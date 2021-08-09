@@ -182,6 +182,12 @@ export default {
       this.deleteDialog = true
     },
     deleteSubmit() {
+      // Check restore status
+      if (this.selected.some(x => x.status == 'IN PROGRESS')) {
+        this.notification("Can't delete restores that are in progress", '#EF5354')
+        this.deleteDialog = false
+        return
+      }
       // Delete Restores
       this.loading = true
       const payload = this.selected.map(x => x.id)

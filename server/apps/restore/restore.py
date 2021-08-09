@@ -131,21 +131,24 @@ class Restore:
 
     def __import(self, core, item, server, path, status):
         # Build paths
-        error_path = os.path.join(path, item['uri'], 'error.txt')
+        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+        error_gunzip2_path = os.path.join(path, item['uri'], 'error_gunzip2.txt')
+        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
         file_path = os.path.join(path, item['uri'], item['source'])
 
         # Check compressed file
         gunzip = ''
         if item['source'].endswith('.tar'):
-            gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_path}"
+            gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
         elif item['source'].endswith('.tar.gz'):
-            gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_path}"
+            gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
         elif item['source'].endswith('.gz'):
-            gunzip = f"| zcat 2> {error_path}"
+            gunzip = f"| zcat 2> {error_gunzip_path}"
 
         if item['selected'] and item['selected'][0].endswith('.gz'):
-            gunzip += f" | zcat 2> {error_path}"
+            gunzip += f" | zcat 2> {error_gunzip2_path}"
 
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
@@ -153,10 +156,10 @@ class Restore:
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             if item['mode'] == 'file':
-                command = f"echo 'RESTORE.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"echo 'RESTORE.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_sql_path}"
             elif item['mode'] in ['url','cloud']:
                 source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=1800) if item['mode'] == 'cloud' else item['source']
-                command = f"echo 'RESTORE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"echo 'RESTORE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_sql_path}"
 
         # Start Import process
         p = core.execute(command)
@@ -175,14 +178,32 @@ class Restore:
 
         # Init path vars
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
-        error_path = os.path.join(path, item['uri'], 'error.txt')
+        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+        error_gunzip2_path = os.path.join(path, item['uri'], 'error_gunzip2.txt')
+        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
 
-        # Read files
+        # Read progress file
         p = core.execute(f"[ -f {progress_path} ] && tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1")
         progress = self.__parse_progress(p['stdout']) if len(p['stdout']) > 0 else None
 
-        p = core.execute(f"[ -f {error_path} ] && cat < {error_path}")
+        # Read error (sql) file
+        p = core.execute(f"[ -f {error_sql_path} ] && cat < {error_sql_path}")
         error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+        if not error:
+            # Read error (gunzip2) file
+            p = core.execute(f"[ -f {error_gunzip2_path} ] && cat < {error_gunzip2_path}")
+            error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+            if not error:
+                # Read error (gunzip) file
+                p = core.execute(f"[ -f {error_gunzip_path} ] && cat < {error_gunzip_path}")
+                error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+                if not error:
+                    # Read error (curl) file
+                    p = core.execute(f"[ -f {error_curl_path} ] && cat < {error_curl_path}")
+                    error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+
+        # Update status
         status[0] = error
 
         # Update restore with progress file
@@ -271,6 +292,11 @@ class Restore:
                         {
                             "title": "Database",
                             "value": f"```{item['database']}```",
+                            "short": False
+                        },
+                        {
+                            "title": "Information",
+                            "value": f"```{item['url']}/utils/restore/{item['id']}```",
                             "short": False
                         },
                         {

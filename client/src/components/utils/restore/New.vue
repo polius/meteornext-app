@@ -755,6 +755,7 @@ export default {
       data.append('size', this.fileObject.size)
       data.append('server', this.server)
       data.append('database', this.database)
+      data.append('url', window.location.protocol + '//' + window.location.host)
       // Build request options
       const CancelToken = axios.CancelToken;
       this.cancelToken = CancelToken.source();
@@ -868,7 +869,8 @@ export default {
         source: this.source,
         selected: this.scanSelected,
         server: this.server,
-        database: this.database
+        database: this.database,
+        url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/restore', payload)
       .then((response) => {
@@ -891,7 +893,8 @@ export default {
         object: this.awsObjectsSelected[0],
         selected: this.scanSelected,
         server: this.server,
-        database: this.database
+        database: this.database,
+        url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/restore', payload)
       .then((response) => {

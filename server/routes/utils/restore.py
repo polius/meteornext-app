@@ -301,11 +301,13 @@ class Restore:
             source = file.filename
             size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
+            url = request.form['url']
 
         elif data['mode'] == 'url':
             source = data['source']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
+            url = data['url']
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
@@ -319,6 +321,7 @@ class Restore:
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
+            url = data['url']
 
         # Build Item
         item = {
@@ -337,7 +340,8 @@ class Restore:
             'uri': uri,
             'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None,
             'slack_enabled': group['utils_slack_enabled'],
-            'slack_url': group['utils_slack_url']
+            'slack_url': group['utils_slack_url'],
+            'url': url
         }
         item['id'] = self._restore.post(user, item)
 
