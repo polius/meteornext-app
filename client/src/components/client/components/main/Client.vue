@@ -246,7 +246,13 @@ export default {
   },
   watch: {
     sidebarMode(val) {
-      if (val == 'objects') this.editor.renderer.updateFull()
+      if (val == 'objects') {
+        if (this.connections.length == 1 && this.connections[0]['clientSession'] == null) {
+          this.clientSession = ace.createEditSession('', 'ace/mode/mysql')
+          this.editor.setSession(this.clientSession)
+        }
+        this.editor.renderer.updateFull()
+      }
     },
     headerTabSelected(val) {
       if (val == 'client') this.editor.renderer.updateFull()
