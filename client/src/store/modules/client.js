@@ -106,7 +106,6 @@ const getDefaultState = () => {
       // Client ACE Editor
       editor: null,
       editorTools: null,
-      editorMarkers: [],
       editorKeywords: null,
       // AG Grid API
       gridApi: {

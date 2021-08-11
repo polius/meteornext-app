@@ -231,7 +231,6 @@ export default {
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
-      'editorMarkers',
       'editorTools',
       'editorKeywords',
       'gridApi',
@@ -817,14 +816,17 @@ export default {
       this.clientQuery = { query: currentQuery.query, range: queryRange }
 
       // Remove Previous Markers
-      while (this.editorMarkers.length > 0) {
-        this.editor.session.removeMarker(this.editorMarkers.pop())
+      const prevMarkers = this.editor.session.getMarkers()
+      if (prevMarkers) {
+        const prevMarkersArr = Object.keys(prevMarkers)
+        for (let item of prevMarkersArr) {
+          this.editor.session.removeMarker(prevMarkers[item].id)
+        }
       }
 
       // Highlight Current Query
       if (currentQuery.query.trim().length > 0 && queryRange != null) {
-        var marker = this.editor.session.addMarker(new Range(queryRange['start'].row, queryRange['start'].column, queryRange['end'].row, queryRange['end'].column), 'ace_active-line', true)
-        this.editorMarkers.push(marker)
+        this.editor.session.addMarker(new Range(queryRange['start'].row, queryRange['start'].column, queryRange['end'].row, queryRange['end'].column), 'ace_active-line', true)
       }
     },
     analyzeQueries(text) {
