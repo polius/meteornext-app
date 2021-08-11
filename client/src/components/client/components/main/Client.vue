@@ -816,12 +816,8 @@ export default {
       this.clientQuery = { query: currentQuery.query, range: queryRange }
 
       // Remove Previous Markers
-      const prevMarkers = this.editor.session.getMarkers()
-      if (prevMarkers) {
-        const prevMarkersArr = Object.keys(prevMarkers)
-        for (let item of prevMarkersArr) {
-          this.editor.session.removeMarker(prevMarkers[item].id)
-        }
+      for (let item of Object.values(this.editor.session.getMarkers())) {
+        if (item.clazz == 'ace_active-line') this.editor.session.removeMarker(item.id)
       }
 
       // Highlight Current Query
