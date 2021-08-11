@@ -1,7 +1,7 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" @blur="onBlur" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 215px)'}" style="padding:10px;">
+      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" @contextmenu="($event) => $event.preventDefault()" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" @blur="onBlur" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 215px)'}" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
@@ -16,7 +16,11 @@
           </div>
         </template>
       </v-autocomplete>
-      <v-autocomplete v-else ref="database" v-model="database" :loading="sidebarLoadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 263px)'}" style="padding:10px;"></v-autocomplete>
+      <v-autocomplete v-else ref="database" v-model="database" @contextmenu="showContextMenuDatabase" :loading="sidebarLoadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 263px)'}" style="padding:10px;">
+        <template v-slot:[`selection`]="{ item }">
+          <span @contextmenu="showContextMenuDatabase">{{ item }}</span>
+        </template>
+      </v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarItems.length == 0 && !sidebarLoading" style="display:flex; justify-content:center; align-items:center; height:calc(100% - 162px)">
@@ -645,6 +649,14 @@ export default {
       if (!found) this.sidebarSelected = [item]
       this.buildContextMenu(item)
     },
+    showContextMenuDatabase(e) {
+      e.preventDefault()
+      if (this.database.length == 0) return
+      this.contextMenuItems = [{i:'Copy Database'}]
+      this.contextMenuX = e.clientX
+      this.contextMenuY = e.clientY
+      this.contextMenu = true
+    },
     buildContextMenu(item) {
       this.contextMenuItem = item
       this.contextMenuItems = []
@@ -693,7 +705,10 @@ export default {
         else if (item == 'Remove Folder') EventBus.$emit('show-bottombar-servers-remove-folder')
       }
       else if (this.sidebarMode == 'objects') {
-        if (this.contextMenuItem.type == 'Table') {
+        if (item == 'Copy Database') {
+          navigator.clipboard.writeText(this.database)
+        }
+        else if (this.contextMenuItem.type == 'Table') {
           if (item == 'Show Table Objects') this.showObjectsTab('tables')
           else EventBus.$emit('click-contextmenu-table', item)
         }
