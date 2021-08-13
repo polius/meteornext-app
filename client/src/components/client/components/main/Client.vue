@@ -795,17 +795,17 @@ export default {
       }
 
       // Get Current Query
-      var currentQuery = { query: '', start: null, end: null}
+      var currentQuery = { query: '', start: null, end: null, comments: []}
       for (let i = 0; i < queries.length; ++i) {
         if (
           (i == 0 && cursorPositionIndex < queries[0]['begin']) ||
           (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end'])
          ) {
-          currentQuery = { query: editorText.substring(queries[i]['begin'], queries[i]['end']), start: queries[i]['begin'], end: queries[i]['end']}
+          currentQuery = { query: editorText.substring(queries[i]['begin'], queries[i]['end']), start: queries[i]['begin'], end: queries[i]['end'], comments: queries[i]['comments']}
           break
         }
         else if (cursorPositionIndex < queries[i]['begin']) {
-          currentQuery = { query: editorText.substring(queries[i-1]['begin'], queries[i-1]['end']), start: queries[i-1]['begin'], end: queries[i-1]['end']}
+          currentQuery = { query: editorText.substring(queries[i-1]['begin'], queries[i-1]['end']), start: queries[i-1]['begin'], end: queries[i-1]['end'], comments: queries[i]['comments']}
           break
         }
       }
@@ -813,7 +813,7 @@ export default {
       var queryRange = { start: this.editor.session.doc.indexToPosition(currentQuery.start), end: this.editor.session.doc.indexToPosition(currentQuery.end)}
 
       // Store Current Query (+ range)
-      this.clientQuery = { query: currentQuery.query, range: queryRange }
+      this.clientQuery = { query: this.removeQueryComments(currentQuery.query, currentQuery.comments), range: queryRange }
 
       // Remove Previous Markers
       for (let item of Object.values(this.editor.session.getMarkers())) {
@@ -828,6 +828,7 @@ export default {
     analyzeQueries(text) {
       // Get all Query Positions
       var queries = []
+      var comments = []
       var chars = []
       var start = 0
       var delimiter = ';'
@@ -853,7 +854,8 @@ export default {
         }
         if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0) {
           if (!text.substring(start, i).toLowerCase().startsWith('delimiter')) {
-            queries.push({"begin": start, "end": i-delimiter.length+1})
+            queries.push({"begin": start, "end": i-delimiter.length+1, "comments": comments})
+            comments = []
           }
           start = i + 1
           first = true
@@ -862,15 +864,28 @@ export default {
           if (chars.length == 0) chars.push(text[i])
           else if (chars[chars.length-1] == text[i]) chars.pop()
         }
-        else if (chars.length == 0 && text[i] == "#") chars.push("#")
-        else if (text[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
-        else if (text[i] == '*' && i != 0 && text[i-1] == '/') chars.push("/*")
-        else if (text[i] == '/' && i != 0 && text[i-1] == '*' && chars[chars.length-1] == '/*') chars.pop()
+        else if (chars.length == 0 && text[i] == "#") { chars.push("#"); comments.push({begin: i-start}) }
+        else if (chars.length == 0 && text[i] == '*' && text[i-1] == '/') { chars.push("/*"); comments.push({begin: i-1-start}) }
+        else if (chars.length == 0 && text[i] == ' ' && text[i-1] == '-' && text[i-2] == '-') { chars.push("--"); comments.push({begin: i-2-start}) }
+        else if (text[i] == '\n' && chars[chars.length-1] == '#') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
+        else if (text[i] == '/' && text[i-1] == '*' && chars[chars.length-1] == '/*') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
+        else if (text[i] == '\n' && chars[chars.length-1] == '--') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
       }
       if (i > start && !text.substring(start, i).trim().toLowerCase().startsWith('delimiter')) {
-        queries.push({"begin": start, "end": i})
+        queries.push({"begin": start, "end": i, "comments": comments})
+        comments = []
       }
       return queries
+    },
+    removeQueryComments(string, comments) {
+      let query = string
+      let offset = 0
+      for (let c of comments) {
+        let end = 'end' in c ? c.end : string.length
+        query = (query.slice(0, c.begin - offset) + query.slice(end - offset)).trim()
+        offset += end - c.begin
+      }
+      return query
     },
     initExecution(payload) {
       const queries = payload.queries.map(x => x.trim().endsWith(';') ? x : x + ';').join('\n')
@@ -1032,7 +1047,7 @@ export default {
       // Get Query/ies (selected or highlighted)
       const selectedText = this.editor.getSelectedText()
       var queries = []
-      if (selectedText.length == 0) queries = [this.clientQuery['query']]
+      if (selectedText.length == 0) queries = [this.clientQuery.query]
       else queries = this.analyzeQueries(selectedText).map(x => selectedText.substring(x.begin, x.end))
       return queries
     },
