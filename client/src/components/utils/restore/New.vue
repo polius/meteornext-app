@@ -198,6 +198,7 @@
                         </template>
                       </v-autocomplete>
                       <v-text-field ref="database" @keyup.enter="nextStep" v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
+                      <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
@@ -314,6 +315,7 @@
                         </template>
                       </v-autocomplete>
                       <v-text-field readonly v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
+                      <v-checkbox readonly v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -493,6 +495,7 @@ export default {
       serverItems: [],
       server: null,
       database: '',
+      createDatabase: false,
       // Dialog
       dialog: false,
       progress: 0,
@@ -755,6 +758,7 @@ export default {
       data.append('size', this.fileObject.size)
       data.append('server', this.server)
       data.append('database', this.database)
+      data.append('createDatabase', this.createDatabase)
       data.append('url', window.location.protocol + '//' + window.location.host)
       // Build request options
       const CancelToken = axios.CancelToken;
@@ -870,6 +874,7 @@ export default {
         selected: this.scanSelected,
         server: this.server,
         database: this.database,
+        createDatabase: this.createDatabase,
         url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/restore', payload)
@@ -894,6 +899,7 @@ export default {
         selected: this.scanSelected,
         server: this.server,
         database: this.database,
+        createDatabase: this.createDatabase,
         url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/restore', payload)
