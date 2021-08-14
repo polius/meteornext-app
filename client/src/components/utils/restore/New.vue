@@ -399,7 +399,7 @@
                       <v-text-field readonly v-model="serverItem.version" label="Version" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <div v-if="!loading && !(readOnly && inventory_secured)" style="margin-bottom:20px">
+                  <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field readonly v-model="serverItem.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -515,7 +515,7 @@ export default {
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return !this.owner && this.serverItem.shared == 1 },
+    readOnly: function() { return !this.owner && (Object.keys(this.serverItem).length == 0 || this.serverItem.shared == 1) },
   },
   beforeRouteLeave(to, from, next) {
     this.stopScan(false)
