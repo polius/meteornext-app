@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 import models.notifications
 import apps.restore.core
+import connectors.base
 
 class Restore:
     def __init__(self, sql):
@@ -28,6 +29,7 @@ class Restore:
             start_time = time.time()
             core = apps.restore.core.Core(self._sql, item['id'], region)
             self.__check(core)
+            self.__create_database(item, server, region)
             self.__core2(start_time, core, user, item, server, region, paths)
         except Exception as e:
             query = """
@@ -41,6 +43,16 @@ class Restore:
             self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
             self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
+
+    def __create_database(self, item, server, region):
+        if not item['create_database']:
+            return
+        # Build Connector Data
+        data = {'ssh': region, 'sql': server}
+        data['ssh']['enabled'] = region['ssh_tunnel']
+        # Init Connector & Execute
+        connector = connectors.base.Base(data)
+        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['database']}`")
 
     def __core2(self, start_time, core, user, item, server, region, paths):
         # Update restore status
