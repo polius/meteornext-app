@@ -198,7 +198,7 @@ const mutations = {
       state.connections[state.currentConn].database = ''
     }
     // Delete last element of array
-    else if (data + 1 == state.connections.length) {
+    else if (data == state.connections.length - 1) {
       state.currentConn = data - 1
       state.connections.splice(data, 1)
     }
