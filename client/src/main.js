@@ -12,8 +12,15 @@ Vue.prototype.$http = Axios
 Vue.prototype.$http.defaults.headers.common['Access-Control-Allow-Origin'] = '*'
 Vue.prototype.$http.defaults.baseURL = window.location.protocol + "//" + window.location.host + "/api"
 
-const token = Cookies.get('csrf_access_token')
-if (token) Vue.prototype.$http.defaults.headers.common['X-CSRF-TOKEN'] = token
+Vue.prototype.$http.interceptors.request.use(
+  config => {
+    config.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
 
 new Vue({
   el: '#app',
