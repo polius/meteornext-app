@@ -27,9 +27,11 @@
         <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
+          <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
+          <div v-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)">
+            <v-btn v-if="!show_results" text title="Show Execution Results" @click="showResults()" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
+            <v-btn text title="Share Results" @click="shareResults_dialog = true" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
+          </div>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -515,7 +517,7 @@
           <v-container>
             <v-layout wrap>
               <v-flex xs12>
-                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="font-size:18px; letter-spacing:0.05em">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
+                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="height:48px; font-size:18px; letter-spacing:0.05em">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
