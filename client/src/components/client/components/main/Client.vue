@@ -244,6 +244,12 @@ export default {
     ], { path: 'client/client' }),
   },
   watch: {
+    connections() {
+      this.editor.setSession(this.clientSession)
+      if (this.headerTabSelected == 'client' && this.sidebarMode == 'objects') this.editor.focus()
+      this.clientHeaders = JSON.parse(JSON.stringify(this.clientHeaders))
+      this.$nextTick(() => this.resizeTable())
+    },
     sidebarMode(val) {
       if (val == 'objects') {
         if (this.connections.length == 1 && this.connections[0]['clientSession'] == null) {
@@ -254,13 +260,14 @@ export default {
       }
     },
     headerTabSelected(val) {
-      if (val == 'client') this.editor.renderer.updateFull()
+      if (val == 'client') {
+        this.editor.renderer.updateFull()
+        this.$nextTick(() => this.resizeTable())
+      }
     },
     currentConn() {
       // Reload Table Headers
-      const headers = this.clientHeaders
-      this.gridApi.client.setColumnDefs([])
-      this.clientHeaders = headers
+      this.clientHeaders = JSON.parse(JSON.stringify(this.clientHeaders))
       // Discard any previous table modifications
       this.cellEditingDiscard()
       // Load Current Connnection Editor
