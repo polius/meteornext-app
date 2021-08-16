@@ -24,7 +24,7 @@
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarItems.length == 0 && !sidebarLoading" style="display:flex; justify-content:center; align-items:center; height:calc(100% - 162px)">
-        <div class="body-2" style="color:#dedede">{{ sidebarMode == 'servers' ? 'Click the + button to add servers' : 'The search returned no results' }}</div>
+        <div class="body-2" style="color:#dedede">{{ sidebarMode == 'servers' ? 'Click the + button to add servers' : database.length != 0 ? 'The search returned no results' : '' }}</div>
       </div>
       <div v-else-if="sidebarMode == 'servers' || database.length > 0" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`};`">
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :activatable="!sidebarLoadingObject" multiple-active open-on-click transition return-object class="clear_shadow" style="height:100%; width:100%; overflow-y:auto;`">
