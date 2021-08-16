@@ -27,9 +27,9 @@
         <div class="body-2" style="color:#dedede">{{ sidebarMode == 'servers' ? 'Click the + button to add servers' : 'The search returned no results' }}</div>
       </div>
       <div v-else-if="sidebarMode == 'servers' || database.length > 0" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`};`">
-        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:100%; width:100%; overflow-y:auto;`">
+        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :activatable="!sidebarLoadingObject" multiple-active open-on-click transition return-object class="clear_shadow" style="height:100%; width:100%; overflow-y:auto;`">
           <template v-slot:label="{item, open}">
-            <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+            <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px">
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'fas fa-folder-open' : 'fas fa-folder' }}</v-icon>
               <v-icon v-else-if="sidebarMode == 'servers'" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="padding:10px;">fas fa-server</v-icon>
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
@@ -186,6 +186,7 @@ export default {
       'sidebarSelected',
       'sidebarLoading',
       'sidebarLoadingServer',
+      'sidebarLoadingObject',
       'server',
       'headerTab',
       'headerTabSelected',
@@ -258,7 +259,7 @@ export default {
       }
     },
     sidebarClicked(event, item) {
-      if (this.sidebarLoadingServer) return
+      if (this.sidebarLoadingServer | this.sidebarLoadingObject) return
       this.clickHandler(event, item)
       return new Promise ((resolve) => {
         if (this.sidebarClick) {

@@ -28,7 +28,7 @@ export default {
   components: { Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
-        'headerTabSelected',
+      'headerTabSelected',
     ], { path: 'client/connection' }),
   },
   mounted() {

@@ -96,6 +96,7 @@ export default {
       'structureItems',
       'structureConnection',
       'sidebarSelected',
+      'sidebarLoadingObject',
       'server',
       'database',
     ], { path: 'client/connection' }),
@@ -133,6 +134,7 @@ export default {
     },
     getStructure(refresh) {
       if (!refresh && this.structureConnection == this.sidebarSelected[0]['id']) return
+      this.sidebarLoadingObject = true
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
@@ -150,6 +152,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.sidebarLoadingObject = false)
     },
     parseStructure(data) {
       // Parse Columns
