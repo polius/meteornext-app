@@ -50,6 +50,7 @@ export default {
       'server',
       'database',
       'sidebarSelected',
+      'sidebarLoadingObject',
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -86,6 +87,7 @@ export default {
   methods: {
     getInfo(refresh) {
       if (!refresh && this.infoConnection == this.sidebarSelected[0]['id']) return
+      this.sidebarLoadingObject = true
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -101,6 +103,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.sidebarLoadingObject = false)
     },
     parseInfo(data) {
       var syntax = ''

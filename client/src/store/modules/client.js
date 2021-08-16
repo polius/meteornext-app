@@ -32,6 +32,7 @@ const connection = () => {
     sidebarSearch: '',
     sidebarLoading: false,
     sidebarLoadingServer: false,
+    sidebarLoadingObject: false,
 
     // Client
     clientHeaders: [],

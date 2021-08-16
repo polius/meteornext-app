@@ -2,13 +2,13 @@
   <v-container fluid style="padding:0px;">
     <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
       <v-text-field ref="search" :disabled="rights['sidebar'].length == 0" v-model="rightsSidebarSearch" placeholder="Search" autofocus dense solo hide-details height="42px" style="padding:5px 5px 5px;"></v-text-field>
-      <v-treeview :active.sync="rightsSidebarSelected" item-key="id" :open.sync="rightsSidebarOpened" :items="rights['sidebar']" :search="rightsSidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 56px); width:100%; overflow-y:auto;">
+      <v-treeview :active.sync="rightsSidebarSelected" item-key="id" :open.sync="rightsSidebarOpened" :items="rights['sidebar']" :search="rightsSidebarSearch" :activatable="!rightsLoading" open-on-click transition class="clear_shadow" style="height:calc(100% - 56px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item, active}">
-          <v-btn @click="sidebarClick($event, item, active)" @contextmenu="onRightClick" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
+          <v-btn @click="sidebarClick($event, item, active)" @contextmenu="onRightClick" text :style="`font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px; ${rightsLoading ? 'cursor:not-allowed' : 'cursor:pointer'}`">
             <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
             {{ item.name }}
             <v-spacer></v-spacer>
-            <v-progress-circular v-if="rightsLoading && item.id == rightsSidebarSelected[0]" indeterminate size="16" width="2" color="white"></v-progress-circular>
+            <v-progress-circular v-if="rightsLoading && item.id == rightsSidebarClicked" indeterminate size="16" width="2" color="white"></v-progress-circular>
           </v-btn>
         </template>
       </v-treeview>
@@ -74,6 +74,7 @@ export default {
     return {
       // Rights
       rightsSidebarSearch: '',
+      rightsSidebarClicked: null,
       // Dialog
       sidebarDialog: false,
     }
@@ -111,7 +112,8 @@ export default {
       requestAnimationFrame(() => this.$refs.search.focus())
     },
     sidebarClick(event, item, active) {
-      if ('children' in item) return
+      this.rightsSidebarClicked = item.id
+      if (this.rightsLoading || 'children' in item) return
       if (active) event.stopPropagation()
       this.rightsSelected = {...item}
       new Promise((resolve) => { EventBus.$emit('get-rights', resolve, item['user'], item['name']) })

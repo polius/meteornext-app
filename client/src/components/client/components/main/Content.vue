@@ -256,7 +256,8 @@ export default {
       'contentPks',
       'contentConnection',
       'contentSortState',
-      'bottomBar'
+      'bottomBar',
+      'sidebarLoadingObject'
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -414,6 +415,7 @@ export default {
     },
     getContent(force) {
       if (!force && this.contentConnection == this.sidebarSelected[0]['id']) return
+      this.sidebarLoadingObject = true
       this.contentSortState = []
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
@@ -436,6 +438,7 @@ export default {
             EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
           }
         })
+        .finally(() => this.sidebarLoadingObject = false)
     },
     parseContentExecution(data) {
       // Build Data Table
