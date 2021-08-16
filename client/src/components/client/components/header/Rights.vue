@@ -7,7 +7,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!saveEnabled" @click="saveClick" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" outlined style="margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
-          <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
+          <v-progress-circular v-if="rightsLoading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -99,10 +99,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="loading" :loading="loading" @click="checkSubmit" color="#00b16a">Confirm</v-btn>
+                      <v-btn :disabled="rightsLoading" :loading="rightsLoading" @click="checkSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="checkDialog = false" color="#EF5354">Cancel</v-btn>
+                      <v-btn :disabled="rightsLoading" @click="checkDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -175,7 +175,6 @@ import Syntax from './rights/Syntax'
 export default {
   data() {
     return {
-      loading: true,
       mode: '',
       dialog: false,
       saveEnabled: false,
@@ -231,6 +230,7 @@ export default {
       'rightsForm',
       'rightsSidebarSelected',
       'rightsSidebarOpened',
+      'rightsLoading',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -314,7 +314,7 @@ export default {
     onSplitPaneReady() {
     },
     getRights(resolve, user, host) {
-      this.loading = true
+      this.rightsLoading = true
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -339,7 +339,7 @@ export default {
             this.infoDialog = true
           }
         })
-        .finally(() => this.loading = false)
+        .finally(() => this.rightsLoading = false)
     },
     parseRightsSidebar(data) {
       if ('rights' in data) {
@@ -499,7 +499,7 @@ export default {
     },
     applyRights(resolve, queries) {
       // Execute generated queries
-      this.loading = true
+      this.rightsLoading = true
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -556,7 +556,7 @@ export default {
             this.$store.dispatch('client/addHistory', history)
           }
         })
-        .finally(() => this.loading = false)
+        .finally(() => this.rightsLoading = false)
     },
     parseRights(rights) {
       return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1).replaceAll('_', ' ') }).join(', ')

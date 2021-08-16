@@ -787,7 +787,6 @@ export default {
     testConnection() {
       // Test Connection
       EventBus.$emit('send-notification', 'Testing Server...', 'info', true)
-      this.loading = true
       const payload = {
         region: this.contextMenuItem.region_id,
         server: this.contextMenuItem.id,
@@ -800,7 +799,6 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
-        .finally(() => this.loading = false)
     },
   }
 }

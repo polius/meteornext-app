@@ -1,4 +1,3 @@
-from os import fchmod
 import tempfile
 import pymysql
 import paramiko

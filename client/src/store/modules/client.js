@@ -82,6 +82,7 @@ const connection = () => {
     rightsForm: { login: null, resources: null },
     rightsSidebarSelected: [],
     rightsSidebarOpened: [],
+    rightsLoading: false,
 
     // Bottom Bar
     bottomBar: {
