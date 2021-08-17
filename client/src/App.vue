@@ -64,9 +64,9 @@
         <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
       </v-btn>
       <!-- DOCUMENTATION -->
-      <a href="https://docs.meteor2.io" target="_blank" title="Documentation">
+      <!-- <a href="https://docs.meteor2.io" target="_blank" title="Documentation">
         <v-btn icon><v-icon style="font-size:22px">fas fa-question</v-icon></v-btn>
-      </a>
+      </a> -->
       <!-- LOGOUT -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
