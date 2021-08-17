@@ -239,14 +239,14 @@ export default {
     showContextMenu(e, item) {
       e.preventDefault()
       if (!('hostname' in item.server)) return
-      this.contextMenuItems = ['Copy Connection Info']
+      this.contextMenuItems = ['Copy Hostname']
       this.contextMenuItem = item.server
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
       this.contextMenu = true
     },
     contextMenuClicked(item) {
-      if (item == 'Copy Connection Info') {
+      if (item == 'Copy Hostname') {
         navigator.clipboard.writeText(this.contextMenuItem['hostname'] + ':' + this.contextMenuItem['port'])
       }
     },

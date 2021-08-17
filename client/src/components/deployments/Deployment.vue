@@ -422,13 +422,13 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="select_dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 15px 20px 20px;">
-          <v-container style="padding:0px; max-width:100%;">
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px; max-width:100%">
             <v-layout wrap>
               <v-flex xs12>
                 <v-card>
                   <v-toolbar flat dense color="#2e3131">
-                    <v-toolbar-title class="white--text subtitle-2">SELECT EXECUTION</v-toolbar-title>
+                    <v-toolbar-title class="white--text subtitle-1">SELECT EXECUTION</v-toolbar-title>
                   </v-toolbar>
                   <v-divider></v-divider>
                   <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" class="elevation-1">

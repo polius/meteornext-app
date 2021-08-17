@@ -57,7 +57,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','simplejson']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','simplejson','flask_limiter']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log', timeout=3600)""")
+    gunicorn_app.run(worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log', accesslog='access.log', timeout=3600)""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 

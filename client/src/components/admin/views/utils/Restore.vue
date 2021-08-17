@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">RESTORE</v-toolbar-title>
+        <v-toolbar-title class="body-2 white--text font-weight-medium" style="font-size:0.9rem!important"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-database</v-icon>RESTORE</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>

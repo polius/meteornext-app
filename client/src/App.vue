@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar clipped-left app absolute v-show="isLoggedIn && showTopNavbar()">
+    <v-app-bar app absolute v-show="isLoggedIn && showTopNavbar()">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
@@ -63,6 +63,10 @@
       <v-btn icon :title="fullScreenEnabled ? 'Exit Full Screen' : 'Full Screen'" @click="fullScreen">
         <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
       </v-btn>
+      <!-- DOCUMENTATION -->
+      <a href="https://docs.meteor2.io" target="_blank" title="Documentation">
+        <v-btn icon><v-icon style="font-size:22px">fas fa-question</v-icon></v-btn>
+      </a>
       <!-- LOGOUT -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
@@ -116,14 +120,14 @@
                   <v-avatar size="130"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
                 </v-row>
                 <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px;">
-                  <div class="text-h5" style="font-weight:400;">{{ coins + ' Coins' }}</div>
+                  <div class="text-h5 white--text" style="font-weight:400;">{{ coins + ' Coins' }}</div>
                 </v-row>
-                <v-row justify="space-around" style="margin-top:0px">
+                <v-row justify="space-around" style="margin-top:0px; margin-bottom:15px">
                   <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
                 </v-row>
-                <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px">
+                <!-- <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px">
                   <div class="text-subtitle-1" style="font-weight:400;">{{ "+" + this.coins_day + " Coins / Day" }}</div>
-                </v-row>
+                </v-row> -->
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
@@ -318,7 +322,7 @@ export default {
       this.coinsDialog = true
     },
     parseDate(date) {
-      return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
     },
     getStatusColor(status) {
       if (status == 'SUCCESS') return '#4caf50'

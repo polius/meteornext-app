@@ -8,8 +8,8 @@
               <v-card style="border-radius:5px;">
                 <v-card-text>
                   <v-avatar :size="150" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
-                  <div class="display-2" style="margin-top:10px;"><b>Meteor</b> Next</div>
-                  <div class="headline" style="margin-top:10px; margin-bottom:20px;">LOGIN</div>
+                  <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px;"><span style="font-weight:500">Meteor</span> Next</div>
+                  <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">LOGIN</div>
                   <v-divider></v-divider>
                   <v-alert v-if="showInstall" dense color="#fb8c00">
                     <v-row align="center">

@@ -45,9 +45,9 @@
                     <template v-slot:activator="{ on }">
                       <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
-                    <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access to the inventory.</span>
+                    <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access the inventory.</span>
                     <br>
-                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (regions, servers, auxiliary connections) for non owners are shown without sensible data (hostname, username, password, ...).</span>
+                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (servers, regions, auxiliary connections) for non owners are shown without sensible data (hostname, username, password, ...).</span>
                   </v-tooltip>
                 </div>
                 <v-switch :disabled="loading" v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
@@ -58,7 +58,7 @@
                     <template v-slot:activator="{ on }">
                       <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
-                    <span>Owners can manage <strong>Shared</strong> resources (environments, regions, servers, auxiliary connections)</span>
+                    <span>Owners can manage <strong>Shared</strong> resources (servers, regions, environments, auxiliary connections, cloud keys)</span>
                   </v-tooltip>
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
