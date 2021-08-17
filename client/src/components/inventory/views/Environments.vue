@@ -57,7 +57,7 @@
                   <v-text-field v-if="mode!='delete'" :readonly="readOnly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
+                      <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>

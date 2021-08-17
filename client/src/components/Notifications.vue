@@ -21,8 +21,8 @@
             </v-simple-checkbox>
           </template>
           <template v-slot:[`item.name`]="{ item }">
-            <v-row no-gutters align="center">
-              <v-col cols="auto" :style="`width:5px; height:47px; margin-right:10px; background-color:` + getNotificationColor(item.status)">
+            <v-row no-gutters align="center" style="height:100%">
+              <v-col cols="auto" :style="`width:4px; height:100%; margin-right:10px; background-color:` + getNotificationColor(item.status)">
               </v-col>
               <v-col cols="auto">
                 {{ item.name }}
@@ -179,7 +179,7 @@ export default {
         })
     },
     dateFormat(date) {
-      if (date) return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
     getNotificationColor(status) {

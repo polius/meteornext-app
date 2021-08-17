@@ -3,6 +3,8 @@ import datetime
 import secrets
 from flask import Flask
 from flask_cors import CORS
+# from flask_limiter import Limiter
+# from flask_limiter.util import get_remote_address
 from flask_jwt_extended import JWTManager
 from flask_compress import Compress
 import routes.setup
@@ -11,6 +13,8 @@ import routes.setup
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['JSON_SORT_KEYS'] = False
+
+# JWT Config
 app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(nbytes=64)
 app.secret_key = app.config['JWT_SECRET_KEY']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
@@ -18,6 +22,9 @@ app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 app.config['JWT_COOKIE_SECURE'] = 'SECURE' in os.environ and os.environ['SECURE'] == 'True'
 app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
 jwt = JWTManager(app)
+
+# Rate Limits
+# Limiter(app, key_func=get_remote_address, default_limits=["10/second"])
 
 # Compress Flask application's responses with gzip, deflate or brotli
 Compress(app)
