@@ -18,9 +18,9 @@ class MySQL:
             "use_unicode": True,
             "cursorclass": OrderedDictCursor,
             "autocommit": False,
-            "ssl_ca": config.get('ssl_ca_certificate'),
-            "ssl_cert": config.get('ssl_client_certificate'),
-            "ssl_key": config.get('ssl_client_key'),
+            "ssl_ca":  'keys/' + config['ssl_ca_certificate'] if 'ssl_ca_certificate' in config and config['ssl_ca_certificate'] else None,
+            "ssl_cert": 'keys/' + config['ssl_client_certificate'] if 'ssl_client_certificate' in config and config['ssl_client_certificate'] else None,
+            "ssl_key": 'keys/' + config['ssl_client_key'] if 'ssl_client_key' in config and config['ssl_client_key'] else None,
             "ssl_verify_cert": config.get('ssl_verify_ca') == 1,
             "ssl_verify_identity": config.get('ssl_verify_ca') == 1
         }

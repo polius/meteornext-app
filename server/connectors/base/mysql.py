@@ -104,15 +104,16 @@ class MySQL:
     def test_sql(self):
         try:
             ssl = self.__get_ssl()
+            database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
             if self._server['ssh']['enabled']:
                 password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
                 pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
                 sshtunnel.SSH_TIMEOUT = 5.0
                 with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger()) as tunnel:
-                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                     conn.close()
             else:
-                conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 conn.close()
         finally:
             self.__close_ssl(ssl)
@@ -166,10 +167,6 @@ class MySQL:
     ####################
     # INTERNAL METHODS #
     ####################
-    def check_db_exists(self, db):
-        result = self.execute('SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = %s', args=(db.strip()))
-        return True if int(result[0]['count']) == 1 else False
-
     def get_variables(self):
         return self.execute('SHOW GLOBAL VARIABLES')
 

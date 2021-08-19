@@ -1,26 +1,26 @@
 <template>
   <div style="height:100%" v-if="available">
     <v-main :style="{ height:'100%', padding:'0px', backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
-      <v-container grid-list-xl text-center style="height:100%; display:flex; justify-content:center; align-items:center;">
+      <v-container grid-list-xl text-center style="height:100%; display:flex; justify-content:center; align-items:center">
         <v-layout row wrap align-center style="max-width:500px">
           <v-flex>
             <v-slide-y-transition mode="out-in">
-              <v-card style="border-radius:5px;">
+              <v-card style="border-radius:5px">
                 <v-card-text>
-                  <v-avatar :size="150" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
-                  <div class="display-2" style="margin-top:10px;"><b>Meteor</b> Next</div>
-                  <div class="headline" style="margin-top:10px; margin-bottom:20px;">INSTALL</div>
+                  <v-avatar :size="150" style="margin-top:10px"><img :src="require('../assets/logo.png')" /></v-avatar>
+                  <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px"><span style="font-weight:500">Meteor</span> Next</div>
+                  <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">INSTALL</div>
                   <v-divider></v-divider>
                   <!-- LICENSE -->
                   <v-form ref="formLicense" v-show="installPart == 'license'">
-                    <div class="text-h5" style="font-size:1.2rem!important; margin-top:15px; margin-bottom:10px;">LICENSE</div>
-                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
-                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
+                    <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">LICENSE</div>
+                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
+                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                   </v-form>
                   <!-- SQL -->
                   <v-form ref="formSQL" v-show="installPart == 'sql'">
-                    <div class="text-h5" style="font-size:1.2rem!important; margin-top:15px; margin-bottom:10px;">SERVER</div>
-                    <v-row no-gutters style="margin-bottom:20px;">
+                    <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">SERVER</div>
+                    <v-row no-gutters style="margin-bottom:20px">
                       <v-col style="margin-right:5px">
                         <v-select filled v-model="sql.engine" :items="['MySQL','Aurora MySQL']" @change="sql.port == '' ? sql.port = '3306' : ''" name="engine" label="Engine" required  :rules="[v => !!v || '']" hide-details></v-select>
                       </v-col>
@@ -28,10 +28,10 @@
                         <v-text-field filled v-model="sql.port" name="port" label="Port" required :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field autofocus filled v-model="sql.hostname" name="hostname" label="Hostname" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
-                    <v-text-field filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="email"></v-text-field>
-                    <v-text-field filled v-model="sql.password" name="password" label="Password" required type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
-                    <v-text-field filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <v-text-field autofocus filled v-model="sql.hostname" name="hostname" label="Hostname" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <v-text-field filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="email"></v-text-field>
+                    <v-text-field filled v-model="sql.password" name="password" label="Password" required :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
+                    <v-text-field filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
                     <v-switch v-model="sql.ssl" flat label="SSL Connection" style="margin-top:20px"></v-switch>
                     <div v-if="sql.ssl" style="margin-bottom:20px">
                       <v-file-input v-model="sql.ssl_client_key" label="Client Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
@@ -42,12 +42,19 @@
                   </v-form>
                   <!-- ACCOUNT -->
                   <v-form ref="formAccount" v-show="installPart == 'account'">
-                    <div class="text-h5" style="font-size:1.2rem!important; margin-top:10px; margin-bottom:10px;">ADMIN ACCOUNT</div>
-                    <v-text-field autofocus filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
-                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">ADMIN ACCOUNT</div>
+                    <v-text-field autofocus filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
                   </v-form>
                   <!-- SUBMIT BUTTON -->
-                  <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="install">{{ buttonText }}</v-btn>
+                  <v-row no-gutters>
+                    <v-col :cols="installPart == 'license' ? 12 : 10">
+                      <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px" @click="install">{{ buttonText }}</v-btn>
+                    </v-col>
+                    <v-col v-if="installPart != 'license'" cols="2" style="padding-left:5px">
+                      <v-btn x-large title="Go back" type="submit" color="info" :loading="loading" block style="margin-top:0px" @click="back"><v-icon style="font-size:1.1rem">fas fa-chevron-left</v-icon></v-btn>
+                    </v-col>
+                  </v-row>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>
@@ -59,19 +66,19 @@
     <v-dialog v-model="installDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">DATABASE ALREADY EXISTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>DATABASE ALREADY EXISTS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="installDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div style="padding-top:10px; padding-bottom:5px;" class="subtitle-1">A database named <b>{{ sql['database'] }}</b> already exists in this server.</div>
+                <div style="padding-bottom:5px" class="subtitle-1">A database named <span style="font-weight:500; color:white">{{ sql['database'] }}</span> already exists in this server.</div>
                 <div style="padding-bottom:10px" class="subtitle-1">Which action do you want to perform?</div>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="installDialogSubmit(false)">{{ `Use the ${sql['database']} database` }}</v-btn>
+                <div style="margin-top:20px">
+                  <v-btn :loading="loading" color="#00b16a" @click="installDialogSubmit(false)">Use the existing database</v-btn>
                   <v-btn :disabled="loading" color="#EF5354" @click="installDialogSubmit(true)" style="margin-left:5px">Recreate the database</v-btn>
                 </div>
               </v-flex>
@@ -81,7 +88,7 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
@@ -102,6 +109,7 @@
       installPart: 'license',
       buttonText: 'VERIFY',
       loading: false,
+      showPassword: false,
 
       // Install Dialog
       installDialog: false,
@@ -139,6 +147,10 @@
           .catch(() => {
             this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           })
+      },
+      back() {
+        if (this.installPart == 'sql') this.installPart = 'license'
+        else if (this.installPart == 'account') this.installPart = 'sql'
       },
       install() {
         if (this.installPart == 'license') this.installLicense()

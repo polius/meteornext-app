@@ -15,7 +15,7 @@
                     <v-row align="center">
                       <v-col align="left"><v-icon small style="margin-bottom:2px; margin-right:12px">fas fa-exclamation-triangle</v-icon>A setup is required before login</v-col>
                       <v-col class="shrink">
-                        <v-btn @click="install">INSTALL</v-btn>
+                        <v-btn @click="install" color="#00b16a">INSTALL</v-btn>
                       </v-col>
                     </v-row>
                   </v-alert>
@@ -151,14 +151,6 @@ export default {
   created() {
     this.checkInstall()
   },
-  mounted() {
-    if (this.rememberVuex) {
-      this.username = this.usernameVuex
-      this.remember = true
-      this.$nextTick(() => this.$refs.password.focus())
-    }
-    else this.$nextTick(() => this.$refs.username.focus())
-  },
   computed: {
     rememberVuex: function() { return this.$store.getters['app/remember'] },
     usernameVuex: function() { return this.$store.getters['app/username'] },
@@ -249,6 +241,14 @@ export default {
       axios.get('/setup')
         .then((response) => {
           this.showInstall = response.data.available
+          if (!this.showInstall) {
+            if (this.rememberVuex) {
+              this.username = this.usernameVuex
+              this.remember = true
+              this.$nextTick(() => this.$refs.password.focus())
+            }
+            else this.$nextTick(() => this.$refs.username.focus())
+          }
         })
         .catch(() => {
           this.notification("Can't establish a connection to the server", '#EF5354')
