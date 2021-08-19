@@ -53,7 +53,7 @@ class Setup:
         self._app = app
         self._url_prefix = url_prefix
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
-        self._keys_path = "{}/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/".format(os.path.dirname(sys.executable))
+        self._keys_path = "{}/keys/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/keys/".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._files_folder = "{}/files".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/files".format(os.path.dirname(sys.executable))
         self._blueprints = []
@@ -133,19 +133,11 @@ class Setup:
             try:
                 sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': setup_json})
                 sql.test_sql()
+                return jsonify({'message': 'Connection Successful', 'exists': True}), 200
             except Exception as e:
+                if "Unknown database " in str(e):
+                    return jsonify({'message': 'Connection Successful', 'exists': False}), 200
                 return jsonify({'message': str(e)}), 400
-
-            # Check Database Access
-            try:
-                exists = sql.check_db_exists(setup_json['database'])
-                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': setup_json})
-                sql.test_sql()
-                return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
-            except Exception as e:
-                if "Unknown database " in str(e): 
-                    return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
-                return jsonify({'message': "Access denied for user '{}' to database '{}'".format(setup_json['username'], setup_json['database'])}), 400 
 
         @setup_blueprint.route('/setup', methods=['POST'])
         def setup_account():
@@ -179,12 +171,12 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "utils_enabled": 1, "client_enabled": 1, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "utils_enabled": 1, "utils_restore_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
                     groups.post(1, group)
 
                     # Create user
                     users = models.admin.users.Users(sql)
-                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1, "disabled": 0}
+                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1, "disabled": 0, "change_password": 0}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(1, user)
 
@@ -196,6 +188,10 @@ class Setup:
             except Exception as e:
                 traceback.print_exc()
                 return jsonify({'message': str(e)}), 500
+
+            # Create keys folder
+            if not os.path.exists(self._keys_path):
+                os.makedirs(self._keys_path)
 
             # Write setup to the setup file
             self._conf = {

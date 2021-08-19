@@ -23,15 +23,15 @@ fi
 
 # Check optional SSL variables
 if [[ -n $SQL_SSL_KEY ]]; then
-    jq '.sql += {"ssl_client_key": "ssl_key.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    jq '.sql += {"ssl_client_key": "$SQL_SSL_KEY"}' < server.conf > server.tmp && mv server.tmp server.conf
     echo $SQL_SSL_KEY > ./ssl_key.pem
 fi
 if [[ -n $SQL_SSL_CERT ]]; then
-    jq '.sql += {"ssl_client_certificate": "ssl_cert.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    jq '.sql += {"ssl_client_certificate": "$SQL_SSL_CERT"}' < server.conf > server.tmp && mv server.tmp server.conf
     echo $SQL_SSL_CERT > ./ssl_cert.pem
 fi
 if [[ -n $SQL_SSL_CA ]]; then
-    jq '.sql += {"ssl_ca_certificate": "ssl_ca.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    jq '.sql += {"ssl_ca_certificate": "$SQL_SSL_CA"}' < server.conf > server.tmp && mv server.tmp server.conf
     echo $SQL_SSL_CA > ./ssl_ca.pem
 fi
 if [[ -n $SQL_SSL_VERIFY_CA && $SQL_SSL_VERIFY_CA == 1 ]]; then

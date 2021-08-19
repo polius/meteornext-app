@@ -57,7 +57,7 @@ CREATE TABLE `users` (
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `disabled` TINYINT(1) NOT NULL DEFAULT '0',
-  `change_password` TINYINT(1) NOT NULL '0',
+  `change_password` TINYINT(1) NOT NULL DEFAULT '0',
   `last_login` DATETIME NULL,
   `last_ping` DATETIME NULL,
   `ip` VARCHAR(191) NULL,

@@ -29,9 +29,6 @@ class Base:
     ####################
     # INTERNAL METHODS #
     ####################
-    def check_db_exists(self, db):
-        return self._sql.check_db_exists(db)
-
     def get_variables(self):
         return self._sql.get_variables()
 
