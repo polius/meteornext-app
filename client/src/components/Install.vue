@@ -76,10 +76,28 @@
               <v-flex xs12>
                 <div style="padding-bottom:5px" class="subtitle-1">A database named <span style="font-weight:500; color:white">{{ sql['database'] }}</span> already exists in this server.</div>
                 <div style="padding-bottom:10px" class="subtitle-1">Which action do you want to perform?</div>
+                <v-radio-group v-model="installOption" hide-details style="margin-top:0px; margin-bottom:20px">
+                  <v-radio value="install" color="primary">
+                    <template v-slot:label>
+                      <div style="margin-left:5px">
+                        <div class="body-1 white--text">Install Meteor Next</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Recreate the database with a fresh Meteor Next installation.</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="use" color="primary">
+                    <template v-slot:label>
+                      <div style="margin-left:5px">
+                        <div class="body-1 white--text">Update Meteor Next</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Use this option if the current database contains an existing Meteor Next installation.</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
                 <v-divider></v-divider>
                 <div style="margin-top:20px">
-                  <v-btn :loading="loading" color="#00b16a" @click="installDialogSubmit(false)">Use the existing database</v-btn>
-                  <v-btn :disabled="loading" color="#EF5354" @click="installDialogSubmit(true)" style="margin-left:5px">Recreate the database</v-btn>
+                  <v-btn :disabled="loading" color="#00b16a" @click="installDialogSubmit(installOption == 'install')">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="installDialog = false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -113,6 +131,7 @@
 
       // Install Dialog
       installDialog: false,
+      installOption: 'install',
 
       // Install Available
       available: false,
