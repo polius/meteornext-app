@@ -302,12 +302,14 @@ class Restore:
             size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
             url = request.form['url']
+            create_database = json.loads(data['createDatabase'])
 
         elif data['mode'] == 'url':
             source = data['source']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             url = data['url']
+            create_database = data['createDatabase']
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
@@ -322,6 +324,7 @@ class Restore:
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
             url = data['url']
+            create_database = data['createDatabase']
 
         # Build Item
         item = {
@@ -335,7 +338,7 @@ class Restore:
             'server_name': server['name'],
             'region_name': region['name'],
             'database': data['database'],
-            'create_database': json.loads(data['createDatabase']),
+            'create_database': create_database,
             'status': 'IN PROGRESS',
             'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,

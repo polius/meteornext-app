@@ -7,15 +7,15 @@
             <v-slide-y-transition mode="out-in">
               <v-card style="border-radius:5px">
                 <v-card-text>
-                  <v-avatar :size="150" style="margin-top:10px"><img :src="require('../assets/logo.png')" /></v-avatar>
+                  <v-avatar :size="130" style="margin-top:10px"><img :src="require('../assets/logo.png')" /></v-avatar>
                   <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px"><span style="font-weight:500">Meteor</span> Next</div>
                   <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">INSTALL</div>
                   <v-divider></v-divider>
                   <!-- LICENSE -->
                   <v-form ref="formLicense" v-show="installPart == 'license'">
                     <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">LICENSE</div>
-                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
-                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
+                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
+                    <v-text-field filled v-model="license.key" name="key" label="Key" required type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                   </v-form>
                   <!-- SQL -->
                   <v-form ref="formSQL" v-show="installPart == 'sql'">
@@ -43,8 +43,8 @@
                   <!-- ACCOUNT -->
                   <v-form ref="formAccount" v-show="installPart == 'account'">
                     <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">ADMIN ACCOUNT</div>
-                    <v-text-field autofocus filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
-                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <v-text-field autofocus filled v-model="account.username" name="username" label="Username" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
+                    <v-text-field filled v-model="account.password" name="password" label="Password" required type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
                   </v-form>
                   <!-- SUBMIT BUTTON -->
                   <v-row no-gutters>
