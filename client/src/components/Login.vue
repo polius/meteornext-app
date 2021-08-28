@@ -7,7 +7,7 @@
             <v-slide-y-transition mode="out-in">
               <v-card style="border-radius:5px;">
                 <v-card-text>
-                  <v-avatar :size="150" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
+                  <v-avatar :size="130" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
                   <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px;"><span style="font-weight:500">Meteor</span> Next</div>
                   <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">LOGIN</div>
                   <v-divider></v-divider>
