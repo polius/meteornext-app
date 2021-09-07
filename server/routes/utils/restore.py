@@ -337,7 +337,7 @@ class Restore:
             'server_id': data['server'],
             'server_name': server['name'],
             'region_name': region['name'],
-            'database': data['database'],
+            'database': data['database'].strip(),
             'create_database': create_database,
             'status': 'IN PROGRESS',
             'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
