@@ -21,7 +21,7 @@ var SqlHighlightRules = function() {
     );
 
     var dataTypes = (
-        "int|numeric|decimal|date|varchar|char|bigint|float|double|bit|binary|text|set|timestamp|" +
+        "int|numeric|decimal|date|varchar|char|bigint|float|double|bit|binary|text|timestamp|" +
         "money|real|number|integer|unsigned|time|datetime|tinyint|fulltext"
     );
 
