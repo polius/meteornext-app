@@ -24,8 +24,10 @@ class Deployments:
         else:
             name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
             all_executions = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
+            active_release = 'AND (r.active = 1 OR r.active IS NULL)'
             args = { 'user_id': user_id }
             if dfilter is not None:
+                active_release = ''
                 if 'name' in dfilter and len(dfilter['name']) > 0:
                     name = "AND d.name = %(name)s"
                     args['name'] = dfilter['name']
@@ -80,11 +82,12 @@ class Deployments:
                     JOIN (SELECT @cnt := 0) t
                     WHERE status = 'QUEUED'
                 ) q ON q.deployment_id = d.id
-                WHERE (r.active = 1 OR r.active IS NULL)
-                {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}
-                {11}
+                WHERE 1=1
+                {0}
+                {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11}
+                {12}
                 ORDER BY created DESC, id DESC
-            """.format(name, release, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to, all_executions)
+            """.format(active_release, name, release, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to, all_executions)
         return self._sql.execute(query, args)
 
     def post(self, user_id, deployment):
