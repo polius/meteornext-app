@@ -79,22 +79,26 @@
     <!----------------->
     <v-dialog v-model="killDialog" max-width="50%">
       <v-card>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">KILL QUERIES</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="loading" @click="killDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">Kill queries</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to kill the selected queries?</div>
+                <v-form ref="form" style="margin-bottom:15px">
+                  <div class="body-1">Are you sure you want to kill the selected queries?</div>
                   <v-checkbox v-model="killDialogCheckbox" label="Terminate the connection" hide-details style="margin-top:15px;"></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="killQuerySubmit" color="#00b16a">Kill</v-btn>
+                    <v-col cols="auto" style="margin-right:5px">
+                      <v-btn :loading="loading" @click="killQuerySubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn :disabled="loading" @click="killDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
