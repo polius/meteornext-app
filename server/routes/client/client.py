@@ -268,12 +268,12 @@ class Client:
                     conn.commit()
                     execution.append(result)
                     # Track query
-                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or query.strip()[:6].upper() != 'SELECT'):
+                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
                     # Track query
-                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or query.strip()[:6].upper() != 'SELECT'):
+                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
                     errors = True
                     result = {'query': query, 'database': database, 'error': str(e)}
