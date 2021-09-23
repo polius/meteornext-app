@@ -122,39 +122,42 @@ class Environments:
             """
             return self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['shared'], environment['owner_id']))[0]['exist'] == 1
 
-    def get_servers(self, group_id=None):
-        if group_id is not None:
+    def get_servers(self, group_id, owner_id=None):
+        if owner_id is not None:
             query = """
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 WHERE r.group_id = %s
+                AND (s.shared = 1 OR s.owner_id = %s)
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, owner_id))
         else:
             query = """
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
+                WHERE r.group_id = %s
+                AND s.shared = 1
             """
-            return self._sql.execute(query)
+            return self._sql.execute(query, (group_id))
 
-    def get_environment_servers(self, group_id=None):
-        if group_id is not None:
+    def get_environment_servers(self, group_id, owner_id=None):
+        if owner_id is not None:
             query = """
                 SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
                 FROM environment_servers es
                 JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
-                JOIN servers s ON s.id = es.server_id
+                JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %s)
                 LEFT JOIN regions r ON r.id = s.region_id
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, owner_id))
         else:
             query = """
                 SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
                 FROM environment_servers es
-                JOIN environments e ON e.id = es.environment_id
-                JOIN servers s ON s.id = es.server_id
+                JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
+                JOIN servers s ON s.id = es.server_id AND s.shared = 1
                 LEFT JOIN regions r ON r.id = s.region_id
             """
-            return self._sql.execute(query)
+            return self._sql.execute(query, (group_id))
