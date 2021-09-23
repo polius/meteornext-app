@@ -74,7 +74,10 @@ class Environments:
                 return jsonify({'message': 'Missing "group_id" parameter'}), 400
 
             # Get environments servers
-            return jsonify({'servers': self._environments.get_servers(request.args['group_id']), 'environment_servers': self._environments.get_environment_servers(request.args['group_id'])})
+            owner_id = None if 'owner_id' not in request.args else request.args['owner_id']
+            servers = self._environments.get_servers(request.args['group_id'], owner_id)
+            environment_servers = self._environments.get_environment_servers(request.args['group_id'], owner_id)
+            return jsonify({'servers': servers, 'environment_servers': environment_servers})
 
         return admin_environments_blueprint
 

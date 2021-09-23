@@ -205,17 +205,31 @@ export default {
   },
   methods: {
     groupChanged() {
+      this.treeviewItems = []
+      this.treeviewOpened = []
+      this.treeviewSelected = []
       this.item.owner_id = null
-      requestAnimationFrame(() => {
-        if (!this.item.shared) this.$refs.owner_id.focus()
-      })
-      if (this.item.group_id != null) {
+      if (this.item.shared) {
+        if (this.item.group_id != null) {
+          this.getServers()
+          this.getUsers()
+        }
+      }
+      else {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+          if (!this.item.shared) this.$refs.owner_id.focus()
+        })
         this.getUsers()
-        this.getServers()
       }
     },
     ownerChanged() {
-      this.treeviewSelected = []
+      if (!this.item.shared) {
+        this.treeviewItems = []
+        this.treeviewOpened = []
+        this.treeviewSelected = []
+        this.getServers()
+      }
     },
     getUsers() {
       axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
@@ -228,7 +242,7 @@ export default {
         })
     },
     getServers() {
-      axios.get('/admin/inventory/environments/servers', { params: { group_id: this.item.group_id }})
+      axios.get('/admin/inventory/environments/servers', { params: { group_id: this.item.group_id, owner_id: this.item.owner_id }})
         .then((response) => {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.treeviewItems = this.parseTreeView(response.data.servers)
