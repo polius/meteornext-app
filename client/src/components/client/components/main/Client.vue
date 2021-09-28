@@ -1064,7 +1064,7 @@ export default {
       let editable = true
       let found = false
       for (let line of beautified.split('\n')) {
-        if (line.startsWith('FROM')) {
+        if (line.substring(0,4).toLowerCase().startsWith('from')) {
           // Extract DB & Table
           let raw = line.slice(5).replace(',','').replace(';','').split('`')
           if (raw[0].slice(-1) == '.') raw[0] = raw[0].slice(0, -1)

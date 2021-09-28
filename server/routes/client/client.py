@@ -721,7 +721,7 @@ class Client:
 
         @client_blueprint.route('/client/pks', methods=['GET'])
         @jwt_required()
-        def client_columns_method():
+        def client_pks_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
