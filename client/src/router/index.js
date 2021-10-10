@@ -215,7 +215,7 @@ let router = new VueRouter({
           path: '',
           name: 'client',
           component: () => import('../components/client/Client'),
-          meta: { requiresClient: true },
+          meta: { requiresClient: true, keepAlive: true },
         }
       ]
     },

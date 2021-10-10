@@ -1129,6 +1129,22 @@ export default {
         }
       })
       current.clientItems = itemsToLoad
+      // Check if the query needs to reload objects.
+      let needReload = false
+      for (let query of payload.queries) {
+        if (
+          ['create','drop'].some(x => query.trim().toLowerCase().startsWith(x)) &&
+          !(['create user','drop user'].some(x => query.trim().toLowerCase().startsWith(x)))
+        ) {
+          needReload = true
+          break
+        }
+      }
+      if (needReload) {
+        new Promise((resolve, reject) => {
+          EventBus.$emit('refresh-sidebar-objects', resolve, reject)
+        }).finally(() => { this.editor.focus() })
+      }
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()

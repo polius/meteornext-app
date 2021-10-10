@@ -415,6 +415,7 @@ export default {
     },
     getContent(force) {
       if (!force && this.contentConnection == this.sidebarSelected[0]['id']) return
+      if (force) this.contentSearchColumn = ''
       this.sidebarLoadingObject = true
       this.contentSortState = []
       this.bottomBar.content = { status: '', text: '', info: '' }
@@ -473,11 +474,9 @@ export default {
         headers = headers.map(x => (x.colId == this.contentSortState[0].colId ? {...x, sort: this.contentSortState[0].sort} : x))
       }
 
-      // Reassign headers if some value has changed
-      if (this.contentHeaders.length == 0 || this.contentHeaders.length != headers.length || !(this.contentHeaders.every(x => headers.some(y => y.colId == x.colId)))) {
-        this.gridApi.content.setColumnDefs([])
-        this.contentHeaders = headers
-      }
+      // Load table header
+      this.gridApi.content.setColumnDefs([])
+      this.contentHeaders = headers
 
       // Build Items
       this.contentItems = items

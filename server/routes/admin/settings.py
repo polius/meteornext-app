@@ -132,7 +132,9 @@ class Settings:
         s = self._settings.get()
 
         # Get License Settings
-        settings['license'] = self._settings_conf['license']
+        settings['license'] = {}
+        settings['license']['email'] = self._settings_conf['license']['email']
+        settings['license']['key'] = self._settings_conf['license']['key']
         settings['license']['expiration'] = self._license.status['expiration']
 
         # Get SQL Settings

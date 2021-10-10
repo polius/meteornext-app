@@ -250,7 +250,8 @@ export default {
     this.getEnvironments()
     this.getCode()
   },
-  mounted() {
+  activated() {
+    if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
     requestAnimationFrame(() => this.$refs.name.focus())
   },
   methods: {

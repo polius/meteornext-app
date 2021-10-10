@@ -285,7 +285,8 @@ export default {
     this.getReleases()
     this.getEnvironments()
   },
-  mounted() {
+  activated() {
+    if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
     requestAnimationFrame(() => this.$refs.name.focus())
   },
   methods: {
