@@ -156,10 +156,18 @@ export default {
       'connections',
       'settings',
     ], { path: 'client/client' }),
-    ...mapFields(['server'], { path: 'client/connection' }),
+    ...mapFields([
+      'gridApi',
+      'editor',
+    ], { path: 'client/components' }),
+    ...mapFields([
+      'server',
+      'clientExecuting',
+      'bottomBar',
+    ], { path: 'client/connection' }),
   },
   beforeMount() {
-    window.addEventListener('beforeunload', this.beforeUnload)
+    // window.addEventListener('beforeunload', this.beforeUnload)
   },
   created() {
     this.getSettings()
@@ -168,8 +176,18 @@ export default {
     EventBus.$on('send-notification', this.notification);
   },
   beforeDestroy() {
-    EventBus.$off()
-    this.$store.dispatch('client/reset')
+    // EventBus.$off()
+    // this.$store.dispatch('client/reset')
+    // window.removeEventListener('beforeunload', this.beforeUnload)
+  },
+  activated () {
+    window.addEventListener('beforeunload', this.beforeUnload)
+    this.clientExecuting = null
+    if (this.gridApi.client != null) this.gridApi.client.showNoRowsOverlay()
+    if (this.bottomBar.client['status'] == 'executing') this.bottomBar.client = { text: '', status: '', info: '' }
+    if (this.editor != null) this.editor.focus()
+  },
+  deactivated () {
     window.removeEventListener('beforeunload', this.beforeUnload)
   },
   // eslint-disable-next-line

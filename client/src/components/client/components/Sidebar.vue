@@ -259,7 +259,7 @@ export default {
       }
     },
     sidebarClicked(event, item) {
-      if (this.sidebarLoadingServer | this.sidebarLoadingObject) return
+      if (this.sidebarLoadingServer || this.sidebarLoadingObject) return
       this.clickHandler(event, item)
       return new Promise ((resolve) => {
         if (this.sidebarClick) {

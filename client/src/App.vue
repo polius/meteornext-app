@@ -72,7 +72,10 @@
         <v-icon>fas fa-sign-out-alt</v-icon>
       </v-btn>
     </v-app-bar>
-    <router-view/>
+    <keep-alive>
+      <router-view v-if="$route.meta.keepAlive"/>
+    </keep-alive>
+    <router-view v-if="!$route.meta.keepAlive"/>
     <v-navigation-drawer temporary right v-model="rightDrawer" fixed app style="width:320px;">
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
