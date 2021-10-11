@@ -140,10 +140,17 @@ class Deployments:
 
     def getExecutions(self, deployment_id):
         query = """
-            SELECT e.id, env.name AS 'environment', e.mode, e.method, e.status, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+            SELECT e.id, env.name AS 'environment', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
             FROM executions e
+            JOIN deployments d ON d.id = e.deployment_id AND d.id = %(deployment_id)s
             LEFT JOIN environments env ON env.id = e.environment_id
-            WHERE e.deployment_id = %(deployment_id)s
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                FROM executions
+                JOIN (SELECT @cnt := 0) t
+                WHERE status = 'QUEUED'
+            ) q ON q.deployment_id = d.id
             ORDER BY e.created DESC
         """
         return self._sql.execute(query, {'deployment_id': deployment_id})
