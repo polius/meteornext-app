@@ -24,11 +24,11 @@
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
-          <v-card :height="maxHeight" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
-            <v-img height="10px" :class="servers[i*align+j].color"></v-img>
-            <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
+          <v-card :height="maxHeight" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == '#009688' ? 'Server available' : servers[i*align+j].color == '#ffa600' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
+            <div height="10px" :style="`height:10px; background-color:${servers[i*align+j].color}`"></div>
+            <v-progress-linear v-if="servers[i*align+j].color == '#ffa600'" indeterminate color="#ffa600" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <div style="padding:16px">
-              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; font-weight:400; font-size:1.1rem!important;"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
+              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; font-weight:400; font-size:1.1rem!important;"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="#ffa600" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
               <p class="body-2" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0px;">{{servers[i*align+j].region}}</p>
             </div>
             <v-divider></v-divider>
@@ -55,14 +55,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-row no-gutters>
-                    <v-col style="margin-right:5px">
-                      <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 9 || '']" label="Data Collection Interval (seconds)" required hide-details></v-text-field>
-                    </v-col>
-                    <v-col style="margin-left:5px">
-                      <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
-                    </v-col>
-                  </v-row>
+                  <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
                   <div style="margin-top:15px">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
@@ -392,7 +385,7 @@
             let pending = (servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available']))
             if (pending == 1) pending_servers = true
             // Get Status Color
-            let color = (pending == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : '#EF5354'
+            let color = (pending == 1) ? '#ffa600' : (servers[i]['available']) ? '#009688' : '#EF5354'
             // Build Item
             let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], available: servers[i]['available'], error: servers[i]['error'], connections: conn, color: color}
             this.servers_origin.push(item)
@@ -481,7 +474,8 @@
         // Update settings
         this.settings.monitor_slack_url = this.settings.monitor_slack_url != null && this.settings.monitor_slack_url.trim().length == 0 ? null : this.settings.monitor_slack_url
         this.settings.monitor_base_url = window.location.origin
-        const payload = this.settings
+        let payload = JSON.parse(JSON.stringify(this.settings))
+        delete payload.monitor_interval
         axios.put('/monitoring/settings', payload)
           .then((response) => {
             this.align = this.settings.monitor_align
@@ -511,9 +505,9 @@
         // Apply Filter
         for (let i = 0; i < this.servers_origin.length; ++i) {
           if (this.filter == 'All') servers.push(this.servers_origin[i])
-          else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Available' && this.servers_origin[i]['color'] == '#009688') servers.push(this.servers_origin[i])
           else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == '#EF5354') servers.push(this.servers_origin[i])
-          else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == '#ffa600') servers.push(this.servers_origin[i])
         }
         // Apply Search
         servers = servers.filter(x => x['name'].toLowerCase().includes(this.search.toLowerCase()) || x['region'].toLowerCase().includes(this.search.toLowerCase()) || x['hostname'].toLowerCase().includes(this.search.toLowerCase()))

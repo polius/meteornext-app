@@ -125,6 +125,16 @@ class Servers:
         """
         self._sql.execute(query, (server_id, group_id, user_id))
 
+        # Delete from 'client_queries'
+        query = """
+            DELETE cq
+            FROM client_queries cq
+            JOIN servers s ON s.id = cq.server_id AND s.id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
+        """
+        self._sql.execute(query, (server_id, group_id, user_id)) 
+
         # Delete from 'servers'
         query = """
             DELETE s

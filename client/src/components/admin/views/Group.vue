@@ -137,7 +137,9 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.monitoring_enabled" label="Access Monitoring" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.monitoring_enabled" label="Access Monitoring" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
+                <v-text-field v-model="group.monitoring_interval" :rules="[v => v == parseInt(v) && v > 9 || '']" label="Data Collection Interval (seconds)" required></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -181,7 +183,8 @@
                 <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">TRACKING</div>
                 <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
-                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECTs)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
+                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
+                <v-select v-if="group.client_tracking" v-model="group.client_tracking_filter" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Succeeded'}, {id: 3, name: 'Failed'}]" item-value="id" item-text="name" label="Tracking Filter" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
                 <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Tracking Retention Days" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-text-field>
               </v-card-text>
             </v-card>
@@ -290,6 +293,7 @@ export default {
       deployments_slack_name: '',
       deployments_slack_url: '',
       monitoring_enabled: false,
+      monitoring_interval: 10,
       utils_enabled: false,
       utils_restore_limit: null,
       utils_slack_enabled: false,
@@ -299,6 +303,7 @@ export default {
       client_tracking: false,
       client_tracking_retention: 1,
       client_tracking_mode: 1,
+      client_tracking_filter: 1,
     },
     toolbar_title: '',
     form_valid: false,

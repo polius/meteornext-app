@@ -71,7 +71,7 @@ const connection = () => {
     infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
     infoConnection: null,
 
-    // Objecs
+    // Objects
     tabObjectsSelected: 'tables',
     objectsHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
     objectsItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
