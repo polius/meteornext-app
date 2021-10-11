@@ -22,10 +22,10 @@ class Groups:
 
     def post(self, user_id, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_timeout, deployments_execution_concurrent, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, utils_enabled, utils_restore_limit, utils_slack_enabled, utils_slack_name, utils_slack_url, client_enabled, client_tracking, client_tracking_retention, client_tracking_mode, created_by, created_at)
+            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_timeout, deployments_execution_concurrent, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, monitoring_interval, utils_enabled, utils_restore_limit, utils_slack_enabled, utils_slack_name, utils_slack_url, client_enabled, client_tracking, client_tracking_retention, client_tracking_mode, client_tracking_filter, created_by, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['utils_restore_limit'], group['utils_slack_enabled'], group['utils_slack_name'], group['utils_slack_url'], group['client_enabled'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['monitoring_interval'], group['utils_enabled'], group['utils_restore_limit'], group['utils_slack_enabled'], group['utils_slack_name'], group['utils_slack_url'], group['client_enabled'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], group['client_tracking_filter'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def clone_inventory(self, user_id, source_group_id, target_group_id):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -102,6 +102,7 @@ class Groups:
             deployments_slack_name = %s,
             deployments_slack_url = %s,
             monitoring_enabled = %s,
+            monitoring_interval = %s,
             utils_enabled = %s,
             utils_restore_limit = %s,
             utils_slack_enabled = %s,
@@ -111,11 +112,12 @@ class Groups:
             client_tracking = %s,
             client_tracking_retention = %s,
             client_tracking_mode = %s,
+            client_tracking_filter = %s,
             updated_by = %s,
             updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['utils_restore_limit'], group['utils_slack_enabled'], group['utils_slack_name'], group['utils_slack_url'], group['client_enabled'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
+        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['monitoring_interval'], group['utils_enabled'], group['utils_restore_limit'], group['utils_slack_enabled'], group['utils_slack_name'], group['utils_slack_url'], group['client_enabled'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], group['client_tracking_filter'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
         self._sql.execute("UPDATE executions JOIN environments e ON e.id = executions.environment_id AND e.group_id = %s SET executions.environment_id = NULL", (group))

@@ -162,6 +162,7 @@ export default {
     ], { path: 'client/components' }),
     ...mapFields([
       'server',
+      'sidebarMode',
       'clientExecuting',
       'bottomBar',
     ], { path: 'client/connection' }),
@@ -183,6 +184,7 @@ export default {
   activated () {
     window.addEventListener('beforeunload', this.beforeUnload)
     this.clientExecuting = null
+    if (this.sidebarMode == 'servers') new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
     if (this.gridApi.client != null) this.gridApi.client.showNoRowsOverlay()
     if (this.bottomBar.client['status'] == 'executing') this.bottomBar.client = { text: '', status: '', info: '' }
     if (this.editor != null) this.editor.focus()

@@ -31,6 +31,7 @@ CREATE TABLE `groups` (
   `deployments_slack_name` VARCHAR(191) NULL,
   `deployments_slack_url` VARCHAR(191) NULL,
   `monitoring_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `monitoring_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `utils_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `utils_restore_limit` BIGINT UNSIGNED NULL,
   `utils_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
@@ -40,6 +41,7 @@ CREATE TABLE `groups` (
   `client_tracking` tinyint(1) NOT NULL DEFAULT '0',
   `client_tracking_retention` INT UNSIGNED NOT NULL DEFAULT '1',
   `client_tracking_mode` INT UNSIGNED NOT NULL DEFAULT '1',
+  `client_tracking_filter` INT UNSIGNED NOT NULL DEFAULT '1',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -356,7 +358,6 @@ CREATE TABLE `monitoring` (
 CREATE TABLE `monitoring_settings` (
   `user_id` INT UNSIGNED NOT NULL,
   `monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
-  `monitor_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `monitor_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
   `monitor_slack_url` VARCHAR(191) NULL,
   `monitor_base_url` VARCHAR(191) NOT NULL,

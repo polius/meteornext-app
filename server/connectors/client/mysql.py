@@ -96,7 +96,12 @@ class MySQL:
             pass
 
     def execute(self, query, args=None, database=None, fetch=True, import_file=False):
-        self._is_executing = True
+        # Wait if another query is executing
+        while True:
+            if not self._is_executing:
+                self._is_executing = True
+                break
+            time.sleep(1)
         # Check connection
         try:
             self._sql.ping(reconnect=False)
