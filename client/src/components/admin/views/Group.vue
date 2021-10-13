@@ -11,7 +11,7 @@
           <v-form ref="form" v-model="form_valid">
             <v-alert v-if="mode == 'clone'" dense color="#fb8c00"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>The shared inventory (Servers, Regions, Environments, Auxiliary connections) related to this group will be cloned as well.</v-alert>
             <!-- INFO -->
-            <v-text-field :disabled="loading" ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
+            <v-text-field :disabled="loading" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;" autofocus></v-text-field>
             <v-text-field :disabled="loading" v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
             <v-text-field :disabled="loading" v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="padding-top:0px; margin-top:0px;"></v-text-field>
             <v-text-field :disabled="loading" v-model="group.coins_max" label="Maximum coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
@@ -528,7 +528,6 @@ export default {
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.focus !== 'undefined') this.$refs.focus.focus()
       })
     }
   }
