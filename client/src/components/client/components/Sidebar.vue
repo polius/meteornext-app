@@ -211,6 +211,9 @@ export default {
     EventBus.$on('change-database', this.databaseChanged);
     this.$refs.server.focus()
   },
+  activated() {
+    if (this.sidebarMode == 'servers') this.$refs.server.focus()
+  },
   watch: {
     dialog: function(val) {
       this.dialogOpened = val
