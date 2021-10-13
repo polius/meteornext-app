@@ -55,7 +55,7 @@ class deploy_blueprint:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('blueprint.py'):
                     found = True
-                    current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
+                    current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                     break
             if not found:
                 current_thread.critical.append(str(e))
@@ -183,7 +183,7 @@ class deploy_blueprint:
                     for frame in reversed(inner_frames):
                         if frame.filename.endswith('blueprint.py'):
                             found = True
-                            current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
+                            current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                             break
                     if not found:
                         current_thread.critical.append(str(e))
@@ -252,7 +252,7 @@ class deploy_blueprint:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('blueprint.py'):
                     found = True
-                    current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
+                    current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                     break
             if not found:
                 current_thread.critical.append(str(e))
