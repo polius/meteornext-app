@@ -1,3 +1,4 @@
+import uuid
 import time
 import tempfile
 import logging
@@ -26,7 +27,7 @@ class MySQL:
         self._is_executing = False
         self._is_protected = False
         self._is_transaction = False
-        self._is_connecting = False
+        self._locks = []
 
     @property
     def last_execution(self):
@@ -53,7 +54,6 @@ class MySQL:
         return self._connection_id
 
     def connect(self):
-        self._is_connecting = True
         # Close existing connections
         self.close()
 
@@ -72,7 +72,7 @@ class MySQL:
             port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
             self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-            self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
+            self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
 
         except Exception:
             self.close()
@@ -80,7 +80,6 @@ class MySQL:
 
         finally:
             self.__close_ssl(ssl)
-            self._is_connecting = False
 
     def close(self):
         try:
@@ -98,15 +97,22 @@ class MySQL:
         except Exception:
             pass
 
-    def execute(self, query, args=None, database=None, fetch=True, import_file=False):
-        # Wait if another query is executing
-        while self._is_executing:
-            print("- executing...")
-            time.sleep(1)
+    def execute(self, query, args=None, database=None, fetch=True, import_file=False, skip_lock=False):
+        self._is_executing = True
+        if not skip_lock:
+            qid = str(uuid.uuid4())
+            self._locks.append(qid)
+            while self._locks[0] != qid:
+                print("- wait...")
+                time.sleep(1)
+
         # Check connection
-        self.ping()
         try:
-            self._is_executing = True
+            self._sql.ping(reconnect=False)
+        except Exception:
+            self.connect()
+
+        try:
             # Check transaction
             if not import_file:
                 if query.strip()[:17].upper().startswith('START TRANSACTION') or query.strip()[:5].upper().startswith('BEGIN'):
@@ -119,19 +125,8 @@ class MySQL:
             self._last_execution = time.time()
             self._is_executing = False
             self._is_protected = False
-
-    def ping(self):
-        # Check connection
-        try:
-            self._sql.ping(reconnect=False)
-        except Exception:
-            if self._is_connecting:
-                while self._is_connecting:
-                    print("- connecting...")
-                    time.sleep(1)
-                self.ping()
-            else:
-                self.connect()
+            if not skip_lock:
+                del self._locks[0]
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database
