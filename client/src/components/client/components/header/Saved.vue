@@ -122,7 +122,7 @@ export default {
       'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-saved', this.showDialog);
   },
   watch: {

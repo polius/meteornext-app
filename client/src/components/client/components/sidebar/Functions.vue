@@ -97,8 +97,8 @@ export default {
       'tableItems',
     ], { path: 'client/connection' }),
   },
-  mounted() {
-    EventBus.$on('click-contextmenu-function', this.contextMenuClicked);
+  activated() {
+    EventBus.$on('click-contextmenu-function', this.contextMenuClicked)
   },
   watch: {
     dialog (val) {

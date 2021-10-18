@@ -180,7 +180,7 @@ export default {
     columnsRaw: [],
   }),
   props: ['tab','groups','filter'],
-  mounted () {
+  mounted() {
     EventBus.$on('get-regions', this.getRegions);
     EventBus.$on('filter-regions', this.filterRegions);
     EventBus.$on('filter-region-columns', this.filterRegionColumns);

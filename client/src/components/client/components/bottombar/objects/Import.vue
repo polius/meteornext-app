@@ -99,7 +99,7 @@ export default {
       'database',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-import', this.showDialog);
   },
   watch: {

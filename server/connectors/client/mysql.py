@@ -26,6 +26,7 @@ class MySQL:
         self._is_executing = False
         self._is_protected = False
         self._is_transaction = False
+        self._is_connecting = False
 
     @property
     def last_execution(self):
@@ -52,6 +53,7 @@ class MySQL:
         return self._connection_id
 
     def connect(self):
+        self._is_connecting = True
         # Close existing connections
         self.close()
 
@@ -78,6 +80,7 @@ class MySQL:
 
         finally:
             self.__close_ssl(ssl)
+            self._is_connecting = False
 
     def close(self):
         try:
@@ -97,17 +100,13 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, fetch=True, import_file=False):
         # Wait if another query is executing
-        while True:
-            if not self._is_executing:
-                self._is_executing = True
-                break
+        while self._is_executing:
+            print("- executing...")
             time.sleep(1)
         # Check connection
+        self.ping()
         try:
-            self._sql.ping(reconnect=False)
-        except Exception:
-            self.connect()
-        try:
+            self._is_executing = True
             # Check transaction
             if not import_file:
                 if query.strip()[:17].upper().startswith('START TRANSACTION') or query.strip()[:5].upper().startswith('BEGIN'):
@@ -120,6 +119,19 @@ class MySQL:
             self._last_execution = time.time()
             self._is_executing = False
             self._is_protected = False
+
+    def ping(self):
+        # Check connection
+        try:
+            self._sql.ping(reconnect=False)
+        except Exception:
+            if self._is_connecting:
+                while self._is_connecting:
+                    print("- connecting...")
+                    time.sleep(1)
+                self.ping()
+            else:
+                self.connect()
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database

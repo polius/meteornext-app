@@ -95,7 +95,7 @@ export default {
       'server',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-variables', this.showDialog);
   },
   watch: {

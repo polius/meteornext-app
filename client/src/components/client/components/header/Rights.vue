@@ -233,7 +233,7 @@ export default {
       'rightsLoading',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-rights', this.showDialog);
     EventBus.$on('reload-rights', this.reloadRights);
     EventBus.$on('get-rights', this.getRights);

@@ -103,7 +103,7 @@ class query_template:
 
                     elif t["type"] == "Table_Level.Truncate":
                         # Check Table
-                        table_name = query_string.split(" ")[2]
+                        table_name = query_string.split(" ")[2] if query_lower.split(" ")[1] == 'table' else query_string.split(" ")[1]
                         table_name = table_name[:-1] if table_name.endswith(';') else table_name
                         exists = connection.check_table_exists(database_name, table_name)
                         if not exists:

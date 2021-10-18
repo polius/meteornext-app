@@ -112,8 +112,8 @@ export default {
       'tabStructureSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
-    EventBus.$on('click-contextmenu-table', this.contextMenuClicked);
+  activated() {
+    EventBus.$on('click-contextmenu-table', this.contextMenuClicked)
   },
   watch: {
     dialog (val) {

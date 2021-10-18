@@ -165,42 +165,30 @@ export default {
       'sidebarMode',
       'clientExecuting',
       'bottomBar',
+      'database',
     ], { path: 'client/connection' }),
-  },
-  beforeMount() {
-    // window.addEventListener('beforeunload', this.beforeUnload)
   },
   created() {
     this.getSettings()
   },
-  mounted() {
+  activated() {
     EventBus.$on('send-notification', this.notification);
-  },
-  beforeDestroy() {
-    // EventBus.$off()
-    // this.$store.dispatch('client/reset')
-    // window.removeEventListener('beforeunload', this.beforeUnload)
-  },
-  activated () {
     window.addEventListener('beforeunload', this.beforeUnload)
-    this.clientExecuting = null
-    if (this.sidebarMode == 'servers') new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
-    if (this.gridApi.client != null) this.gridApi.client.showNoRowsOverlay()
-    if (this.bottomBar.client['status'] == 'executing') this.bottomBar.client = { text: '', status: '', info: '' }
-    if (this.editor != null) this.editor.focus()
+    if (this.editor != null && this.database.length > 0) this.editor.focus()
   },
-  deactivated () {
+  deactivated() {
+    EventBus.$off()
     window.removeEventListener('beforeunload', this.beforeUnload)
   },
   // eslint-disable-next-line
-  beforeRouteLeave(to, from, next) {
-    if (to.name == 'login') next()
-    else {
-      const answer = window.confirm('Close Meteor Next - Client?')
-      if (answer) next()
-      else next(false)
-    }
-  },
+  // beforeRouteLeave(to, from, next) {
+  //   if (to.name == 'login') next()
+  //   else {
+  //     const answer = window.confirm('Close Meteor Next - Client?')
+  //     if (answer) next()
+  //     else next(false)
+  //   }
+  // },
   methods: {
     getSettings() {
       axios.get('/client/settings')
@@ -210,7 +198,7 @@ export default {
           for (let row of data) this.settings[row.setting] = row.value
         })
         .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.go('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },

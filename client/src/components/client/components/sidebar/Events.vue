@@ -203,7 +203,7 @@ export default {
       'tableItems',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('click-contextmenu-event', this.contextMenuClicked);
   },
   watch: {

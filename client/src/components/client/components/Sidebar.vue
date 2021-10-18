@@ -203,16 +203,14 @@ export default {
   created() {
     new Promise((resolve, reject) => this.getServers(resolve, reject))
   },
-  mounted() {
+  activated() {
     EventBus.$on('execute-sidebar', this.execute);
     EventBus.$on('get-sidebar-servers', this.getServers);
     EventBus.$on('get-sidebar-objects', this.getObjects);
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
     EventBus.$on('change-database', this.databaseChanged);
-    this.$refs.server.focus()
-  },
-  activated() {
     if (this.sidebarMode == 'servers') this.$refs.server.focus()
+    else if (this.database.length == 0) this.$refs.database.focus()
   },
   watch: {
     dialog: function(val) {

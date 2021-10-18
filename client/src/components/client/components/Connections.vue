@@ -133,10 +133,10 @@ export default {
       'dialogOpened',
     ], { path: 'client/client' }),
   },
-  mounted() {
+  activated() {
     document.addEventListener("keydown", this.listeners, false)
   },
-  beforeDestroy() {
+  deactivated() {
     document.removeEventListener("keydown", this.listeners, false)
   },
   methods: {

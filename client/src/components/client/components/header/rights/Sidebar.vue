@@ -80,7 +80,7 @@ export default {
     }
   },
   props: { dialog: Boolean },
-  mounted() {
+  activated() {
     EventBus.$on('focus-search-bar', this.focusSearchBar);
   },
   computed: {

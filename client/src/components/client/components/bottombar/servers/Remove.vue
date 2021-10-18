@@ -60,7 +60,7 @@ export default {
       'sidebarOpened',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-servers-remove', this.removeServer)
   },
   watch: {

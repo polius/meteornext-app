@@ -62,7 +62,7 @@ export default {
       'sidebarSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-servers-rename-folder', this.renameFolder)
   },
   watch: {

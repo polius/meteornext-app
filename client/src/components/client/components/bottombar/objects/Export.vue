@@ -216,7 +216,7 @@ export default {
       'objectsItems',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-export', this.showDialog);
   },
   watch: {
