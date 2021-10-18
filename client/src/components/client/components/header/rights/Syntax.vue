@@ -23,8 +23,10 @@ export default {
     ], { path: 'client/connection' }),
   },
   props: { tab: Number },
+  activated() {
+    EventBus.$on('reload-rights', this.reloadRights)
+  },
   mounted() {
-    EventBus.$on('reload-rights', this.reloadRights);
     // Init ACE Editor
     this.editor = ace.edit("rightsSyntax", {
       mode: "ace/mode/mysql",

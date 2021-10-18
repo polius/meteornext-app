@@ -167,7 +167,7 @@ export default {
     columnsRaw: [],
   }),
   props: ['tab','groups','filter'],
-  mounted () {
+  mounted() {
     EventBus.$on('get-environments', this.getEnvironments);
     EventBus.$on('filter-environments', this.filterEnvironments);
     EventBus.$on('filter-environment-columns', this.filterEnvironmentColumns);

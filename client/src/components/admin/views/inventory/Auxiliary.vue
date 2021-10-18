@@ -240,7 +240,7 @@ export default {
     columnsRaw: [],
   }),
   props: ['tab','groups','filter'],
-  mounted () {
+  mounted() {
     EventBus.$on('get-auxiliary', this.getAuxiliary);
     EventBus.$on('filter-auxiliary', this.filterAuxiliary);
     EventBus.$on('filter-auxiliary-columns', this.filterAuxiliaryColumns);

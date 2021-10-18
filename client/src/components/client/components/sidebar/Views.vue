@@ -93,7 +93,7 @@ export default {
       'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('click-contextmenu-view', this.contextMenuClicked);
   },
   watch: {

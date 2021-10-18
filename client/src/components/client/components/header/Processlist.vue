@@ -231,7 +231,7 @@ export default {
       'id',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-processlist', this.showDialog);
   },
   watch: {

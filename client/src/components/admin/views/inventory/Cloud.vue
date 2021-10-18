@@ -232,7 +232,7 @@ export default {
     columnsRaw: [],
   }),
   props: ['tab','groups','filter'],
-  mounted () {
+  mounted() {
     EventBus.$on('get-cloud', this.getCloud);
     EventBus.$on('filter-cloud', this.filterCloud);
     EventBus.$on('filter-cloud-columns', this.filterCloudColumns);

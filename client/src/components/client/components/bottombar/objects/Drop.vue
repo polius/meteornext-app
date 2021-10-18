@@ -70,7 +70,7 @@ export default {
       })
     },
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-drop', this.showDialog);
   },
   methods: {

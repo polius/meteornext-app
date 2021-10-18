@@ -31,8 +31,7 @@ export default {
       'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
-    // Register Event
+  activated() {
     EventBus.$on('get-info', this.getInfo);
   },
   methods: {

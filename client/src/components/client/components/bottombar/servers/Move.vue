@@ -65,7 +65,7 @@ export default {
       'sidebarOpened',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-servers-move', this.moveServer)
   },
   watch: {

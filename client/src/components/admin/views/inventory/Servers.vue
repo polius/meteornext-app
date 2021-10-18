@@ -263,7 +263,7 @@ export default {
     regions: [],
   }),
   props: ['tab','groups','filter'],
-  mounted () {
+  mounted() {
     EventBus.$on('get-servers', this.getServers);
     EventBus.$on('filter-servers', this.filterServers);
     EventBus.$on('filter-server-columns', this.filterServerColumns);

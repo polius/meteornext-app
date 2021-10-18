@@ -77,7 +77,7 @@ export default {
       'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-settings', this.showDialog)
     // Build shortcuts
     const isMacLike = navigator.platform.match(/(Mac|iPhone|iPod|iPad)/i) ? true : false

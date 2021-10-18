@@ -203,7 +203,7 @@ export default {
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
-  mounted () {
+  activated() {
     EventBus.$on('run-query', this.runQuery);
     EventBus.$on('explain-query', this.explainQuery);
     EventBus.$on('stop-query', this.stopQuery);
@@ -1025,7 +1025,7 @@ export default {
         .catch((error) => {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('client/logout').then(() => this.$store.dispatch('app/logout').then(() => this.$router.push('/login')))
           else {
             // Get Response Data
             let data = JSON.parse(error.response.data.data)

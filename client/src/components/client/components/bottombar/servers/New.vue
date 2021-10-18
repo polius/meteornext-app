@@ -192,7 +192,7 @@ export default {
     owner: function() { return this.$store.getters['app/owner'] },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-servers-new', this.newServer)
   },
   watch: {

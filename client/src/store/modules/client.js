@@ -148,6 +148,7 @@ const getters = {
 
 // ACTIONS
 const actions = {
+  logout({ commit }) { commit('logout') },
   reset({ commit }) { commit('reset') },
   newConnection({ commit }) { commit('newConnection') },
   changeConnection({ commit }, data) { commit('changeConnection', data) },
@@ -157,6 +158,11 @@ const actions = {
 
 // MUTATIONS
 const mutations = {
+  logout(state) {
+    state.connections[state.currentConn].clientExecuting = null
+    if (state.components.gridApi.client != null) state.components.gridApi.client.showNoRowsOverlay()
+    if (state.connections[state.currentConn].bottomBar.client['status'] == 'executing') state.connections[state.currentConn].bottomBar.client = { text: '', status: '', info: '' }
+  },
   reset(state) {
     Object.assign(state, getDefaultState())
   },

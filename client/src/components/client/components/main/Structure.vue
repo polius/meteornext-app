@@ -109,7 +109,7 @@ export default {
       'dialogOpened',
     ], { path: 'client/client' }),
   },
-  mounted () {
+  activated() {
     EventBus.$on('get-structure', this.getStructure);
     EventBus.$on('execute-structure', this.execute);
     EventBus.$on('stop-structure', this.stopExecution);

@@ -78,7 +78,7 @@ export default {
       })
     },
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-create', this.showDialog);
   },
   methods: {

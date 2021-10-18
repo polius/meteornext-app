@@ -90,7 +90,7 @@ export default {
       'rightsSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {

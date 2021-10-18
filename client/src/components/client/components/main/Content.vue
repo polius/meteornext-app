@@ -264,7 +264,7 @@ export default {
       'columnApi',
     ], { path: 'client/components' }),
   },
-  mounted () {
+  activated() {
     EventBus.$on('get-content', this.getContent);
   },
   watch: {

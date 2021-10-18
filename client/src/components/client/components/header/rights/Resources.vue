@@ -35,7 +35,7 @@ export default {
       'rightsForm',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {

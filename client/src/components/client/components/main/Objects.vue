@@ -61,8 +61,7 @@ export default {
       'bottomBar',
     ], { path: 'client/connection' }),
   },
-  mounted() {
-    // Register Event
+  activated() {
     EventBus.$on('get-objects', this.getObjects);
   },
   methods: {

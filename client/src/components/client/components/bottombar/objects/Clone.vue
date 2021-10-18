@@ -196,7 +196,7 @@ export default {
       'objectsItems',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-objects-clone', this.showDialog);
   },
   watch: {

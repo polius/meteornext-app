@@ -53,10 +53,10 @@ export default {
       'sidebarLoadingObject',
     ], { path: 'client/connection' }),
   },
-  mounted () {
-    // Register Event
-    EventBus.$on('get-info-procedure', this.getInfo);
-
+  activated() {
+    EventBus.$on('get-info-procedure', this.getInfo)
+  },
+  mounted() {
     // Init ACE Editor
     this.editor = ace.edit("infoProceduresEditor", {
       mode: "ace/mode/mysql",

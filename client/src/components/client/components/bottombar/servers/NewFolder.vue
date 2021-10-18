@@ -61,7 +61,7 @@ export default {
       'sidebarSelected'
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-bottombar-servers-new-folder', this.newFolder)
   },
   watch: {

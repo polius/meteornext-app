@@ -75,7 +75,7 @@ export default {
       'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  mounted() {
+  activated() {
     EventBus.$on('show-history', this.showDialog);
   },
   watch: {
