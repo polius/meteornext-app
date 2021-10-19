@@ -59,14 +59,14 @@
       <router-link v-if="admin" title="Administration" class="nav-link" to="/admin">
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
       </router-link>
-      <!-- FULL SCREEN -->
-      <v-btn icon :title="fullScreenEnabled ? 'Exit Full Screen' : 'Full Screen'" @click="fullScreen">
-        <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
-      </v-btn>
       <!-- DOCUMENTATION -->
       <a href="https://docs.meteor2.io" target="_blank" title="Documentation">
         <v-btn icon><v-icon style="font-size:22px">fas fa-question</v-icon></v-btn>
       </a>
+      <!-- FULL SCREEN -->
+      <v-btn icon :title="fullScreenEnabled ? 'Exit Full Screen' : 'Full Screen'" @click="fullScreen">
+        <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
+      </v-btn>
       <!-- LOGOUT -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
