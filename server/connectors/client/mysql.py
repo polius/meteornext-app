@@ -103,7 +103,6 @@ class MySQL:
             qid = str(uuid.uuid4())
             self._locks.append(qid)
             while self._locks[0] != qid:
-                print("- wait...")
                 time.sleep(1)
 
         # Check connection
