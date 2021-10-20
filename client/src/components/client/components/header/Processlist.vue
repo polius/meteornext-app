@@ -370,7 +370,7 @@ export default {
       // Reload new items
       this.items = data
       this.gridApi.setRowData(data)
-      this.rowCount = this.items.length
+      if (this.search.length == 0) this.rowCount = this.items.length
       // Apply selected / filtered nodes
       this.$nextTick(() => {
         this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
