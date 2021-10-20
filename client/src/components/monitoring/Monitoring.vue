@@ -208,7 +208,7 @@
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
           <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px;">
+        <v-card-text style="padding:0px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
