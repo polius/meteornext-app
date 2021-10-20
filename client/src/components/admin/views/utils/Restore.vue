@@ -398,7 +398,7 @@ export default {
       // Get Restores
       axios.get('/admin/utils/restore', { params: payload })
         .then((response) => {
-          this.origin = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.origin = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.total = this.origin.length
           this.filterUsers = response.data.users_list
           this.onSearch()
@@ -439,11 +439,6 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    parseOverall(item) {
-      // Calculate Overall
-      let diff = (item['ended'] == null) ? moment.utc().diff(moment(item['started'])) : moment(item['ended']).diff(moment(item['started']))
-      return moment.utc(diff).format("HH:mm:ss")
-    },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
@@ -482,7 +477,8 @@ export default {
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
-          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase()))
+          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
         ).slice(itemStart, itemEnd)
       }
     },

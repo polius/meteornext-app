@@ -40,7 +40,7 @@ class Monitoring:
                     attached = 'AND m.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND m.server_id IS NULL'
 
             if dsort is not None:
-                sort_column = dsort['column']
+                sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
