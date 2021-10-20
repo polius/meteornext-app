@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1">
+    <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1">
       <template v-slot:[`item.date`]="{ item }">
         <span style="display:block; min-width:130px">{{ item.date }}</span>
       </template>
@@ -282,7 +282,6 @@ export default {
       axios.get('/admin/client/queries', { params: payload })
         .then((response) => {
           this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
-          this.total = this.origin.length
           this.filterUsers = response.data.users_list
           this.filterServers = response.data.servers_list
           this.onSearch()
@@ -300,15 +299,20 @@ export default {
       const { page, itemsPerPage } = this.options
       const itemStart = (page-1) * itemsPerPage
       const itemEnd = (page-1) * itemsPerPage + itemsPerPage
-      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
+      if (this.search.length == 0) {
+        this.items = this.origin.slice(itemStart, itemEnd)
+        this.total = this.origin.length
+      }
       else {
-        this.items = this.origin.filter(x =>
+        const items = this.origin.filter(x =>
           x.date.includes(this.search) ||
           x.user.toLowerCase().includes(this.search.toLowerCase()) ||
           x.server.toLowerCase().includes(this.search.toLowerCase()) ||
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
           x.query.toLowerCase().includes(this.search.toLowerCase())
-        ).slice(itemStart, itemEnd)
+        )
+        this.total = items.length
+        this.items = items.slice(itemStart, itemEnd)
       }
     },
     dateTimeDialogOpen(field) {

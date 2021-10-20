@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total.length < 11" :loading="loading" item-key="id" show-select class="elevation-1">
+    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="id" show-select class="elevation-1">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
@@ -181,7 +181,6 @@ export default {
       axios.get('/admin/client/servers', { params: payload })
         .then((response) => {
           this.origin = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
-          this.total = this.origin.length
           this.filterUsers = response.data.users_list
           this.filterServers = response.data.servers_list
           this.onSearch()
@@ -196,14 +195,19 @@ export default {
       const { page, itemsPerPage } = this.options
       const itemStart = (page-1) * itemsPerPage
       const itemEnd = (page-1) * itemsPerPage + itemsPerPage
-      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
+      if (this.search.length == 0) {
+        this.items = this.origin.slice(itemStart, itemEnd)
+        this.total = this.origin.length
+      }
       else {
-        this.items = this.origin.filter(x =>
+        const items = this.origin.filter(x =>
           x.user.toLowerCase().includes(this.search.toLowerCase()) ||
           x.server.toLowerCase().includes(this.search.toLowerCase()) ||
           (x.date != null && x.date.includes(this.search)) ||
           (x.folder != null && x.folder.toLowerCase().includes(this.search.toLowerCase()))
-        ).slice(itemStart, itemEnd)
+        )
+        this.total = items.length
+        this.items = items.slice(itemStart, itemEnd)
       }
     },
     getServer(server_id) {
