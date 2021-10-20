@@ -395,7 +395,8 @@ export default {
           (x.method != null && x.method.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
-          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase()))
+          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
         ).slice(itemStart, itemEnd)
       }
     },

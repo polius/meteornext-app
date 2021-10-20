@@ -51,11 +51,11 @@ class Restore:
                 args['deleted'] = rfilter['deleted']
 
         if rsort is not None:
-            sort_column = rsort['column']
+            sort_column = f"`{rsort['column']}`"
             sort_order = 'DESC' if rsort['desc'] else 'ASC'
 
         query = """
-                SELECT r.id, r.mode, r.source, r.size, r.server_id, s.name AS 'server', r.database, r.status, r.started, r.ended, r.user_id, u.username, r.deleted
+                SELECT r.id, r.mode, r.source, r.size, r.server_id, s.name AS 'server', r.database, r.status, r.started, r.ended, CONCAT(TIMEDIFF(r.ended, r.started)) AS 'overall', r.user_id, u.username, r.deleted
                 FROM restore r
                 JOIN servers s ON s.id = r.server_id
                 JOIN users u ON u.id = r.user_id

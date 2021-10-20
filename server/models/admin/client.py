@@ -52,7 +52,7 @@ class Client:
                     args.append(dfilter['dateTo'])
 
             if dsort is not None:
-                sort_column = dsort['column']
+                sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
@@ -119,7 +119,7 @@ class Client:
                     attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND cs.server_id IS NULL'
 
             if dsort is not None:
-                sort_column = dsort['column']
+                sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
