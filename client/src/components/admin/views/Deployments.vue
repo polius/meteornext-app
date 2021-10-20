@@ -369,7 +369,6 @@ export default {
       axios.get('/admin/deployments', { params: payload })
         .then((res) => {
           this.origin = res.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-          this.total = this.origin.length
           this.filterUsers = res.data.users_list
           this.onSearch()
         })
@@ -383,9 +382,12 @@ export default {
       const { page, itemsPerPage } = this.options
       const itemStart = (page-1) * itemsPerPage
       const itemEnd = (page-1) * itemsPerPage + itemsPerPage
-      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
+      if (this.search.length == 0) {
+        this.items = this.origin.slice(itemStart, itemEnd)
+        this.total = this.origin.length
+      }
       else {
-        this.items = this.origin.filter(x =>
+        const items = this.origin.filter(x =>
           (x.name != null && x.name.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.release != null && x.release.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.username != null && x.username.toLowerCase().includes(this.search.toLowerCase())) ||
@@ -397,7 +399,9 @@ export default {
           (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
-        ).slice(itemStart, itemEnd)
+        )
+        this.total = items.length
+        this.items = items.slice(itemStart, itemEnd)
       }
     },
     openFilter() {
