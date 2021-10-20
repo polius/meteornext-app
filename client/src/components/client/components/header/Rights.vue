@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="85%">
+    <v-dialog v-model="dialog" persistent eager max-width="85%">
       <v-card>
         <v-toolbar flat dense color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>USER RIGHTS</v-toolbar-title>
