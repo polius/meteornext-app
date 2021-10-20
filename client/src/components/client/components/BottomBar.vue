@@ -3,8 +3,8 @@
     <!---------------------->
     <!-- BOTTOMBAR - LEFT -->
     <!---------------------->
-    <Servers v-if="sidebarMode == 'servers'" />
-    <Objects v-else-if="sidebarMode == 'objects'" />
+    <Servers v-show="sidebarMode == 'servers'" />
+    <Objects v-show="sidebarMode == 'objects'" />
   </div>
 </template>
 

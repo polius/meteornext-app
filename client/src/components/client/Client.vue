@@ -180,15 +180,6 @@ export default {
     EventBus.$off()
     window.removeEventListener('beforeunload', this.beforeUnload)
   },
-  // eslint-disable-next-line
-  // beforeRouteLeave(to, from, next) {
-  //   if (to.name == 'login') next()
-  //   else {
-  //     const answer = window.confirm('Close Meteor Next - Client?')
-  //     if (answer) next()
-  //     else next(false)
-  //   }
-  // },
   methods: {
     getSettings() {
       axios.get('/client/settings')
