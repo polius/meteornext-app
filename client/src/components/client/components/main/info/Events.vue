@@ -40,6 +40,7 @@ export default {
   computed: {
     ...mapFields([
       'settings',
+      'currentConn',
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
@@ -84,6 +85,11 @@ export default {
         e.preventDefault()
       }
     }, false);
+  },
+  watch: {
+    currentConn() {
+      this.editor.setValue(this.infoEditor.events, -1)
+    }
   },
   methods: {
     getInfo(refresh) {

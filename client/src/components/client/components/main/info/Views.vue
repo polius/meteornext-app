@@ -40,6 +40,7 @@ export default {
   computed: {
     ...mapFields([
       'settings',
+      'currentConn',
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
@@ -47,6 +48,7 @@ export default {
       'infoHeaders',
       'infoItems',
       'infoEditor',
+      'infoConnection',
       'server',
       'database',
       'sidebarSelected',
@@ -83,6 +85,11 @@ export default {
         e.preventDefault()
       }
     }, false);
+  },
+  watch: {
+    currentConn() {
+      this.editor.setValue(this.infoEditor.views, -1)
+    }
   },
   methods: {
     getInfo(refresh) {
