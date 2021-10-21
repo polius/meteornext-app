@@ -187,7 +187,7 @@ export default {
         // Hide Confirm Dialog
         this.confirmDialog = false
         // Send notification
-        EventBus.$emit('send-notification', 'Server variable changed successfully', 'success')
+        EventBus.$emit('send-notification', 'Server variable changed successfully', '#00b16a')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     confirmDialogCancel() {
