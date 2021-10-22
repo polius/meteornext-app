@@ -53,13 +53,12 @@ class deploy_blueprint:
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
             for frame in reversed(inner_frames):
-                if frame.filename.endswith('blueprint.py'):
+                if any(frame.filename.endswith(i) for i in ['blueprint.py','blueprint.pyc']):
                     found = True
                     current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                     break
             if not found:
-                current_thread.critical.append(str(e))
-
+                current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
         finally:
             query_instance.close_sql_connection()
 
@@ -112,10 +111,8 @@ class deploy_blueprint:
                 self.__track_execution_progress(server, databases)
 
                 # Check critical errors
-                errors = False
                 for t in threads:
                     if len(t.critical) > 0:
-                        errors = True
                         for i in t.critical:
                             if i not in current_thread.critical:
                                 current_thread.critical.append(i)
@@ -181,12 +178,12 @@ class deploy_blueprint:
                     inner_frames = inspect.getinnerframes(e.__traceback__)
                     found = False
                     for frame in reversed(inner_frames):
-                        if frame.filename.endswith('blueprint.py'):
+                        if any(frame.filename.endswith(i) for i in ['blueprint.py','blueprint.pyc']):
                             found = True
                             current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                             break
                     if not found:
-                        current_thread.critical.append(str(e))
+                        current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
 
         # Close SQL Connection
         query_instance.close_sql_connection()
@@ -250,13 +247,12 @@ class deploy_blueprint:
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
             for frame in reversed(inner_frames):
-                if frame.filename.endswith('blueprint.py'):
+                if any(frame.filename.endswith(i) for i in ['blueprint.py','blueprint.pyc']):
                     found = True
                     current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
                     break
             if not found:
-                current_thread.critical.append(str(e))
-
+                current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
         finally:
             query_instance.close_sql_connection()
 

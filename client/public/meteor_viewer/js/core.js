@@ -1209,6 +1209,9 @@ function compile_query(data) {
 }
 
 function compare_values(value1, value2) {
+  // Normalize values
+  if (value1 == undefined) value1 = null
+  if (value2 == undefined) value2 = null
   // Check NULL & Empty Values
   if ((value1 === null && value2 === null) || (value1 !== null && value2 !== null && value1.toString().trim() == '' && value2.toString().trim() == '')) return 0;
   if ((value1 === null) || (value1.toString().trim() == '')) return -1;
