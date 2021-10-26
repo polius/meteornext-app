@@ -11,7 +11,6 @@ class Auxiliary:
                 FROM auxiliary
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
-                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
         else:
@@ -72,13 +71,11 @@ class Auxiliary:
                     FROM auxiliary
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['shared'], auxiliary['shared'], user_id, auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id, user_id, auxiliary['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -86,9 +83,7 @@ class Auxiliary:
                     FROM auxiliary
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['shared'], auxiliary['shared'], user_id))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id, user_id))[0]['exist'] == 1

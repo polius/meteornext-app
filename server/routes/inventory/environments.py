@@ -67,7 +67,27 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self, user):
-        return jsonify({'environments': self._environments.get(user['id'], user['group_id']), 'environment_servers': self._environments.get_environment_servers(user['id'], user['group_id']), 'servers': self._environments.get_servers(user['id'], user['group_id'])}), 200
+        # Get data
+        environments = self._environments.get(user['id'], user['group_id'])
+        environment_servers = self._environments.get_environment_servers(user['id'], user['group_id'])
+        servers = self._environments.get_servers(user['id'], user['group_id'])
+        # Apply limits
+        n = 0
+        for server in sorted(environment_servers, key=lambda k:k['server_id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['server_active'] = True
+                n += 1
+            else:
+                server['server_active'] = False
+        n = 0
+        for server in sorted(servers, key=lambda k:k['server_id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['server_active'] = True
+                n += 1
+            else:
+                server['server_active'] = False
+        # Return request
+        return jsonify({'environments': environments, 'environment_servers': environment_servers, 'servers': servers}), 200
 
     def post(self, user, environment):
         # Check privileges

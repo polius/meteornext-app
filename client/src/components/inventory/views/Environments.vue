@@ -27,13 +27,16 @@
         </template>
         <template v-slot:[`item.servers`]="{ item }">
           <div v-for="server in item.servers" :key="server.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
-            <v-chip outlined label :color="server.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span> - {{ server.region }}</v-chip>
+            <v-chip outlined label :color="server.color" style="margin-left:0px;"><span v-if="!server.active" class="font-weight-bold" style="padding-right:4px">DISABLED</span><span class="font-weight-medium" style="padding-right:4px;">{{ (server.active ? '' : '| ') + server.server }}</span> - {{ server.region }}</v-chip>
           </div>
         </template>
         <template v-slot:[`item.shared`]="{ item }">
           <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
           <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
           {{ !item.shared ? 'Personal' : 'Shared' }}
+        </template>
+        <template v-slot:[`footer.prepend`]>
+          <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some environments contain servers that are disabled. Consider the possibility of upgrading your license.</div>
         </template>
       </v-data-table>
     </v-card>
@@ -65,6 +68,7 @@
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center;">No servers to be selected</div>
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
                         <template v-slot:prepend="{ item }">
+                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
@@ -113,6 +117,7 @@ import axios from 'axios'
 export default {
   data: () => ({
     // Data Table
+    disabledResources: false,
     filter: 'all',
     headers: [
       { text: 'Id', align: ' d-none', value: 'id' },
@@ -173,6 +178,7 @@ export default {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.environments = this.parseEnvironments(response.data.environments)
           this.items = this.environments.slice(0)
+          this.disabledResources = this.environments.some(x => x.servers.some(y => !y.active))
           this.filterBy(this.filter)
           this.loading = false
         })
@@ -204,7 +210,7 @@ export default {
         let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], children: []}
         for (let j = 0; j < servers.length; ++j) {
           if (regions[i]['name'] == servers[j]['region_name']) {
-            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'] })
+            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'], active: servers[j]['server_active'] })
             this.treeviewShared[servers[j]['server_shared']].push(servers[j]['server_id'])
           }
         }
@@ -234,8 +240,9 @@ export default {
             for (let k = 0; k < this.environment_servers[environments[i]['id']][j]['children'].length; ++k) {
               let region_name = this.environment_servers[environments[i]['id']][j]['name']
               let server_name = this.environment_servers[environments[i]['id']][j]['children'][k]['name']
+              let server_active = this.environment_servers[environments[i]['id']][j]['children'][k]['active']
               let color_next = regions.indexOf(region_name) < colors.length ? colors[regions.indexOf(region_name)] : ''
-              row['servers'].push({ region: region_name, server: server_name, color: color_next })
+              row['servers'].push({ region: region_name, server: server_name, active: server_active, color: color_next })
             }
           }
         }
@@ -262,14 +269,14 @@ export default {
           let found = false 
           for (let j = 0; j < data[environment_servers[i]['environment_id']]; ++j) {
             if (data[environment_servers[i]['environment_id']][j]['id'] == environment_servers[i]['region_id']) {
-              data[environment_servers[i]['environment_id']][j]['children'].push({ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] })
+              data[environment_servers[i]['environment_id']][j]['children'].push({ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'], active: environment_servers[i]['server_active'] })
               found = true
               break
             }
           }
-          if (!found) data[environment_servers[i]['environment_id']].push({ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] })
+          if (!found) data[environment_servers[i]['environment_id']].push({ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'], active: environment_servers[i]['server_active'] }] })
         }
-        else data[environment_servers[i]['environment_id']] = [{ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] }]
+        else data[environment_servers[i]['environment_id']] = [{ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'], active: environment_servers[i]['server_active'] }] }]
       }
       return data
     },
