@@ -84,13 +84,11 @@ class Cloud:
                     FROM cloud
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['shared'], cloud['shared'], cloud['owner_id'], cloud['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['owner_id'], cloud['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -98,9 +96,7 @@ class Cloud:
                     FROM cloud
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['shared'], cloud['shared'], cloud['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['owner_id']))[0]['exist'] == 1

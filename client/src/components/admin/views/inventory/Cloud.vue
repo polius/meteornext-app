@@ -296,6 +296,7 @@ export default {
       this.users = []
       this.$nextTick(() => {
         this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        delete this.item['id']
         this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
         this.bucketsSelected = []
         this.getUsers()

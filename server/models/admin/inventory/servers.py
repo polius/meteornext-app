@@ -161,13 +161,11 @@ class Servers:
                     FROM servers
                     WHERE `name` = %s 
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['group_id'], server['shared'], server['shared'], server['owner_id'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['group_id'], server['owner_id'], server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -175,12 +173,10 @@ class Servers:
                     FROM servers
                     WHERE `name` = %s 
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['group_id'], server['shared'], server['shared'], server['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['group_id'], server['owner_id']))[0]['exist'] == 1
 
     def exist_in_environment(self, server):
         query = """

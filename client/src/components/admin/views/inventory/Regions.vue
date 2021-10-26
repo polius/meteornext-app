@@ -241,6 +241,7 @@ export default {
       this.mode = 'clone'
       this.users = []
       this.item = {...this.selected[0]}
+      delete this.item['id']
       this.getUsers()
       this.dialog_title = 'CLONE REGION'
       this.dialog = true

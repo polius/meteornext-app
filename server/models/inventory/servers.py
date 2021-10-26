@@ -14,7 +14,6 @@ class Servers:
                 LEFT JOIN regions r ON r.id = s.region_id
                 WHERE s.group_id = %s
                 AND (s.shared = 1 OR s.owner_id = %s)
-                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
         else:
@@ -153,13 +152,11 @@ class Servers:
                     FROM servers
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, server['shared'], server['shared'], user_id, server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], group_id, user_id, server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -167,12 +164,10 @@ class Servers:
                     FROM servers
                     WHERE name = %s
                     AND group_id = %s
-                    AND (
-                        (shared = 1 AND shared = %s) OR (shared = 0 AND shared = %s AND owner_id = %s)
-                    )
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, server['shared'], server['shared'], user_id))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], group_id, user_id))[0]['exist'] == 1
 
     def exist_in_environment(self, user_id, group_id, server_id):
         query = """

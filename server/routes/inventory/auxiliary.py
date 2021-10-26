@@ -99,6 +99,15 @@ class Auxiliary:
     ####################
     def get(self, user):
         auxiliary = self._auxiliary.get(user['id'], user['group_id'])
+        # Apply limits
+        n = 0
+        for aux in sorted(auxiliary, key=lambda k:k['id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                aux['active'] = True
+                n += 1
+            else:
+                aux['active'] = False
+        auxiliary.sort(key=lambda k:k['id'], reverse=True)
         # Protect SSL Keys
         for aux in auxiliary:
             aux['ssl_client_key'] = '<ssl_client_key>' if aux['ssl_client_key'] is not None else None

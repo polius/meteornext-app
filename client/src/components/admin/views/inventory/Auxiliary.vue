@@ -315,6 +315,7 @@ export default {
       this.mode = 'clone'
       this.users = []
       this.item = {...this.selected[0]}
+      delete this.item['id']
       this.getUsers()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'

@@ -103,6 +103,15 @@ class Servers:
     ####################
     def get(self, user):
         servers = self._servers.get(user['id'], user['group_id'], request.args['server_id']) if 'server_id' in request.args else self._servers.get(user['id'], user['group_id'])
+        # Apply limits
+        n = 0
+        for server in sorted(servers, key=lambda k:k['id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['active'] = True
+                n += 1
+            else:
+                server['active'] = False
+        servers.sort(key=lambda k:k['id'], reverse=True)
         # Protect SSL Keys
         for server in servers:
             server['ssl_client_key'] = '<ssl_client_key>' if server['ssl_client_key'] is not None else None
@@ -113,7 +122,7 @@ class Servers:
             servers_secured = []
             for s in servers:
                 if s['shared']:
-                    servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "usage": s['usage']})
+                    servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "usage": s['usage'], "active": s['active']})
                 else:
                     servers_secured.append(s)
             return jsonify({'data': servers_secured}), 200

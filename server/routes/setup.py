@@ -313,6 +313,10 @@ class License:
     def validated(self):
         return self._license_status and self._license_status['code'] == 200
 
+    @property
+    def resources(self):
+        return self._license_status['resources']
+
     def validate(self):
         current_utc = str(datetime.utcnow())
         # Check if first time
@@ -341,6 +345,7 @@ class License:
             response_code = response.status_code
             response_text = json.loads(response.text)['response']
             date = json.loads(response.text)['date']
+            resources = 5 # json.loads(response.text)['resources']
             expiration = None if 'expiration' not in json.loads(response.text) else json.loads(response.text)['expiration']
 
             # Solve challenge
@@ -354,7 +359,7 @@ class License:
                     response_text = "The license is not valid"
                     response_code = 401
 
-            self._license_status = {"code": response_code, "response": response_text, "date": date, "expiration": expiration}
+            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources, "expiration": expiration}
         except Exception:
             self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
         else:
