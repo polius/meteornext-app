@@ -169,7 +169,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false },
+    item: { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false, change_password: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -217,7 +217,7 @@ export default {
     },
     newUser() {
       this.mode = 'new'
-      this.item = { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false }
+      this.item = { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false, change_password: false }
       this.mfaUsername = ''
       this.dialog_title = 'NEW USER'
       this.dialog = true
