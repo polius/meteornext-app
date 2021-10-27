@@ -57,7 +57,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','simplejson','flask_limiter']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','flask_limiter']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)

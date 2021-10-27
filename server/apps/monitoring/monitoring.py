@@ -1,5 +1,5 @@
 import time
-import simplejson
+import json
 import datetime
 import calendar
 import requests
@@ -407,7 +407,7 @@ class Monitoring:
             webhook_data['attachments'][0]['fields'].append({"title": "Current Uptime", "value": data['current_uptime'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Current Start Time", "value": data['current_start_time'], "short": True})
         # Send Slack Message
-        response = requests.post(slack['monitor_slack_url'], data=simplejson.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+        requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
     def __get_users_server(self, server_id):
         query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
@@ -438,11 +438,11 @@ class Monitoring:
         self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
 
     def __dict2str(self, data):
-        return simplejson.dumps(data, separators=(',', ':'))
+        return json.dumps(data, separators=(',', ':'))
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
-        return simplejson.loads(data, object_pairs_hook=OrderedDict)
+        return json.loads(data, object_pairs_hook=OrderedDict)
 
     def __utcnow(self):
         # Get current timestamp in utc
