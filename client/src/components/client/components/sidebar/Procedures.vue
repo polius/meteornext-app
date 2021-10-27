@@ -343,7 +343,10 @@ WHERE CountryCode = country;
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
         if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the procedure syntax", '#EF5354')
-        else navigator.clipboard.writeText(syntax) + ';'
+        else {
+          navigator.clipboard.writeText(syntax) + ';'
+          EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+        }
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

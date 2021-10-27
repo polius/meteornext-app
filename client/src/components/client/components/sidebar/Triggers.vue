@@ -328,6 +328,7 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'] + ';'
         navigator.clipboard.writeText(syntax)
+        EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }
