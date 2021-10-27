@@ -8,6 +8,10 @@
           @click="selected.length == items.length ? selected = [] : selected = [...items]">
         </v-simple-checkbox>
       </template>
+      <template v-slot:[`item.name`]="{ item }">
+        <v-chip v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more auxiliary connections." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+        {{ item.name }}
+      </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
@@ -15,6 +19,9 @@
       </template>
       <template v-slot:[`item.ssl`]="{ item }">
         <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : '#EF5354'" style="margin-left:2px">fas fa-circle</v-icon>
+      </template>
+      <template v-slot:[`footer.prepend`]>
+        <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some auxiliary connections are disabled. Consider the possibility of upgrading your license.</div>
       </template>
     </v-data-table>
 
@@ -198,6 +205,7 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    disabledResources: false,
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Engine', align: 'left', value: 'version'},
@@ -288,6 +296,7 @@ export default {
           })
           this.auxiliary = response.data.auxiliary
           this.items = response.data.auxiliary
+          this.disabledResources = this.auxiliary.some(x => !x.active)
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {

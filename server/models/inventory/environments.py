@@ -115,6 +115,18 @@ class Environments:
         """
         return self._sql.execute(query, (group_id, user_id))
 
+    def get_servers_by_environment(self, user_id, group_id, environment_id):
+        query = """
+            SELECT s.id
+            FROM environments e
+            JOIN environment_servers es ON es.environment_id = e.id
+            JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %s)
+            WHERE e.group_id = %s
+            AND e.id = %s
+        """
+        result = self._sql.execute(query, (user_id, group_id, environment_id))
+        return [i['id'] for i in result] if result else []
+
     def valid(self, user_id, environment):
         query = """
             SELECT NOT EXISTS (

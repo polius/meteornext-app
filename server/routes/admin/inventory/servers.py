@@ -115,6 +115,17 @@ class Servers:
         user_id = request.args['user_id'] if 'user_id' in request.args else None
         # Get servers
         servers = self._servers.get(group_id=group_id, server_id=server_id, user_id=user_id)
+        # Apply limits
+        n = 0
+        for server in sorted(servers, key=lambda k:k['id']):
+            if user_id is None:
+                server['active'] = True
+            elif self._license.resources == -1 or n < self._license.resources:
+                server['active'] = True
+                n += 1
+            else:
+                server['active'] = False
+        servers.sort(key=lambda k:k['id'], reverse=True)
         # Protect SSL Keys
         for server in servers:
             server['ssl_client_key'] = '<ssl_client_key>' if server['ssl_client_key'] is not None else None

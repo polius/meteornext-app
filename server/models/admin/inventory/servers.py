@@ -16,7 +16,6 @@ class Servers:
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
-                ORDER BY s.id DESC
             """
             return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
@@ -29,7 +28,6 @@ class Servers:
                 LEFT JOIN users u3 ON u3.id = s.updated_by
                 LEFT JOIN groups g ON g.id = s.group_id
                 WHERE s.group_id = %s
-                ORDER BY s.id DESC
             """
             return self._sql.execute(query, (group_id))
         elif server_id is not None:
@@ -51,7 +49,6 @@ class Servers:
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
                 LEFT JOIN groups g ON g.id = s.group_id
-                ORDER BY s.id DESC
             """
             return self._sql.execute(query)
 
