@@ -792,7 +792,15 @@
 
       // Execution URL
       url: window.location.protocol + '//' + window.location.host,
+
+      // Previous Route
+      prevRoute: null
     }),
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        vm.prevRoute = from
+      })
+    },
     components: { codemirror, Viewer },
     created() {
       this.init()
@@ -813,8 +821,8 @@
         }
       },
       goBack() {
-        if (this.show_results) this.show_results = false
-        else this.$router.back()
+        if (['/','/login'].includes(this.prevRoute.path)) this.$router.push('/deployments')
+        else this.$router.push(this.prevRoute.path)
       },
       getCode() {
         axios.get('/deployments/blueprint')
@@ -1125,11 +1133,7 @@
         else if (this.action_dialog_mode == 'stop') this.actionSubmitStop()
       },
       actionSubmitStart() {
-        // Start Current Execution
-        this.notification('Starting the execution. Please wait...', 'primary')
-        this.start_execution = true
         this.action_dialog = false
-        
         // Build parameters
         const payload = {
           id: this.$route.params.id,
@@ -1138,6 +1142,8 @@
         axios.post('/deployments/start', payload)
         .then((response) => {
           if (response.data.message != '') this.notification(response.data.message, '#00b16a')
+          this.notification('Starting the execution. Please wait...', 'primary')
+          this.start_execution = true
           this.getDeployment()
         })
         .catch((error) => {

@@ -396,6 +396,27 @@ class Deployments:
             except Exception as e:
                 return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
+        # Check scheduled date
+        if execution['scheduled'] is not None:
+            execution['start_execution'] = False
+            if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+
+        # Check selected environment, if some servers are disabled
+        servers = self._environments.get_servers(user['id'], user['group_id'])
+        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
+        n = 0
+        for server in sorted(servers, key=lambda k:k['server_id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['server_active'] = True
+                n += 1
+            else:
+                server['server_active'] = False
+        for server in environment_servers:
+            for s2 in servers:
+                if s2['server_id'] == server and not s2['server_active']:
+                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
+
         # Set Deployment Status
         if execution['scheduled'] is not None:
             execution['status'] = 'SCHEDULED'
@@ -490,6 +511,10 @@ class Deployments:
             return jsonify({'message': 'The environment does not exist'}), 400
         environment = environment[0]
 
+        # Check files path permissions
+        if not self.__check_files_path():
+            return jsonify({'message': 'No write permissions in the files folder'}), 400
+
         # Check Code Syntax Errors
         if execution['mode'] == 'PRO':
             try:
@@ -504,9 +529,20 @@ class Deployments:
             if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
-        # Check files path permissions
-        if not self.__check_files_path():
-            return jsonify({'message': 'No write permissions in the files folder'}), 400
+        # Check selected environment, if some servers are disabled
+        servers = self._environments.get_servers(user['id'], user['group_id'])
+        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
+        n = 0
+        for server in sorted(servers, key=lambda k:k['server_id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['server_active'] = True
+                n += 1
+            else:
+                server['server_active'] = False
+        for server in environment_servers:
+            for s2 in servers:
+                if s2['server_id'] == server and not s2['server_active']:
+                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Set Execution Status
         if execution['scheduled'] is not None:
@@ -597,6 +633,21 @@ class Deployments:
         # Check if Deploy can be started
         if execution['status'] not in ['CREATED','SCHEDULED']:
             return jsonify({'message': 'This deployment cannot be started.'}), 400
+
+        # Check selected environment, if some servers are disabled
+        servers = self._environments.get_servers(user['id'], user['group_id'])
+        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
+        n = 0
+        for server in sorted(servers, key=lambda k:k['server_id']):
+            if self._license.resources == -1 or n < self._license.resources:
+                server['server_active'] = True
+                n += 1
+            else:
+                server['server_active'] = False
+        for server in environment_servers:
+            for s2 in servers:
+                if s2['server_id'] == server and not s2['server_active']:
+                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Get Group Authority
         group = self._groups.get(group_id=authority['group_id'])[0]

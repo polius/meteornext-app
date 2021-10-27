@@ -15,7 +15,6 @@ class Auxiliary:
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
                 WHERE (a.shared = 1 OR a.owner_id = %(user_id)s)
-                ORDER BY a.id DESC
             """
             return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
@@ -27,7 +26,6 @@ class Auxiliary:
                 LEFT JOIN users u3 ON u3.id = a.updated_by
                 LEFT JOIN groups g ON g.id = a.group_id
                 WHERE a.group_id = %s
-                ORDER BY a.id DESC
             """
             return self._sql.execute(query, (group_id))
         elif auxiliary_id is not None:
@@ -45,7 +43,6 @@ class Auxiliary:
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
                 LEFT JOIN groups g ON g.id = a.group_id
-                ORDER BY a.id DESC
             """
             return self._sql.execute(query)
 

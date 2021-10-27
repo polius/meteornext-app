@@ -8,6 +8,10 @@
           @click="selected.length == items.length ? selected = [] : selected = [...items]">
         </v-simple-checkbox>
       </template>
+      <template v-slot:[`item.name`]="{ item }">
+        <v-chip v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+        {{ item.name }}
+      </template>
       <template v-slot:[`item.region`]="{ item }">
         <v-icon v-if="item.region" small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
         {{ item.region }}
@@ -25,6 +29,9 @@
       </template>
       <template v-slot:[`item.ssl`]="{ item }">
         <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : '#EF5354'" style="margin-left:2px">fas fa-circle</v-icon>
+      </template>
+      <template v-slot:[`footer.prepend`]>
+        <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some servers are disabled. Consider the possibility of upgrading your license.</div>
       </template>
     </v-data-table>
 
@@ -218,6 +225,7 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    disabledResources: false,
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Region', align: 'left', value: 'region'},
@@ -341,6 +349,7 @@ export default {
           })
           this.servers = response.data.servers
           this.items = response.data.servers
+          this.disabledResources = this.servers.some(x => !x.active)
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
