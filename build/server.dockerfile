@@ -13,7 +13,6 @@ RUN yum update -y && \
     python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \
-    python3 -m pip install --no-cache-dir simplejson && \
     python3 -m pip install --no-cache-dir paramiko && \
     python3 -m pip install --no-cache-dir sshtunnel && \
     python3 -m pip install --no-cache-dir pymysql && \
