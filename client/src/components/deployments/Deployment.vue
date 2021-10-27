@@ -821,8 +821,8 @@
         }
       },
       goBack() {
-        if (['/','/login'].includes(this.prevRoute.path)) this.$router.push('/deployments')
-        else this.$router.push(this.prevRoute.path)
+        if (this.prevRoute.path == '/admin/deployments') this.$router.push('/admin/deployments')
+        else this.$router.push('/deployments')
       },
       getCode() {
         axios.get('/deployments/blueprint')
