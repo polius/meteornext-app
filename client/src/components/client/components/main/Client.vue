@@ -999,8 +999,7 @@ export default {
         EventBus.$emit('change-database', database)
       }
       // Show loading
-      const gridApi = this.gridApi.client
-      setTimeout(() => { gridApi.showLoadingOverlay() }, 0)
+      setTimeout(() => { this.gridApi.client.showLoadingOverlay() }, 0)
       // Execute queries
       const server = this.server
       const index = this.index
@@ -1013,7 +1012,7 @@ export default {
           this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          this.parseExecution(payload, data, current, gridApi).finally(() => {
+          this.parseExecution(payload, data, current).finally(() => {
             this.parseClientBottomBar(data, current)
             // Focus Editor
             let cursor = this.editor.getCursorPosition()
@@ -1043,7 +1042,7 @@ export default {
             }
             if (this.index == index) this.showDialog(dialogOptions)
             current.clientExecuting = null
-            gridApi.showNoRowsOverlay()
+            this.gridApi.client.showNoRowsOverlay()
             // Add execution to history
             const history = { section: 'client', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
@@ -1058,7 +1057,7 @@ export default {
       else queries = this.analyzeQueries(selectedText).map(x => selectedText.substring(x.begin, x.end))
       return queries
     },
-    async parseExecution(payload, data, current, gridApi) {
+    async parseExecution(payload, data, current) {
       // Determine if result can be edited and store current table
       const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { linesBetweenQueries: 2 })
       let editable = true
@@ -1107,7 +1106,7 @@ export default {
         }
       }
       // Load Table Header
-      gridApi.setColumnDefs([])
+      if (current.index == this.index) this.gridApi.client.setColumnDefs([])
       current.clientHeaders = headers
       // Load Table Items
       let itemsToLoad = []
@@ -1120,7 +1119,7 @@ export default {
           setTimeout(() => {
             if (!current.clientQueryStopped) {
               let sliced = items.slice(i, i+chunk)
-              gridApi.applyTransaction({ add: sliced })
+              if (current.index == this.index) this.gridApi.client.applyTransaction({ add: sliced })
               itemsToLoad = itemsToLoad.concat(sliced)
               if (i+chunk >= n) resolve()
             }
