@@ -59,10 +59,10 @@
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
+                    <v-col cols="6" style="padding-right:10px">
                       <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-left:10px">
+                    <v-col cols="6" style="padding-left:10px">
                       <v-autocomplete :disabled="item.group_id == null" v-model="item.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="regions" label="Region" required>
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>

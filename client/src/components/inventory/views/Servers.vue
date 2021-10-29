@@ -72,10 +72,10 @@
                 <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:25px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row no-gutters style="margin-top:15px">
-                    <v-col cols="8" style="padding-right:10px">
+                    <v-col cols="6" style="padding-right:10px">
                       <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-left:10px">
+                    <v-col cols="6" style="padding-left:10px">
                       <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;">
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
