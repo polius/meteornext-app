@@ -12,7 +12,8 @@ import connectors.base
 import models.notifications
 
 class Monitoring:
-    def __init__(self, sql):
+    def __init__(self, license, sql):
+        self._license = license
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
@@ -410,7 +411,25 @@ class Monitoring:
         requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
     def __get_users_server(self, server_id):
-        query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
+        query = """
+            SELECT m.user_id
+            FROM monitoring m
+            JOIN (
+                SELECT
+                    u.id AS 'user_id',
+                    s.id AS 'server_id',
+                    IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
+                    IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active',
+                    @usr := u.id AS 'logic2'
+                FROM users u
+                JOIN (SELECT @cnt := 0, @usr := 0) t
+                JOIN servers s ON s.group_id = u.group_id AND (s.shared = 1 OR s.owner_id = u.id)
+                ORDER BY u.id, s.id
+            ) t ON t.user_id = m.user_id AND t.server_id = m.server_id
+            WHERE m.server_id = %s
+            AND m.monitor_enabled = 1
+            AND t.active = 1
+        """
         return self._sql.execute(query=query, args=(server_id))
 
     def __get_slack_server(self, server_id):
@@ -418,7 +437,20 @@ class Monitoring:
             SELECT DISTINCT ms.monitor_slack_url, ms.monitor_base_url
             FROM monitoring_settings ms
             JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %s
+            JOIN (
+                SELECT
+                    u.id AS 'user_id',
+                    s.id AS 'server_id',
+                    IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
+                    IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active',
+                    @usr := u.id AS 'logic2'
+                FROM users u
+                JOIN (SELECT @cnt := 0, @usr := 0) t
+                JOIN servers s ON s.group_id = u.group_id AND (s.shared = 1 OR s.owner_id = u.id)
+                ORDER BY u.id, s.id
+            ) t ON t.user_id = m.user_id AND t.server_id = m.server_id
             WHERE ms.monitor_slack_enabled = 1
+            AND t.active = 1
         """
         return self._sql.execute(query=query, args=(server_id))
 

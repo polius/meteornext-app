@@ -107,7 +107,7 @@ class Cron:
         if not self._license.validated:
             return
         try:
-            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+            monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
             monitoring.clean()
         except Exception:
             traceback.print_exc()
