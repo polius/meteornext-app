@@ -79,7 +79,7 @@ class Setup:
                 # Register blueprints
                 self.__register_blueprints(sql)
                 # Start monitoring
-                monitoring = apps.monitoring.monitoring.Monitoring(sql)
+                monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
                 monitoring.start()
                 # Init cron
                 Cron(self._app, self._license, self._blueprints, sql)

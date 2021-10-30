@@ -24,7 +24,7 @@
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
-          <v-card :height="maxHeight" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == '#009688' ? 'Server available' : servers[i*align+j].color == '#ffa600' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
+          <v-card :height="maxHeight" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="!servers[i*align+j].active ? 'Server disabled' : servers[i*align+j].color == '#009688' ? 'Server available' : servers[i*align+j].color == '#ffa600' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
             <div height="10px" :style="`height:10px; background-color:${servers[i*align+j].color}`"></div>
             <v-progress-linear v-if="servers[i*align+j].color == '#ffa600'" indeterminate color="#ffa600" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <div style="padding:16px">
@@ -36,7 +36,7 @@
               <p class="font-weight-medium" style="margin-bottom:0px">Hostname</p>
               <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ servers[i*align+j].hostname }}</p>
               <p class="font-weight-medium" style="margin-bottom:0px">Connections</p>
-              <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{servers[i*align+j].connections}}</p>
+              <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{servers[i*align+j].active ? servers[i*align+j].connections : '?'}}</p>
             </v-card-text>
           </v-card>
         </v-hover>
@@ -108,6 +108,7 @@
                       <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
                       <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
+                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
@@ -328,7 +329,8 @@
     },
     methods: {
       monitor(item) {
-        this.$router.push({ name:'monitor', params: { id: item.id }})
+        if (item.active) this.$router.push({ name: 'monitor', params: { id: item.id }})
+        else this.notification('This server is disabled', '#EF5354')
       },
       getMonitoring(refresh=true) {
         if (refresh || !this.active) clearTimeout(this.timer)
@@ -385,9 +387,9 @@
             let pending = (servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available']))
             if (pending == 1) pending_servers = true
             // Get Status Color
-            let color = (pending == 1) ? '#ffa600' : (servers[i]['available']) ? '#009688' : '#EF5354'
+            let color = (pending == 1) ? '#ffa600' : !servers[i]['server_active'] ? '#808080' : (servers[i]['available']) ? '#009688' : '#EF5354'
             // Build Item
-            let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], available: servers[i]['available'], error: servers[i]['error'], connections: conn, color: color}
+            let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], active: servers[i]['server_active'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], available: servers[i]['available'], error: servers[i]['error'], connections: conn, color: color}
             this.servers_origin.push(item)
           }
         }
@@ -408,11 +410,11 @@
         var current_region = null
         for (let i = 0; i < servers.length; ++i) {
           if ('r' + servers[i]['region_id'] != current_region) {
-            data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
+            data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
             current_region = 'r' + servers[i]['region_id']
           } else {
             let row = data.pop()
-            row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
+            row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] })
             data.push(row)
           }
           // Check selected

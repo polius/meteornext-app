@@ -229,7 +229,14 @@ export default {
         .finally(() => this.loading = false)
     },
     parseData(server, settings) {
-      if (server.length == 0) this.notification("This server does not exist", '#EF5354')
+      if (server.length == 0) {
+        this.notification("This server does not exist", '#EF5354')
+        setTimeout(() => this.$router.push('/monitoring'), 1000)
+      }
+      else if (!server[0].server_active) {
+        this.notification("This server is disabled", '#EF5354')
+        setTimeout(() => this.$router.push('/monitoring'), 1000)
+      }
       else {
         // Parse Information
         this.server_name = server[0]['name']
