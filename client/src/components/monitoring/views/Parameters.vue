@@ -15,7 +15,11 @@
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
-      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;"></v-data-table>
+      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
+        <template v-slot:[`footer.prepend`]>
+          <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some servers are disabled. Consider the possibility of upgrading your license.</div>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="servers_dialog" max-width="896px">
@@ -38,6 +42,7 @@
                       <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
                       <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
+                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
@@ -100,6 +105,7 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    disabledResources: false,
     active: true,
     loading: true,
     timer: null,
@@ -150,6 +156,7 @@ export default {
       else {
         axios.get('/monitoring/parameters')
         .then((response) => {
+          this.disabledResources = response.data.data.some(x => x.selected && !x.server_active)
           this.parseParameters(response.data.data)
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
@@ -180,14 +187,14 @@ export default {
             for (let p in params) {
               let obj = this.parameters_origin.find((o, j) => {
                 if (o.variable === p) {
-                  this.parameters_origin[j]['s'+data[i]['server_id']] = params[p]
+                  this.parameters_origin[j]['s'+data[i]['server_id']] = data[i]['server_active'] ? params[p] : '-'
                   return true; // stop searching
                 }
               });
-              if (obj === undefined) this.parameters_origin.push({variable: p, ['s'+data[i]['server_id']]: params[p]})
+              if (obj === undefined) this.parameters_origin.push({variable: p, ['s'+data[i]['server_id']]: data[i]['server_active'] ? params[p] : '-'})
             }
             // Fill parameter headers
-            this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
+            this.parameters_headers.push({ text: (data[i]['server_active'] ? '' : 'DISABLED | ' ) + data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
           }
         }
       }
@@ -204,11 +211,11 @@ export default {
       var current_region = null
       for (let i = 0; i < servers.length; ++i) {
         if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
           current_region = 'r' + servers[i]['region_id']
         } else {
           let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] })
           data.push(row)
         }
         // Check selected

@@ -16,7 +16,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :expanded.sync="expanded" single-expand item-key="id" show-expand :hide-default-footer="queries_total < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :expanded.sync="expanded" single-expand item-key="id" show-expand :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.first_seen`]="{ item }">
           <span style="display:block; min-width:130px">{{ dateFormat(item.first_seen) }}</span>
         </template>
@@ -110,6 +110,7 @@
                       <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
                       <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
+                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
@@ -533,11 +534,11 @@ export default {
       var current_region = null
       for (let i = 0; i < servers.length; ++i) {
         if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
           current_region = 'r' + servers[i]['region_id']
         } else {
           let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] })
           data.push(row)
         }
         // Check selected

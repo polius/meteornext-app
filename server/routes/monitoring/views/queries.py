@@ -13,7 +13,7 @@ class Queries:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.monitoring.monitoring.Monitoring(sql)
+        self._monitoring = models.monitoring.monitoring.Monitoring(sql, license)
         self._monitoring_settings = models.monitoring.monitoring_settings.Monitoring_Settings(sql)
         self._monitoring_queries = models.monitoring.monitoring_queries.Monitoring_Queries(sql)
 
