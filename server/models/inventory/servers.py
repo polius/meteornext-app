@@ -201,13 +201,3 @@ class Servers:
             WHERE (s.shared = 1 OR s.owner_id = %s)
         """
         return self._sql.execute(query, (group_id, environment_id, user_id))
-
-    def get_servers_ids(self, user_id, group_id):
-        query = """
-            SELECT s.id
-            FROM servers s
-            WHERE (s.shared = 1 OR s.owner_id = %s)
-            AND s.group_id = %s
-            ORDER BY s.id
-        """
-        return [i['id'] for i in self._sql.execute(query, (user_id, group_id))]

@@ -187,15 +187,3 @@ class Servers:
         for server in servers:    
             self._servers.delete(user['id'], user['group_id'], server)
         return jsonify({'message': 'Selected servers deleted successfully'}), 200
-
-    def get_active_servers(self, user):
-        servers_ids = self._servers.get_servers_ids(user['id'], user['group_id'])
-        servers_active = {}
-        n = 0
-        for server in servers_ids:
-            if self._license.resources == -1 or n < self._license.resources:
-                servers_active[server] = True
-                n += 1
-            else:
-                servers_active[server] = False
-        return servers_active

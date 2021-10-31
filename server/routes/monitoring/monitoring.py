@@ -8,7 +8,6 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import models.admin.users
 import models.monitoring.monitoring
 import models.monitoring.monitoring_settings
-import routes.inventory.servers
 
 class Monitoring:
     def __init__(self, app, sql, license):
@@ -18,8 +17,6 @@ class Monitoring:
         self._users = models.admin.users.Users(sql)
         self._monitoring = models.monitoring.monitoring.Monitoring(sql)
         self._monitoring_settings = models.monitoring.monitoring_settings.Monitoring_Settings(sql)
-        # Init routes
-        self._servers = routes.inventory.servers.Servers(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -111,14 +108,13 @@ class Monitoring:
     # Internal Methods #
     ####################
     def get(self, user):
-        servers_active = self._servers.get_active_servers(user)
         server_id = request.args['server_id'] if 'server_id' in request.args else None
-        servers = self._monitoring.get(user, server_id) if server_id else self._monitoring.get_monitoring(user)
-        for server in servers:
-            server['server_active'] = servers_active[server['server_id']]
         if server_id:
-            return jsonify({'server': servers, 'settings': self._monitoring_settings.get(user)}), 200
+            servers = self._monitoring.get(user, server_id)
+            settings = self._monitoring_settings.get(user)
+            return jsonify({'server': servers, 'settings': settings}), 200
         else:
+            servers = self._monitoring.get_monitoring(user)
             events = self._monitoring.get_events(user)
             return jsonify({'servers': servers, 'events': events}), 200
 
