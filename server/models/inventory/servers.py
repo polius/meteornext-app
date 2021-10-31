@@ -1,34 +1,53 @@
 from datetime import datetime
 
 class Servers:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user_id, group_id, server_id=None):
         if server_id is None:
             query = """
                 SELECT 
                     s.id, s.name, s.group_id, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.`usage`, s.shared, s.owner_id, s.created_by, s.created_at,
+                    t.id IS NOT NULL AS 'active',
                     r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
-                WHERE s.group_id = %s
-                AND (s.shared = 1 OR s.owner_id = %s)
+                LEFT JOIN (
+                    SELECT s.id
+                    FROM servers s
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                    ORDER BY s.id
+                ) t ON t.id = s.id
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
             """
-            return self._sql.execute(query, (group_id, user_id))
+            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
         else:
             query = """
                 SELECT 
                     s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.`usage`, s.shared, s.owner_id, s.created_by, s.created_at,
+                    t.id IS NOT NULL AS 'active',
                     r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 JOIN groups g ON g.id = s.group_id
                 LEFT JOIN regions r ON r.id = s.region_id
-                WHERE s.group_id = %s
-                AND (s.shared = 1 OR s.owner_id = %s)
-                AND s.id = %s
+                LEFT JOIN (
+                    SELECT s.id
+                    FROM servers s
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                    ORDER BY s.id
+                ) t ON t.id = s.id
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND s.id = %(server_id)s
             """
-            return self._sql.execute(query, (group_id, user_id, server_id))
+            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.resources})
 
     def post(self, user_id, group_id, server):
         query = """

@@ -16,14 +16,14 @@ import models.inventory.auxiliary
 import models.admin.groups
 
 class Meteor:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
         self._app = app
 
         # Init models
         self._settings = models.admin.settings.Settings(sql)
         self._environments = models.inventory.environments.Environments(sql)
         self._regions = models.inventory.regions.Regions(sql)
-        self._servers = models.inventory.servers.Servers(sql)
+        self._servers = models.inventory.servers.Servers(sql, license)
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
         self._groups = models.admin.groups.Groups(sql)
 

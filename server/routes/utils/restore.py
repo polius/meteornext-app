@@ -27,10 +27,10 @@ class Restore:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._restore = models.utils.restore.Restore(sql)
+        self._restore = models.utils.restore.Restore(sql, license)
         self._scans = models.utils.scans.Scans(sql)
         self._settings = models.admin.settings.Settings(sql)
-        self._servers = models.inventory.servers.Servers(sql)
+        self._servers = models.inventory.servers.Servers(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core
@@ -260,6 +260,8 @@ class Restore:
         server = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['server'])
         if len(server) == 0:
             return jsonify({"message": 'This server does not exist.'}), 400
+        elif not server[0]['active']:
+            return jsonify({"message": 'The selected server is disabled.'}), 400
         server = server[0]
 
         # Get region details

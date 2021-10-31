@@ -14,7 +14,7 @@ class Servers:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._regions = models.inventory.regions.Regions(sql)
-        self._servers = models.inventory.servers.Servers(sql)
+        self._servers = models.inventory.servers.Servers(sql, license)
 
     def blueprint(self):
         # Init blueprint

@@ -39,7 +39,7 @@ class Deployments:
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(app, sql)
+        self._meteor = routes.deployments.meteor.Meteor(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
