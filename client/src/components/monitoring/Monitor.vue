@@ -233,7 +233,7 @@ export default {
         this.notification("This server does not exist", '#EF5354')
         setTimeout(() => this.$router.push('/monitoring'), 1000)
       }
-      else if (!server[0].server_active) {
+      else if (!server[0].active) {
         this.notification("This server is disabled", '#EF5354')
         setTimeout(() => this.$router.push('/monitoring'), 1000)
       }
