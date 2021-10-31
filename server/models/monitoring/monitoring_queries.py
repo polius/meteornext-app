@@ -1,6 +1,7 @@
 class Monitoring_Queries:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user, mfilter=None, msort=None):
         server = host = user_text = database = query_text = first_seen_from = first_seen_to = last_seen_from = last_seen_to = ''
@@ -51,11 +52,19 @@ class Monitoring_Queries:
         query = """
             SELECT q.id, s.id AS 'server_id', s.name AS 'server', s.shared, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
             FROM monitoring_queries q
-            JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = {0}
+            JOIN monitoring m ON m.server_id = q.server_id AND m.queries_enabled = 1 AND m.user_id = {0}
             JOIN servers s ON s.id = q.server_id
+            JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE (s.shared = 1 OR s.owner_id = {0})
+                AND ({12} = -1 OR (@cnt := @cnt + 1) <= {12})
+                ORDER BY s.id
+            ) t ON t.id = s.id
             WHERE 1=1
             {1} {2} {3} {4} {5} {6} {7} {8} {9}
             ORDER BY {10} {11}
             LIMIT 1000
-        """.format(user['id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order)
+        """.format(user['id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order, self._license.resources)
         return self._sql.execute(query, args)

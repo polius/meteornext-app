@@ -66,10 +66,10 @@
                                 <v-card>
                                   <v-card-text style="padding:15px">
                                     <v-row no-gutters>
-                                      <v-col cols="8" style="padding-right:10px">
+                                      <v-col cols="6" style="padding-right:10px">
                                         <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:8px"></v-text-field>
                                       </v-col>
-                                      <v-col cols="4" style="padding-left:10px">
+                                      <v-col cols="6" style="padding-left:10px">
                                         <v-row no-gutters>
                                           <v-col cols="auto" style="margin-right:8px">
                                             <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:20px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>

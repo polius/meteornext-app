@@ -380,10 +380,10 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px">
                   <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
+                    <v-col cols="6" style="padding-right:10px">
                       <v-text-field readonly v-model="serverItem.name" label="Name"></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-left:10px">
+                    <v-col cols="6" style="padding-left:10px">
                       <v-text-field readonly v-model="serverItem.region" label="Region">
                         <template v-slot:prepend-inner>
                           <v-icon small :color="serverItem.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ serverItem.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>

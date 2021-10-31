@@ -60,6 +60,9 @@
             <div id="editor" style="width:calc(100vw - 70px); margin-top:15px; margin-bottom:15px"></div>
           </td>
         </template>
+        <template v-slot:[`footer.prepend`]>
+          <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some servers are disabled. Consider the possibility of upgrading your license.</div>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -301,10 +304,10 @@
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
+                    <v-col cols="6" style="padding-right:10px">
                       <v-text-field readonly v-model="server.name" label="Name"></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-left:10px">
+                    <v-col cols="6" style="padding-left:10px">
                       <v-text-field readonly v-model="server.region" label="Region">
                         <template v-slot:prepend-inner>
                           <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -393,6 +396,7 @@ import sqlFormatter from '@sqltools/formatter'
 
 export default {
   data: () => ({
+    disabledResources: false,
     loading: true,
 
     // Queries
@@ -552,6 +556,7 @@ export default {
         this.treeviewSelected = selected
         this.treeviewOpened = opened
       }
+      this.disabledResources = servers.some(x => x.selected && !x.server_active)
     },
     parseServers(servers) {
       const serversList = servers.map(x => ({id: x.server_id, name: x.server_name, shared: x.server_shared}))
