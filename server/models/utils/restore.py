@@ -1,8 +1,7 @@
-from datetime import datetime
-
 class Restore:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user_id=None, restore_id=None):
         if restore_id:
@@ -42,12 +41,21 @@ class Restore:
 
     def get_servers(self, user):
         query = """
-            SELECT s.id, s.name, s.shared
+            SELECT s.id, s.name, s.shared, t.id IS NOT NULL AS 'active'
             FROM servers s
-            WHERE (s.shared = 1 OR s.owner_id = %s)
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE (s.shared = 1 OR s.owner_id = 1)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
             AND s.usage LIKE '%%U%%'
+            ORDER BY s.name
         """
-        return self._sql.execute(query, (user['id']))
+        return self._sql.execute(query, {"user_id": user['id'], "license": self._license.resources})
 
     def stop(self, user, restore_id):
         query = """
@@ -57,6 +65,3 @@ class Restore:
             AND `id` = %s
         """
         return self._sql.execute(query, (user['id'], restore_id))
-
-    def __utcnow(self):
-        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

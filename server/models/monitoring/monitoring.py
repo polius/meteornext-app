@@ -7,15 +7,16 @@ class Monitoring:
 
     def get(self, user, server_id):
         query = """
-            SELECT ms.*, s.name, s.hostname, t.active, r.name AS 'region'
+            SELECT ms.*, s.name, s.hostname, t.id IS NOT NULL AS 'active', r.name AS 'region'
             FROM monitoring_servers ms
             JOIN servers s ON s.id = ms.server_id AND s.id = %(server_id)s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
-            JOIN (
-                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+            LEFT JOIN (
+                SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                 ORDER BY s.id
             ) t ON t.id = s.id
             WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
@@ -26,14 +27,15 @@ class Monitoring:
 
     def get_monitoring(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled IS NOT NULL AND m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled IS NOT NULL AND m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
-            JOIN (
-                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+            LEFT JOIN (
+                SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                 ORDER BY s.id
             ) t ON t.id = s.id
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
@@ -46,14 +48,15 @@ class Monitoring:
 
     def get_parameters(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
-            JOIN (
-                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+            LEFT JOIN (
+                SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                 ORDER BY s.id
             ) t ON t.id = s.id
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
@@ -66,14 +69,15 @@ class Monitoring:
 
     def get_processlist(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
-            JOIN (
-                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+            LEFT JOIN (
+                SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                 ORDER BY s.id
             ) t ON t.id = s.id
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
@@ -86,14 +90,15 @@ class Monitoring:
 
     def get_queries(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
-            JOIN (
-                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+            LEFT JOIN (
+                SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                 ORDER BY s.id
             ) t ON t.id = s.id
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
