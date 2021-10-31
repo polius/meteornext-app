@@ -27,7 +27,11 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="processlist_search[i]" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;"></v-data-table>
+        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :no-data-text="!processlist_metadata[i]['server_active'] ? 'Server disabled' : (!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
+          <template v-slot:[`footer.prepend`]>
+            <div v-if="!processlist_metadata[i]['server_active']" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>This server is disabled. Consider the possibility of upgrading your license.</div>
+          </template>
+        </v-data-table>
       </v-card>
     </div>
 
@@ -51,6 +55,7 @@
                       <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
                       <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
+                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
@@ -196,13 +201,13 @@ export default {
 
           // Fill processlist 
           let threads = JSON.parse(data[i]['processlist'])
-          this.processlist_metadata[data[i]['server_id']] = { server_name: data[i]['server_name'], region_name: data[i]['region_name']}
+          this.processlist_metadata[data[i]['server_id']] = { server_name: data[i]['server_name'], region_name: data[i]['region_name'], server_active: data[i]['server_active']}
           this.processlist_headers[data[i]['server_id']] = []
           this.processlist_origin[data[i]['server_id']] = []
 
           if (threads != null && threads.length > 0) {
             for (let t in threads[0]) this.processlist_headers[data[i]['server_id']].push({ text: t, align: 'left', value: t })
-            for (let t in threads) this.processlist_origin[data[i]['server_id']].push(threads[t])
+            if (data[i]['server_active']) for (let t in threads) this.processlist_origin[data[i]['server_id']].push(threads[t])
           }
         }
       }
@@ -219,11 +224,11 @@ export default {
       var current_region = null
       for (let i = 0; i < servers.length; ++i) {
         if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
           current_region = 'r' + servers[i]['region_id']
         } else {
           let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] })
           data.push(row)
         }
         // Check selected

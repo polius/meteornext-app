@@ -10,7 +10,7 @@ class Processlist:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.monitoring.monitoring.Monitoring(sql)
+        self._monitoring = models.monitoring.monitoring.Monitoring(sql, license)
 
     def blueprint(self):
         # Init blueprint

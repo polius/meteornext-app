@@ -1,8 +1,9 @@
 from datetime import datetime
 
 class Monitoring:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user, server_id):
         query = """
@@ -11,7 +12,7 @@ class Monitoring:
             JOIN servers s ON s.id = ms.server_id AND s.id = %(server_id)s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             JOIN (
-                SELECT s.id, IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active'
+                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
@@ -21,7 +22,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY s.id
         """
-        return self._sql.execute(query, {"server_id": server_id, "group_id": user['group_id'], "user_id": user['id']})
+        return self._sql.execute(query, {"server_id": server_id, "group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
 
     def get_monitoring(self, user):
         query = """
@@ -29,7 +30,7 @@ class Monitoring:
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             JOIN (
-                SELECT s.id, IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active'
+                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
@@ -41,46 +42,67 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id']})
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
 
     def get_parameters(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
             FROM servers s
-			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
+            JOIN (
+                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            WHERE (s.shared = 1 OR s.owner_id = %s)
+            WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
             AND s.usage LIKE '%%M%%'
-            ORDER BY r.name, s.name;
+            ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
 
     def get_processlist(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
-			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
+            JOIN (
+                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            WHERE (s.shared = 1 OR s.owner_id = %s)
+            WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
             AND s.usage LIKE '%%M%%'
-            ORDER BY r.name, s.name;
+            ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
 
     def get_queries(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.active AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
             FROM servers s
-			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
+            JOIN (
+                SELECT s.id, IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active'
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %(user_id)s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            WHERE (s.shared = 1 OR s.owner_id = %s)
+            WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
             AND s.usage LIKE '%%M%%'
-            ORDER BY r.name, s.name;
+            ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
 
     def get_events(self, user):
         query = """
