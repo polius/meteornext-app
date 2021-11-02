@@ -35,7 +35,7 @@ class Deployments:
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
-        self._environments = models.inventory.environments.Environments(sql)
+        self._environments = models.inventory.environments.Environments(sql, license)
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
@@ -402,20 +402,9 @@ class Deployments:
             if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
-        # Check selected environment, if some servers are disabled
-        servers = self._environments.get_servers(user['id'], user['group_id'])
-        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
-        n = 0
-        for server in sorted(servers, key=lambda k:k['server_id']):
-            if self._license.resources == -1 or n < self._license.resources:
-                server['server_active'] = True
-                n += 1
-            else:
-                server['server_active'] = False
-        for server in environment_servers:
-            for s2 in servers:
-                if s2['server_id'] == server and not s2['server_active']:
-                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
+        # Check if selected environment contains any disabled servers
+        if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
+            return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Set Deployment Status
         if execution['scheduled'] is not None:
@@ -529,20 +518,9 @@ class Deployments:
             if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
-        # Check selected environment, if some servers are disabled
-        servers = self._environments.get_servers(user['id'], user['group_id'])
-        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
-        n = 0
-        for server in sorted(servers, key=lambda k:k['server_id']):
-            if self._license.resources == -1 or n < self._license.resources:
-                server['server_active'] = True
-                n += 1
-            else:
-                server['server_active'] = False
-        for server in environment_servers:
-            for s2 in servers:
-                if s2['server_id'] == server and not s2['server_active']:
-                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
+        # Check if selected environment contains any disabled servers
+        if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
+            return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Set Execution Status
         if execution['scheduled'] is not None:
@@ -634,20 +612,9 @@ class Deployments:
         if execution['status'] not in ['CREATED','SCHEDULED']:
             return jsonify({'message': 'This deployment cannot be started.'}), 400
 
-        # Check selected environment, if some servers are disabled
-        servers = self._environments.get_servers(user['id'], user['group_id'])
-        environment_servers = self._environments.get_servers_by_environment(user['id'], user['group_id'], execution['environment_id'])
-        n = 0
-        for server in sorted(servers, key=lambda k:k['server_id']):
-            if self._license.resources == -1 or n < self._license.resources:
-                server['server_active'] = True
-                n += 1
-            else:
-                server['server_active'] = False
-        for server in environment_servers:
-            for s2 in servers:
-                if s2['server_id'] == server and not s2['server_active']:
-                    return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
+        # Check if selected environment contains any disabled servers
+        if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
+            return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Get Group Authority
         group = self._groups.get(group_id=authority['group_id'])[0]

@@ -1,8 +1,9 @@
 from datetime import datetime
 
 class Environments:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user_id, group_id, environment_id=None):
         if environment_id is None:
@@ -115,17 +116,27 @@ class Environments:
         """
         return self._sql.execute(query, (group_id, user_id))
 
-    def get_servers_by_environment(self, user_id, group_id, environment_id):
+    def is_disabled(self, user_id, group_id, environment_id):
         query = """
-            SELECT s.id
-            FROM environments e
-            JOIN environment_servers es ON es.environment_id = e.id
-            JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %s)
-            WHERE e.group_id = %s
-            AND e.id = %s
+            SELECT EXISTS (
+                SELECT s.id
+                FROM environments e
+                JOIN environment_servers es ON es.environment_id = e.id
+                JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                LEFT JOIN (
+                    SELECT s.id
+                    FROM servers s
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                    ORDER BY s.id
+                ) t ON t.id = s.id
+                WHERE e.group_id = %(group_id)s
+                AND e.id = %(environment_id)s
+                AND t.id IS NULL
+            ) AS 'exist'
         """
-        result = self._sql.execute(query, (user_id, group_id, environment_id))
-        return [i['id'] for i in result] if result else []
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "environment_id": environment_id, "license": self._license.resources})[0]['exist']
 
     def valid(self, user_id, environment):
         query = """

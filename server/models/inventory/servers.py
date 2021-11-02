@@ -24,6 +24,7 @@ class Servers:
                 ) t ON t.id = s.id
                 WHERE s.group_id = %(group_id)s
                 AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id DESC
             """
             return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
         else:
