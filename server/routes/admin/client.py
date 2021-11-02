@@ -13,7 +13,7 @@ class Client:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._client = models.admin.client.Client(sql)
+        self._client = models.admin.client.Client(sql, license)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
