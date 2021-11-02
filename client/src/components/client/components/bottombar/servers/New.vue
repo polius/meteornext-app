@@ -7,8 +7,6 @@
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-plus</v-icon>NEW SERVER</v-toolbar-title>
-          <!-- <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn> -->
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -38,7 +36,11 @@
                                         <v-checkbox dense :input-value="selected.includes(item.id)"></v-checkbox>
                                       </v-list-item-action>
                                       <v-list-item-content>
-                                        <v-list-item-title><v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px; margin-bottom:2px">fas fa-server</v-icon>{{ item.name }}</v-list-item-title>
+                                        <v-list-item-title>
+                                          <v-chip small v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+                                          <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px">fas fa-server</v-icon>
+                                          {{ item.name }}
+                                        </v-list-item-title>
                                       </v-list-item-content>
                                     </template>
                                   </v-list-item>
