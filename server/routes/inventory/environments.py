@@ -11,7 +11,7 @@ class Environments:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._environments = models.inventory.environments.Environments(sql)
+        self._environments = models.inventory.environments.Environments(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
 
     def blueprint(self):

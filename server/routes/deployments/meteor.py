@@ -21,7 +21,7 @@ class Meteor:
 
         # Init models
         self._settings = models.admin.settings.Settings(sql)
-        self._environments = models.inventory.environments.Environments(sql)
+        self._environments = models.inventory.environments.Environments(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._servers = models.inventory.servers.Servers(sql, license)
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
