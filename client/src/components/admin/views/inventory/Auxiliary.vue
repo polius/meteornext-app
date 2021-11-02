@@ -296,7 +296,6 @@ export default {
           })
           this.auxiliary = response.data.auxiliary
           this.items = response.data.auxiliary
-          this.disabledResources = this.auxiliary.some(x => !x.active)
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
@@ -489,6 +488,7 @@ export default {
       if (val == 'all') this.items = this.auxiliary.slice(0)
       else if (val == 'personal') this.items = this.auxiliary.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.auxiliary.filter(x => x.shared)
+      this.disabledResources = this.items.some(x => !x.active)
     },
     filterAuxiliary() {
       this.selected = []

@@ -349,7 +349,6 @@ export default {
           })
           this.servers = response.data.servers
           this.items = response.data.servers
-          this.disabledResources = this.servers.some(x => !x.active)
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
@@ -547,6 +546,7 @@ export default {
       if (val == 'all') this.items = this.servers.slice(0)
       else if (val == 'personal') this.items = this.servers.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.servers.filter(x => x.shared)
+      this.disabledResources = this.items.some(x => !x.active)
     },
     parseUsage(val) {
       if (typeof val == 'string') {

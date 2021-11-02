@@ -21,6 +21,7 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.server`]="{ item }">
+          <v-chip v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
           <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
               {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
@@ -34,6 +35,9 @@
         </template>
         <template v-slot:[`item.attached`]="{ item }">
           <v-icon small :title="item.attached ? 'Attached' : 'Detached'" :color="item.attached ? '#00b16a' : '#EF5354'" style="margin-left:15px">fas fa-circle</v-icon>
+        </template>
+        <template v-slot:[`footer.prepend`]>
+          <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some servers are disabled. Consider the possibility of upgrading your license.</div>
         </template>
       </v-data-table>
     </v-card>
@@ -195,6 +199,7 @@ import EventBus from '../js/event-bus'
 export default {
   data() {
     return {
+      disabledResources: false,
       loading: false,
       origin: [],
       items: [],
@@ -281,6 +286,7 @@ export default {
         this.total = items.length
         this.items = items.slice(itemStart, itemEnd)
       }
+      this.disabledResources = this.items.some(x => !x.active)
     },
     submitFilter() {
       // Check if some filter was applied
