@@ -127,7 +127,8 @@ class Environments:
                     SELECT s.id
                     FROM servers s
                     JOIN (SELECT @cnt := 0) t
-                    WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                    WHERE s.group_id = %(group_id)s
+                    AND (s.shared = 1 OR s.owner_id = %(user_id)s)
                     AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
                     ORDER BY s.id
                 ) t ON t.id = s.id

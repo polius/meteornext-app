@@ -1,13 +1,14 @@
 from datetime import datetime
 
 class Servers:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, group_id=None, server_id=None, user_id=None):
         if user_id is not None:
             query = """
-                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared', t.id IS NOT NULL AS 'active'
                 FROM servers s
                 JOIN users u0 ON u0.id = %(user_id)s
                 JOIN groups g ON g.id = s.group_id AND g.id = u0.group_id
@@ -15,12 +16,22 @@ class Servers:
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
+                LEFT JOIN (
+                    SELECT s.id
+                    FROM servers s
+                    JOIN users u ON u.id = %(user_id)s AND u.group_id = s.group_id
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                    ORDER BY s.id
+                ) t ON t.id = s.id
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id DESC
             """
-            return self._sql.execute(query, {"user_id": user_id})
+            return self._sql.execute(query, {"user_id": user_id, "license": self._license.resources})
         elif group_id is not None:
             query = """
-                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared', '1' AS 'active'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
@@ -28,6 +39,7 @@ class Servers:
                 LEFT JOIN users u3 ON u3.id = s.updated_by
                 LEFT JOIN groups g ON g.id = s.group_id
                 WHERE s.group_id = %s
+                ORDER BY s.id DESC
             """
             return self._sql.execute(query, (group_id))
         elif server_id is not None:
@@ -42,13 +54,14 @@ class Servers:
             return self._sql.execute(query, (server_id))
         else:
             query = """
-                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared', '1' AS 'active'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
                 LEFT JOIN groups g ON g.id = s.group_id
+                ORDER BY s.id DESC
             """
             return self._sql.execute(query)
 

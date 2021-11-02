@@ -13,7 +13,7 @@ class Auxiliary:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
+        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
 
     def blueprint(self):
@@ -98,16 +98,8 @@ class Auxiliary:
     # Internal Methods #
     ####################
     def get(self, user):
+        # Get auxiliary
         auxiliary = self._auxiliary.get(user['id'], user['group_id'])
-        # Apply limits
-        n = 0
-        for aux in sorted(auxiliary, key=lambda k:k['id']):
-            if self._license.resources == -1 or n < self._license.resources:
-                aux['active'] = True
-                n += 1
-            else:
-                aux['active'] = False
-        auxiliary.sort(key=lambda k:k['id'], reverse=True)
         # Protect SSL Keys
         for aux in auxiliary:
             aux['ssl_client_key'] = '<ssl_client_key>' if aux['ssl_client_key'] is not None else None

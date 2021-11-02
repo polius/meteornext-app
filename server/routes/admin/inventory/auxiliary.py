@@ -16,7 +16,7 @@ class Auxiliary:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
-        self._auxiliary = models.admin.inventory.auxiliary.Auxiliary(sql)
+        self._auxiliary = models.admin.inventory.auxiliary.Auxiliary(sql, license)
         self._regions = models.admin.inventory.regions.Regions(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
@@ -109,21 +109,10 @@ class Auxiliary:
     ####################
     def get(self):
         # Get args
-        group_id = request.args['group_id'] if 'group_id' in request.args else None
         user_id = request.args['user_id'] if 'user_id' in request.args else None
+        group_id = request.args['group_id'] if 'group_id' in request.args else None
         # Get auxiliary
         auxiliary = self._auxiliary.get(group_id=group_id, user_id=user_id)
-        # Apply limits
-        n = 0
-        for aux in sorted(auxiliary, key=lambda k:k['id']):
-            if user_id is None:
-                aux['active'] = True
-            elif self._license.resources == -1 or n < self._license.resources:
-                aux['active'] = True
-                n += 1
-            else:
-                aux['active'] = False
-        auxiliary.sort(key=lambda k:k['id'], reverse=True)
         # Protect SSL Keys
         for aux in auxiliary:
             aux['ssl_client_key'] = '<ssl_client_key>' if aux['ssl_client_key'] is not None else None
