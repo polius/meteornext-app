@@ -37,7 +37,7 @@
                                       </v-list-item-action>
                                       <v-list-item-content>
                                         <v-list-item-title>
-                                          <v-chip small v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+                                          <v-icon small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-bottom:2px; margin-right:12px">fas fa-exclamation-triangle</v-icon>
                                           <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px">fas fa-server</v-icon>
                                           {{ item.name }}
                                         </v-list-item-title>
