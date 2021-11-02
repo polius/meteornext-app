@@ -9,7 +9,7 @@
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.server`]="{ item }">
-        <v-chip v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+        <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:8px">fas fa-exclamation-triangle</v-icon>
         <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
           <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
             {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
