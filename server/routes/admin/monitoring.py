@@ -13,7 +13,7 @@ class Monitoring:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.admin.monitoring.Monitoring(sql)
+        self._monitoring = models.admin.monitoring.Monitoring(sql, license)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 

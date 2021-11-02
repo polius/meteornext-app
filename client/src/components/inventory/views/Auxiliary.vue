@@ -285,7 +285,6 @@ export default {
         .then((response) => {
           this.auxiliary = response.data.data
           this.items = response.data.data
-          this.disabledResources = this.auxiliary.some(x => !x.active)
           this.filterBy(this.filter)
         })
         .catch((error) => {
@@ -474,6 +473,7 @@ export default {
       if (val == 'all') this.items = this.auxiliary.slice(0)
       else if (val == 'personal') this.items = this.auxiliary.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.auxiliary.filter(x => x.shared)
+      this.disabledResources = this.items.some(x => !x.active)
     },
     readFileAsync(file) {
       if (file == null || typeof file !== 'object') return file

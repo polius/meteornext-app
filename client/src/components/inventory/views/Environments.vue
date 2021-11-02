@@ -178,7 +178,6 @@ export default {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.environments = this.parseEnvironments(response.data.environments)
           this.items = this.environments.slice(0)
-          this.disabledResources = this.environments.some(x => x.servers.some(y => !y.active))
           this.filterBy(this.filter)
           this.loading = false
         })
@@ -400,6 +399,7 @@ export default {
       if (val == 'all') this.items = this.environments.slice(0)
       else if (val == 'personal') this.items = this.environments.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.environments.filter(x => x.shared)
+      this.disabledResources = this.items.some(x => x.servers.some(y => !y.active))
     },
     getIcon(mode) {
       if (mode == 'new') return 'fas fa-plus'

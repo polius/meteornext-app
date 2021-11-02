@@ -419,30 +419,30 @@ class Monitoring:
                     u.id AS 'user_id',
                     s.id AS 'server_id',
                     IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
-                    IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active',
+                    IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active',
                     @usr := u.id AS 'logic2'
                 FROM users u
                 JOIN (SELECT @cnt := 0, @usr := 0) t
                 JOIN servers s ON s.group_id = u.group_id AND (s.shared = 1 OR s.owner_id = u.id)
                 ORDER BY u.id, s.id
             ) t ON t.user_id = m.user_id AND t.server_id = m.server_id
-            WHERE m.server_id = %s
+            WHERE m.server_id = %(server_id)s
             AND m.monitor_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args=(server_id))
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
 
     def __get_slack_server(self, server_id):
         query = """
             SELECT DISTINCT ms.monitor_slack_url, ms.monitor_base_url
             FROM monitoring_settings ms
-            JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %s
+            JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %(server_id)s
             JOIN (
                 SELECT
                     u.id AS 'user_id',
                     s.id AS 'server_id',
                     IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
-                    IF((@cnt := @cnt + 1) <= 5, 1, 0) AS 'active',
+                    IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active',
                     @usr := u.id AS 'logic2'
                 FROM users u
                 JOIN (SELECT @cnt := 0, @usr := 0) t
@@ -452,7 +452,7 @@ class Monitoring:
             WHERE ms.monitor_slack_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args=(server_id))
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
 
     def __get_last_event(self, server_id):
         query = """
