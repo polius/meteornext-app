@@ -9,7 +9,7 @@
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.name`]="{ item }">
-        <v-chip v-if="!item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+        <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-bottom:2px; margin-right:6px">fas fa-exclamation-triangle</v-icon>
         {{ item.name }}
       </template>
       <template v-slot:[`item.region`]="{ item }">
