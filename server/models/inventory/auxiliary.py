@@ -1,18 +1,29 @@
 from datetime import datetime
 
 class Auxiliary:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get(self, user_id, group_id, auxiliary_id=None):
         if auxiliary_id is None:
             query = """
-                SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca, shared, owner_id, created_by, created_at
-                FROM auxiliary
-                WHERE group_id = %s
-                AND (shared = 1 OR owner_id = %s)
+                SELECT a.id, a.name, a.group_id, a.engine, a.version, a.hostname, a.port, a.username, a.password, a.`ssl`, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, a.created_by, a.created_at, t.id IS NOT NULL AS 'active'
+                FROM auxiliary a
+                LEFT JOIN (
+                    SELECT a.id
+                    FROM auxiliary a
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE a.group_id = %(group_id)s
+                    AND (a.shared = 1 OR a.owner_id = %(user_id)s)
+                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                    ORDER BY a.id
+                ) t ON t.id = a.id
+                WHERE a.group_id = %(group_id)s
+                AND (a.shared = 1 OR a.owner_id = %(user_id)s)
+                ORDER BY a.id DESC
             """
-            return self._sql.execute(query, (group_id, user_id))
+            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
         else:
             query = """
                 SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca, shared, owner_id, created_by, created_at

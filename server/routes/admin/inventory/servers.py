@@ -17,7 +17,7 @@ class Servers:
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._regions = models.admin.inventory.regions.Regions(sql)
-        self._servers = models.admin.inventory.servers.Servers(sql)
+        self._servers = models.admin.inventory.servers.Servers(sql, license)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 

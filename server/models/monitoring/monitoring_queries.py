@@ -58,13 +58,14 @@ class Monitoring_Queries:
                 SELECT s.id
                 FROM servers s
                 JOIN (SELECT @cnt := 0) t
-                WHERE (s.shared = 1 OR s.owner_id = {0})
-                AND ({12} = -1 OR (@cnt := @cnt + 1) <= {12})
+                WHERE s.group_id = {1}
+                AND (s.shared = 1 OR s.owner_id = {0})
+                AND ({13} = -1 OR (@cnt := @cnt + 1) <= {13})
                 ORDER BY s.id
             ) t ON t.id = s.id
             WHERE 1=1
-            {1} {2} {3} {4} {5} {6} {7} {8} {9}
-            ORDER BY {10} {11}
+            {2} {3} {4} {5} {6} {7} {8} {9} {10}
+            ORDER BY {11} {12}
             LIMIT 1000
-        """.format(user['id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order, self._license.resources)
+        """.format(user['id'], user['group_id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order, self._license.resources)
         return self._sql.execute(query, args)
