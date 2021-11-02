@@ -32,7 +32,7 @@
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px">
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'fas fa-folder-open' : 'fas fa-folder' }}</v-icon>
               <div v-else-if="sidebarMode == 'servers'">
-                <v-icon small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers.">fas fa-exclamation-triangle</v-icon>
+                <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers.">fas fa-exclamation-triangle</v-icon>
                 <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="padding:10px">fas fa-server</v-icon>
               </div>
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
