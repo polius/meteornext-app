@@ -20,7 +20,7 @@ class Client:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._client = models.client.client.Client(sql)
+        self._client = models.client.client.Client(sql, license)
         # Init connections
         self._connections = connectors.client.Client(app)
 
@@ -131,6 +131,10 @@ class Client:
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
+
+            # Check Server Disabled
+            if not cred['active']:
+                return jsonify({"message": 'This server is disabled'}), 400
 
             # Open a server connection
             try:

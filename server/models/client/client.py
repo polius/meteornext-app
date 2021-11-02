@@ -1,39 +1,58 @@
 from datetime import datetime
 
 class Client:
-    def __init__(self, sql):
+    def __init__(self, sql, license):
         self._sql = sql
+        self._license = license
 
     def get_servers(self, user_id, group_id):
         query = """
             SELECT 
-                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared,
+                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared, t.id IS NOT NULL AS 'active',
                 cs.folder_id, cf.name AS 'folder_name',
                 r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %(user_id)s
             LEFT JOIN client_folders cf ON cf.id = cs.folder_id
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
             WHERE s.group_id = %(group_id)s AND (s.shared = 1 OR s.owner_id = %(user_id)s)
             ORDER BY s.name;
         """
-        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id})
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.resources})
 
     def get_servers_unassigned(self, user_id, group_id):
         query = """
             SELECT
-                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared,
+                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared, t.id IS NOT NULL AS 'active',
                 r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %(user_id)s
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
             WHERE s.group_id = %(group_id)s
             AND (s.shared = 1 OR s.owner_id = %(user_id)s)
             AND s.usage LIKE '%%C%%'
             AND cs.server_id IS NULL
-            ORDER BY s.name;
+            ORDER BY s.name
         """
-        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id})
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.resources})
 
     def get_folders(self, user_id):
         query = """
@@ -49,18 +68,29 @@ class Client:
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
                 s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
+                t.id IS NOT NULL AS 'active',
                 r.ssh_tunnel AS 'rtunnel', r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key AS 'rkey'
             FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            WHERE s.id = %s
-            AND (s.shared = 1 OR s.owner_id = %s)
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            WHERE s.id = %(server_id)s
+            AND (s.shared = 1 OR s.owner_id = %(user_id)s)
         """
-        result = self._sql.execute(query, (group_id, server_id, user_id))
+        result = self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.resources})
         if len(result) == 0:
             return None
 
         credentials = {
             'id': result[0]['id'],
+            'active': result[0]['active'],
             'ssh': {
                 'enabled': result[0]['rtunnel'],
                 'hostname': result[0]['rhostname'],
