@@ -3,6 +3,7 @@ import re
 import json
 import boto3
 import tempfile
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -67,7 +68,25 @@ class Settings:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            return jsonify({'message': 'OK'}), 200
+            # Check if 60 seconds has elapsed before last check
+            now = datetime.utcnow()
+            last = datetime.strptime(self._license.last_check_date, '%Y-%m-%d %H:%M:%S.%f')
+            diff = int((now-last).total_seconds())
+            if int(diff) < 60:
+                return jsonify({'message': f"Wait {60-diff} seconds to refresh again"}), 400
+
+            # Check license status
+            self._license.validate(force=True)
+
+            # Build data
+            license = {
+                "email": self._settings_conf['license']['email'],
+                "key": self._settings_conf['license']['key'],
+                "expiration": self._license.status['expiration'],
+                "resources": self._license.status['resources'],
+                "last_check_date": self._license.last_check_date,
+            }
+            return jsonify({'license': license}), 200
 
         @settings_blueprint.route('/admin/settings/files', methods=['POST'])
         @jwt_required()
@@ -157,6 +176,7 @@ class Settings:
         settings['license']['key'] = self._settings_conf['license']['key']
         settings['license']['expiration'] = self._license.status['expiration']
         settings['license']['resources'] = self._license.status['resources']
+        settings['license']['last_check_date'] = self._license.last_check_date
 
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']

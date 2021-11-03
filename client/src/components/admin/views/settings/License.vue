@@ -7,27 +7,36 @@
     <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
     <v-text-field readonly :loading="loading" v-model="license.expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
     <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="padding-top:0px; margin-top:0px" hide-details></v-switch>
-    <v-btn @click="refresh" :loading="loading" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>Refresh</v-btn>
+    <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
   </v-flex>
 </template>
 
 <script>
+import axios from 'axios'
+import moment from 'moment'
+import EventBus from '../../js/event-bus'
+
 export default {
   data: () => ({
+    timer: null,
+    diff: null,
     renewal: true,
     license: {},
     show_key: false,
-    loading: false,
+    loading: true,
   }),
   props: ['info','init'],
   created() {
     if (Object.keys(this.info).length > 0) this.license = JSON.parse(JSON.stringify(this.info))
   },
+  mounted() {
+    this.checkLicense()
+  },
   computed: {
     resources() {
       if (this.license.resources == -1) return 'Unlimited'
       return this.license.resources + (this.license.resources == 1 ? ' Server' : ' Servers') + ' / User'
-    },
+    }
   },
   watch: {
     info: function(val) {
@@ -35,20 +44,28 @@ export default {
     },
     init: function(val) {
       this.loading = val
-    }
+    },
   },
   methods: {
+    checkLicense() {
+      this.timer = setInterval(() => {
+        this.diff = moment.utc().diff(moment.utc(this.license.last_check_date), 'seconds')
+        if (this.diff > 60) clearInterval(this.timer)
+      }, 1000)
+    },
     refresh() {
       this.loading = true
-      // axios.get('/admin/settings')
-      //   .then((response) => {
-      //     this.settings = response.data.settings
-      //   })
-      //   .catch((error) => {
-      //     if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-      //     else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-      //   })
-      //   .finally(() => this.loading = false)
+      this.diff = null
+      axios.get('/admin/settings/license')
+        .then((response) => {
+          this.license = response.data.license
+          this.checkLicense()
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
     }
   }
 }

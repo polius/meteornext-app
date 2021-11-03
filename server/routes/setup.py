@@ -301,7 +301,7 @@ class License:
         self._license_params = license
         self._license_status = {} 
         self._license_timeout = 24 # Hours
-        self._last_login_date = str(datetime.utcnow())
+        self._last_check_date = str(datetime.utcnow())
         self._next_check = None
         self._next_check2 = None
 
@@ -317,23 +317,30 @@ class License:
     def resources(self):
         return self._license_status['resources']
 
-    def validate(self):
+    @property
+    def last_check_date(self):
+        return self._last_check_date
+
+    def validate(self, force=False):
         current_utc = str(datetime.utcnow())
+        # Check if force param is True
+        if force:
+            self.__check()
         # Check if first time
-        if not self._license_status:
+        elif not self._license_status:
             self.__check()
         # Check again if license server is unreachable
         elif self._license_status['code'] == 404:
             self.__check()
         # Check license if time was changed
-        elif current_utc <= self._last_login_date or current_utc <= self._license_status['date']:
+        elif current_utc <= self._last_check_date or current_utc <= self._license_status['date']:
             self.__check()
         # Check next validation
         elif current_utc > self._next_check or current_utc > self._next_check2:
             self.__check()
 
-        # Store last login date
-        self._last_login_date = current_utc
+        # Store last check date
+        self._last_check_date = current_utc
 
     def __check(self):
         try:
