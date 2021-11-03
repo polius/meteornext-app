@@ -70,7 +70,7 @@ class Settings:
 
             # Check if 60 seconds has elapsed before last check
             now = datetime.utcnow()
-            last = datetime.strptime(self._license.last_check_date, '%Y-%m-%d %H:%M:%S.%f')
+            last = self._license.last_check_date
             diff = int((now-last).total_seconds())
             if int(diff) < 60:
                 return jsonify({'message': f"Wait {60-diff} seconds to refresh again"}), 400

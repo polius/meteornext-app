@@ -5,7 +5,7 @@
     <v-text-field readonly :loading="loading" v-model="license.email" label="Email" style="margin-top:15px" required :rules="[v => !!v || '']"></v-text-field>
     <v-text-field readonly :loading="loading" v-model="license.key" label="Key" style="padding-top:0px" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
     <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" v-model="license.expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
+    <v-text-field readonly :loading="loading" v-model="expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
     <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="padding-top:0px; margin-top:0px" hide-details></v-switch>
     <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
   </v-flex>
@@ -36,6 +36,10 @@ export default {
     resources() {
       if (this.license.resources == -1) return 'Unlimited'
       return this.license.resources + (this.license.resources == 1 ? ' Server' : ' Servers') + ' / User'
+    },
+    expiration() {
+      if (this.license.expiration == null) return 'Lifetime'
+      return this.license.expiration
     }
   },
   watch: {

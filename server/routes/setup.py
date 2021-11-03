@@ -7,7 +7,7 @@ import bcrypt
 import hashlib
 import requests
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import request, jsonify, Blueprint
 
 import routes.login
@@ -82,7 +82,7 @@ class Setup:
                 monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
                 monitoring.start()
                 # Init cron
-                Cron(self._app, self._license, self._blueprints, sql)
+                Cron(self._app, self._license, sql)
                 # Show success message
                 print("- Meteor initiated from existing configuration.")
         except Exception as e:
@@ -239,7 +239,7 @@ class Setup:
             self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
-            Cron(self._app, self._license, self._blueprints, sql)
+            Cron(self._app, self._license, sql)
 
             # Build return message
             return jsonify({'message': 'Setup Finished Successfully'}), 200
@@ -299,11 +299,8 @@ class Setup:
 class License:
     def __init__(self, license):
         self._license_params = license
-        self._license_status = {} 
-        self._license_timeout = 24 # Hours
-        self._last_check_date = str(datetime.utcnow())
-        self._next_check = None
-        self._next_check2 = None
+        self._license_status = {}
+        self._last_check_date = datetime.utcnow()
 
     @property
     def status(self):
@@ -322,25 +319,12 @@ class License:
         return self._last_check_date
 
     def validate(self, force=False):
-        current_utc = str(datetime.utcnow())
-        # Check if force param is True
-        if force:
-            self.__check()
-        # Check if first time
-        elif not self._license_status:
-            self.__check()
-        # Check again if license server is unreachable
-        elif self._license_status['code'] == 404:
-            self.__check()
-        # Check license if time was changed
-        elif current_utc <= self._last_check_date or current_utc <= self._license_status['date']:
-            self.__check()
-        # Check next validation
-        elif current_utc > self._next_check or current_utc > self._next_check2:
+        # Check license
+        if force or not self._license_status or self._license_status['code'] != 200:
             self.__check()
 
         # Store last check date
-        self._last_check_date = current_utc
+        self._last_check_date = datetime.utcnow()
 
     def __check(self):
         try:
@@ -368,8 +352,5 @@ class License:
 
             self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources, "expiration": expiration}
         except Exception:
-            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
-        else:
-            if self._license_status['code'] == 200:
-                self._next_check = str(datetime.utcnow() + timedelta(hours=self._license_timeout))
-                self._next_check2 = str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(hours=self._license_timeout))
+            if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
+                self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
