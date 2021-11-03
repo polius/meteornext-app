@@ -98,6 +98,10 @@ export default {
         // Change view to Client
         this.headerTab = 0
         this.headerTabSelected = 'client'
+        // Refresh Sidebar Objects
+        new Promise((resolve, reject) => {
+          EventBus.$emit('refresh-sidebar-objects', resolve, reject)
+        })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }
