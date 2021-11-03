@@ -336,8 +336,8 @@ class License:
             response_code = response.status_code
             response_text = json.loads(response.text)['response']
             date = json.loads(response.text)['date']
-            resources = 5 # json.loads(response.text)['resources']
-            expiration = None if 'expiration' not in json.loads(response.text) else json.loads(response.text)['expiration']
+            resources = json.loads(response.text)['resources'] if response_code == 200 else None
+            expiration = json.loads(response.text)['expiration'] if response_code == 200 else None
 
             # Solve challenge
             if response_code == 200:

@@ -5,8 +5,8 @@
     <v-text-field readonly :loading="loading" v-model="license.email" label="Email" style="margin-top:15px" required :rules="[v => !!v || '']"></v-text-field>
     <v-text-field readonly :loading="loading" v-model="license.key" label="Key" style="padding-top:0px" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
     <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" v-model="expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
-    <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="padding-top:0px; margin-top:0px" hide-details></v-switch>
+    <v-text-field readonly :loading="loading" v-model="expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
+    <!-- <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="padding-top:0px; margin-top:0px" hide-details></v-switch> -->
     <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
   </v-flex>
 </template>
@@ -20,7 +20,7 @@ export default {
   data: () => ({
     timer: null,
     diff: null,
-    renewal: true,
+    // renewal: true,
     license: {},
     show_key: false,
     loading: true,
@@ -30,7 +30,11 @@ export default {
     if (Object.keys(this.info).length > 0) this.license = JSON.parse(JSON.stringify(this.info))
   },
   mounted() {
+    this.loading = false
     this.checkLicense()
+  },
+  beforeDestroy() {
+    clearInterval(this.timer)
   },
   computed: {
     resources() {
@@ -52,9 +56,10 @@ export default {
   },
   methods: {
     checkLicense() {
+      clearInterval(this.timer)
       this.timer = setInterval(() => {
         this.diff = moment.utc().diff(moment.utc(this.license.last_check_date), 'seconds')
-        if (this.diff > 60) clearInterval(this.timer)
+        if (this.diff == 60) clearInterval(this.timer)
       }, 1000)
     },
     refresh() {
@@ -63,13 +68,18 @@ export default {
       axios.get('/admin/settings/license')
         .then((response) => {
           this.license = response.data.license
-          this.checkLicense()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else {
+            EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+            this.license = error.response.data.license
+          }
         })
-        .finally(() => this.loading = false)
+        .finally(() => {
+          this.checkLicense()
+          this.loading = false
+        })
     }
   }
 }
