@@ -11,7 +11,7 @@ import apps.monitoring.monitoring
 import apps.restore.scan
 
 class Cron:
-    def __init__(self, app, license, blueprints, sql):
+    def __init__(self, app, license, sql):
         self._app = app
         self._license = license
         self._sql = sql
@@ -22,6 +22,7 @@ class Cron:
             self.__one_time()
             # Schedule Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__check_license)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
@@ -56,6 +57,9 @@ class Cron:
             deployments.check_queued()
         except Exception:
             traceback.print_exc()
+
+    def __check_license(self):
+        self._license.validate(force=True)
 
     def __coins(self):
         if not self._license.validated:
