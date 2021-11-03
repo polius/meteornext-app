@@ -68,15 +68,14 @@ class Settings:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Check if 60 seconds has elapsed before last check
+            # Check number of seconds elapsed before last check
             now = datetime.utcnow()
             last = self._license.last_check_date
             diff = int((now-last).total_seconds())
-            if int(diff) < 60:
-                return jsonify({'message': f"Wait {60-diff} seconds to refresh again"}), 400
 
             # Check license status
-            self._license.validate(force=True)
+            if int(diff) >= 60:
+                self._license.validate(force=True)
 
             # Build data
             license = {
@@ -86,7 +85,10 @@ class Settings:
                 "resources": self._license.status['resources'],
                 "last_check_date": self._license.last_check_date,
             }
-            return jsonify({'license': license}), 200
+            if int(diff) < 60:
+                return jsonify({'license': license, 'message': f"Wait {60-diff} seconds to refresh again"}), 400
+            else:
+                return jsonify({'license': license}), 200
 
         @settings_blueprint.route('/admin/settings/files', methods=['POST'])
         @jwt_required()
