@@ -15,7 +15,7 @@
       </div>
     </v-form>
     <div style="margin-top:20px">
-      <v-btn :disabled="loading" color="#00b16a" @click="saveFiles()">SAVE</v-btn>
+      <v-btn :disabled="loading" color="#00b16a" @click="saveFiles()"><v-icon small style="margin-right:10px">fas fa-save</v-icon>SAVE</v-btn>
       <v-btn v-if="files.amazon_s3.enabled" :loading="loading" color="primary" style="margin-left:10px" @click="testCredentials()">TEST CREDENTIALS</v-btn>
     </div>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
