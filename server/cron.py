@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import time
 import schedule
@@ -59,7 +58,10 @@ class Cron:
             traceback.print_exc()
 
     def __check_license(self):
-        self._license.validate(force=True)
+        try:
+            self._license.validate(force=True)
+        except Exception:
+            traceback.print_exc()
 
     def __coins(self):
         if not self._license.validated:
