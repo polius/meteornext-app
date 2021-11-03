@@ -754,7 +754,7 @@ import importlib
 
 def import2(name, globals=None, locals=None, fromlist=(), level=0):
     global importlib
-    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale','boto3']
+    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale','boto3','hashlib']
     frommodule = globals['__name__'] if globals else None
     if frommodule is None or frommodule == '__main__':
         if name not in whitelist:

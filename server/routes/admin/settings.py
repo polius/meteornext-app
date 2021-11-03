@@ -49,6 +49,26 @@ class Settings:
             elif request.method == 'PUT':
                 return self.put(user['id'], settings_json)
 
+        @settings_blueprint.route('/admin/settings/license', methods=['GET'])
+        @jwt_required()
+        def settings_license_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            return jsonify({'message': 'OK'}), 200
+
         @settings_blueprint.route('/admin/settings/files', methods=['POST'])
         @jwt_required()
         def settings_files_method():
@@ -136,6 +156,7 @@ class Settings:
         settings['license']['email'] = self._settings_conf['license']['email']
         settings['license']['key'] = self._settings_conf['license']['key']
         settings['license']['expiration'] = self._license.status['expiration']
+        settings['license']['resources'] = self._license.status['resources']
 
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']

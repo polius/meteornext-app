@@ -42,7 +42,7 @@
     <div class="subtitle-1" style="margin-top:20px; color:#fa8131">SECURE ADMIN</div>
     <div class="body-1 font-weight-regular" style="margin-top:10px;">Restrict access to the Administration panel only to a specific IP address or domain.</div>
     <v-text-field :loading="loading" :disabled="loading" v-model="security.restrict_url" label="Administration URL" :placeholder="currentUrl" style="margin-top:10px" required :rules="[v => v ? this.validURL(v) : true || '' ]" hide-details></v-text-field>
-    <v-btn :loading="loading" color="#00b16a" style="margin-top:25px" @click="saveSecurity()">SAVE</v-btn>
+    <v-btn :loading="loading" color="#00b16a" style="margin-top:25px" @click="saveSecurity()"><v-icon small style="margin-right:10px">fas fa-save</v-icon>SAVE</v-btn>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
