@@ -319,12 +319,12 @@ class License:
         return self._last_check_date
 
     def validate(self, force=False):
-        # Check license
         if force or not self._license_status or self._license_status['code'] != 200:
+            # Check license
             self.__check()
 
-        # Store last check date
-        self._last_check_date = datetime.utcnow()
+            # Store last check date
+            self._last_check_date = datetime.utcnow()
 
     def __check(self):
         try:
