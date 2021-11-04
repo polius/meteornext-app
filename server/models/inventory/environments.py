@@ -98,23 +98,41 @@ class Environments:
 
     def get_servers(self, user_id, group_id):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name'
             FROM servers s
             LEFT JOIN regions r ON r.id = s.region_id
-            WHERE (s.shared = 1 AND r.group_id = %s)
-            OR s.owner_id = %s
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
+            WHERE (s.shared = 1 AND r.group_id = %(group_id)s)
+            OR s.owner_id = %(user_id)s
         """
-        return self._sql.execute(query, (group_id, user_id))
+        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
 
     def get_environment_servers(self, user_id, group_id):
         query = """
-            SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
+            SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name'
             FROM environment_servers es
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
-            JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %s)
+            JOIN environments e ON e.id = es.environment_id AND e.group_id = %(group_id)s
+            JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+            LEFT JOIN (
+                SELECT s.id
+                FROM servers s
+                JOIN (SELECT @cnt := 0) t
+                WHERE s.group_id = %(group_id)s
+                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
+                ORDER BY s.id
+            ) t ON t.id = s.id
             LEFT JOIN regions r ON r.id = s.region_id
         """
-        return self._sql.execute(query, (group_id, user_id))
+        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
 
     def is_disabled(self, user_id, group_id, environment_id):
         query = """

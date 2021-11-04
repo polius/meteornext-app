@@ -68,7 +68,7 @@
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center;">No servers to be selected</div>
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
                         <template v-slot:prepend="{ item }">
-                          <v-chip v-if="!item.children && !item.active" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." label color="#EB5F5D" style="margin-right:10px">DISABLED</v-chip>
+                          <v-icon v-if="!item.children && !item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
