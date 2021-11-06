@@ -575,7 +575,7 @@ class Client:
 
             # Start clone
             try:
-                self.__clone_object(client_json['options'], cred, conn)
+                self.__clone_object(client_json['options'], conn)
                 return jsonify({"message": 'Object cloned successfully'}), 200
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
@@ -913,12 +913,19 @@ class Client:
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
-    def __clone_object(self, options, cred, conn):
+    def __clone_object(self, options, conn):
         conn.disable_fks_checks()
         if options['object'] == 'table':
             for table in options['items']:
+                # Drop Table if Exists
                 conn.execute(query=f"DROP TABLE IF EXISTS `{table}`", database=options['target'])
+                # Create Table
                 conn.execute(query=f"CREATE TABLE IF NOT EXISTS `{table}` LIKE `{options['origin']}`.`{table}`", database=options['target'])
+                # Create FKs
+                fks = conn.execute(query=f"SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE table_schema = '{options['origin']}' AND table_name = '{table}' AND REFERENCED_TABLE_SCHEMA IS NOT NULL ORDER BY ordinal_position", database=options['target'])['data']
+                for fk in fks:
+                    db = fk['REFERENCED_TABLE_SCHEMA'] if fk['REFERENCED_TABLE_SCHEMA'] != options['origin'] else options['target']
+                    conn.execute(query=f"ALTER TABLE `{table}` ADD CONSTRAINT `{fk['CONSTRAINT_NAME']}` FOREIGN KEY (`{fk['COLUMN_NAME']}`) REFERENCES `{db}`.`{fk['REFERENCED_TABLE_NAME']}` (`{fk['REFERENCED_COLUMN_NAME']}`)", database=options['target'])
                 conn.execute(query=f"INSERT INTO `{table}` SELECT * FROM `{options['origin']}`.`{table}`", database=options['target'])
         elif options['object'] == 'view':
             for view in options['items']:

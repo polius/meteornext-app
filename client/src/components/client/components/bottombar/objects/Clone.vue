@@ -202,13 +202,16 @@ export default {
   watch: {
     dialog: function(val) {
       this.dialogOpened = val
-      if (this.database != this.databasePrev) this.buildObjects()
+      if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
     },
   },
   methods: {
     showDialog(selected) {
+      this.buildObjects()
       this.selected = selected
       this.targetDatabase = ''
+      this.search = ''
+      this.onSearch('')
       this.dialog = true
       setTimeout(() => {
         for (let obj of this.objects) {
@@ -390,6 +393,7 @@ export default {
       this.dialog = false
     },
     onSearch(value) {
+      if (this.gridApi['tables'] == null) return
       for (let id of ['tables','views','triggers','functions','procedures','events']) this.gridApi[id].setQuickFilter(value)
     },
   }
