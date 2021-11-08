@@ -389,7 +389,6 @@ export default {
     cloneServer() {
       this.mode = 'clone'
       this.item = {...this.selected[0]}
-      delete this.item['id']
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()

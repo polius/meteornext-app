@@ -357,7 +357,6 @@ export default {
     cloneServer() {
       this.mode = 'clone'
       this.item = {...this.selected[0]}
-      delete this.item['id']
       this.item.usage = this.parseUsage(this.item.usage)
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.versions = this.engines[this.item.engine]
