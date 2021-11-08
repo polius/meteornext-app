@@ -246,18 +246,13 @@ class Client:
             # Execute all queries
             execution = []
             errors = False
-            multiple = type(client_json['database']) == list and len(client_json['database']) == len(client_json['queries'])
-            use_database = None
 
-            for index, query in enumerate(client_json['queries']):
-                database = client_json['database'][index] if multiple else client_json['database']
-                database = None if database and len(database) == 0 else database
-                # Handle 'USE' keyword
-                if query.strip()[:4].upper() == 'USE ':
-                    database = use_database = query.strip()[4:-1] if query.endswith(';') else query.strip()[4:]
-                elif use_database is not None:
-                    database = use_database
+            for query in client_json['queries']:
                 try:
+                    # Select database
+                    if query.upper().startswith('USE '):
+                        client_json['database'] = query[4:][1:-1] if query[4:].startswith('`') and query[4:].endswith('`') else query[4:]
+                    database = None if len(client_json['database']) == 0 else client_json['database']
                     # Execute query
                     result = conn.execute(query=query, database=database)
                     result['query'] = query

@@ -505,7 +505,6 @@ export default {
         server: this.server.id,
         database: null,
         queries,
-        executeAll: false,
       }
       const server = this.server
       axios.post('/client/execute', payload)

@@ -991,13 +991,6 @@ export default {
       this.clientQueryStopped = false
       this.currentCellEditNode = {}
       this.currentCellEditValues = {}
-      // Check database
-      let database = payload.queries.find(x => x.replace(/^\s+|\s+$/g, '').substring(0,4).toUpperCase() == 'USE ')
-      if (database !== undefined) {
-        const parsedDatabase = database.replace(/^\s+|\s+$/g, '')
-        database = database.endsWith(';') ? parsedDatabase.substring(4, parsedDatabase.length-1) : parsedDatabase.substring(4, parsedDatabase.length)
-        EventBus.$emit('change-database', database)
-      }
       // Show loading
       setTimeout(() => { this.gridApi.client.showLoadingOverlay() }, 0)
       // Execute queries
@@ -1020,6 +1013,17 @@ export default {
             this.editor.moveCursorTo(cursor.row, cursor.column)
             current.clientExecuting = null
           })
+          // Check USE 'DB'
+          let database = null
+          for (let query of payload['queries']) {
+            if (query.replace(/^\s+|\s+$/g, '').substring(0,4).toUpperCase() == 'USE ') {
+              database = query.replace(/^\s+|\s+$/g, '')
+              database = database.endsWith(';') ? database.slice(4,-1) : database.substring(4)
+              database = database.startsWith('`') ? database.substring(1) : database
+              database = database.endsWith('`') ? database.slice(0,-1) : database
+            }
+          }
+          if (database != null) EventBus.$emit('change-database', database)
         })
         .catch((error) => {
           let current = this.connections.find(c => c['index'] == index)
@@ -1128,6 +1132,16 @@ export default {
         }
       })
       current.clientItems = itemsToLoad
+      // Check if executed DROP DATABASE in the current DB
+      for (let query of payload.queries) {
+        if (query.trim().toLowerCase().startsWith('drop database')) {
+          let db = query.trim().split(" ").splice(-1)[0]
+          db = db.endsWith(';') ? db.slice(0,-1) : db
+          db = db.startsWith('`') ? db.substring(1) : db
+          db = db.endsWith('`') ? db.slice(0,-1) : db
+          if (db == this.database) this.database = ''
+        }
+      }
       // Check if the query needs to reload objects.
       let needReload = false
       for (let query of payload.queries) {
