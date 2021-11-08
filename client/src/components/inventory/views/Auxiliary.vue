@@ -309,7 +309,6 @@ export default {
     cloneAuxiliary() {
       this.mode = 'clone'
       this.item = {...this.selected[0]}
-      delete this.item['id']
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'
