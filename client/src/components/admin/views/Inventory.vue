@@ -245,6 +245,9 @@ export default {
     }
   },
   watch: {
+    tab: function (newValue, oldValue) {
+      if (newValue === undefined) this.tab = oldValue
+    },
     dialog (val) {
       if (!val) return
       if (!this.filterApplied) this.filter = { by: 'user', search: '', group: null, scope: 'all' }
