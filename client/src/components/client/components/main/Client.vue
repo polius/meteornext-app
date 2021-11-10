@@ -345,7 +345,8 @@ export default {
       const payload = { 
         connection: this.id + '-shared',
         server: this.server.id,
-        ...this.currentQueryMetadata
+        database: this.currentQueryMetadata.database.replaceAll('``','`'),
+        table: this.currentQueryMetadata.table.replaceAll('``','`'),
       }
       axios.get('/client/pks', { params: payload })
       .then((response) => {
@@ -403,7 +404,7 @@ export default {
               'mode': 'cellEditingError',
               'icon': 'fas fa-exclamation-triangle',
               'title': 'ERROR',
-              'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
+              'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table.replace('``','`') + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
               'button1': 'Edit row',
               'button2': 'Discard changes'
             }
@@ -1069,16 +1070,27 @@ export default {
       for (let line of beautified.split('\n')) {
         if (line.substring(0,4).toLowerCase().startsWith('from')) {
           // Extract DB & Table
-          let raw = line.slice(5).replace(',','').replace(';','').split('`')
-          if (raw[0].slice(-1) == '.') raw[0] = raw[0].slice(0, -1)
-          let transform = raw.reduce((acc, val) => {
-            if (!(['','.'].includes(val))) acc.push(val)
-            return acc
-          },[])
-          if (raw.count == 1 && transform.length == 1) raw = transform[0].split('.')
-          else raw = transform
-          if (raw.length == 1) this.currentQueryMetadata = { database: this.database, table: raw[0].trim()}
-          else this.currentQueryMetadata = { database: raw[0].trim(), table: raw[1].trim()}
+          let raw = line.slice(5).indexOf(" ") == -1 ? line.slice(5) : line.slice(5).substring(0, line.slice(5).indexOf(" "))
+          let chars = []
+          let dbFound = false
+          for (let i = 0; i < raw.length; ++i) {
+            if (raw[i] == '.' && chars.length == 0) {
+              // Found!
+              let db = raw.substring(0,i).startsWith('`') && raw.substring(0,i).endsWith('`') ? raw.substring(1,i-1) : raw.substring(0,i)
+              let tbl = raw.substring(i+1).startsWith('`') && raw.substring(i+1).endsWith('`') ? raw.substring(i+2,raw.length-1) : raw.substring(i+1)
+              dbFound = true
+              this.currentQueryMetadata = { database: db, table: tbl}
+              break
+            }
+            if (raw[i] == '`') {
+              if (chars.length != 0) chars.pop()
+              else chars.push(i)
+            }
+          }
+          if (!dbFound) {
+            let tbl = raw.startsWith('`') && raw.endsWith('`') ? raw.substring(1, raw.length-1) : raw
+            this.currentQueryMetadata = { database: this.database, table: tbl}
+          }
           found = true
         }
         else if (found) {
