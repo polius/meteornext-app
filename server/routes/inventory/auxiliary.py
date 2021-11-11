@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import json
+import copy
 
 import connectors.base
 import models.admin.users
@@ -121,7 +122,10 @@ class Auxiliary:
         if auxiliary['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check auxiliary exists
-        if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
+        auxiliary2 = copy.deepcopy(auxiliary)
+        if 'id' in auxiliary2:
+            del auxiliary2['id']
+        if self._auxiliary.exist(user['id'], user['group_id'], auxiliary2):
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Parse ssl
         if auxiliary['ssl'] and (auxiliary['ssl_client_key'] == '<ssl_client_key>' or auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' or auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>'):

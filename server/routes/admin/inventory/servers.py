@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import json
+import copy
 
 import connectors.base
 import models.admin.users
@@ -130,7 +131,10 @@ class Servers:
         if not server['shared'] and not self._inventory.exist_user(server['group_id'], server['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check server exists
-        if self._servers.exist(server):
+        server2 = copy.deepcopy(server)
+        if 'id' in server:
+            del server2['id']
+        if self._servers.exist(server2):
             return jsonify({'message': 'This server name currently exists'}), 400
         # Parse ssl
         if server['ssl'] and (server['ssl_client_key'] == '<ssl_client_key>' or server['ssl_client_certificate'] == '<ssl_client_certificate>' or server['ssl_ca_certificate'] == '<ssl_ca_certificate>'):
