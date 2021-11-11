@@ -162,24 +162,32 @@ class Servers:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    WHERE name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, user_id, server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": server['name'], "group_id": group_id, "owner_id": user_id, "shared": server['shared'], "id": server['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    WHERE name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, user_id))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": server['name'], "group_id": group_id, "owner_id": user_id, "shared": server['shared']})[0]['exist'] == 1
 
     def exist_in_environment(self, user_id, group_id, server_id):
         query = """

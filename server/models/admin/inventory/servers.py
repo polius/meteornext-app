@@ -169,24 +169,32 @@ class Servers:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
-                    WHERE `name` = %s 
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    WHERE `name` = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['group_id'], server['owner_id'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": server['name'], "group_id": server['group_id'], "owner_id": server['owner_id'], "shared": server['shared'], "id": server['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
-                    SELECT * 
+                    SELECT shared, owner_id
                     FROM servers
-                    WHERE `name` = %s 
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    WHERE `name` = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['group_id'], server['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": server['name'], "group_id": server['group_id'], "owner_id": server['owner_id'], "shared": server['shared']})[0]['exist'] == 1
 
     def exist_in_environment(self, server):
         query = """

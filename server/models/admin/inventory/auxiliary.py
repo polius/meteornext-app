@@ -100,21 +100,29 @@ class Auxiliary:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM auxiliary
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    WHERE name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['owner_id'], auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": auxiliary['name'], "group_id": auxiliary['group_id'], "owner_id": auxiliary['owner_id'], "shared": auxiliary['shared'], "id": auxiliary['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM auxiliary
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    WHERE name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (shared = 1 OR owner_id = %(owner_id)s)
+                    AND (
+                        shared = %(shared)s
+                        OR owner_id = %(owner_id)s
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": auxiliary['name'], "group_id": auxiliary['group_id'], "owner_id": auxiliary['owner_id'], "shared": auxiliary['shared']})[0]['exist'] == 1

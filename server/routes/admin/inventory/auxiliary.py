@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import json
+import copy
 
 import connectors.base
 import models.admin.users
@@ -128,7 +129,10 @@ class Auxiliary:
         if not auxiliary['shared'] and not self._inventory.exist_user(auxiliary['group_id'], auxiliary['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check auxiliary exists
-        if self._auxiliary.exist(auxiliary):
+        auxiliary2 = copy.deepcopy(auxiliary)
+        if 'id' in auxiliary2:
+            del auxiliary2['id']
+        if self._auxiliary.exist(auxiliary2):
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Add auxiliary
         self._auxiliary.post(user, auxiliary)
