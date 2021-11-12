@@ -1,4 +1,5 @@
 import pymysql
+import time
 import dbutils.pooled_db
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
@@ -38,14 +39,22 @@ class MySQL:
         self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
     def execute(self, query, args=None, database=None):
-        with self._pool.dedicated_connection() as connection:
-            if database:
-                connection.select_db(database)
-            with connection.cursor(OrderedDictCursor) as cursor:
-                cursor.execute(query, args)
-                result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
-            connection.commit()
-        return result
+        retries = 1
+        exception = None
+        for _ in range(retries+1):
+            try:
+                with self._pool.dedicated_connection() as connection:
+                    if database:
+                        connection.select_db(database)
+                    with connection.cursor(OrderedDictCursor) as cursor:
+                        cursor.execute(query, args)
+                        result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+                    connection.commit()
+                return result
+            except pymysql.err.OperationalError as e:
+                exception = e
+                time.sleep(1)
+        raise exception
 
     def mogrify(self, query, args=None):
         with self._pool.dedicated_connection() as connection:
