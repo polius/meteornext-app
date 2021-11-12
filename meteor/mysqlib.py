@@ -27,7 +27,7 @@ class MySQL:
         sys.stderr = open(os.devnull, 'w')
 
         error = None
-        for i in range(6):
+        for _ in range(4):
             # Check if thread is alive
             if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
                 self.stop()
@@ -80,17 +80,7 @@ class MySQL:
         except Exception:
             pass
 
-    def execute(self, query, args=None, database=None, retry=True):
-        try:
-            return self.__execute_query(query, args, database)
-        except Exception as e:
-            if retry:
-                self.start()
-                return self.execute(query, args, database, retry=False)
-            else:
-                raise
-
-    def __execute_query(self, query, args, database):
+    def execute(self, query, args=None, database=None):
         # Select the database
         if database:
             self._sql.select_db(database)

@@ -7,14 +7,14 @@
             <v-slide-y-transition mode="out-in">
               <v-card style="border-radius:5px">
                 <v-card-text>
-                  <v-avatar :size="130" style="margin-top:10px"><img :src="require('../assets/logo.png')" /></v-avatar>
+                  <v-avatar :size="110" style="margin-top:10px"><img :src="require('../assets/logo.png')" /></v-avatar>
                   <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px"><span style="font-weight:500">Meteor</span> Next</div>
                   <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">INSTALL</div>
                   <v-divider></v-divider>
                   <!-- LICENSE -->
                   <v-form ref="formLicense" v-show="installPart == 'license'">
                     <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">LICENSE</div>
-                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
+                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required style="margin-bottom:20px" :rules="emailRules" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
                     <v-text-field filled v-model="license.key" name="key" label="Key" required type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                   </v-form>
                   <!-- SQL -->
@@ -32,7 +32,7 @@
                     <v-text-field filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="email"></v-text-field>
                     <v-text-field filled v-model="sql.password" name="password" label="Password" required :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                     <v-text-field filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
-                    <v-switch v-model="sql.ssl" flat label="SSL Connection" style="margin-top:20px"></v-switch>
+                    <!-- <v-switch v-model="sql.ssl" flat label="SSL Connection" style="margin-top:20px"></v-switch> -->
                     <div v-if="sql.ssl" style="margin-bottom:20px">
                       <v-file-input v-model="sql.ssl_client_key" label="Client Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
                       <v-file-input v-model="sql.ssl_client_certificate" label="Client Certificate" prepend-icon="" hide-details style="margin-top:10px"></v-file-input>
@@ -128,6 +128,10 @@
       buttonText: 'VERIFY',
       loading: false,
       showPassword: false,
+      emailRules: [
+        v => !!v || 'E-mail is required',
+        v => /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'E-mail must be valid',
+      ],
 
       // Install Dialog
       installDialog: false,

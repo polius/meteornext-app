@@ -54,32 +54,40 @@ class MySQL:
         return self._connection_id
 
     def connect(self):
-        # Close existing connections
-        self.close()
-
-        try:
-            ssl = self.__get_ssl()
-            # Start SSH Tunnel
-            if self._server['ssh']['enabled']:
-                sshtunnel.SSH_TIMEOUT = 5.0
-                sshtunnel.TUNNEL_TIMEOUT = 5.0
-                pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
-                self._tunnel.start()
-
-            # Start SQL Connection
-            hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
-            port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
-            database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-            self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
-
-        except Exception:
+        retries = 1
+        exception = None
+        for _ in range(retries+1):
+            # Close existing connections
             self.close()
-            raise
 
-        finally:
-            self.__close_ssl(ssl)
+            try:
+                ssl = self.__get_ssl()
+                # Start SSH Tunnel
+                if self._server['ssh']['enabled']:
+                    sshtunnel.SSH_TIMEOUT = 5.0
+                    sshtunnel.TUNNEL_TIMEOUT = 5.0
+                    pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
+                    self._tunnel.start()
+
+                # Start SQL Connection
+                hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
+                port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
+                database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
+
+            except Exception as e:
+                exception = e
+                time.sleep(1)
+            else:
+                exception = None
+            finally:
+                self.__close_ssl(ssl)
+        if exception:
+            if type(exception).__name__ == 'sshtunnel.BaseSSHTunnelForwarderError':
+                raise Exception("Can't connect to the SSH Server")
+            raise exception
 
     def close(self):
         try:
