@@ -52,7 +52,7 @@
                       <v-icon size="18" style="margin-top:13px">fas fa-arrow-right</v-icon>
                     </v-col>
                     <v-col cols="auto">
-                      <v-autocomplete v-model="targetDatabase" :items="databaseItems" label="Target Database" dense outlined :rules="[v => !!v || '']" required hide-details style="width:300px"></v-autocomplete>
+                      <v-autocomplete v-model="targetDatabase" :items="databaseItems" label="Target Database" dense outlined :rules="[v => !!v || '']" required auto-select-first hide-details style="width:300px"></v-autocomplete>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -334,7 +334,7 @@ export default {
     },
     cloneObjects(objects, resolve, reject) {
       var payload = {
-        connection: this.id + '-shared',
+        connection: this.id + '-clone',
         server: this.server.id,
         options: {
           origin: this.database,
