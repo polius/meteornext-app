@@ -81,7 +81,7 @@ class Cron:
             return
         try:
             # Get expiration value
-            setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
+            setting = self._sql.execute("SELECT value FROM settings WHERE name = 'FILES'")
 
             # Check expiration is active
             if len(setting) > 0:
@@ -91,6 +91,7 @@ class Cron:
                         SELECT id, uri
                         FROM executions
                         WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
+                        AND uri IS NOT NULL
                         AND expired = 0
                     """.format(setting['local']['expire'])
                     expired = self._sql.execute(query)
