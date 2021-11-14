@@ -18,7 +18,7 @@ class Settings:
         self._settings_conf = settings
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -89,6 +89,28 @@ class Settings:
                 return jsonify({'license': license, 'message': f"Wait {60-diff} seconds to refresh again"}), 400
             else:
                 return jsonify({'license': license}), 200
+
+        @settings_blueprint.route('/admin/settings/license/usage', methods=['GET'])
+        @jwt_required()
+        def settings_license_usage_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Return usage
+            usage = self._settings.get_license_usage()
+            return jsonify({'usage': usage}), 200
 
         @settings_blueprint.route('/admin/settings/files', methods=['POST'])
         @jwt_required()

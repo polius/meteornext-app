@@ -17,7 +17,7 @@ class Users:
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
         self._restore = models.utils.restore.Restore(sql, license)
         # Init routes
         self._settings_route = routes.admin.settings.Settings(app, sql, license)

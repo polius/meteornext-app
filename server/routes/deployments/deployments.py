@@ -34,7 +34,7 @@ class Deployments:
         self._executions = models.deployments.executions.Executions(sql)
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
         self._notifications = models.notifications.Notifications(sql)
 
