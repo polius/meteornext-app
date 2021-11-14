@@ -29,7 +29,7 @@ class Restore:
         self._groups = models.admin.groups.Groups(sql)
         self._restore = models.utils.restore.Restore(sql, license)
         self._scans = models.utils.scans.Scans(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
         self._servers = models.inventory.servers.Servers(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)

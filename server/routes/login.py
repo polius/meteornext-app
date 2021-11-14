@@ -20,7 +20,7 @@ class Login:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
         # Init routes
         self._settings_route = routes.admin.settings.Settings(app, sql, license)
         self._profile_route = routes.profile.Profile(app, sql, license)

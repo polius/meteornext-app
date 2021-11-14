@@ -6,50 +6,47 @@
       <v-text-field readonly :loading="loading" v-model="license.key" label="Key" style="padding-top:0px" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
       <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
       <v-text-field readonly :loading="loading" v-model="expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
-      <!-- <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="padding-top:0px; margin-top:0px" hide-details></v-switch> -->
+      <!-- <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="margin-top:15px" hide-details></v-switch> -->
       <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
-      <!-- <v-btn @click="refresh" color="info" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn> -->
-    <!-- 
-    <v-dialog v-model="dialog" max-width="90%">
-      <v-card>
-        <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-rss</v-icon>USERS</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 640px)" single-line hide-details></v-text-field>
-          <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
-          <v-btn icon @click="dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
-        </v-toolbar>
-        <v-card-text style="padding:0px;">
-          <v-container style="padding:0px; max-width:100%!important">
-            <v-layout wrap>
-              <v-flex xs12>
-                <v-data-table :headers="usersHeaders" :items="usersItems" :search="usersSearch" :loading="loading" item-key="id" class="elevation-1" style="margin-top:0px;">
-                  <template v-slot:[`item.event`]="{ item }">
-                    <v-row no-gutters align="center" style="height:100%">
-                      <v-col cols="auto" :style="`width:4px; height:100%; margin-right:10px; background-color:` + getEventColor(item.event)">
-                      </v-col>
-                      <v-col cols="auto" class="mr-auto">
-                        {{ item.event.toUpperCase() }}
-                      </v-col>
-                      <v-col v-if="item.event == 'parameters'" cols="auto" style="margin-left:10px">
-                        <v-btn small @click="eventDetails(item)">Details</v-btn>
-                      </v-col>
-                    </v-row>
-                  </template>
-                  <template v-slot:[`item.message`]="{ item }">
-                    {{ getEventMessage(item) }}
-                  </template>
-                  <template v-slot:[`item.time`]="{ item }">
-                    {{ dateFormat(item.time) }}
-                  </template>
-                </v-data-table>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-    -->
+      <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn>
+      <!-- DIALOG -->
+      <v-dialog v-model="dialog" width="1024px">
+        <v-card>
+          <v-toolbar dense flat color="primary">
+            <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-chart-bar</v-icon>USAGE</v-toolbar-title>
+            <v-divider class="mx-3" inset vertical></v-divider>
+            <v-btn text class="body-2" @click="filterBy('all')" :style="`height:100%; ${filter == 'all' ? 'font-weight:600' : 'font-weight:400'}`">ALL</v-btn>
+            <v-btn text class="body-2" @click="filterBy('exceeded')" :style="`height:100%; ${filter == 'exceeded' ? 'font-weight:600' : 'font-weight:400'}`">EXCEEDED</v-btn>
+            <v-btn text class="body-2" @click="filterBy('not_exceeded')" :style="`height:100%; ${filter == 'not_exceeded' ? 'font-weight:600' : 'font-weight:400'}`">NOT EXCEEDED</v-btn>
+            <v-divider class="mx-3" inset vertical></v-divider>
+            <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 640px)" single-line hide-details></v-text-field>
+            <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
+            <v-btn icon @click="dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          </v-toolbar>
+          <v-card-text style="padding:0px;">
+            <v-container style="padding:0px; max-width:100%!important">
+              <v-layout wrap>
+                <v-flex xs12>
+                  <v-data-table :headers="headers" :items="items" :search="search" :loading="loading" item-key="username" class="elevation-1" style="margin-top:0px">
+                    <template v-slot:[`item.servers`]="{ item }">
+                      <div style="margin-left:10px">{{ item.servers }}</div>
+                    </template>
+                    <template v-slot:[`item.auxiliary`]="{ item }">
+                      <div style="margin-left:50px">{{ item.auxiliary }}</div>
+                    </template>
+                    <template v-slot:[`item.exceeded`]="{ item }">
+                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-left:50px; font-size:17px">fas fa-circle</v-icon>
+                    </template>
+                    <template v-slot:[`footer.prepend`]>
+                      <div v-if="expiredResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some users have disabled resources. Consider the possibility of upgrading your license.</div>
+                    </template>
+                  </v-data-table>
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
   </v-flex>
 </template>
 
@@ -69,6 +66,15 @@ export default {
     // Dialog
     dialog: false,
     search: '',
+    filter: 'all',
+    headers: [
+      { text: 'Username', align: 'left', value: 'username' },
+      { text: 'Servers', align: 'left', value: 'servers'},
+      { text: 'Auxiliary connections', align: 'left', value: 'auxiliary' },
+      { text: 'Resources exceeded', align: 'left', value: 'exceeded'}
+    ],
+    usage: [],
+    items: [],
   }),
   props: ['info','init'],
   created() {
@@ -91,6 +97,9 @@ export default {
       if (this.license.expiration === undefined) return ''
       if (this.license.expiration == null) return 'Lifetime'
       return this.license.expiration
+    },
+    expiredResources() {
+      return this.usage.some(x => x.exceeded)
     }
   },
   watch: {
@@ -127,7 +136,27 @@ export default {
           this.checkLicense()
           this.loading = false
         })
-    }
+    },
+    getUsage() {
+      this.loading = true
+      this.dialog = true
+      axios.get('/admin/settings/license/usage')
+        .then((response) => {
+          this.usage = response.data.usage
+          this.items = response.data.usage
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    filterBy(val) {
+      this.filter = val
+      if (val == 'all') this.items = this.usage.slice(0)
+      else if (val == 'exceeded') this.items = this.usage.filter(x => x.exceeded)
+      else if (val == 'not_exceeded') this.items = this.usage.filter(x => !x.exceeded)
+    },
   }
 }
 </script>

@@ -12,7 +12,7 @@ class Profile:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
 
     def blueprint(self):
         # Init blueprint

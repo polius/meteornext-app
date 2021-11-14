@@ -16,7 +16,7 @@ class Meteor:
         self._app = app
 
         # Init models
-        self._settings = models.admin.settings.Settings(sql)
+        self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._servers = models.inventory.servers.Servers(sql, license)
