@@ -252,7 +252,7 @@ class Client:
                     # Select database
                     if query.upper().startswith('USE '):
                         client_json['database'] = query[4:][1:-1] if query[4:].startswith('`') and query[4:].endswith('`') else query[4:]
-                    database = None if len(client_json['database']) == 0 else client_json['database']
+                    database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
                     # Execute query
                     result = conn.execute(query=query, database=database)
                     result['query'] = query
