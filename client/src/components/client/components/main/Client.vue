@@ -11,7 +11,7 @@
           </div>
         </Pane>
         <Pane size="50" min-size="0">
-          <ag-grid-vue ref="agGridClient" suppressAnimationFrame suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressAnimationFrame suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenCellsLoseFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">
@@ -887,13 +887,12 @@ export default {
     },
     removeQueryComments(string, comments) {
       let query = string
-      let offset = 0
-      for (let c of comments) {
-        let end = 'end' in c ? c.end : string.length
-        query = (query.slice(0, c.begin - offset) + query.slice(end - offset)).trim()
-        offset += end - c.begin
+      var reversed = [].concat(comments).reverse()
+      for (let c of reversed) {
+        let end = 'end' in c ? c.end : query.length
+        query = query.substring(0, c.begin) + query.substring(end)
       }
-      return query
+      return query.trim()
     },
     initExecution(payload) {
       const queries = payload.queries.map(x => x.trim().endsWith(';') ? x : x + ';').join('\n')
@@ -1018,8 +1017,8 @@ export default {
           let database = null
           for (let query of payload['queries']) {
             if (query.replace(/^\s+|\s+$/g, '').substring(0,4).toUpperCase() == 'USE ') {
-              database = query.replace(/^\s+|\s+$/g, '')
-              database = database.endsWith(';') ? database.slice(4,-1) : database.substring(4)
+              database = query.replace(/^\s+|\s+$/g, '').substring(4).trim()
+              database = database.endsWith(';') ? database.slice(0,-1) : database
               database = database.startsWith('`') ? database.substring(1) : database
               database = database.endsWith('`') ? database.slice(0,-1) : database
             }
