@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">CLOUD KEYS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn text @click="newCloud()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneCloud()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length != 1" text @click="editCloud()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
@@ -19,7 +19,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;" mobile-breakpoint="0">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -90,7 +90,7 @@
                       <v-toolbar flat dense color="#2e3131">
                         <v-toolbar-title class="white--text subtitle-1">BUCKETS</v-toolbar-title>
                         <v-divider class="mx-3" inset vertical></v-divider>
-                        <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-toolbar-items style="padding-left:0px;">
                           <v-btn text @click='newBucket()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                           <v-btn :disabled="bucketsSelected.length != 1" text @click="editBucket()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                           <v-btn :disabled="bucketsSelected.length == 0" text @click='deleteBucket()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
@@ -99,7 +99,7 @@
                         <v-text-field v-model="bucketsSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                       </v-toolbar>
                       <v-divider></v-divider>
-                      <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 6" :options="{itemsPerPage: 5}" item-key="name" show-select class="elevation-1" style="padding-top:5px;">
+                      <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 6" :options="{itemsPerPage: 5}" item-key="name" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
                         <template v-ripple v-slot:[`header.data-table-select`]="{}">
                           <v-simple-checkbox
                             :value="bucketsItems.length == 0 ? false : bucketsSelected.length == bucketsItems.length"

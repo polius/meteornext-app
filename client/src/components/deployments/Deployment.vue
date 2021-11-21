@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>EXECUTIONS</v-btn>
           <v-btn v-if="'status' in deployment" :disabled="['STARTING','IN PROGRESS','STOPPING','QUEUED'].includes(deployment['status'])" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
@@ -26,7 +26,7 @@
         <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#EF5354" style="font-weight:500; margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
         <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <div v-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)">
             <v-btn v-if="!show_results" text title="Show Execution Results" @click="showResults()" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
@@ -48,7 +48,7 @@
       <v-card-text v-else>
         <!-- INFORMATION -->
         <v-card>
-          <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.environment`]="{ item }">
               {{ item.environment.name }}
             </template>
@@ -109,7 +109,7 @@
         <div v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
         <v-card v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" style="margin-top:15px;">
-          <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
+          <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer mobile-breakpoint="0">
             <template v-slot:item="">
               <tr>
                 <td v-for="item in Object.keys(validation_data[0])" :key="item">
@@ -148,7 +148,7 @@
         <div v-if="execution_headers.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
         <v-card v-if="execution_headers.length > 0" style="margin-top:15px;">
           <!-- Overall -->
-          <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer>
+          <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer mobile-breakpoint="0">
             <template v-slot:item="props">
               <tr>
                 <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item]) + `width: ${100/execution_headers.length}%`">
@@ -158,7 +158,7 @@
             </template>
           </v-data-table>
           <!-- Servers -->
-          <v-data-table v-if="execution_progress.length > 0" :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11">
+          <v-data-table v-if="execution_progress.length > 0" :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11" mobile-breakpoint="0">
             <template v-slot:item="props">
               <tr>
                 <td v-for="item in Object.keys(execution_headers)" :key="item" :style="`width: ${100/execution_headers.length}%`">
@@ -203,7 +203,7 @@
           <!-- logs -->
           <v-flex v-if="logs_data.length > 0" xs4 style="padding-right:5px;">
             <v-card>
-              <v-data-table :headers="logs_headers" :items="logs_data" hide-default-footer>
+              <v-data-table :headers="logs_headers" :items="logs_data" hide-default-footer mobile-breakpoint="0">
                 <template v-slot:[`item.message`]="{ item }">
                   <v-icon v-if="item.status == 'progress'" title="In Progress" small style="color: #ff9800; margin-right:10px;">fas fa-spinner</v-icon>
                   <v-icon v-else-if="item.status == 'success'" title="Success" small style="color: #4caf50; margin-right:10px;">fas fa-check</v-icon>
@@ -216,7 +216,7 @@
           <!-- remaining-tasks -->
           <v-flex v-if="tasks_data.length > 0" xs4 style="padding-left:5px; padding-right:5px;">
             <v-card>
-              <v-data-table :headers="tasks_headers" :items="tasks_data" hide-default-footer>
+              <v-data-table :headers="tasks_headers" :items="tasks_data" hide-default-footer mobile-breakpoint="0">
                 <template v-slot:[`item.message`]="{ item }">
                   <v-icon v-if="item.status == 'progress'" title="In Progress" small style="color: #ff9800; margin-right:10px;">fas fa-spinner</v-icon>
                   <v-icon v-else-if="item.status == 'success'" title="Success" small style="color: #4caf50; margin-right:10px;">fas fa-check</v-icon>
@@ -229,7 +229,7 @@
           <!-- queries -->
           <v-flex v-if="deployment['ended'] !== null && queries_data.length > 0" xs4 style="padding-left:5px;">
             <v-card>
-              <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer>
+              <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer mobile-breakpoint="0">
                 <template v-slot:[`item.succeeded`]="{ item }">
                   <span class="font-weight-medium" style="color: rgb(0, 177, 106)">{{ item.succeeded }}</span>
                 </template>
@@ -280,7 +280,7 @@
                     <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                       <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-toolbar-items v-if="information_dialog_mode != 'parameters'" style="padding-left:0px;">
                         <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
@@ -291,12 +291,12 @@
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
-                      <v-toolbar-items v-else class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-toolbar-items v-else style="padding-left:0px;">
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click='showQuery()'><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>SHOW</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
-                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" show-select :hide-default-header="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length == 0" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" show-select :hide-default-header="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length == 0" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1" mobile-breakpoint="0">
                       <template v-ripple v-slot:[`header.data-table-select`]="{}">
                         <v-simple-checkbox
                           :value="information_dialog_data.queries.length == 0 ? false : information_dialog_query_selected.length == information_dialog_data.queries.length"
@@ -431,7 +431,7 @@
                     <v-toolbar-title class="white--text subtitle-1">SELECT EXECUTION</v-toolbar-title>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" class="elevation-1">
+                  <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" class="elevation-1" mobile-breakpoint="0">
                     <template v-slot:item="props">
                       <tr :style="`background-color:` + selectRow(props.item.id)">
                         <td>{{ props.item.environment }}</td>
@@ -506,7 +506,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-share</v-icon>SHARE RESULTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-toolbar-items class="hidden-sm-and-down">
+          <v-toolbar-items>
             <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="margin-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
             <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
           </v-toolbar-items>

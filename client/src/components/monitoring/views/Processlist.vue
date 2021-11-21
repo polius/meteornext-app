@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">PROCESSLIST</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter processes" @click="openFilter()"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider v-if="!loading && last_updated != null" class="mx-3" inset vertical></v-divider>
@@ -27,7 +27,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="processlist_search[i]" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :no-data-text="!processlist_metadata[i]['server_active'] ? 'Server disabled' : (!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
+        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :no-data-text="!processlist_metadata[i]['server_active'] ? 'Server disabled' : (!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;" mobile-breakpoint="0">
           <template v-slot:[`footer.prepend`]>
             <div v-if="!processlist_metadata[i]['server_active']" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>This server is disabled. Consider the possibility of upgrading your license.</div>
           </template>

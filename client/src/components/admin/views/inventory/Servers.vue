@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+    <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;" mobile-breakpoint="0">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"

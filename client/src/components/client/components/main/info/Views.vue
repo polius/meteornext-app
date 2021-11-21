@@ -5,7 +5,7 @@
     <!----------->
     <div style="height:calc(100% - 46px)">
       <div style="width:100%; height:100%">
-        <v-data-table :headers="infoHeaders.views" :items="infoItems.views" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
+        <v-data-table :headers="infoHeaders.views" :items="infoItems.views" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);" mobile-breakpoint="0"></v-data-table>
         <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">VIEW SYNTAX</div>
         <div style="height:calc(100% - 143px)">
           <div id="infoViewsEditor" style="float:left"></div>

@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -16,7 +16,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"

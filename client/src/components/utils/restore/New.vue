@@ -49,7 +49,7 @@
                           <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                             <v-text-field v-model="cloudKeysSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                           </v-toolbar>
-                          <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" :search="cloudKeysSearch" :loading="loading" loading-text="Loading... Please wait" item-key="id" single-select class="elevation-1">
+                          <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" :search="cloudKeysSearch" :loading="loading" loading-text="Loading... Please wait" item-key="id" single-select class="elevation-1" mobile-breakpoint="0">
                             <template v-slot:item="{ item }">
                               <tr>
                                 <td v-for="header in cloudKeysHeaders" :key="header.value" @click="cloudKeysClick(item)" style="cursor:pointer">
@@ -85,7 +85,7 @@
                               <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                                 <v-text-field v-model="awsBucketsSearch" append-icon="search" label="Find buckets by name" color="white" single-line hide-details></v-text-field>
                               </v-toolbar>
-                              <v-data-table v-model="awsBucketsSelected" :headers="awsBucketsHeaders" :items="awsBucketsItems" :search="awsBucketsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1">
+                              <v-data-table v-model="awsBucketsSelected" :headers="awsBucketsHeaders" :items="awsBucketsItems" :search="awsBucketsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
                                 <template v-slot:item="{ item }">
                                   <tr :style="awsBucketsSelected.length > 0 && awsBucketsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                     <td v-for="header in awsBucketsHeaders" :key="header.value" @click="awsBucketsClick(item)" style="cursor:pointer">
@@ -102,7 +102,7 @@
                               <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                                 <v-text-field @keyup.enter="getAWSObjects(true)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
                               </v-toolbar>
-                              <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1">
+                              <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
                                 <template v-slot:item="{ item }">
                                   <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                     <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" :style="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus))) ? 'cursor:not-allowed' : 'cursor:pointer'">
@@ -153,7 +153,7 @@
                             <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                               <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                             </v-toolbar>
-                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
+                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1" mobile-breakpoint="0">
                               <template v-ripple v-slot:[`header.data-table-select`]="{}">
                                 <v-simple-checkbox
                                   :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
@@ -249,7 +249,7 @@
                       </div>
                       <div v-else-if="mode == 'cloud'">
                         <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
-                        <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysSelected" item-key="id" hide-default-footer class="elevation-1">
+                        <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysSelected" item-key="id" hide-default-footer class="elevation-1" mobile-breakpoint="0">
                           <template v-slot:item="{ item }">
                             <tr>
                               <td v-for="header in cloudKeysHeaders" :key="header.value">
@@ -270,7 +270,7 @@
                           </template>
                         </v-data-table>
                         <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECT</div>
-                        <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsSelected" item-key="name" hide-default-footer class="elevation-1">
+                        <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsSelected" item-key="name" hide-default-footer class="elevation-1" mobile-breakpoint="0">
                           <template v-slot:item="{ item }">
                             <tr>
                               <td v-for="header in awsObjectsHeaders" :key="header.value">
@@ -292,7 +292,7 @@
                       </div>
                       <div v-if="scanItems.length > 0">
                         <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">FILES</div>
-                        <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" item-key="file" class="elevation-1">
+                        <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" item-key="file" class="elevation-1" mobile-breakpoint="0">
                           <template v-slot:[`item.size`]="{ item }">
                             {{ formatBytes(item.size) }}
                           </template>
