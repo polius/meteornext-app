@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter parameters" @click="openFilter()"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -15,7 +15,7 @@
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
-      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-slot:[`footer.prepend`]>
           <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some servers are disabled. Consider the possibility of upgrading your license.</div>
         </template>

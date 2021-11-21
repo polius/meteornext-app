@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1">
+    <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1" mobile-breakpoint="0">
       <template v-slot:[`item.date`]="{ item }">
         <span style="display:block; min-width:130px">{{ item.date }}</span>
       </template>

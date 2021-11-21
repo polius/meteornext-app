@@ -27,7 +27,7 @@
             <v-container style="padding:0px; max-width:100%!important">
               <v-layout wrap>
                 <v-flex xs12>
-                  <v-data-table :headers="headers" :items="items" :search="search" :loading="loading" item-key="username" class="elevation-1" style="margin-top:0px">
+                  <v-data-table :headers="headers" :items="items" :search="search" :loading="loading" item-key="username" class="elevation-1" style="margin-top:0px" mobile-breakpoint="0">
                     <template v-slot:[`item.servers`]="{ item }">
                       <div style="margin-left:10px">{{ item.servers }}</div>
                     </template>

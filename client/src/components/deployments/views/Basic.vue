@@ -26,7 +26,7 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
-                <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                <v-toolbar-items style="padding-left:0px;">
                   <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                   <v-btn :disabled="query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
                   <v-btn :disabled="query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
@@ -39,7 +39,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-header="query_items.length == 0" :hide-default-footer="query_items.length < 11" class="elevation-1">
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-header="query_items.length == 0" :hide-default-footer="query_items.length < 11" class="elevation-1" mobile-breakpoint="0">
                 <template v-ripple v-slot:[`header.data-table-select`]="{}">
                   <v-simple-checkbox
                     :value="query_items.length == 0 ? false : query_selected.length == query_items.length"

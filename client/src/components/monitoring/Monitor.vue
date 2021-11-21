@@ -37,7 +37,7 @@
 
         <!-- SUMMARY -->
         <v-card v-show="tabs == 0">
-          <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.available`]="{ item }">
               <span v-if="item.available == 1">Yes</span>
               <span v-else-if="item.available == 0">No</span>
@@ -48,7 +48,7 @@
 
         <!-- LOGS -->
         <v-card v-show="tabs == 1">
-          <v-data-table :headers="logs_headers" :items="logs_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="logs_headers" :items="logs_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.general_log`]="{ item }">
               <span v-if="item.general_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
               <span v-else><v-icon small color="#EF5354" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
@@ -62,19 +62,19 @@
 
         <!-- CONNECTIONS -->
         <v-card v-show="tabs == 2">
-          <v-data-table :headers="connections_headers" :items="connections_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="connections_headers" :items="connections_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
           </v-data-table>
         </v-card>
 
         <!-- STATEMENTS -->
         <v-card v-show="tabs == 3">
-          <v-data-table :headers="statements_headers" :items="statements_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="statements_headers" :items="statements_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
           </v-data-table>
         </v-card>
 
         <!-- INDEXES -->
         <v-card v-show="tabs == 4">
-          <v-data-table :headers="indexes_headers" :items="indexes_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="indexes_headers" :items="indexes_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
           </v-data-table>
         </v-card>
 
@@ -85,7 +85,7 @@
             <v-divider class="mx-3" inset vertical></v-divider>
             <v-text-field v-model="params_search" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:3px;" single-line hide-details></v-text-field>
           </v-toolbar>
-          <v-data-table :headers="params_headers" :items="params_items" :search="params_search" :loading="loading" item-key="name" style="padding-top:5px;">
+          <v-data-table :headers="params_headers" :items="params_items" :search="params_search" :loading="loading" item-key="name" style="padding-top:5px;" mobile-breakpoint="0">
           </v-data-table>
         </v-card>
 
@@ -96,7 +96,7 @@
             <v-divider class="mx-3" inset vertical></v-divider>
             <v-text-field v-model="processlist_search" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:3px;" single-line hide-details></v-text-field>
           </v-toolbar>
-          <v-data-table :headers="processlist_headers" :items="processlist_items" :search="processlist_search" :loading="loading" item-key="id" style="padding-top:5px;">
+          <v-data-table :headers="processlist_headers" :items="processlist_items" :search="processlist_search" :loading="loading" item-key="id" style="padding-top:5px;" mobile-breakpoint="0">
           </v-data-table>
         </v-card>
       </v-card-text>

@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app style="overflow-x:auto">
     <v-app-bar app absolute v-show="isLoggedIn && showTopNavbar()">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
@@ -128,9 +128,6 @@
                 <v-row justify="space-around" style="margin-top:0px; margin-bottom:15px">
                   <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
                 </v-row>
-                <!-- <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px">
-                  <div class="text-subtitle-1" style="font-weight:400;">{{ "+" + this.coins_day + " Coins / Day" }}</div>
-                </v-row> -->
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
@@ -231,11 +228,23 @@ export default {
   },
   created() {
     this.getNotifications(true)
-    // window.addEventListener('contextmenu', function (e) {
-    //   e.preventDefault();
-    // }, false)
+  },
+  mounted() {
+    this.checkStyle()
+  },
+  watch: {
+    isLoggedIn() {
+      this.checkStyle()
+    }
   },
   methods: {
+    checkStyle() {
+      var element = document.getElementsByClassName('v-application--wrap');
+      if (element.length > 0) {
+        if (this.$store.getters['app/isLoggedIn']) element[0].style.minWidth = 'max(calc(100vw - 20px),1330px)'
+        else element[0].style.minWidth = ''
+      }
+    },
     fullScreen() {
       if (!this.fullScreenEnabled) {
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {})

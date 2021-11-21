@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="id" show-select class="elevation-1">
+    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="id" show-select class="elevation-1" mobile-breakpoint="0">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"

@@ -39,7 +39,7 @@ import EventBus from './js/event-bus'
 export default {
   data() {
     return {
-      tabs: null,
+      tabs: 1,
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),

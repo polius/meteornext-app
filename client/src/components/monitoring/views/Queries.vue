@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items>
           <v-btn text title="Define monitoring rules and settings" @click="openSettings()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn text title="Filter queries" @click="filter_dialog = true" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
@@ -16,7 +16,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :expanded.sync="expanded" single-expand item-key="id" show-expand :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :expanded.sync="expanded" single-expand item-key="id" show-expand :loading="loading" class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-slot:[`item.first_seen`]="{ item }">
           <span style="display:block; min-width:130px">{{ dateFormat(item.first_seen) }}</span>
         </template>

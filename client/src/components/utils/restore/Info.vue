@@ -17,7 +17,7 @@
       <v-card-text>
         <!-- SUMMARY -->
         <v-card>
-          <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
+          <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.mode`]="{ item }">
               <div v-if="item.mode == 'file'">
                 <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#23cba7" style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
@@ -82,7 +82,7 @@
               <div v-if="['file','url'].includes(information_items[0]['mode'])" class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
               <div v-else>
                 <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
-                <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" item-key="id" hide-default-footer class="elevation-1">
+                <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" item-key="id" hide-default-footer class="elevation-1" mobile-breakpoint="0">
                   <template v-slot:item="{ item }">
                     <tr>
                       <td v-for="header in cloudKeysHeaders" :key="header.value">
@@ -104,7 +104,7 @@
                 </v-data-table>
                 <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECT</div>
                 <div class="text-body-1" style="margin-bottom:15px">{{ bucket + '/' + awsObjectsItems[0]['key'] }}</div>
-                <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsItems" item-key="name" hide-default-footer class="elevation-1">
+                <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsItems" item-key="name" hide-default-footer class="elevation-1" mobile-breakpoint="0">
                   <template v-slot:item="{ item }">
                     <tr>
                       <td v-for="header in awsObjectsHeaders" :key="header.value">
@@ -129,7 +129,7 @@
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
-                <v-data-table readonly :headers="selectedHeaders" :items="selectedItems" :search="selectedSearch" :hide-default-footer="selectedItems.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
+                <v-data-table readonly :headers="selectedHeaders" :items="selectedItems" :search="selectedSearch" :hide-default-footer="selectedItems.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1" mobile-breakpoint="0">
                   <template v-slot:[`item.size`]="{ item }">
                     {{ formatBytes(item.size) }}
                   </template>

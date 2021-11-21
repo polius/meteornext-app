@@ -2,7 +2,7 @@
   <div>
     <v-card style="margin-bottom:7px;">
       <v-toolbar dense flat color="primary">
-        <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
+        <v-toolbar-items style="margin-left:-16px">
           <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
@@ -169,7 +169,7 @@
           <v-container style="padding:0px; max-width:100%!important">
             <v-layout wrap>
               <v-flex xs12>
-                <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:0px;">
+                <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:0px;" mobile-breakpoint="0">
                   <template v-slot:[`item.event`]="{ item }">
                     <v-row no-gutters align="center" style="height:100%">
                       <v-col cols="auto" :style="`width:4px; height:100%; margin-right:10px; background-color:` + getEventColor(item.event)">
@@ -214,7 +214,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <v-data-table :headers="event_details_headers" :items="event_details_items" :search="events_details_search" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;"></v-data-table>
+                  <v-data-table :headers="event_details_headers" :items="event_details_items" :search="events_details_search" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;" mobile-breakpoint="0"></v-data-table>
                 </v-form>
               </v-flex>
             </v-layout>
