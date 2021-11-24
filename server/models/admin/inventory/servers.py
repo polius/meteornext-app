@@ -117,6 +117,7 @@ class Servers:
             JOIN servers s ON s.id = m.server_id AND s.id = %s
         """
         self._sql.execute(query, (server_id))
+
         # Delete from 'monitoring_servers'
         query = """
             DELETE ms
@@ -124,11 +125,20 @@ class Servers:
             JOIN servers s ON s.id = ms.server_id AND s.id = %s
         """
         self._sql.execute(query, (server_id))
+
         # Delete from 'monitoring_queries'
         query = """
             DELETE mq
             FROM monitoring_queries mq
             JOIN servers s ON s.id = mq.server_id AND s.id = %s
+        """
+        self._sql.execute(query, (server_id))
+
+        # Delete from 'monitoring_events'
+        query = """
+            DELETE me
+            FROM monitoring_events me
+            JOIN servers s ON s.id = me.server_id AND s.id = %s
         """
         self._sql.execute(query, (server_id))
 
