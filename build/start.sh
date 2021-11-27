@@ -2,12 +2,12 @@
 cd /root
 
 # Generate 'server.conf' file
-if [[ -n $LIC_EMAIL && -n $LIC_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
+if [[ -n $LIC_ACCESS_KEY && -n $LIC_SECRET_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
     cat >./server.conf <<EOF
 {
     "license": {
-        "email": "$LIC_EMAIL",
-        "key": "$LIC_KEY"
+        "access_key": "$LIC_ACCESS_KEY",
+        "secret_key": "$LIC_SECRET_KEY"
     },
     "sql": {
         "engine": "$SQL_ENGINE",
