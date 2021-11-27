@@ -79,9 +79,8 @@ class Settings:
 
             # Build data
             license = {
-                "email": self._settings_conf['license']['email'],
-                "key": self._settings_conf['license']['key'],
-                "expiration": self._license.status['expiration'],
+                "access_key": self._settings_conf['license']['access_key'],
+                "secret_key": self._settings_conf['license']['secret_key'],
                 "resources": self._license.status['resources'],
                 "last_check_date": self._license.last_check_date,
             }
@@ -196,9 +195,8 @@ class Settings:
 
         # Get License Settings
         settings['license'] = {}
-        settings['license']['email'] = self._settings_conf['license']['email']
-        settings['license']['key'] = self._settings_conf['license']['key']
-        settings['license']['expiration'] = self._license.status['expiration']
+        settings['license']['access_key'] = self._settings_conf['license']['access_key']
+        settings['license']['secret_key'] = self._settings_conf['license']['secret_key']
         settings['license']['resources'] = self._license.status['resources']
         settings['license']['last_check_date'] = self._license.last_check_date
 

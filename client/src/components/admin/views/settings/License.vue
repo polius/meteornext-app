@@ -2,11 +2,9 @@
     <v-flex xs12 style="margin:5px">
       <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-certificate</v-icon>LICENSE</div>
       <div class="body-1 font-weight-regular" style="margin-top:10px">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a">LICENSED</span>.</div>
-      <v-text-field readonly :loading="loading" v-model="license.email" label="Email" style="margin-top:15px" required :rules="[v => !!v || '']"></v-text-field>
-      <v-text-field readonly :loading="loading" v-model="license.key" label="Key" style="padding-top:0px" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-      <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']"></v-text-field>
-      <v-text-field readonly :loading="loading" v-model="expiration" label="Expiration" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
-      <!-- <v-switch readonly :loading="loading" v-model="renewal" label="Automatic Renewal" color="#00b16a" style="margin-top:15px" hide-details></v-switch> -->
+      <v-text-field readonly :loading="loading" v-model="license.access_key" label="Access Key" style="margin-top:15px" @click:append="show_access_key = !show_access_key" :append-icon="show_access_key ? 'visibility' : 'visibility_off'" :type="show_access_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="license.secret_key" label="Secret Key" style="padding-top:0px" @click:append="show_secret_key = !show_secret_key" :append-icon="show_secret_key ? 'visibility' : 'visibility_off'" :type="show_secret_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
       <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
       <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn>
       <!-- DIALOG -->
@@ -61,7 +59,8 @@ export default {
     diff: null,
     // renewal: true,
     license: {},
-    show_key: false,
+    show_access_key: false,
+    show_secret_key: false,
     loading: true,
     // Dialog
     dialog: false,
@@ -92,11 +91,6 @@ export default {
       if (this.license.resources === undefined) return ''
       if (this.license.resources == -1) return 'Unlimited'
       return this.license.resources + (this.license.resources == 1 ? ' Server' : ' Servers') + ' / User'
-    },
-    expiration() {
-      if (this.license.expiration === undefined) return ''
-      if (this.license.expiration == null) return 'Lifetime'
-      return this.license.expiration
     },
     expiredResources() {
       return this.usage.some(x => x.exceeded)

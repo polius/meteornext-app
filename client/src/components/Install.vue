@@ -14,8 +14,8 @@
                   <!-- LICENSE -->
                   <v-form ref="formLicense" v-show="installPart == 'license'">
                     <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">LICENSE</div>
-                    <v-text-field autofocus filled v-model="license.email" name="email" label="Email" required style="margin-bottom:20px" :rules="emailRules" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
-                    <v-text-field filled v-model="license.key" name="key" label="Key" required type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
+                    <v-text-field autofocus filled v-model="license.access_key" name="access_key" label="Access Key" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="false"></v-text-field>
+                    <v-text-field filled v-model="license.secret_key" name="secret_key" label="Secret Key" required type="password" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                   </v-form>
                   <!-- SQL -->
                   <v-form ref="formSQL" v-show="installPart == 'sql'">
@@ -121,17 +121,13 @@
   export default {
     data: () => ({
       // Install Form
-      license: { email: '', key: '' },
+      license: { access_key: '', secret_key: '' },
       sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteor2', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false },
       account: { username: '', password: '' },
       installPart: 'license',
-      buttonText: 'VERIFY',
+      buttonText: 'VERIFY LICENSE',
       loading: false,
       showPassword: false,
-      emailRules: [
-        v => !!v || 'E-mail is required',
-        v => /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(v) || 'E-mail must be valid',
-      ],
 
       // Install Dialog
       installDialog: false,
@@ -155,11 +151,6 @@
         vm.installAvailable()
       })
     },
-    mounted() {
-      requestAnimationFrame(() => {
-        if (typeof this.$refs.email !== 'undefined') this.$refs.email.focus()
-      })
-    },
     methods: {
       installAvailable() {
         axios.get('/setup')
@@ -172,8 +163,8 @@
           })
       },
       back() {
-        if (this.installPart == 'sql') this.installPart = 'license'
-        else if (this.installPart == 'account') this.installPart = 'sql'
+        if (this.installPart == 'sql') { this.installPart = 'license'; this.buttonText = 'VERIFY LICENSE' }
+        else if (this.installPart == 'account') { this.installPart = 'sql'; this.buttonText = 'CHECK CONNECTION' }
       },
       install() {
         if (this.installPart == 'license') this.installLicense()

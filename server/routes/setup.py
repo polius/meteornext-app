@@ -197,8 +197,8 @@ class Setup:
             self._conf = {
                 "license":
                 {
-                    "email": setup_json['license']['email'],
-                    "key": setup_json['license']['key']
+                    "access_key": setup_json['license']['access_key'],
+                    "secret_key": setup_json['license']['secret_key']
                 },
                 "sql":
                 {
@@ -337,7 +337,6 @@ class License:
             response_text = json.loads(response.text)['response']
             date = json.loads(response.text)['date']
             resources = json.loads(response.text)['resources'] if response_code == 200 else None
-            expiration = json.loads(response.text)['expiration'] if response_code == 200 else None
 
             # Solve challenge
             if response_code == 200:
@@ -350,7 +349,7 @@ class License:
                     response_text = "The license is not valid"
                     response_code = 401
 
-            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources, "expiration": expiration}
+            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources}
         except Exception:
             if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
                 self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
