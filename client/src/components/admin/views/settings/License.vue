@@ -118,6 +118,7 @@ export default {
       axios.get('/admin/settings/license')
         .then((response) => {
           this.license = response.data.license
+          EventBus.$emit('send-notification', 'License successfully refreshed', '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
