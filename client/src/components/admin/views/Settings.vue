@@ -58,6 +58,7 @@ export default {
       axios.get('/admin/settings')
         .then((response) => {
           this.settings = response.data.settings
+          if (this.settings.license.resources == null) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
