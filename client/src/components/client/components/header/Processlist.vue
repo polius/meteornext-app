@@ -263,6 +263,7 @@ export default {
       this.search = ''
       this.dialog = true
       this.stopped = false
+      this.onSearch('')
       this.getProcesslist()
     },
     onGridReady(params) {
@@ -331,8 +332,10 @@ export default {
       else if (item == 'Deselect All') this.gridApi.deselectAll()
     },
     onSearch(value) {
-      this.gridApi.setQuickFilter(value)
-      this.rowCount = this.gridApi.getDisplayedRowCount()
+      if (this.gridApi != null) {
+        this.gridApi.setQuickFilter(value)
+        this.rowCount = this.gridApi.getDisplayedRowCount()
+      }
     },
     getProcesslist() {
       if (this.stopped || !this.dialog) { clearTimeout(this.timer); return }
