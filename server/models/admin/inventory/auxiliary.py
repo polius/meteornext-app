@@ -1,37 +1,27 @@
 from datetime import datetime
 
 class Auxiliary:
-    def __init__(self, sql, license):
+    def __init__(self, sql):
         self._sql = sql
-        self._license = license
 
     def get(self, group_id=None, auxiliary_id=None, user_id=None):
         if user_id is not None:
             query = """
-                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at, t.id IS NOT NULL AS 'active'
+                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
                 FROM auxiliary a
                 JOIN users u0 ON u0.id = %(user_id)s
                 JOIN groups g ON g.id = a.group_id AND g.id = u0.group_id
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
-                LEFT JOIN (
-                    SELECT a.id
-                    FROM auxiliary a
-                    JOIN users u ON u.id = %(user_id)s AND u.group_id = a.group_id
-                    JOIN (SELECT @cnt := 0) t
-                    WHERE (a.shared = 1 OR a.owner_id = %(user_id)s)
-                    AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
-                    ORDER BY a.id
-                ) t ON t.id = a.id
                 WHERE a.group_id = u0.group_id
                 AND (a.shared = 1 OR a.owner_id = %(user_id)s)
                 ORDER BY a.id DESC
             """
-            return self._sql.execute(query, {"user_id": user_id, "license": self._license.resources})
+            return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
             query = """
-                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at, '1' AS 'active'
+                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
                 FROM auxiliary a
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by

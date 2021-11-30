@@ -20,7 +20,7 @@ class Meteor:
         self._environments = models.inventory.environments.Environments(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._servers = models.inventory.servers.Servers(sql, license)
-        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql, license)
+        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
         self._groups = models.admin.groups.Groups(sql)
 
         # Retrieve Meteor Files Path

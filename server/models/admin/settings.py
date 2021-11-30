@@ -27,24 +27,12 @@ class Settings:
 
     def get_license_usage(self):
         query = """
-            SELECT u.username, s.n AS 'servers', a.n AS 'auxiliary', IF(%(resources)s = -1, 0, s.n > %(resources)s OR a.n > %(resources)s) AS 'exceeded'
+            SELECT u.username, COUNT(s.id) AS 'servers', IF(%(resources)s = -1, 0, COUNT(s.id) > %(resources)s) AS 'exceeded', %(resources)s AS 'resources'
             FROM users u
-            JOIN (
-                SELECT u.id AS 'user_id', COUNT(s.id) AS 'n'
-                FROM users u
-                JOIN groups g ON g.id = u.group_id
-                JOIN servers s ON s.group_id = g.id
-                WHERE (s.shared = 1 OR s.owner_id = u.id)
-                GROUP BY u.id
-            ) s ON s.user_id = u.id
-            JOIN (
-                SELECT u.id AS 'user_id', COUNT(a.id) AS 'n'
-                FROM users u
-                JOIN groups g ON g.id = u.group_id
-                JOIN auxiliary a ON a.group_id = g.id
-                WHERE (a.shared = 1 OR a.owner_id = u.id)
-                GROUP BY u.id
-            ) a ON a.user_id = u.id
-            ORDER BY u.username
+            JOIN groups g ON g.id = u.group_id
+            JOIN servers s ON s.group_id = g.id
+            WHERE (s.shared = 1 OR s.owner_id = u.id)
+            GROUP BY u.id
+            ORDER BY COUNT(s.id) DESC;
         """
         return self._sql.execute(query, {"resources": self._license.resources})
