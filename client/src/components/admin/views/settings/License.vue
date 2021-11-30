@@ -33,7 +33,7 @@
                       <div style="margin-left:50px">{{ item.auxiliary }}</div>
                     </template>
                     <template v-slot:[`item.exceeded`]="{ item }">
-                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-left:50px; font-size:17px">fas fa-circle</v-icon>
+                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-left:50px; font-size:17px">{{ !item.exceeded ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }}</v-icon>
                     </template>
                     <template v-slot:[`footer.prepend`]>
                       <div v-if="expiredResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some users have disabled resources. Consider the possibility of upgrading your license.</div>
