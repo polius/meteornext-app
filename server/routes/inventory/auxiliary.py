@@ -14,7 +14,7 @@ class Auxiliary:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql, license)
+        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
         self._regions = models.inventory.regions.Regions(sql)
 
     def blueprint(self):
@@ -111,7 +111,7 @@ class Auxiliary:
             auxiliary_secured = []
             for a in auxiliary:
                 if a['shared']:
-                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "engine": a['engine'], "version": a['version'], "shared": a['shared'], "active": a['active']})
+                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "engine": a['engine'], "version": a['version'], "shared": a['shared']})
                 else:
                     auxiliary_secured.append(a)
             return jsonify({'data': auxiliary_secured}), 200

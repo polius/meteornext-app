@@ -27,13 +27,13 @@
                 <v-flex xs12>
                   <v-data-table :headers="headers" :items="items" :search="search" :loading="loading" item-key="username" class="elevation-1" style="margin-top:0px" mobile-breakpoint="0">
                     <template v-slot:[`item.servers`]="{ item }">
-                      <div style="margin-left:10px">{{ item.servers }}</div>
+                      <div style="padding-right:18px">{{ item.servers }}</div>
                     </template>
-                    <template v-slot:[`item.auxiliary`]="{ item }">
-                      <div style="margin-left:50px">{{ item.auxiliary }}</div>
+                    <template v-slot:[`item.resources`]="{ item }">
+                      <div style="padding-right:18px">{{ item.resources }}</div>
                     </template>
                     <template v-slot:[`item.exceeded`]="{ item }">
-                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-left:50px; font-size:17px">{{ !item.exceeded ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }}</v-icon>
+                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-right:8px; font-size:17px">{{ !item.exceeded ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }}</v-icon>
                     </template>
                     <template v-slot:[`footer.prepend`]>
                       <div v-if="expiredResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some users have disabled resources. Consider the possibility of upgrading your license.</div>
@@ -68,9 +68,9 @@ export default {
     filter: 'all',
     headers: [
       { text: 'Username', align: 'left', value: 'username' },
-      { text: 'Servers', align: 'left', value: 'servers'},
-      { text: 'Auxiliary connections', align: 'left', value: 'auxiliary' },
-      { text: 'Resources exceeded', align: 'left', value: 'exceeded'}
+      { text: 'Servers owned', align: 'center', value: 'servers'},
+      { text: 'Maximum allowed servers', align: 'center', value: 'resources'},
+      { text: 'Resources exceeded', align: 'center', value: 'exceeded'}
     ],
     usage: [],
     items: [],
