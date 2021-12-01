@@ -10,6 +10,7 @@ Vue.config.productionTip = false
 
 Vue.prototype.$http = Axios
 Vue.prototype.$http.defaults.headers.common['Access-Control-Allow-Origin'] = '*'
+Vue.prototype.$http.defaults.headers.common['Cache-Control'] = 'no-cache'
 Vue.prototype.$http.defaults.baseURL = window.location.protocol + "//" + window.location.host + "/api"
 
 Vue.prototype.$http.interceptors.request.use(

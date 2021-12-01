@@ -6,11 +6,11 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
-          <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>EXECUTIONS</v-btn>
-          <v-btn v-if="'status' in deployment" :disabled="['STARTING','IN PROGRESS','STOPPING','QUEUED'].includes(deployment['status'])" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-btn v-if="'status' in deployment" :disabled="!deployment.owner" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>EXECUTIONS</v-btn>
+          <v-btn v-if="'status' in deployment" :disabled="!deployment.owner || ['STARTING','IN PROGRESS','STOPPING','QUEUED'].includes(deployment['status'])" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="start_execution" v-if="['CREATED','SCHEDULED'].includes(deployment['status'])" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
-          <v-btn v-if="['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" :disabled="deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" text title="Stop Execution" @click="stop()"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <v-btn :disabled="!deployment.owner || start_execution" v-if="['CREATED','SCHEDULED'].includes(deployment['status'])" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
+          <v-btn v-if="['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" :disabled="!deployment.owner || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" text title="Stop Execution" @click="stop()"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
@@ -30,7 +30,7 @@
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <div v-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)">
             <v-btn v-if="!show_results" text title="Show Execution Results" @click="showResults()" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
-            <v-btn text title="Share Results" @click="shareResults_dialog = true" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
+            <v-btn :disabled="!deployment.owner" text title="Share Deployment" @click="shareDeploymentDialog = true" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
           </div>
         </v-toolbar-items>
 
@@ -263,7 +263,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']">
+                  <v-text-field v-if="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment.name" label="Environment" readonly></v-text-field>
+                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']">
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
@@ -353,7 +354,7 @@
                     </v-radio>
                   </v-radio-group>
                   <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
-                  <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+                  <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px"></v-text-field>
                   <v-checkbox v-else-if="information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
@@ -454,7 +455,7 @@
                         <td>{{ dateFormat(props.item.ended) }}</td>
                         <td>{{ props.item.overall }}</td>
                         <td>
-                          <v-btn icon @click="selectExecution(props.item.id)"><v-icon title="Select execution" small>fas fa-arrow-right</v-icon></v-btn>
+                          <v-btn icon @click="selectExecution(props.item.uri)"><v-icon title="Select execution" small>fas fa-arrow-right</v-icon></v-btn>
                         </td>
                       </tr>
                     </template>
@@ -501,23 +502,31 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="shareResults_dialog" max-width="896px">
+    <v-dialog v-model="shareDeploymentDialog" max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-share</v-icon>SHARE RESULTS</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-toolbar-items>
-            <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="margin-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
-            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
-          </v-toolbar-items>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-share</v-icon>SHARE DEPLOYMENT</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="shareResults_dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="shareDeploymentDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px">
           <v-container>
             <v-layout wrap>
               <v-flex xs12>
-                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="height:48px; font-size:18px; letter-spacing:0.05em">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
+                <div class="text-body-1 font-weight-regular white--text">EXECUTION</div>
+                <v-text-field solo v-model="shareDeploymentUrl" readonly class="font-weight-light" style="padding-top:10px" hide-details>
+                  <template v-slot:append>
+                    <v-btn @click="copyClipboard(shareDeploymentUrl)" title="Copy" icon><v-icon small>fas fa-copy</v-icon></v-btn>
+                  </template>
+                </v-text-field>
+                <div class="text-body-1 font-weight-regular white--text" style="margin-top:15px">RESULTS</div>
+                <v-text-field solo v-model="shareDeploymentResultsUrl" readonly class="font-weight-light" style="padding-top:10px" hide-details>
+                  <template v-slot:append>
+                    <v-btn :href="shareDeploymentResultsUrl" target="_blank" title="Open" icon><v-icon small>fas fa-external-link-alt</v-icon></v-btn>
+                    <v-btn @click="copyClipboard(shareDeploymentResultsUrl)" title="Copy" icon><v-icon small>fas fa-copy</v-icon></v-btn>
+                  </template>
+                </v-text-field>
+                <v-btn @click="shareDeployment" block :color="deployment.shared ? '#EF5354' : '#00b16a'" style="margin-top:20px">{{ deployment.shared ? 'Unshare Deployment' : 'Share Deployment' }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -674,11 +683,10 @@
       schedule_time: '',
       schedule_datetime: '',
 
-      // Share Results Dialog
-      shareResults_dialog: false,
-      shareResults_dialog_title: '',
-      shareResults_dialog_text: '',
-      shareResults_dialog_icon: '',
+      // Share Deployment Dialog
+      shareDeploymentDialog: false,
+      shareDeploymentUrl: '',
+      shareDeploymentResultsUrl: '',
 
       // Executions Flag
       stop_execution: false,
@@ -790,9 +798,6 @@
       snackbarText: '',
       snackbarColor: '',
 
-      // Execution URL
-      url: window.location.protocol + '//' + window.location.host,
-
       // Previous Route
       prevRoute: null
     }),
@@ -814,7 +819,7 @@
       // BASE METHODS
       // -------------
       init() {
-        if (this.$route.params.id === undefined) this.notification('Invalid Deployment Identifier', '#EF5354')
+        if (this.$route.params.uri === undefined) this.notification('Invalid Deployment Identifier', '#EF5354')
         else {
           this.getDeployment()
           this.getCode()
@@ -836,7 +841,7 @@
       },
       getDeployment() {
         // Get Deployment Data
-        axios.get('/deployments', { params: { id: this.$route.params.id } })
+        axios.get('/deployments', { params: { uri: this.$route.params.uri } })
           .then((response) => {
             const data = response.data.deployment
             this.environments = response.data.environments
@@ -894,7 +899,7 @@
         this.deployment['databases'] = this.deployment['mode'] == 'BASIC' ? data['databases'] : ''
         this.deployment['code'] = this.deployment['mode'] == 'PRO' ? data['code'] : ''
         this.deployment['method'] = data['method'].toLowerCase()
-        if (this.deployment['status'] != data['status']) this.getExecutions()
+        if (this.deployment['status'] != data['status'] && data['owner']) this.getExecutions()
         this.deployment['status'] = data['status']
         this.deployment['stopped'] = data['stopped']
         this.deployment['queue'] = data['queue']
@@ -906,8 +911,13 @@
         this.deployment['uri'] = data['uri']
         this.deployment['url'] = data['url']
         this.deployment['engine'] = data['engine']
-        this.deployment['public'] = data['public']
+        this.deployment['shared'] = data['shared']
         this.deployment['overall'] = data['overall']
+        this.deployment['owner'] = data['owner']
+
+        // Parse Shared
+        this.shareDeploymentUrl = window.location.href
+        this.shareDeploymentResultsUrl = window.location.protocol + '//' + window.location.host + `/viewer/` + this.deployment['uri']
 
         // Parse Scheduled
         if (this.deployment['scheduled']) {
@@ -923,11 +933,6 @@
           }
           if (!found) this.information_headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
         }
-
-        // Set Public Values
-        this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are public' : 'The results are private'
-        this.shareResults_dialog_text = (this.deployment['public']) ? 'PUBLIC' : 'PRIVATE'
-        this.shareResults_dialog_icon = (this.deployment['public']) ? 'fas fa-unlock' : 'fas fa-lock'
 
         // Add Deployment to the information table
         this.information_items = []
@@ -1071,7 +1076,7 @@
       },
       getExecutions() {
         // Get Deployment Executions
-        axios.get('/deployments/executions', { params: { id: this.$route.params.id } })
+        axios.get('/deployments/executions', { params: { uri: this.$route.params.uri } })
           .then((response) => {
             this.executions['items'] = response.data.data
             this.executions['headers'] = [
@@ -1136,7 +1141,7 @@
         this.action_dialog = false
         // Build parameters
         const payload = {
-          id: this.$route.params.id,
+          uri: this.$route.params.uri,
           url: window.location.protocol + '//' + window.location.host
         }
         axios.post('/deployments/start', payload)
@@ -1159,7 +1164,7 @@
 
           // Build parameters
           const payload = {
-            id: this.$route.params.id,
+            uri: this.$route.params.uri,
             mode: this.stop_execution_mode
           }
           axios.post('/deployments/stop', payload)
@@ -1184,6 +1189,7 @@
         else if (this.schedule_mode == 'time') this.schedule_time = date.format("HH:mm")
       },
       schedule_change() {
+        if (this.information_dialog_mode == 'parameters') return
         if (this.schedule_enabled) {
           if (this.schedule_datetime == '') {
             const date = moment()
@@ -1207,10 +1213,10 @@
       // ------------------------
       // SELECT EXECUTION DIALOG
       // ------------------------
-      selectExecution(id) {
+      selectExecution(uri) {
         this.select_dialog = false
-        if (this.deployment['id'] != id) {
-          this.$router.push({ name:'deployment', params: { id: id }})
+        if (this.deployment['uri'] != uri) {
+          this.$router.push({ name:'deployment', params: { uri: uri }})
           this.show_results = false
           this.clear()
           this.init()
@@ -1235,7 +1241,7 @@
         this.show_results = false
         // Build parameters
         var payload = {
-          id: this.$route.params.id,
+          uri: this.$route.params.uri,
           mode: this.information_dialog_execution_mode,
           environment: this.information_dialog_data.environment.id,
           method: this.information_dialog_data.method.toUpperCase(),
@@ -1263,7 +1269,7 @@
           this.clear()
           // Get new deployment
           if (this.information_dialog_mode == 're-deploy') {
-            this.$router.push({ name: 'deployment', params: { id: data['id'] }})
+            this.$router.push({ name: 'deployment', params: { uri: data['uri'] }})
           }
           else this.getDeployment()
           // Get executions list
@@ -1419,28 +1425,24 @@
         return queries
       },
       // -------------------------------------
-      // SHARE RESULTS
+      // SHARE DEPLOYMENT
       // -------------------------------------
-      resultsClipboard() {
-        navigator.clipboard.writeText(this.url + `/viewer/` + this.deployment['uri'])
-        this.notification('Link copied to clipboard', 'primary')
+      copyClipboard(text) {
+        navigator.clipboard.writeText(text)
+        // this.notification('Link copied to clipboard', 'primary')
       },
-      resultsShare() {
+      shareDeployment() {
         // Build parameters
         const payload = {
-          id: this.$route.params.id,
-          public: !this.deployment['public']
+          uri: this.$route.params.uri,
+          shared: !this.deployment['shared']
         }
-        axios.post('/deployments/public', payload)
+        axios.post('/deployments/shared', payload)
         .then(() => {
-          // Update new public value
-          this.deployment['public'] = !this.deployment['public']
-          this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are public' : 'The results are private'
-          this.shareResults_dialog_text = (this.deployment['public']) ? 'PUBLIC' : 'PRIVATE'
-          this.shareResults_dialog_icon = (this.deployment['public']) ? 'fas fa-unlock' : 'fas fa-lock'
-
-          if (this.deployment['public']) this.notification('Results changed to public', 'info')
-          else this.notification('Results changed to private', 'info')
+          // Update new shared value
+          this.deployment['shared'] = !this.deployment['shared']
+          if (this.deployment['shared']) this.notification('This deployment is now shared', '#00b16a')
+          else this.notification('This deployment is now private', '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

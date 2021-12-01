@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 import json
 import boto3
 import signal
@@ -145,7 +146,7 @@ class Deployments:
             if user['disabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
+            if not results['shared'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
             # Get Files Settings
@@ -201,9 +202,9 @@ class Deployments:
             # Get executions
             return self.__get_executions(user, data)
 
-        @deployments_blueprint.route('/deployments/public', methods=['POST'])
+        @deployments_blueprint.route('/deployments/shared', methods=['POST'])
         @jwt_required()
-        def deployments_public():
+        def deployments_shared():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -214,8 +215,8 @@ class Deployments:
             # Get Request Json
             deployment_json = request.get_json()
 
-            # Set Deployment Public
-            return self.__public(user, deployment_json)
+            # Set Deployment Shared
+            return self.__shared(user, deployment_json)
 
         return deployments_blueprint
 
@@ -269,7 +270,7 @@ class Deployments:
             notification = {'category': 'deployment'}
             notification['name'] = '{} has finished'.format(f['name'])
             notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
-            notification['data'] = '{{"id": "{}"}}'.format(f['id'])
+            notification['data'] = '{{"id": "{}"}}'.format(f['uri'])
             self._notifications.post(f['user_id'], notification)
 
             # Clean finished deployments
@@ -299,7 +300,7 @@ class Deployments:
     #################
     def __get(self, user):
         # Get all user deployments
-        if 'id' not in request.args:
+        if 'uri' not in request.args:
             dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
             dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
             deployments = self._deployments.get(user_id=user['id'], dfilter=dfilter, dsort=dsort)
@@ -308,37 +309,38 @@ class Deployments:
             return jsonify({'deployments': deployments, 'releases': releases, 'deployments_list': deployments_list}), 200
 
         # Get current execution
-        execution = self._executions.get(request.args['id'])
+        execution = self._executions.get(request.args['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
-        else:
-            execution = execution[0]
+        execution = execution[0]
 
         # Check deployment authority
         authority = self._deployments.getUser(execution['deployment_id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
         authority = authority[0]
-        if authority['id'] != user['id'] and not user['admin']:
-            return jsonify({'message': 'Insufficient Privileges'}), 400
+        if authority['id'] != user['id'] and not execution['shared'] and not user['admin']:
+            return jsonify({'message': 'This deployment is private'}), 400
+
+        # Add execution owner
+        execution['owner'] = (authority['id'] == user['id'] or user['admin'])
 
         # Get environments
-        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared']} for i in self._environments.get(authority['id'], authority['group_id'])]
+        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared']} for i in self._environments.get(user['id'], user['group_id'])]
 
         # Return data
         return jsonify({'deployment': execution, 'environments': environments}), 200
 
     def __get_executions(self, user, data):
         # Get current execution
-        execution = self._executions.get(data['id'])
+        execution = self._executions.get(data['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
-        else:
-            execution = execution[0]
+        execution = execution[0]
 
         # Check user privileges
         if user['disabled'] or (execution['mode'] == 'BASIC' and not user['deployments_basic']) or (execution['mode'] == 'PRO' and not user['deployments_pro']):
@@ -370,6 +372,7 @@ class Deployments:
             'method': data['method'],
             'scheduled': data['scheduled'],
             'url': data['url'],
+            'uri': str(uuid.uuid4()),
             'start_execution': data['start_execution'],
         }
 
@@ -442,6 +445,7 @@ class Deployments:
                 'databases': execution['databases'],
                 'code': execution['code'],
                 'url': execution['url'],
+                'uri': execution['uri'],
                 'execution_threads': group['deployments_execution_threads'],
                 'execution_timeout': group['deployments_execution_timeout']
             }
@@ -463,7 +467,6 @@ class Deployments:
 
         # Get Data
         execution = {
-            'id': data['id'],
             'environment_id': data['environment'],
             'mode': data['mode'],
             'databases': data.get('databases'),
@@ -472,11 +475,12 @@ class Deployments:
             'method': data['method'],
             'scheduled': data['scheduled'],
             'url': data['url'],
+            'uri': data['uri'],
             'start_execution': data['start_execution'],
         }
 
         # Get Current Deployment
-        current_execution = self._executions.get(execution['id'])
+        current_execution = self._executions.get(execution['uri'])
 
         # Check if deployment exists
         if len(current_execution) == 0:
@@ -546,6 +550,7 @@ class Deployments:
 
             # Create a new Deployment
             execution['deployment_id'] = current_execution['deployment_id']
+            execution['uri'] = str(uuid.uuid4())
             execution_id = self._executions.post(user['id'], execution)
 
             # Consume Coins
@@ -556,7 +561,7 @@ class Deployments:
                 coins = user['coins'] - group['coins_execution']
 
         # Build Response Data
-        response = { 'id': execution_id, 'coins': coins }
+        response = { 'uri': execution['uri'], 'coins': coins }
 
         if execution['start_execution'] and not group['deployments_execution_concurrent']:
             # Build Meteor Execution
@@ -573,6 +578,7 @@ class Deployments:
                 'databases': execution['databases'],
                 'code': execution['code'],
                 'url': execution['url'],
+                'uri': execution['uri'],
                 'execution_threads': group['deployments_execution_threads'],
                 'execution_timeout': group['deployments_execution_timeout']
             }
@@ -589,7 +595,7 @@ class Deployments:
             return jsonify({'message': 'No write permissions in the files folder'}), 400
 
         # Get current deployment
-        execution = self._executions.get(data['id'])
+        execution = self._executions.get(data['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:
@@ -653,13 +659,13 @@ class Deployments:
 
     def __stop(self, user, data):
         # Check params
-        if 'id' not in data:
-            return jsonify({'message': 'Id parameter is required'}), 400
+        if 'uri' not in data:
+            return jsonify({'message': 'Uri parameter is required'}), 400
         if 'mode' not in data or data['mode'] not in ['graceful','forceful']:
             return jsonify({'message': 'Mode parameter is required'}), 400
 
         # Get current deployment
-        execution = self._executions.get(data['id'])
+        execution = self._executions.get(data['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:
@@ -694,9 +700,9 @@ class Deployments:
             return jsonify({'message': 'Stopping the execution...'}), 200
         return jsonify({'message': 'Execution removed from the queue'}), 200
 
-    def __public(self, user, data):
+    def __shared(self, user, data):
         # Get current deployment
-        execution = self._executions.get(data['id'])
+        execution = self._executions.get(data['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:
@@ -715,8 +721,8 @@ class Deployments:
         if authority['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
-        # Change deployment public value
-        self._executions.setPublic(execution['id'], data['public'])
+        # Change deployment shared value
+        self._executions.setShared(execution['id'], data['shared'])
         return jsonify({'message': 'Success'}), 200
 
     ####################

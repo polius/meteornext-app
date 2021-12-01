@@ -34,8 +34,7 @@ class progress:
         self._sql.start()
         # Track progress
         logs = 'amazon_s3' if self._config['amazon_s3']['enabled'] else 'local'
-        uri = self._args.path[self._args.path.rfind('/')+1:]
-        query = "UPDATE executions SET status = 'IN PROGRESS', uri = '{}', logs = '{}', started = '{}', pid = '{}' WHERE id = {}".format(uri, logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
+        query = "UPDATE executions SET status = 'IN PROGRESS', logs = '{}', started = '{}', pid = '{}' WHERE id = {}".format(logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
 
     def end(self, execution_status):
