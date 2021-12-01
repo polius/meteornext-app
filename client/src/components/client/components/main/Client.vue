@@ -210,6 +210,7 @@ export default {
     EventBus.$on('beautify-query', this.beautifyQuery);
     EventBus.$on('minify-query', this.minifyQuery);
     EventBus.$on('select-favourite', this.selectFavourite);
+    EventBus.$on('settings-saved', this.settingsSaved);
   },
   computed: {
     ...mapFields([
@@ -281,6 +282,9 @@ export default {
     },
   },
   methods: {
+    settingsSaved() {
+      this.editor.setFontSize(parseInt(this.settings['font_size']) || 14)
+    },
     onGridReady(params) {
       this.gridApi.client = params.api
       this.columnApi.client = params.columnApi
@@ -289,13 +293,11 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.client.deselectAll()
-        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
         this.cellEditConfirm()
       }
     },
     onRowClicked(event) {
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
         this.cellEditConfirm()
       }
     },
@@ -327,7 +329,6 @@ export default {
         }
       }
       else if (e.event.key == 'Enter') {
-        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
         this.cellEditConfirm()
       }
       else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
@@ -384,7 +385,6 @@ export default {
       if (this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
     cellEditingSubmit(node, values) {
-      if (Object.keys(values).length == 0) return
       new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
         // Build values to update
         var valuesToUpdate = []
@@ -627,15 +627,19 @@ export default {
       }, 100)
     },
     cellEditConfirm() {
-      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
-      // var dialogOptions = {
-      //   'mode': 'cellEdit',
-      //   'title': 'Confirmation',
-      //   'text': 'Want to confirm these changes?',
-      //   'button1': 'Confirm',
-      //   'button2': 'Cancel'
-      // }
-      // this.showDialog(dialogOptions)
+      if (Object.keys(this.currentCellEditValues).length == 0) return
+      if (parseInt(this.settings['secure_mode']) || false) {
+        var dialogOptions = {
+          'mode': 'cellEditingConfirm',
+          'icon': 'fas fa-exclamation-triangle',
+          'title': 'CONFIRMATION',
+          'text': 'Do you want to confirm these changes?',
+          'button1': 'Confirm',
+          'button2': 'Cancel'
+        }
+        this.showDialog(dialogOptions)
+      }
+      else this.cellEditConfirmSubmit()
     },
     cellEditConfirmSubmit() {
       this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
@@ -1206,9 +1210,10 @@ export default {
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
       else if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
       else if (this.dialogMode == 'info') { this.dialog = false; this.$nextTick(() => this.editDialogEditor.focus()) }
+      else if (this.dialogMode == 'cellEditingConfirm') { this.dialog = false; this.cellEditConfirmSubmit() }
     },
     dialogCancel() {
-      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
+      if (['cellEditingError','cellEditingConfirm'].includes(this.dialogMode)) this.cellEditingDiscard()
       this.dialog = false
     },
     exportRows() {

@@ -235,6 +235,7 @@ export default {
       'currentConn',
       'dialogOpened',
       'connections',
+      'settings',
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
@@ -300,7 +301,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.content.deselectAll()
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditingConfirm()
       }
     },
     onSelectionChanged() {
@@ -308,7 +309,7 @@ export default {
     },
     onRowClicked(event) {
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditingConfirm()
       }
     },
     onCellKeyDown(e) {
@@ -339,7 +340,7 @@ export default {
         }
       }
       else if (e.event.key == 'Enter') {
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditingConfirm()
       }
       else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
         let cell = this.gridApi.content.getFocusedCell()
@@ -650,9 +651,25 @@ export default {
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
       if (this.currentCellEditMode == 'edit' && this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
+    cellEditingConfirm() {
+      if (Object.keys(this.currentCellEditValues).length == 0) return
+      if (parseInt(this.settings['secure_mode']) || false) {
+        let dialogOptions = {
+            'mode': 'cellEditingConfirm',
+            'icon': 'fas fa-exclamation-triangle',
+            'title': 'CONFIRMATION',
+            'text': 'Do you want to confirm these changes?',
+            'button1': 'Confirm',
+            'button2': 'Cancel'
+          }
+          this.showDialog(dialogOptions)
+      }
+      else this.cellEditingConfirmSubmit()
+    },
+    cellEditingConfirmSubmit() {
+      this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+    },
     cellEditingSubmit(mode, node, values) {
-      if (Object.keys(values).length == 0) return
-
       // Compute queries
       var query = ''
       var valuesToUpdate = []
@@ -868,12 +885,11 @@ export default {
       else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
       else if (this.dialogMode == 'info') { this.dialog = false; this.$nextTick(() => this.editDialogEditor.focus()) }
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
+      else if (this.dialogMode == 'cellEditingConfirm') { this.dialog = false; this.cellEditingConfirmSubmit() }
     },
     dialogCancel() {
-      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
-      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
-      else if (this.dialogMode == 'info') this.dialog = false
-      else if (this.dialogMode == 'export') this.dialog = false
+      if (['cellEditingError','cellEditingConfirm'].includes(this.dialogMode)) this.cellEditingDiscard()
+      this.dialog = false
     },
     editDialogOpen(title, text) {
       this.editDialogTitle = title
