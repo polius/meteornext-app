@@ -4,7 +4,7 @@ class Deployments_Finished:
 
     def get(self):
         query = """
-            SELECT e.id, e.mode, d.name, e.status, e.user_id
+            SELECT e.id, e.uri, e.mode, d.name, e.status, e.user_id
             FROM deployments_finished f
             JOIN executions e ON e.id = f.execution_id AND e.status IN ('SUCCESS','WARNING','FAILED','STOPPED') 
             JOIN deployments d ON d.id = e.deployment_id

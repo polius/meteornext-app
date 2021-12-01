@@ -5,7 +5,7 @@ class Deployments:
     def get(self, user_id=None, deployment_id=None, dfilter=None, dsort=None):
         if deployment_id is not None:
             query = """
-                SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s AND d.id = %(deployment_id)s
                 JOIN users u ON u.id = d.user_id
@@ -68,7 +68,7 @@ class Deployments:
                     all_executions = ''
 
             query = """
-                SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s
                 JOIN users u ON u.id = d.user_id
@@ -122,7 +122,7 @@ class Deployments:
 
     def getResults(self, uri):
         query = """
-            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.logs, e.public
+            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.logs, e.shared
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             WHERE e.uri = %(uri)s
@@ -140,7 +140,7 @@ class Deployments:
 
     def getExecutions(self, deployment_id):
         query = """
-            SELECT e.id, env.name AS 'environment', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+            SELECT e.id, e.uri, env.name AS 'environment', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id AND d.id = %(deployment_id)s
             LEFT JOIN environments env ON env.id = e.environment_id

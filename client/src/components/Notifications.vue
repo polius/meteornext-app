@@ -125,7 +125,7 @@ export default {
     infoNotification() {
       const id = this.selected[0].data.id
       if (this.selected[0].category == 'deployment') {
-        this.$router.push({ name:'deployment', params: { id: id }})
+        this.$router.push({ name:'deployment', params: { uri: id }})
       }
       else if (this.selected[0].category == 'monitoring') {
         this.$router.push({ name:'monitor', params: { id: id }})

@@ -283,14 +283,21 @@ export default {
           // Go to the selected resource
           const data = JSON.parse(notification.data)
           if (notification.category == 'deployment') {
-            this.$router.push({ name: 'deployment', params: { id: data.id }})
+            if (this.$router.history.current.name != 'deployment' || this.$router.history.current.params.uri != data.id) {
+              this.$router.push({ name: 'deployment', params: { uri: data.id }})
+            }
           }
           else if (notification.category == 'monitoring') {
-            this.$router.push({ name: 'monitor', params: { id:  data.id }})
+            if (this.$router.history.current.name != 'monitor' || this.$router.history.current.params.id != data.id) {
+              this.$router.push({ name: 'monitor', params: { id:  data.id }})
+            }
           }
           else if (notification.category == 'utils-restore') {
-            this.$router.push({ name: 'utils.restore.info', params: { id:  data.id }})
+            if (this.$router.history.current.name != 'utils.restore.info' || this.$router.history.current.params.id != data.id) {
+              this.$router.push({ name: 'utils.restore.info', params: { id:  data.id }})
+            }
           }
+          this.rightDrawer = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

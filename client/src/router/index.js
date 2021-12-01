@@ -124,7 +124,7 @@ let router = new VueRouter({
       meta: { requiresAuth: true },
       children: [
         {
-          path: ':id',
+          path: ':uri',
           name: 'deployment',
           component: () => import('../components/deployments/Deployment'),
           meta: { requiresAuth: true }

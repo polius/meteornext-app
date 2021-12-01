@@ -434,7 +434,7 @@ export default {
       this.$router.push({ name:'deployments.new' })
     },
     infoDeploy() {
-      this.$router.push({ name:'deployment', params: { id: this.selected[0]['execution_id'] }})
+      this.$router.push({ name:'deployment', params: { uri: this.selected[0]['uri'] }})
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
