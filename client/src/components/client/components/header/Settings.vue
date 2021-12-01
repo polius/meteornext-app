@@ -5,7 +5,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @loading="loading" @disabled="loading" @click="saveSettings" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn @loading="loading" @disabled="loading" @click="saveSettings" color="#00b16a" style="margin-right:10px;"><v-icon small style="margin-right:10px">fas fa-save</v-icon>Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -15,6 +15,15 @@
               <v-flex xs12>
                 <v-form ref="form" @submit.prevent style="margin-bottom:15px;">
                   <v-text-field filled v-model="editorFontSize" @keyup.enter="saveSettings" label="Editor Font Size" :rules="[v => v == parseInt(v) && v > 0 || '']" hide-details style="margin-top:10px"></v-text-field>
+                  <v-checkbox v-model="secureMode" color="#00b16a" style="margin-top:15px" hide-details>
+                    <template v-slot:label>
+                      <div style="margin-left:2px">
+                        <div class="white--text">Secure Mode</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">All modifications done in CLIENT (editing SELECT results) and CONTENT will require a confirmation before proceeding.</div>
+                      </div>
+                    </template>
+                  </v-checkbox>
+                  <v-divider style="margin-top:15px"></v-divider>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:12px; margin-bottom:10px; margin-left:2px">SHORTCUTS</div>
                   <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
                 </v-form>
@@ -41,6 +50,7 @@ export default {
       dialog: false,
       loading: false,
       editorFontSize: '14',
+      secureMode: false,
       // AG Grid
       gridApi: null,
       columnApi: null,
@@ -80,7 +90,7 @@ export default {
   activated() {
     EventBus.$on('show-settings', this.showDialog)
     // Build shortcuts
-    const isMacLike = navigator.platform.match(/(Mac|iPhone|iPod|iPad)/i) ? true : false
+    const isMacLike = navigator.userAgent.match(/(Mac|iPhone|iPod|iPad)/i) ? true : false
     if (isMacLike) {
       for (let i = 0; i < this.shortcuts.length; ++i) this.shortcuts[i]['binding'] = this.shortcuts[i]['binding'].replace('Ctrl', '⌘')
     }
@@ -111,6 +121,7 @@ export default {
     },
     getSettings() {
       if ('font_size' in this.settings) this.editorFontSize = this.settings['font_size']
+      if ('secure_mode' in this.settings) this.secureMode = parseInt(this.settings['secure_mode'])
     },
     saveSettings() {
       // Check if all fields are filled
@@ -121,11 +132,15 @@ export default {
       this.loading = true
       const payload = {
         font_size: this.editorFontSize,
+        secure_mode: this.secureMode,
       }
       axios.put('/client/settings', payload)
         .then((response) => {
-            this.settings['font_size'] = payload['font_size']
-            EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
+          this.settings['font_size'] = payload['font_size']
+          this.settings['secure_mode'] = payload['secure_mode'] ? 1 : 0
+          EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
+          EventBus.$emit('settings-saved')
+          this.dialog = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
