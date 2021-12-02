@@ -134,7 +134,7 @@
     <!------------------->
     <!-- DIALOG: BASIC -->
     <!------------------->
-    <v-dialog v-model="dialog" persistent max-width="50%">
+    <v-dialog v-model="dialog" persistent max-width="50%" eager>
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
@@ -147,6 +147,9 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px">
                   <div v-if="dialogText.length > 0" class="body-1">{{ dialogText }}</div>
+                  <div v-show="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
+                    <div id="dialogQueryEditorContent" style="height:256px"></div>
+                  </div>
                   <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
@@ -185,6 +188,7 @@
 import axios from 'axios'
 
 import ace from 'ace-builds';
+import sqlFormatter from '@sqltools/formatter'
 
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
@@ -218,6 +222,7 @@ export default {
       dialogIcon: '',
       dialogTitle: '',
       dialogText: '',
+      dialogQueryEditor: null,
       dialogSubmitText: '',
       dialogCancelText: '',
       // Context Menu
@@ -266,7 +271,8 @@ export default {
     ], { path: 'client/components' }),
   },
   activated() {
-    EventBus.$on('get-content', this.getContent);
+    EventBus.$on('get-content', this.getContent)
+    this.initAceEditor()
   },
   watch: {
     currentConn() {
@@ -292,7 +298,36 @@ export default {
     },
   },
   methods: {
-   onGridReady(params) {
+    initAceEditor() {
+      if (this.dialogQueryEditor != null) return
+      this.dialogQueryEditor = ace.edit("dialogQueryEditorContent", {
+        mode: "ace/mode/mysql",
+        theme: "ace/theme/monokai",
+        keyboardHandler: "ace/keyboard/vscode",
+        fontSize: 14,
+        showPrintMargin: false,
+        wrap: false,
+        indentedSoftWrap: false,
+        showLineNumbers: true,
+        scrollPastEnd: true,
+        readOnly: true,
+      })
+      this.dialogQueryEditor.container.addEventListener("keydown", (e) => {
+        // - Increase Font Size -
+        if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+          this.dialogQueryEditor.setFontSize(size + 1)
+          e.preventDefault()
+        }
+        // - Decrease Font Size -
+        else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+          this.dialogQueryEditor.setFontSize(Math.max(size - 1 || 1))
+          e.preventDefault()
+        }
+      }, false);
+    },
+    onGridReady(params) {
       this.gridApi.content = params.api
       this.columnApi.content = params.columnApi
       this.$refs['agGridContent'].$el.addEventListener('click', this.onGridClick)
@@ -652,24 +687,13 @@ export default {
       if (this.currentCellEditMode == 'edit' && this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
     cellEditingConfirm() {
-      if (Object.keys(this.currentCellEditValues).length == 0) return
-      if (parseInt(this.settings['secure_mode']) || false) {
-        let dialogOptions = {
-            'mode': 'cellEditingConfirm',
-            'icon': 'fas fa-exclamation-triangle',
-            'title': 'CONFIRMATION',
-            'text': 'Do you want to confirm these changes?',
-            'button1': 'Confirm',
-            'button2': 'Cancel'
-          }
-          this.showDialog(dialogOptions)
-      }
-      else this.cellEditingConfirmSubmit()
+      this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, false)
     },
     cellEditingConfirmSubmit() {
-      this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, true)
     },
-    cellEditingSubmit(mode, node, values) {
+    cellEditingSubmit(mode, node, values, confirm=false) {
+      if (Object.keys(values).length == 0) return
       // Compute queries
       var query = ''
       var valuesToUpdate = []
@@ -707,6 +731,21 @@ export default {
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
+        // Check Secure Mode
+        if (!confirm && parseInt(this.settings['secure_mode']) || false) {
+          var dialogOptions = {
+            'mode': 'cellEditingConfirm',
+            'icon': 'fas fa-exclamation-triangle',
+            'title': 'CONFIRMATION',
+            'text': 'Do you want to confirm these changes?',
+            'button1': 'Confirm',
+            'button2': 'Cancel'
+          }
+          let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+          this.dialogQueryEditor.setValue(beautified, -1)
+          this.showDialog(dialogOptions)
+          return
+        }
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
