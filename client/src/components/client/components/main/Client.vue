@@ -57,12 +57,12 @@
     <!------------>
     <!-- DIALOG -->
     <!------------>
-    <v-dialog v-model="dialog" :persistent="dialogMode == 'cellEditingError'" max-width="50%">
+    <v-dialog v-model="dialog" :persistent="['cellEditingError','cellEditingConfirm'].includes(dialogMode)" max-width="50%" eager>
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
+          <v-btn v-if="!['cellEditingError','cellEditingConfirm'].includes(dialogMode)" :disabled="loading" @click="dialog = false" icon><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px">
@@ -70,6 +70,9 @@
               <v-flex xs12>
                 <v-form ref="form">
                   <div v-if="dialogText.length>0" class="body-1">{{ dialogText }}</div>
+                  <div v-show="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
+                    <div id="dialogQueryEditorClient" style="height:256px"></div>
+                  </div>
                   <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
                 </v-form>
                 <div v-if="dialogSubmitText.length > 0 || dialogCancelText.length > 0">
@@ -183,6 +186,7 @@ export default {
       dialogIcon: '',
       dialogTitle: '',
       dialogText: '',
+      dialogQueryEditor: null,
       dialogSubmitText: '',
       dialogCancelText: '',
       // Dialog - Content Edit
@@ -384,7 +388,8 @@ export default {
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
       if (this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
-    cellEditingSubmit(node, values) {
+    cellEditingSubmit(node, values, confirm=false) {
+      if (Object.keys(values).length == 0) return
       new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
         // Build values to update
         var valuesToUpdate = []
@@ -404,8 +409,8 @@ export default {
               'mode': 'cellEditingError',
               'icon': 'fas fa-exclamation-triangle',
               'title': 'ERROR',
-              'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table.replace('``','`') + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
-              'button1': 'Edit row',
+              'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table.replace('``','`') + "' does not contain a primary key constraint." : "The result set does not contain the table primary keys. Please include in your SELECT the columns: " + pks.join(',') + '.',
+              'button1': '',
               'button2': 'Discard changes'
             }
             this.showDialog(dialogOptions)
@@ -414,6 +419,21 @@ export default {
           // Build Query
           let where = pks.map(x => '`' + x + '` = ' + JSON.stringify(values[x]['old']))
           let query = "UPDATE `" + this.currentQueryMetadata.database + "`.`" + this.currentQueryMetadata.table + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          // Check Secure Mode
+          if (!confirm && parseInt(this.settings['secure_mode']) || false) {
+            var dialogOptions = {
+              'mode': 'cellEditingConfirm',
+              'icon': 'fas fa-exclamation-triangle',
+              'title': 'CONFIRMATION',
+              'text': 'Do you want to confirm these changes?',
+              'button1': 'Confirm',
+              'button2': 'Cancel'
+            }
+            let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+            this.dialogQueryEditor.setValue(beautified, -1)
+            this.showDialog(dialogOptions)
+            return
+          }
           // Execute Query
           const payload = {
             connection: this.id + '-shared',
@@ -627,22 +647,10 @@ export default {
       }, 100)
     },
     cellEditConfirm() {
-      if (Object.keys(this.currentCellEditValues).length == 0) return
-      if (parseInt(this.settings['secure_mode']) || false) {
-        var dialogOptions = {
-          'mode': 'cellEditingConfirm',
-          'icon': 'fas fa-exclamation-triangle',
-          'title': 'CONFIRMATION',
-          'text': 'Do you want to confirm these changes?',
-          'button1': 'Confirm',
-          'button2': 'Cancel'
-        }
-        this.showDialog(dialogOptions)
-      }
-      else this.cellEditConfirmSubmit()
+      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues, false)
     },
     cellEditConfirmSubmit() {
-      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues, true)
     },
     onContextMenu(e) {
       if (!this.gridApi.client.getSelectedNodes().some(x => x.id == e.node.id)) this.gridApi.client.deselectAll()
@@ -791,6 +799,35 @@ export default {
 
       // Resize after Renderer
       this.editor.renderer.on('afterRender', () => { this.editor.resize() });
+
+      // -----------------------------------
+      // INIT Dialog Query Editor Ace Client
+      this.dialogQueryEditor = ace.edit("dialogQueryEditorClient", {
+        mode: "ace/mode/mysql",
+        theme: "ace/theme/monokai",
+        keyboardHandler: "ace/keyboard/vscode",
+        fontSize: 14,
+        showPrintMargin: false,
+        wrap: false,
+        indentedSoftWrap: false,
+        showLineNumbers: true,
+        scrollPastEnd: true,
+        readOnly: true,
+      })
+      this.dialogQueryEditor.container.addEventListener("keydown", (e) => {
+        // - Increase Font Size -
+        if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+          this.dialogQueryEditor.setFontSize(size + 1)
+          e.preventDefault()
+        }
+        // - Decrease Font Size -
+        else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+          this.dialogQueryEditor.setFontSize(Math.max(size - 1 || 1))
+          e.preventDefault()
+        }
+      }, false);
     },
     highlightQueries() {
       var Range = ace.require("ace/range").Range
