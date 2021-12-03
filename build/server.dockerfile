@@ -17,7 +17,7 @@ RUN yum update -y && \
     python3 -m pip install --no-cache-dir sshtunnel && \
     python3 -m pip install --no-cache-dir pymysql && \
     python3 -m pip install --no-cache-dir webauthn==0.4.7 && \
-    python3 -m pip install --no-cache-dir DBUtils==2.0.2 && \
+    python3 -m pip install --no-cache-dir DBUtils && \
     # python3 -m pip install mysql-connector-python && \
     python3 -m pip install --no-cache-dir bcrypt && \
     python3 -m pip install --no-cache-dir pyotp && \

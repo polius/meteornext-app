@@ -208,14 +208,14 @@ class blueprint:
     def __init__(self):
         self.queries = {0}
         self.auxiliary_queries = {{}}
-    def before(self, meteor, environment, region):
+    def before(self, meteor, environment, region, server):
         pass
     def main(self, meteor, environment, region, server, database):
         for d in {1}:
             if len(fnmatch.filter([database], d)) > 0:
                 for i in self.queries.keys():
                     meteor.execute(query=self.queries[str(i)], database=database)
-    def after(self, meteor, environment, region):
+    def after(self, meteor, environment, region, server):
         pass""".format(json.dumps(queries), databases)
 
     def __execute(self, deployment, files):

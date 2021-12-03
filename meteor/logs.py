@@ -1,26 +1,24 @@
 import os
+import gzip
 import json
 import shutil
 
 class logs:
-    def __init__(self, args):
+    def __init__(self, args, imports):
         self._args = args
+        self._imports = imports
 
-    def compile(self, logs, summary_raw, exception=None):
+    def compile(self, logs, summary, exception=None):
         try:
-            with open("{}/meteor.js".format(self._args.path), 'w') as write_file:
-                # Write Parsed Data
-                write_file.write('var DATA = {};\n'.format(json.dumps(logs, separators=(',', ':'))))
-                # Write Sorted Displayed Columns
-                write_file.write('var COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query", "meteor_status", "meteor_response", "meteor_execution_time", "meteor_execution_rows", "meteor_output"];\n')
-                # Write the Execution Information
-                summary = summary_raw
-                summary['mode'] = 'deploy' if self._args.deploy else 'test' 
-                write_file.write('var INFO = {};\n'.format(json.dumps(summary, separators=(',', ':'))))
-                # If there's an Exception, add it to the file
-                if exception is not None and not exception.startswith('[QUERY_ERROR]'):
-                    parsed_exception = exception.replace('"', '\\"').replace("\n", "\\n")
-                    write_file.write('var ERROR = "{}";\n'.format(parsed_exception))
+            # Generate file
+            summary['mode'] = 'deploy' if self._args.deploy else 'test'
+            file = {"DATA": logs, "COLUMNS": ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query", "meteor_status", "meteor_response", "meteor_execution_time", "meteor_execution_rows", "meteor_output"], "INFO": summary}
+            if exception is not None and not exception.startswith('[QUERY_ERROR]'):
+                file['ERROR'] = exception.replace('"', '\\"').replace("\n", "\\n")
+
+            # Save file
+            with open("{}/meteor.json".format(self._args.path), 'w') as outfile:
+                json.dump(file, outfile, separators=(',', ':'))
 
             # Compress Logs
             self.__compress()
@@ -40,3 +38,9 @@ class logs:
 
         # Tar Gz Deploy Folder
         shutil.make_archive(self._args.path, 'gztar', self._args.path)
+
+        # Compress Results (to upload it to S3)
+        if self._imports.config['amazon_s3']['enabled']:
+            with open(f"{self._args.path}/meteor.json", 'rb') as f_in:
+                with gzip.open(f"{self._args.path}/meteor.json.gz", 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)

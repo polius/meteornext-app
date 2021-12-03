@@ -10,7 +10,7 @@
       <div v-if="files.amazon_s3.enabled" style="margin-top:20px; margin-bottom:25px">
         <v-text-field :disabled="loading" v-model="files.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !files.amazon_s3.enabled) || '']" :append-icon="showAccessKey ? 'mdi-eye' : 'mdi-eye-off'" :type="showAccessKey ? 'text' : 'password'" @click:append="showAccessKey = !showAccessKey"></v-text-field>
         <v-text-field :disabled="loading" v-model="files.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !files.amazon_s3.enabled) || '']" :append-icon="showSecretAccessKey ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecretAccessKey ? 'text' : 'password'" @click:append="showSecretAccessKey = !showSecretAccessKey"></v-text-field>
-        <v-text-field :disabled="loading" v-model="files.amazon_s3.region" label="Region Name" placeholder="us-east-1, eu-west-1, ..." style="padding-top:0px;" required :rules="[v => (!!v || !logfiless.amazon_s3.enabled) || '']"></v-text-field>
+        <v-text-field :disabled="loading" v-model="files.amazon_s3.region" label="Region Name" placeholder="us-east-1, eu-west-1, ..." style="padding-top:0px;" required :rules="[v => (!!v || !files.amazon_s3.enabled) || '']"></v-text-field>
         <v-text-field :disabled="loading" v-model="files.amazon_s3.bucket" label="Bucket Name" style="padding-top:0px;" required :rules="[v => (!!v || !files.amazon_s3.enabled) || '']" hide-details></v-text-field>
       </div>
     </v-form>

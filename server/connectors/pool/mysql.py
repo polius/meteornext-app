@@ -28,8 +28,8 @@ class MySQL:
         POOL_CONFIG = {
             "creator": pymysql,
             "maxconnections": None,
-            "mincached": 1,
-            "maxcached": 10,
+            "mincached": 0,
+            "maxcached": 20,
             "maxshared": 0,
             "blocking": True,
             "maxusage": 0,
@@ -39,7 +39,7 @@ class MySQL:
         self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
     def execute(self, query, args=None, database=None):
-        retries = 1
+        retries = 2
         exception = None
         for _ in range(retries+1):
             try:
@@ -51,7 +51,7 @@ class MySQL:
                         result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
                     connection.commit()
                 return result
-            except pymysql.err.OperationalError as e:
+            except Exception as e: # (pymysql.err.OperationalError, pymysql.err.InterfaceError, UnicodeDecodeError) as e:
                 exception = e
                 time.sleep(1)
         raise exception

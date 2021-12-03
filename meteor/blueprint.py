@@ -11,9 +11,9 @@ class blueprint:
         }
 
     #######################################################
-    # Executed once per Region before all main executions #
+    # Executed once per Server before all main executions #
     #######################################################
-    def before(self, meteor, environment, region):
+    def before(self, meteor, environment, region, server):
         pass
 
     ##############################
@@ -23,9 +23,9 @@ class blueprint:
         pass
 
     ######################################################
-    # Executed once per Region after all main executions #
+    # Executed once per Server after all main executions #
     ######################################################
-    def after(self, meteor, environment, region):
+    def after(self, meteor, environment, region, server):
         pass
 
     ########################

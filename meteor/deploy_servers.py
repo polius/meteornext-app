@@ -20,21 +20,11 @@ class deploy_servers:
 
         # Start the Deploy
         try:
-            # Execute 'BEFORE' Queries Once per Region
-            deploy = deploy_blueprint(self._args, self._imports, self._region)
-            if current_thread.alive:
-                deploy.execute_before()
-
-            # Stop Execution if the 'before' method ended with a critical error
-            if len(current_thread.critical) > 0:
-                return
-
-            # Start Server Deploy in Parallel
             threads = []
             try:
                 for server in self._region['sql']:
-                    deploy_parallel = deploy_blueprint(self._args, self._imports, self._region, deploy.blueprint)
-                    t = threading.Thread(target=deploy_parallel.execute_main, args=(server,))
+                    blueprint = deploy_blueprint(self._args, self._imports, self._region)
+                    t = threading.Thread(target=blueprint.execute, args=(server,))
                     threads.append(t)
                     t.alive = current_thread.alive
                     t.error = False
@@ -64,10 +54,6 @@ class deploy_servers:
                 for t in threads:
                     t.join()
                 raise
-
-            # Execute 'AFTER' Queries Once per Region
-            if current_thread.alive:
-                deploy.execute_after()
 
         except Exception as e:
             # Stop all threads and store critical error (auxiliary error related)

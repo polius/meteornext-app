@@ -4,12 +4,14 @@
       <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" @contextmenu="($event) => $event.preventDefault()" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" @blur="onBlur" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 215px)'}" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
+            <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="padding-right:10px">fas fa-exclamation-triangle</v-icon>
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
           </div>
         </template>
         <template v-slot:[`item`]="{ item }">
           <div class="body-2">
+            <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="padding-right:10px">fas fa-exclamation-triangle</v-icon>
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
             <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
@@ -418,7 +420,7 @@ export default {
       this.servers = JSON.parse(JSON.stringify(servers))
       this.sidebarItems = JSON.parse(JSON.stringify(servers))
       // Parse Servers List
-      this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
+      this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name, active: x.active }))
     },
     getDatabases(server, resolve=null, reject=null) {
       this.serverSearch = server
