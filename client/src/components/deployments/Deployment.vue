@@ -312,7 +312,7 @@
                       <template v-slot:activator="{ on }">
                         <span v-on="on" class="subtitle-1 font-weight-regular white--text">
                           CODE
-                          <v-icon small style="margin-left:5px; margin-bottom:2px;">fas fa-question-circle</v-icon>
+                          <v-icon small style="margin-left:5px; margin-bottom:4px;">fas fa-question-circle</v-icon>
                         </span>
                       </template>
                       <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
@@ -324,7 +324,7 @@
                       <template v-slot:activator="{ on }">
                         <span v-on="on" class="subtitle-1 font-weight-regular white--text">
                           METHOD
-                          <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                          <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                         </span>
                       </template>
                       <span>
