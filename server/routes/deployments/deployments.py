@@ -539,10 +539,9 @@ class Deployments:
         # Edit the execution
         if current_execution['status'] in ['CREATED','SCHEDULED']:
             self._executions.put(user['id'], execution)
-            execution_id = execution['id']
             coins = user['coins']
             if not execution['start_execution']:
-                return jsonify({'message': 'Deployment edited successfully', 'data': {'id': execution_id}}), 200
+                return jsonify({'message': 'Deployment edited successfully', 'data': {'uri': execution['uri']}}), 200
 
         # Create a new execution
         else:
