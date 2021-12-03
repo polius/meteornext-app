@@ -22,6 +22,8 @@ var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_t
 // +--------+
 // Global Import File Variable
 var IMPORT_FILE;
+var DATA;
+var COLUMNS;
 // +----------+
 // | SETTINGS |
 // +----------+
@@ -89,7 +91,7 @@ function check_uri() {
   var uri = current_url.searchParams.get("uri");
   if (uri != null) {
     resource_url = (resource_url[resource_url.length - 1] == '/') ? resource_url : resource_url + '/'
-    $("#loading").append("<p>- Retrieving Data URI...</p>");
+    $("#loading").append("<p>- Retrieving Data URI ...</p>");
     $.getScript(resource_url + uri + '.js')
       .done(function () {
         init_meteor();
@@ -394,19 +396,18 @@ $("#import-file").change(function (event) {
   $("#loading").html('');
 
   var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";
-  var error_code = `
-    var DATA = [{\"column_1\": \"value_1\", \"column_2\": \"value_2\"}];<br><br>
-    // Define column order<br>
-    var COLUMNS = ["column_1", "column_2"];
-  `;
+  var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
+  var error_code = `{<br>
+    &nbsp "DATA": [["row1_col1", "row1_col2"],["row2_col1", "row2_col2"]],<br>
+    &nbsp "COLUMNS": ["column1", "column2"]<br>
+  }`;
   var file = event.target.files[0];
   if (typeof file == 'undefined') {
     $("#import-button").removeClass("is-loading");
     return;
   }
   var extension = file['name'].substr((file['name'].lastIndexOf('.') + 1));
-  if (extension != 'js') show_error(error_title, error_message, error_code);
+  if (extension != 'json') show_error(error_title, error_message, error_code);
   else {
     // If Grid is Loaded then Destroy it and show the loading page again
     if (typeof gridOptions != 'undefined') {
@@ -425,15 +426,14 @@ $("#import-file").change(function (event) {
     reader.onprogress = updateProgress;
     reader.onload = function (e) {
       try {
-        // Browser completed reading file
         $("#loading").append("<p>- File Uploaded Successfully</p>");
-        IMPORT_FILE = e.target.result;
+        $("#loading").append("<p>- Processing File ...</p>");
         // Convert String to Executable Javascript Code
-        var valid_file = false;
-        jQuery.globalEval(IMPORT_FILE);
+        IMPORT_FILE = JSON.parse(e.target.result);
         // Check Errors
-        if (typeof DATA == 'undefined') show_error(error_title, error_message, error_code);
-        else if (DATA.length == 0) show_error(error_title, error_message, error_code);
+        var valid_file = false;
+        if (!('DATA' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
+        else if (!('COLUMNS' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
         else valid_file = true;
       }
       catch (err) {
@@ -449,7 +449,7 @@ $("#import-file").change(function (event) {
 
 function init_meteor() {
   // Compile Several Data File Meteor Values.
-  $("#loading").append("<p>- Compiling Logs ...</p>");
+  $("#loading").append("<p>- Compiling Data ...</p>");
   compile_meteor();
   // Init and Load The AG-GRID
   $("#loading").append("<p>- Building Columns ...</p>");
@@ -479,11 +479,23 @@ function init_meteor() {
 }
 
 function compile_meteor() {
-  // Check if variable COLUMNS has been set in meteor data file. If not, then rebuild.
-  if (typeof COLUMNS == 'undefined') {
-    var columns = Object.keys(DATA[0]);
-    jQuery.globalEval("var COLUMNS = " + JSON.stringify(columns) + ";");
-  }
+  // Compile columns
+  COLUMNS = IMPORT_FILE.COLUMNS;
+  // Compile data
+  DATA = IMPORT_FILE.DATA
+  // DATA = IMPORT_FILE['DATA'].reduce((acc, val) => {
+  //   acc.push(val.reduce((acc2, val2, index) => {
+  //     acc2[COLUMNS[index]] = val2;
+  //     return acc2;
+  //   }, {}))
+  //   return acc; 
+  // }, [])
+  // Compile info
+  if ('INFO' in IMPORT_FILE) INFO = IMPORT_FILE.INFO
+  // Compile errors
+  if ('ERROR' in IMPORT_FILE) ERROR = IMPORT_FILE.ERROR
+  // Clean IMPORT_FILE
+  IMPORT_FILE = null
   // Get the Custom Columns
   for (var i = 0; i < COLUMNS.length; ++i) {
     if (!SUMMARY_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) FILTER_CUSTOM_COLUMNS.push(COLUMNS[i]);
@@ -1458,7 +1470,7 @@ function export_meteor(rows_to_export, columns_to_export) {
   data_to_export += 'var DATA = ' + JSON.stringify(rows_to_export) + ';\n';
   data_to_export += 'var COLUMNS = ' + JSON.stringify(columns_to_export) + ';';
   if (typeof INFO != 'undefined') data_to_export += '\nvar INFO = {"mode": "' + INFO['mode'] + '"};';
-  download('meteor.js', data_to_export);
+  download('meteor.json', data_to_export);
 }
 
 function export_json(rows_to_export) {
@@ -1914,7 +1926,7 @@ function initMeteorNext() {
   $("#loading").html('');
   $("#import-div").remove();
   $("#import-div-separator").remove();
-  $("#loading").append("<p>- Retrieving Data...</p>");
+  $("#loading").append("<p>- Retrieving Data ...</p>");
 }
 function showError(title, description) {
   $("#loading").html('');
@@ -1926,17 +1938,16 @@ function loadMeteorNext(data) {
   try {
     // Init variables
     var error_title = "Invalid File Type";
-    var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";
-    var error_code = `
-    var DATA = [{\"column_1\": \"value_1\", \"column_2\": \"value_2\"}];<br><br>
-    // Define column order<br>
-    var COLUMNS = ["column_1", "column_2"];
-    `;
-    // Execute a script in the global context
-    jQuery.globalEval(data);
+    var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
+    var error_code = `{<br>
+      &nbsp "DATA": [["row1_col1", "row1_col2"],["row2_col1", "row2_col2"]],<br>
+      &nbsp "COLUMNS": ["column1", "column2"]<br>
+    }`;
+    IMPORT_FILE = data
     // Check Errors
-    if (typeof DATA == 'undefined') show_error(error_title, error_message, error_code);
-    else if (DATA.length == 0) show_error(error_title, error_message, error_code);
+    var valid_file = false;
+    if (!('DATA' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
+    else if (!('COLUMNS' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
     else valid_file = true;
   }
   catch (err) {

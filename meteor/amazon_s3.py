@@ -34,11 +34,11 @@ class amazon_s3:
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
                 # 2. Upload Results File to '/results'
-                file_path = "{}/meteor.js".format(self._args.path)
-                s3_path = "results/{}.js".format(execution_name)
+                file_path = "{}/meteor.json.gz".format(self._args.path)
+                s3_path = "results/{}.json.gz".format(execution_name)
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
-            except Exception as e:
+            except Exception:
                 # print("- Uploading Process Failed.")
                 self._progress.track_tasks(value={'status': 'false'})
                 raise

@@ -272,7 +272,7 @@ class Settings:
             return True
         return False
 
-    def test_logs_credentials(self, data):
+    def test_files_credentials(self, data):
         # Generate Temp File
         file = tempfile.NamedTemporaryFile()
         file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Files).\nIt is safe to delete it.'.encode())

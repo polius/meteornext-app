@@ -34,7 +34,7 @@ class core:
         # Init Classes
         self._imports = imports(self._args)
         self._progress = progress(self._args, self._imports)
-        self._logs = logs(self._args)
+        self._logs = logs(self._args, self._imports)
         self._amazon_s3 = amazon_s3(self._args, self._imports, self._progress)
         self._validation = validation(self._args, self._imports, self._progress)
         self._deployment = deployment(self._args, self._imports, self._progress)
@@ -280,7 +280,7 @@ class core:
                         environment_logs.extend(json_decoded['output'])
 
             # Write Environment Log
-            with open("{}/meteor.js".format(self._args.path), 'w') as f:
+            with open("{}/meteor.json".format(self._args.path), 'w') as f:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder

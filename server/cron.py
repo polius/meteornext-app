@@ -103,8 +103,8 @@ class Cron:
                         if os.path.isfile(deployments_path + '.tar.gz'):
                             os.remove(deployments_path + '.tar.gz')
                         results_path = os.path.join(setting['local']['path'], 'results', i['uri'])
-                        if os.path.isfile(results_path + '.js'):
-                            os.remove(results_path + '.js')
+                        if os.path.isfile(results_path + '.json'):
+                            os.remove(results_path + '.json')
                         # SQL
                         self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
         except Exception:

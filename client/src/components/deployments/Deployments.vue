@@ -5,8 +5,11 @@
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
-          <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-btn text title="Create a new deployment" @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <!-- <v-btn title="Import a shared deployment from another user" text><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-arrow-up</v-icon>IMPORT</v-btn> -->
+          <!-- <v-btn disabled title="Remove a shared deployment from the list" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>REMOVE</v-btn> -->
+          <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+          <!-- <v-btn disabled title="Pin a deployment" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>PIN</v-btn> -->
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>

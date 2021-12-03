@@ -11,11 +11,11 @@ from connector import connector
 from deploy_queries import deploy_queries
 
 class deploy_blueprint:
-    def __init__(self, args, imports, region, blueprint=None):
+    def __init__(self, args, imports, region):
         self._args = args
         self._imports = imports
         self._region = region
-        self._blueprint = importlib.util.spec_from_file_location("blueprint", "{}/blueprint.py".format(self._args.path)).loader.load_module().blueprint() if blueprint is None else blueprint
+        self._blueprint = importlib.util.spec_from_file_location("blueprint", "{}/blueprint.py".format(self._args.path)).loader.load_module().blueprint()
         # Store Threading Shared Vars 
         self._databases = []
         self._progress = []
@@ -24,32 +24,48 @@ class deploy_blueprint:
     def blueprint(self):
         return self._blueprint
 
-    def execute_before(self):
+    def execute(self, server):
+        # Create Execution Server Folder (if exists, then recreate)
+        execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.path, self._region['name'], server['name'])
+        if os.path.exists(execution_server_folder):
+            shutil.rmtree(execution_server_folder)
+        os.mkdir(execution_server_folder)
+
+        # Execute before
+        self.__before(server)
+
+        # Execute main
+        self.__main(server)
+
+        # Execute after
+        self.__after(server)
+
+    def __before(self, server):
         try:
             # Get the current thread
             current_thread = threading.current_thread()
+            if not current_thread.alive:
+                return
 
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
+            query_instance.start_sql_connection(server)
 
             # Execute Before
-            self._blueprint.before(query_instance, self._imports.config['params']['environment'], self._region['name'])
+            self._blueprint.before(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'])
 
             # Commit queries
             if not query_instance.transaction:
                 query_instance.commit()
 
-            # Store Execution Logs
-            execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.path, self._region['name'])
-            with open(execution_log_path, 'w') as outfile:
-                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+            # Store Logs
+            self.__store_logs(server, None, query_instance, False, 'before')
 
-            # Check Errors
-            for log in query_instance.execution_log['output']:
-                if log['meteor_status'] == '0':
-                    current_thread.error = True
-                    break
-        except Exception as e:            
+        except Exception as e:
+            # Store Logs
+            self.__store_logs(server, None, query_instance, True, 'before')
+
+            # Build error message
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
             for frame in reversed(inner_frames):
@@ -62,11 +78,11 @@ class deploy_blueprint:
         finally:
             query_instance.close_sql_connection()
 
-    def execute_main(self, server):
+    def __main(self, server):
         try:
             # Check thread execution status
             current_thread = threading.current_thread()
-            if not current_thread.alive:
+            if len(current_thread.critical) > 0 or not current_thread.alive:
                 return
 
             # Get all server databases
@@ -76,13 +92,6 @@ class deploy_blueprint:
             databases = conn.get_all_databases()
             self._databases = [i for i in databases]
             conn.stop()
-
-            # Create Execution Server Folder (if exists, then delete+create)
-            execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.path, self._region['name'], server['name'])
-            if os.path.exists(execution_server_folder):
-                shutil.rmtree(execution_server_folder)
-
-            os.mkdir(execution_server_folder)
 
             # Deployment in Parallel
             try:
@@ -136,6 +145,44 @@ class deploy_blueprint:
             current_thread.progress.append(error_format)
             raise
 
+    def __after(self, server):
+        try:
+            # Get the current thread
+            current_thread = threading.current_thread()
+            if len(current_thread.critical) > 0 or not current_thread.alive:
+                return
+
+            # Start Deploy
+            query_instance = deploy_queries(self._args, self._imports, self._region)
+            query_instance.start_sql_connection(server)
+
+            # Execute After
+            self._blueprint.after(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'])
+
+            # Commit queries
+            if not query_instance.transaction:
+                query_instance.commit()
+
+            # Store Logs
+            self.__store_logs(server, None, query_instance, False, 'after')
+
+        except Exception as e:
+            # Store Logs
+            self.__store_logs(server, None, query_instance, True, 'after')
+
+            # Build error message
+            inner_frames = inspect.getinnerframes(e.__traceback__)
+            found = False
+            for frame in reversed(inner_frames):
+                if any(frame.filename.endswith(i) for i in ['blueprint.py','blueprint.pyc']):
+                    found = True
+                    current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
+                    break
+            if not found:
+                current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
+        finally:
+            query_instance.close_sql_connection()
+
     def __track_execution_progress(self, server, databases):
         current_thread = threading.current_thread()
         d = len(self._progress)
@@ -164,12 +211,13 @@ class deploy_blueprint:
 
                 # Perform the execution to the Database
                 self._blueprint.main(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'], database)
+
                 # Store Logs
-                self.__store_main_logs(server, database, query_instance, error=False)
+                self.__store_logs(server, database, query_instance, False, 'main')
 
             except Exception as e:
                 # Store Logs
-                self.__store_main_logs(server, database, query_instance, error=True)
+                self.__store_logs(server, database, query_instance, True, 'main')
 
                 # Build error message
                 if e.__class__.__name__ == 'InterfaceError':
@@ -184,11 +232,15 @@ class deploy_blueprint:
                             break
                     if not found:
                         current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
+            
+            finally:
+                # Add database to the progressed list
+                self._progress.append(database)
 
         # Close SQL Connection
         query_instance.close_sql_connection()
 
-    def __store_main_logs(self, server, database, query_instance, error):
+    def __store_logs(self, server, database, query_instance, error, mode):
         current_thread = threading.current_thread()
 
         # Commit/Rollback queries
@@ -201,7 +253,11 @@ class deploy_blueprint:
             pass
 
         # Store Logs
-        execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.path, self._region['name'], server['name'], database)
+        if mode == 'main':
+            execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.path, self._region['name'], server['name'], database)
+        else:
+            execution_log_path = "{0}/execution/{1}/{2}_{3}.json".format(self._args.path, self._region['name'], server['name'], mode)
+
         if len(query_instance.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
@@ -212,49 +268,8 @@ class deploy_blueprint:
                 current_thread.error = True
                 break
 
-        # Add database to the progressed list
-        self._progress.append(database)
-
         # Clear Log
         query_instance.clear_execution_log()
-
-    def execute_after(self):
-        try:
-            # Get the current thread
-            current_thread = threading.current_thread()
-
-            # Start Deploy
-            query_instance = deploy_queries(self._args, self._imports, self._region)
-
-            # Execute After
-            self._blueprint.after(query_instance, self._imports.config['params']['environment'], self._region['name'])
-
-            # Commit queries
-            if not query_instance.transaction:
-                query_instance.commit()
-
-            # Store Execution Logs
-            execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.path, self._region['name'])
-            with open(execution_log_path, 'w') as outfile:
-                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
-            # Check Errors
-            for log in query_instance.execution_log['output']:
-                if log['meteor_status'] == '0':
-                    current_thread.error = True
-                    break
-        except Exception as e:
-            inner_frames = inspect.getinnerframes(e.__traceback__)
-            found = False
-            for frame in reversed(inner_frames):
-                if any(frame.filename.endswith(i) for i in ['blueprint.py','blueprint.pyc']):
-                    found = True
-                    current_thread.critical.append("{}: {} (line {})".format(type(e).__name__, str(e).capitalize(), frame.lineno))
-                    break
-            if not found:
-                current_thread.critical.append("{}: {}".format(type(e).__name__, str(e).capitalize()))
-        finally:
-            query_instance.close_sql_connection()
 
     # Parse JSON objects
     def __dtSerializer(self, obj):

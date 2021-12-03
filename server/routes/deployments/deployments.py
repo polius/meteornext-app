@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 import json
+import gzip
 import boto3
 import signal
 import subprocess
@@ -160,11 +161,11 @@ class Deployments:
                 # Check if exists
                 if not os.path.exists(deployments_path + '.tar.gz'):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                elif not os.path.exists(results_path + '.js'):
+                elif not os.path.exists(results_path + '.json'):
                     if not os.path.exists(results_folder):
                         os.makedirs(results_folder)
-                    subprocess.run(f"tar Oxzf '{deployments_path}'.tar.gz './meteor.js' > {results_path}.js", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                return send_from_directory(results_folder, uri + '.js')
+                    subprocess.run(f"tar Oxzf '{deployments_path}'.tar.gz './meteor.json' > {results_path}.json", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return send_from_directory(results_folder, uri + '.json')
 
             elif results['logs'] == 'amazon_s3':
                 # Check Amazon S3 credentials are setup
@@ -177,8 +178,9 @@ class Deployments:
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='results/{}.js'.format(uri))
-                    return jsonify(obj['Body'].read().decode('utf-8')), 200
+                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='results/{}.json.gz'.format(uri))
+                    with gzip.open(obj['Body'], 'rb') as fopen:
+                        return jsonify(json.load(fopen)), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
                         return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400

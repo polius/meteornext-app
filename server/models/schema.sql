@@ -325,6 +325,15 @@ CREATE TABLE `deployments_finished` (
   FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `deployments_pinned` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `execution_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`user_id`,`execution_id`),
+  INDEX `execution_id` (`execution_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `notifications` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
