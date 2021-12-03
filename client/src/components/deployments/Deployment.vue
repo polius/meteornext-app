@@ -1110,11 +1110,17 @@
       },
       edit() {
         this.information_dialog_mode = (this.deployment['status'] == 'CREATED' || this.deployment['status'] == 'SCHEDULED') ? 'edit' : 're-deploy'
+        if (this.information_dialog_mode == 're-deploy') {
+          this.schedule_enabled = false
+          this.schedule_mode = 'date'
+          this.schedule_date = ''
+          this.schedule_time = ''
+          this.schedule_datetime = ''
+        }
         this.information_dialog_execution_mode = this.deployment['mode']
         this.information_dialog_query_selected = []
         this.cmOptions.readOnly = false
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
-        this.schedule_enabled = this.deployment['scheduled'] !== null
         this.information_dialog = true
       },
       select() {
