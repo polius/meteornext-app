@@ -506,7 +506,7 @@ export default {
         axios.post('/deployments/pinned', payload)
           .then((response) => {
             for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 1
-            this.notification(response.data.message, '#00b16a')
+            this.notification(response.data.message, '#00b16a', Number(1000))
             this.getDeployments()
           })
           .catch((error) => {
@@ -518,7 +518,7 @@ export default {
         axios.delete('/deployments/pinned', { data: payload })
           .then((response) => {
             for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 0
-            this.notification(response.data.message, '#00b16a')
+            this.notification(response.data.message, '#00b16a', Number(1000))
             this.getDeployments()
           })
           .catch((error) => {
@@ -541,9 +541,10 @@ export default {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
     },
-    notification(message, color) {
+    notification(message, color, time=Number(3000)) {
       this.snackbarText = message
       this.snackbarColor = color 
+      this.snackbarTimeout = time
       this.snackbar = true
     }
   }
