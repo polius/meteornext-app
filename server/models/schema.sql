@@ -327,11 +327,11 @@ CREATE TABLE `deployments_finished` (
 
 CREATE TABLE `deployments_pinned` (
   `user_id` INT UNSIGNED NOT NULL,
-  `execution_id` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`user_id`,`execution_id`),
-  INDEX `execution_id` (`execution_id`),
+  `deployment_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`user_id`,`deployment_id`),
+  INDEX `deployment_id` (`deployment_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `notifications` (

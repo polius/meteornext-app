@@ -20,6 +20,7 @@ import models.deployments.deployments
 import models.deployments.executions
 import models.deployments.deployments_queued
 import models.deployments.deployments_finished
+import models.deployments.deployments_pinned
 import models.admin.settings
 import models.inventory.environments
 import models.notifications
@@ -36,6 +37,7 @@ class Deployments:
         self._executions = models.deployments.executions.Executions(sql)
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
+        self._deployments_pinned = models.deployments.deployments_pinned.Deployments_Pinned(sql)
         self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
         self._notifications = models.notifications.Notifications(sql)
@@ -219,6 +221,29 @@ class Deployments:
 
             # Set Deployment Shared
             return self.__shared(user, deployment_json)
+
+        @deployments_blueprint.route('/deployments/pinned', methods=['POST','DELETE'])
+        @jwt_required()
+        def deployments_pinned():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Get Request Json
+            data = request.get_json() if request.get_json() else request.form
+
+            if request.method == 'POST':
+                for item in data:
+                    self._deployments_pinned.post(user['id'], item)
+                return jsonify({'message': f"Deployment{'s' if len(data) > 1 else ''} pinned"}), 200
+
+            elif request.method == 'DELETE':
+                for item in data:
+                    self._deployments_pinned.delete(user['id'], item)
+                return jsonify({'message': f"Deployment{'s' if len(data) > 1 else ''} unpinned"}), 200
 
         return deployments_blueprint
 

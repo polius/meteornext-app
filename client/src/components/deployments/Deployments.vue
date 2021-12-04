@@ -7,7 +7,7 @@
         <v-toolbar-items>
           <v-btn text title="Create a new deployment" @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
-          <v-btn :disabled="selected.length != 1" title="Pin a deployment" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>PIN</v-btn>
+          <v-btn @click="pinDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
@@ -26,12 +26,19 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.name`]="{ item }">
-          <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
-            {{ item.name }}
-            <template v-slot:input>
-              <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
-            </template>
-          </v-edit-dialog>
+          <v-row no-gutters>
+            <v-col cols="auto" style="margin-right:10px">
+              <v-icon v-if="item.is_pinned" color="#ff9900" small>fas fa-thumbtack</v-icon>
+            </v-col>
+            <v-col>
+              <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
+                {{ item.name }}
+                <template v-slot:input>
+                  <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
+                </template>
+              </v-edit-dialog>
+            </v-col>
+          </v-row>
         </template>
         <template v-slot:[`item.release`]="{ item }">
           <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
@@ -326,6 +333,7 @@ export default {
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+    pinMode() { return this.selected.length == 0 || this.selected.find(x => !x.is_pinned) ? 'pin' : 'unpin' },
   },
   methods: {
     getDeployments() {
@@ -403,7 +411,7 @@ export default {
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        }) 
+        })
     },
     getModeColor (mode) {
       if (mode == 'BASIC') return 'rgb(250, 130, 49)'
@@ -490,6 +498,34 @@ export default {
       this.filter = {}
       this.filterApplied = false
       this.getDeployments()
+    },
+    pinDeployments() {
+      const toPin = this.selected.find(x => !x.is_pinned)
+      const payload = this.selected.map(x => x.id)
+      if (toPin) {
+        axios.post('/deployments/pinned', payload)
+          .then((response) => {
+            for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 1
+            this.notification(response.data.message, '#00b16a')
+            this.getDeployments()
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+      }
+      else {
+        axios.delete('/deployments/pinned', { data: payload })
+          .then((response) => {
+            for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 0
+            this.notification(response.data.message, '#00b16a')
+            this.getDeployments()
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+      }
     },
     openColumnsDialog() {
       this.columnsRaw = [...this.columns]

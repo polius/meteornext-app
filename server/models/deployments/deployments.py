@@ -68,13 +68,14 @@ class Deployments:
                     all_executions = ''
 
             query = """
-                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', dp.deployment_id IS NOT NULL AS 'is_pinned'
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s
                 JOIN users u ON u.id = d.user_id
                 JOIN groups g ON g.id = u.group_id
                 LEFT JOIN environments env ON env.id = e.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
+                LEFT JOIN deployments_pinned dp ON dp.user_id = u.id AND dp.deployment_id = d.id
                 LEFT JOIN
                 (
                     SELECT (@cnt := @cnt + 1) AS queue, deployment_id
