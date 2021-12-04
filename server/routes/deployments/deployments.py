@@ -383,7 +383,7 @@ class Deployments:
         if (user['coins'] - group['coins_execution']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
-        # Check environment authority
+        # Check environment
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
         if len(environment) == 0:
             return jsonify({'message': 'The environment does not exist'}), 400
@@ -497,11 +497,11 @@ class Deployments:
         if authority['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
-        # Get deployment authority group
-        group = self._groups.get(group_id=authority['group_id'])[0]
+        # Get deployment group
+        group = self._groups.get(group_id=user['group_id'])[0]
 
-        # Check environment authority
-        environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=data['environment'])
+        # Check environment
+        environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=data['environment'])
         if len(environment) == 0:
             return jsonify({'message': 'The environment does not exist'}), 400
         environment = environment[0]
@@ -546,7 +546,7 @@ class Deployments:
         # Create a new execution
         else:
             # Check Coins
-            if not (authority['id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
+            if (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
             # Create a new Deployment
@@ -555,11 +555,8 @@ class Deployments:
             execution_id = self._executions.post(user['id'], execution)
 
             # Consume Coins
-            if authority['id'] != user['id'] and user['admin']:
-                coins = user['coins']
-            else:
-                self._users.consume_coins(user, group['coins_execution'])
-                coins = user['coins'] - group['coins_execution']
+            self._users.consume_coins(user, group['coins_execution'])
+            coins = user['coins'] - group['coins_execution']
 
         # Build Response Data
         response = { 'uri': execution['uri'], 'coins': coins }
@@ -568,9 +565,9 @@ class Deployments:
             # Build Meteor Execution
             meteor = {
                 'id': execution_id,
-                'user_id': authority['id'],
+                'user_id': user['id'],
                 'username': user['username'],
-                'group_id': authority['group_id'],
+                'group_id': user['group_id'],
                 'environment_id': environment['id'],
                 'environment_name': environment['name'],
                 'mode': execution['mode'],
@@ -623,15 +620,15 @@ class Deployments:
         if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
             return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
-        # Get Group Authority
-        group = self._groups.get(group_id=authority['group_id'])[0]
+        # Get Group
+        group = self._groups.get(group_id=user['group_id'])[0]
 
         # Build Meteor Execution
         meteor = {
             'id': execution['id'],
-            'user_id': authority['id'],
+            'user_id': user['id'],
             'username': user['username'],
-            'group_id': authority['group_id'],
+            'group_id': user['group_id'],
             'environment_id': execution['environment_id'],
             'environment_name': execution['environment_name'],
             'mode': execution['mode'],
