@@ -84,7 +84,7 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if user['disabled']:
+            if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Retrieve blueprint
@@ -746,6 +746,7 @@ class Deployments:
 
         # Change deployment shared value
         self._executions.setShared(execution['id'], data['shared'])
+
         return jsonify({'message': 'Success'}), 200
 
     ####################

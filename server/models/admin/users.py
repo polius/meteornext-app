@@ -65,6 +65,8 @@ class Users:
             self._sql.execute("UPDATE users SET disabled = 1 WHERE username = %s", (user))
             self._sql.execute("DELETE dq FROM deployments_queued dq JOIN executions e ON e.id = dq.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE df FROM deployments_finished df JOIN executions e ON e.id = df.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE dp FROM deployments_pinned dp JOIN users u ON u.id = dp.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE ds FROM deployments_shared ds JOIN users u ON u.id = ds.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE e FROM executions e JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("UPDATE executions JOIN users u ON u.id = executions.user_id AND u.username = %s SET executions.user_id = NULL", (user))
             self._sql.execute("DELETE d FROM deployments d JOIN users u ON u.id = d.user_id AND u.username = %s", (user))

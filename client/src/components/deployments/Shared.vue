@@ -2,15 +2,32 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">SHARED</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
-          <v-btn text title="Create a new deployment" @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-menu offset-y>
+            <template v-slot:activator="{ attrs, on }">
+              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SHARED WITH YOU' : 'SHARED WITH OTHERS' }}</v-btn>
+            </template>
+            <v-list-item-group v-model="tab">
+              <v-list style="padding:0px">
+                <v-list-item link>
+                  <v-list-item-title class="text-subtitle-2">SHARED WITH YOU</v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-title class="text-subtitle-2">SHARED WITH OTHERS</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-list-item-group>
+          </v-menu>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn v-show="tab == 0" @click="importClick()" title="Import a shared deployment from another user" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>IMPORT</v-btn>
+          <v-btn :disabled="selected.length != 1" @click="removeDialog = true" title="Remove a shared deployment" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>REMOVE</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
-          <v-btn @click="pinDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
+          <v-btn v-show="tab == 0" @click="pinSharedDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="getShared" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -31,22 +48,9 @@
               <v-icon color="#ff9900" small>fas fa-thumbtack</v-icon>
             </v-col>
             <v-col>
-              <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
-                {{ item.name }}
-                <template v-slot:input>
-                  <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
-                </template>
-              </v-edit-dialog>
+              {{ item.name }}
             </v-col>
           </v-row>
-        </template>
-        <template v-slot:[`item.release`]="{ item }">
-          <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
-            {{ item.release }}
-            <template v-slot:input>
-              <v-autocomplete v-model="inline_editing_release" :items="releaseItems" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
-            </template>
-          </v-edit-dialog>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
           <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
@@ -72,6 +76,54 @@
       </v-data-table>
     </v-card>
 
+    <!------------------->
+    <!-- IMPORT DIALOG -->
+    <!------------------->
+    <v-dialog v-model="importDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-plus</v-icon>IMPORT DEPLOYMENT</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="importDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <v-form ref="importForm" @submit.prevent>
+            <div class="text-body-1" style="margin-top:5px">Enter the deployment URL to be imported in your list.</div>
+            <v-text-field autofocus v-model="importValue" v-on:keyup.enter="submitImport" outlined label="Deployment URL" :rules="[v => this.validURL(v) || '' ]" hide-details style="margin-top:15px"></v-text-field>
+          </v-form>
+          <v-divider style="margin-top:20px"></v-divider>
+          <div style="margin-top:20px;">
+            <v-btn :loading="loading" color="#00b16a" @click="submitImport">Confirm</v-btn>
+            <v-btn :disabled="loading" color="#EF5354" @click="importDialog = false" style="margin-left:5px;">Cancel</v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!------------------->
+    <!-- REMOVE DIALOG -->
+    <!------------------->
+    <v-dialog v-model="removeDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-minus</v-icon>REMOVE DEPLOYMENTS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="removeDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <div class="text-body-1" style="margin-top:5px">Do you want to remove the selected deployments in your list?</div>
+          <v-divider style="margin-top:20px"></v-divider>
+          <div style="margin-top:20px;">
+            <v-btn :loading="loading" color="#00b16a" @click="submitRemove">Confirm</v-btn>
+            <v-btn :disabled="loading" color="#EF5354" @click="removeDialog = false" style="margin-left:5px;">Cancel</v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!------------------->
+    <!-- FILTER DIALOG -->
+    <!------------------->
     <v-dialog v-model="filterDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -86,12 +138,17 @@
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
                     <v-col>
-                      <v-autocomplete v-model="filter.name" :items="deploymentsItems" label="Name" style="padding-top:0px;" hide-details></v-autocomplete>
+                      <v-text-field v-model="filter.name" label="Name" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete v-model="filter.release" :items="releaseItems" label="Release" style="padding-top:0px;" hide-details></v-autocomplete>
+                      <v-text-field v-model="filter.release" label="Release" style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-text-field v-model="filter.environment" label="Environment" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -176,11 +233,6 @@
                       </v-text-field>
                     </v-col>
                   </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col>
-                      <v-checkbox v-model="filter.allExecutions" label="Filter all deployment executions" style="margin-top:0px" hide-details></v-checkbox>
-                    </v-col>
-                  </v-row>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
@@ -195,6 +247,9 @@
       </v-card>
     </v-dialog>
 
+    <!--------------------->
+    <!-- DATETIME DIALOG -->
+    <!--------------------->
     <v-dialog v-model="dateTimeDialog" persistent width="290px">
       <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
@@ -241,6 +296,7 @@
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -269,6 +325,7 @@ import moment from 'moment';
 
 export default {
   data: () => ({
+    tab: 0,
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Release', align: 'left', value: 'release' },
@@ -280,16 +337,20 @@ export default {
       { text: 'Scheduled', align: 'left', value: 'scheduled' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
-      { text: 'Overall', align: 'left', value: 'overall' }
+      { text: 'Overall', align: 'left', value: 'overall' },
+      { text: 'Owner', align: 'left', value: 'owner' },
     ],
     items: [],
     selected: [],
     search: '',
     loading: false,
 
-    // Inline Editing
-    inline_editing_name: '',
-    inline_editing_release: '',
+    // Import Dialog
+    importDialog: false,
+    importValue: '',
+
+    // Remove Dialog
+    removeDialog: false,
 
     // Filter Dialog
     filterDialog: false,
@@ -305,8 +366,6 @@ export default {
     filter: {},
     filterApplied: false,
     nameItems: [],
-    releaseItems: [],
-    deploymentsItems: [],
     deploymentMode: ['BASIC','PRO'],
     deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
     deploymentStatus: ['CREATED','QUEUED','STARTING','SCHEDULED','IN PROGRESS','WARNING','STOPPING','FAILED','STOPPED','SUCCESS'],
@@ -319,7 +378,7 @@ export default {
 
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['name','release','username','environment','mode','method','status','created','started','ended','overall'],
+    columns: ['name','release','username','environment','mode','method','status','created','started','ended','overall','owner'],
     columnsRaw: [],
 
     // Snackbar
@@ -329,14 +388,19 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    this.getDeployments()
+    this.getShared()
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     pinMode() { return this.selected.length == 0 || this.selected.find(x => !x.is_pinned) ? 'pin' : 'unpin' },
   },
+  watch: {
+    importDialog() {
+      if (this.$refs.importForm !== undefined) this.$refs.importForm.resetValidation()
+    }
+  },
   methods: {
-    getDeployments() {
+    getShared() {
       this.loading = true
       var payload = {}
       // Build Filter
@@ -348,12 +412,10 @@ export default {
         }
       }
       if (filter != null) payload['filter'] = filter
-      // Get Deployments
-      axios.get('/deployments', { params: payload })
+      // Get Deployments Shared
+      axios.get('/deployments/shared/you', { params: payload })
         .then((response) => {
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-          this.releaseItems = response.data.releases.map(x => x.name)
-          this.deploymentsItems = response.data.deployments_list.map(x => x.name)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -361,57 +423,49 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    openName(item) {
-      this.inline_editing_name = item.name
-    },
-    saveName(item) {
-      if (this.inline_editing_name == item.name) {
-        this.notification('Deployment edited successfully', '#00b16a')
-        return
-      }
+    submitRemove() {
       this.loading = true
-      // Edit release name in the DB
-      const payload = {
-        put: 'name',
-        id: item.id,
-        name: this.inline_editing_name
-      }
-      axios.put('/deployments', payload)
+      const payload = this.selected.map(x => x.execution_id)
+      axios.delete('/deployments/shared/you', { data: payload })
         .then((response) => {
+          this.removeDialog = false
+          this.selected = []
           this.notification(response.data.message, '#00b16a')
-          // Reload Deployments Data
-          this.getDeployments()
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        }) 
-    },
-    openRelease(item) {
-      this.inline_editing_release = item.release
-    },
-    saveRelease(item) {
-      if (this.inline_editing_release == item.release) {
-        this.notification('Deployment edited successfully', '#00b16a')
-        return
-      }
-      this.loading = true
-      // Edit deployment release in the DB
-      const payload = {
-        put: 'release',
-        id: item.id,
-        release: this.inline_editing_release
-      }
-      axios.put('/deployments', payload)
-        .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          // Reload Deployments Data
-          this.getDeployments()
+          this.getShared()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.loading = false)
+    },
+    importClick() {
+      this.importValue = ''
+      this.importDialog = true
+    },
+    submitImport() {
+      // Check if all necessary fields are filled
+      if (!this.$refs.importForm.validate()) {
+        this.notification('Please enter a valid Deployment URL', '#EF5354')
+        return
+      }
+      this.loading = true
+      // Import new deployment
+      const payload = { url: this.importValue}
+      axios.post('/deployments/shared/you', payload)
+        .then((response) => {
+          this.importDialog = false
+          this.notification(response.data.message, '#00b16a')
+          this.getShared()
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    infoDeploy() {
+      this.$router.push({ name:'deployment', params: { uri: this.selected[0]['uri'] }})
     },
     getModeColor (mode) {
       if (mode == 'BASIC') return 'rgb(250, 130, 49)'
@@ -438,12 +492,6 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
-    },
-    newDeploy() {
-      this.$router.push({ name:'deployments.new' })
-    },
-    infoDeploy() {
-      this.$router.push({ name:'deployment', params: { uri: this.selected[0]['uri'] }})
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
@@ -475,39 +523,34 @@ export default {
     },
     submitFilter() {
       // Check if all necessary fields are filled
-
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Check if some filter was applied
-      if (Object.keys(this.filter).length == 1 && 'allExecutions' in this.filter && !this.filter['allExecutions']) {
-        this.notification('Enter at least one filter.', '#EF5354')
-        return
-      }
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
         this.notification('Enter at least one filter.', '#EF5354')
         return
       }
       this.filterDialog = false
       this.filterApplied = true
-      this.getDeployments()
+      this.getShared()
     },
     clearFilter() {
       this.filterDialog = false
       this.filter = {}
       this.filterApplied = false
-      this.getDeployments()
+      this.getShared()
     },
-    pinDeployments() {
+    pinSharedDeployments() {
       const toPin = this.selected.find(x => !x.is_pinned)
-      const payload = this.selected.map(x => x.id)
+      const payload = this.selected.map(x => x.execution_id)
       if (toPin) {
-        axios.post('/deployments/pinned', payload)
+        axios.post('/deployments/shared/you/pinned', payload)
           .then((response) => {
             for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 1
             this.notification(response.data.message, '#00b16a', Number(1000))
-            this.getDeployments()
+            this.getShared()
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -515,11 +558,11 @@ export default {
           })
       }
       else {
-        axios.delete('/deployments/pinned', { data: payload })
+        axios.delete('/deployments/shared/you/pinned', { data: payload })
           .then((response) => {
             for (let i = 0; i < this.selected.length; ++i) this.selected[i]['is_pinned'] = 0
             this.notification(response.data.message, '#00b16a', Number(1000))
-            this.getDeployments()
+            this.getShared()
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -532,7 +575,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','release','username','environment','mode','method','status','created','scheduled','started','ended','overall']
+      this.columnsRaw = ['name','release','username','environment','mode','method','status','created','scheduled','started','ended','overall','owner']
     },
     deselectAllColumns() {
       this.columnsRaw = []
@@ -546,7 +589,11 @@ export default {
       this.snackbarColor = color 
       this.snackbarTimeout = time
       this.snackbar = true
-    }
+    },
+    validURL(str) {
+      var regex = /(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-/]))?/;
+      return regex.test(str)
+    },
   }
 }
 </script>

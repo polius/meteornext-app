@@ -65,7 +65,14 @@ class Executions:
             SET shared = %s
             WHERE id = %s
         """
-        return self._sql.execute(query, (shared, execution_id))
+        self._sql.execute(query, (shared, execution_id))
+
+        if not shared:
+            query = """
+                DELETE FROM deployments_shared
+                WHERE execution_id = %s
+            """
+            self._sql.execute(query, (execution_id))
 
     def getScheduled(self):
         query = """
