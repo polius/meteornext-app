@@ -142,17 +142,15 @@
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
-                    <v-col>
+                    <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.release" label="Release" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col>
+                    <v-col cols="6" style="padding-left:8px;">
                       <v-text-field v-model="filter.environment" label="Environment" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
-                    <v-col>
+                    <v-col cols="6" style="padding-right:8px;">
                       <v-autocomplete v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :color="getModeColor(item)" :style="`text-transform:capitalize; margin-left:5px; margin-right:${item == 'BASIC' ? '17px' : '15px'}`">{{ item == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
@@ -166,9 +164,7 @@
                         </template>
                       </v-autocomplete>
                     </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col>
+                    <v-col cols="6" style="padding-left:8px;">
                       <v-autocomplete v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
@@ -182,7 +178,7 @@
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col>
+                    <v-col cols="6" style="padding-right:8px;">
                       <v-autocomplete v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
@@ -195,6 +191,9 @@
                           </v-chip>
                         </template>
                       </v-autocomplete>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.owner" label="Owner" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">

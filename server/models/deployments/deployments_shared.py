@@ -8,7 +8,7 @@ class Deployments_Shared:
     # SHARED WITH YOU #
     ###################
     def get_you(self, user_id=None, dfilter=None, dsort=None):
-        name = release = environment = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
+        name = release = environment = mode = method = status = owner = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
         args = { 'user_id': user_id }
         if dfilter is not None:
             if 'name' in dfilter and len(dfilter['name']) > 0:
@@ -32,6 +32,9 @@ class Deployments_Shared:
                 status = 'AND e.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(dfilter['status']))])
                 for i,v in enumerate(dfilter['status']):
                     args[f'status{i}'] = v
+            if 'owner' in dfilter and len(dfilter['owner']) > 0:
+                owner = "AND u.username = %(owner)s"
+                args['owner'] = dfilter['owner']
             if 'createdFrom' in dfilter and len(dfilter['createdFrom']) > 0:
                 created_from = 'AND e.created >= %(created_from)s'
                 args['created_from'] = dfilter['createdFrom']
@@ -68,9 +71,9 @@ class Deployments_Shared:
                 WHERE status = 'QUEUED'
             ) q ON q.deployment_id = d.id
             WHERE e.shared = 1
-            {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11}
+            {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
             ORDER BY ds.id DESC
-        """.format(name, release, environment, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to)
+        """.format(name, release, environment, mode, method, status, owner, created_from, created_to, started_from, started_to, ended_from, ended_to)
         return self._sql.execute(query, args)
 
     def check_uri(self, user_id, uri):
