@@ -99,6 +99,12 @@ let router = new VueRouter({
           meta: { requiresDeployments: true }
         },
         {
+          path: 'shared',
+          name: 'deployments.shared',
+          component: () => import('../components/deployments/Shared'),
+          meta: { requiresDeployments: true }
+        },
+        {
           path: 'new',
           name: 'deployments.new',
           component: () => import('../components/deployments/views/Navigation'),

@@ -827,6 +827,7 @@
       },
       goBack() {
         if (this.prevRoute.path == '/admin/deployments') this.$router.push('/admin/deployments')
+        else if (this.prevRoute.path == '/deployments/shared') this.$router.push('/deployments/shared')
         else this.$router.push('/deployments')
       },
       getCode() {
@@ -1435,7 +1436,7 @@
       // -------------------------------------
       copyClipboard(text) {
         navigator.clipboard.writeText(text)
-        // this.notification('Link copied to clipboard', 'primary')
+        this.notification('Link copied to clipboard', '#00b16a', Number(2000))
       },
       shareDeployment() {
         // Build parameters
@@ -1487,9 +1488,10 @@
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
         return date
       },
-      notification(message, color) {
+      notification(message, color, time=Number(3000)) {
         this.snackbarText = message
-        this.snackbarColor = color 
+        this.snackbarColor = color
+        this.snackbarTimeout = time
         this.snackbar = true
       },
       checkNotifications() {
