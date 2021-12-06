@@ -51,22 +51,22 @@ class Region:
         binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
         self.__ssh('{} --path "{}/deployments/{}" --region "{}" --compress'.format(binary_path, self._remote_path, self._uuid, self._region['name']))
         # 2. Download Compressed Logs
-        remote_path = ".meteor/deployments/{}/execution/{}.tar.gz".format(self._uuid, self._region['name'])
-        local_path = "{}/execution/{}.tar.gz".format(self._args.path, self._region['name'])
+        remote_path = f".meteor/deployments/{self._uuid}/execution/{self._region['name']}_{self._region['id']}.tar.gz"
+        local_path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}.tar.gz"
         status = self.__get(remote_path, local_path)
 
         if status:
             # 3. Uncompress Downloaded Logs
             with tarfile.open(local_path) as tar:
-                tar.extractall(path="{}/execution".format(self._args.path))
+                tar.extractall(path=f"{self._args.path}/execution")
 
     def get_progress(self):
         current_thread = threading.current_thread()
 
         if self._region['ssh']['enabled']:
-            progress = self.__ssh("cat {}/deployments/{}/execution/{}/progress.json 2>/dev/null".format(self._remote_path, self._uuid, self._region['name']))
+            progress = self.__ssh(f"cat {self._remote_path}/deployments/{self._uuid}/execution/{self._region['name']}_{self._region['id']}/progress.json 2>/dev/null")
         else:
-            progress = self.__local("cat {}/execution/{}/progress.json 2>/dev/null".format(self._args.path, self._region['name']))
+            progress = self.__local(f"cat {self._args.path}/execution/{self._region['name']}_{self._region['id']}/progress.json 2>/dev/null")
         current_thread.progress = json.loads(progress) if len(progress) > 0 else {}
 
     def clean(self):
@@ -86,7 +86,7 @@ class Region:
     def sigint(self):
         command = "ps -U $USER -u $USER u | grep '{}' | grep '\--region' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
         if self._region['ssh']['enabled']:
-            self.__ssh(command, self._args.path + '/deployments/' + self._region['name'])
+            self.__ssh(command, f"{self._args.path}/deployments/{self._region['name']}_{self._region['id']}")
         else:
             self.__local(command)
 
@@ -112,7 +112,7 @@ class Region:
             self.__put("{}/config.json".format(self._args.path), ".meteor/deployments/{}/config.json".format(self._uuid))
             self.__put("{}/blueprint.py".format(self._args.path), ".meteor/deployments/{}/blueprint.py".format(self._uuid))
             # Start execution
-            self.__ssh('{} --path "{}/deployments/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']), self._args.path + '/deployments/' + self._region['name'])
+            self.__ssh('{} --path "{}/deployments/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']), f"{self._args.path}'/deployments/{self._region['name']}_{self._region['id']}")
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
@@ -123,8 +123,8 @@ class Region:
             time.sleep(5)
 
     def compress_logs(self):
-        compressed_dir = "{}/execution/{}".format(self._args.path, self._region['name'])
-        compressed_path = "{}/execution".format(self._args.path)
+        compressed_dir = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}"
+        compressed_path = f"{self._args.path}/execution"
         shutil.make_archive(compressed_dir, 'gztar', compressed_path)
 
     ################

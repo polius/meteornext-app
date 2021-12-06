@@ -16,9 +16,6 @@ class validate_regions:
         self._Region = Region(args, region)
 
     def validate(self):
-        region_type = '[SSH]  ' if self._region['ssh']['enabled'] else '[LOCAL]'
-        # print("--> {} Region '{}' Started...".format(region_type, self._region['name']))
-
         # Get current thread 
         current_thread = threading.current_thread()
 
@@ -28,8 +25,6 @@ class validate_regions:
                 self.__validate_ssh()
             except Exception as e:
                 current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e).capitalize()}
-                print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
-                print(str(e))
                 return
 
         if not current_thread.alive:
@@ -54,18 +49,11 @@ class validate_regions:
         for t in threads:
             connection_succeeded &= t.progress['success']
             if t.progress['success'] == False:
-                # print("    [{}/SQL] {} {}".format(self._region['name'], t.progress['sql'], t.progress['error']))
                 progress['errors'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
 
         # In case of no errors, remove the 'errors' key
         if len(progress['errors']) == 0:
             del progress['errors']
-
-        # Print status
-        # if connection_succeeded:
-        #     print("--> {} Region '{}' Finished.".format(region_type, self._region['name']))
-        # else:
-        #     print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
 
         # Return validation status
         progress['success'] = connection_succeeded

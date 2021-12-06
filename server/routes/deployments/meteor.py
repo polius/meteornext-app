@@ -84,6 +84,7 @@ class Meteor:
                 if server['region_id'] == region['id']:
                     # Init Server Conf
                     region_data['sql'].append({
+                        "id": server['id'],
                         "name": server['name'],
                         "engine": server['engine'],
                         "hostname": server['hostname'],

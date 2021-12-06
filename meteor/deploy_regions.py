@@ -13,13 +13,14 @@ class deploy_regions:
         self._imports = imports
         self._region = region
         # Init Region Class
-        self._Region = Region(args, region)        
+        self._Region = Region(args, region)
 
     def start(self):
         try:
             # Create Execution Folder
-            if not os.path.exists("{}/execution/{}".format(self._args.path, self._args.region)):
-                os.makedirs("{}/execution/{}".format(self._args.path, self._args.region))
+            path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}"
+            if not os.path.exists(path):
+                os.makedirs(path)
 
             # Start Deployment
             deploy_server = deploy_servers(self._args, self._imports, self._region)
@@ -69,7 +70,7 @@ class deploy_regions:
                 progress['errors'] = deploy.critical
 
             # Write Progress
-            with open("{}/execution/{}/progress.json".format(self._args.path, self._region['name']), 'w') as outfile:
+            with open(f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/progress.json", 'w') as outfile:
                 json.dump(progress, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
             # Sleep for 1 second

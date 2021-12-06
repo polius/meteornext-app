@@ -2,7 +2,6 @@ import os
 import time
 import signal
 import threading
-from datetime import timedelta
 
 from deploy_regions import deploy_regions
 from region import Region
@@ -31,16 +30,13 @@ class deployment:
             started_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             started_time = time.time()
 
-            # Show Header
-            # self.__show_execution_header(started_datetime, started_time)
-
             # Create Execution Folder
-            if not os.path.exists("{}/execution".format(self._args.path)):
-                os.makedirs("{}/execution".format(self._args.path))
+            if not os.path.exists(f"{self._args.path}/execution"):
+                os.makedirs(f"{self._args.path}/execution")
 
             # Create Deployments Folder
-            if not os.path.exists("{}/deployments".format(self._args.path)):
-                os.makedirs("{}/deployments".format(self._args.path))
+            if not os.path.exists(f"{self._args.path}/deployments"):
+                os.makedirs(f"{self._args.path}/deployments")
 
             # Init Progress dictionary
             progress = {i['name']: {} for i in self._config['regions']}
@@ -83,12 +79,6 @@ class deployment:
                 for j in i['progress'].values():
                     if j['e']:
                         queries_failed = True
-    
-            # Print status
-            # if queries_failed:
-            #     print("- {}Execution Finished. Some queries failed".format('Test ' if self._args.test else ''))
-            # else:
-            #     print("- {}Execution Finished Successfully".format('Test ' if self._args.test else ''))
 
             # Return status
             return 1 if queries_failed else 0
@@ -108,7 +98,6 @@ class deployment:
         self._sigterm = True
 
     def __interrupt_deployment(self):
-        # print("--> SIGINT Received. Interrupting all regions...")
         threads = []
         for region in self._config['regions']:
             r = Region(self._args, region)
@@ -121,10 +110,8 @@ class deployment:
                 self.__terminate_deployment()
                 break
             time.sleep(1)
-        # print("--> {}Execution Interrupted Successfully".format('Test ' if self._args.test else ''))
 
     def __terminate_deployment(self):
-        # print("--> SIGTERM Received. Terminating all regions...")
         threads = []
         for region in self._config['regions']:
             r = Region(self._args, region)
@@ -133,7 +120,6 @@ class deployment:
             t.start()
         for t in self._threads:
             t.join()
-        # print("--> {}Execution Terminated Successfully".format('Test ' if self._args.test else ''))
 
     def __track_overall(self, progress, started_datetime, started_time):
         # Start tracking all regions
@@ -154,33 +140,11 @@ class deployment:
             if len(t.progress.keys()) > 0:
                 progress[t.region] = t.progress
 
-        # Compute progress
-        # self.__show_execution_header(started_datetime, started_time)
-        for region in self._imports.config['regions']:
-            if region['name'] in progress.keys() and 'progress' in progress[region['name']]:
-                environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
-                region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']]['progress'].values()])
-                region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']]['progress'].values()])
-                overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
-                # print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['name'], overall_progress, region_databases, region_total_databases))
-
         # Track execution process
         track = {}
         for k, v in progress.items():
             track[k] = v['progress'] if 'progress' in v else {}
         self._progress.track_execution(value=track)
-
-    def __show_execution_header(self, started_datetime, started_time):
-        # Clean Console
-        # os.system('cls' if os.name == 'nt' else 'clear')
-        # Show Header
-        title = "|  TEST EXECUTION                                                  |" if self._args.test else "|  DEPLOYMENT                                                      |"
-        # print("+==================================================================+")
-        # print(title)
-        # print("+==================================================================+")
-        # Show Execution Status
-        elapsed = str(timedelta(seconds=time.time() - started_time))
-        # print("> Started: {} > Elapsed: {}".format(started_datetime, elapsed))
 
     ##########
     # REMOTE #

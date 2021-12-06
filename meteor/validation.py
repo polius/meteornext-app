@@ -20,9 +20,6 @@ class validation:
         return self._time
 
     def start(self):
-        # print("+==================================================================+")
-        # print("|  VALIDATION                                                      |")
-        # print("+==================================================================+")
         try:
             self._start_time = time.time()
             self.__validate_regions()
@@ -71,13 +68,10 @@ class validation:
             if error:
                 error_msg = "- Regions Not Passed the Environment Validation"
                 raise Exception(error_msg)
-            
-            # print("- Regions Validation Passed!")
 
         except KeyboardInterrupt:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             signal.signal(signal.SIGTERM,signal.SIG_IGN)
-            # print("\n--> Ctrl+C received. Stopping the execution...")
             for t in threads:
                 t.alive = False
             for t in threads:
