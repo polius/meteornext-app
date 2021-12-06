@@ -22,7 +22,7 @@
           </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn v-show="tab == 0" @click="importClick()" title="Import a shared deployment from another user" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>IMPORT</v-btn>
-          <v-btn :disabled="selected.length != 1" @click="removeDialog = true" title="Remove a shared deployment" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>REMOVE</v-btn>
+          <v-btn :disabled="selected.length == 0" @click="removeDialog = true" title="Remove a shared deployment" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>REMOVE</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-btn v-show="tab == 0" @click="pinSharedDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -111,7 +111,7 @@
           <v-btn icon @click="removeDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
-          <div class="text-body-1" style="margin-top:5px">Do you want to remove the selected deployments in your list?</div>
+          <div class="text-body-1" style="margin-top:5px">{{ tab == 0 ? 'Do you want to remove the selected deployments in your list?' : 'Do you want to unshare the selected deployments?' }}</div>
           <v-divider style="margin-top:20px"></v-divider>
           <div style="margin-top:20px;">
             <v-btn :loading="loading" color="#00b16a" @click="submitRemove">Confirm</v-btn>
@@ -136,14 +136,22 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
-                  <v-row>
+                  <v-row v-if="tab == 0">
                     <v-col>
                       <v-text-field v-model="filter.name" label="Name" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                   </v-row>
-                  <v-row style="margin-top:10px">
+                  <v-row v-if="tab == 0" style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.owner" label="Owner" style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.release" label="Release" style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row v-if="tab == 1">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.name" label="Name" style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
                       <v-text-field v-model="filter.release" label="Release" style="padding-top:0px;" hide-details></v-text-field>
@@ -295,7 +303,7 @@
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-show="tab == 0" v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -394,6 +402,16 @@ export default {
     pinMode() { return this.selected.length == 0 || this.selected.find(x => !x.is_pinned) ? 'pin' : 'unpin' },
   },
   watch: {
+    tab(value) {
+      this.selected = []
+      this.getShared()
+      if (value == 0) {
+        this.headers.push({ text: 'Owner', align: 'left', value: 'owner' })
+      }
+      else if (value == 1) {
+        this.headers = this.headers.filter(x => x.value != 'owner')
+      }
+    },
     importDialog() {
       if (this.$refs.importForm !== undefined) this.$refs.importForm.resetValidation()
     }
@@ -412,7 +430,8 @@ export default {
       }
       if (filter != null) payload['filter'] = filter
       // Get Deployments Shared
-      axios.get('/deployments/shared/you', { params: payload })
+      const url = this.tab == 0 ? '/deployments/shared/you' : '/deployments/shared/others'
+      axios.get(url, { params: payload })
         .then((response) => {
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
         })
@@ -424,8 +443,9 @@ export default {
     },
     submitRemove() {
       this.loading = true
+      const url = this.tab == 0 ? '/deployments/shared/you' : '/deployments/shared/others'
       const payload = this.selected.map(x => x.execution_id)
-      axios.delete('/deployments/shared/you', { data: payload })
+      axios.delete(url, { data: payload })
         .then((response) => {
           this.removeDialog = false
           this.selected = []

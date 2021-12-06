@@ -745,7 +745,7 @@ class Deployments:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Change deployment shared value
-        self._executions.setShared(execution['id'], data['shared'])
+        self._executions.setShared(user['id'], execution['id'], data['shared'])
 
         return jsonify({'message': 'Success'}), 200
 

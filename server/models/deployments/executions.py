@@ -59,20 +59,24 @@ class Executions:
             query = "UPDATE executions SET `status` = 'STOPPED' WHERE id = %s AND status = 'QUEUED'"
             self._sql.execute(query, (execution_id))
 
-    def setShared(self, execution_id, shared):
+    def setShared(self, user_id, execution_id, shared):
         query = """
             UPDATE executions
-            SET shared = %s
-            WHERE id = %s
+            JOIN deployments ON deployments.id = executions.deployment_id AND deployments.user_id = %s
+            SET executions.shared = %s
+            WHERE executions.id = %s
         """
-        self._sql.execute(query, (shared, execution_id))
+        self._sql.execute(query, (user_id, shared, execution_id))
 
         if not shared:
             query = """
-                DELETE FROM deployments_shared
+                DELETE ds 
+                FROM deployments_shared ds
+                JOIN executions e ON e.id = ds.execution_id
+                JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %s
                 WHERE execution_id = %s
             """
-            self._sql.execute(query, (execution_id))
+            self._sql.execute(query, (user_id, execution_id))
 
     def getScheduled(self):
         query = """
