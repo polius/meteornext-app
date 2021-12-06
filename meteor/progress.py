@@ -99,8 +99,14 @@ class progress:
             ) t
             WHERE NOT EXISTS (
                 SELECT *
-                FROM regions_update
-                WHERE region_id = %(region_id)s
+                FROM regions_update ru
+                JOIN regions r1 ON r1.id = ru.region_id
+                JOIN regions r2 ON r2.id = %(region_id)s
+                WHERE ru.region_id = %(region_id)s
+                OR (
+                    r1.hostname = r2.hostname
+                    AND r2.port = r2.port
+                )
             )
         """
         args = {'execution_id': self._config['params']['id'], 'region_id': region_id}

@@ -60,9 +60,6 @@ class Region:
             with tarfile.open(local_path) as tar:
                 tar.extractall(path="{}/execution".format(self._args.path))
 
-            # 4. Delete Downloaded Compressed Logs
-            os.remove(local_path)
-
     def get_progress(self):
         current_thread = threading.current_thread()
 

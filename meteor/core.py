@@ -224,76 +224,75 @@ class core:
             return []
 
         # Merge Logs
-        try:
-            for region_item in region_items:
-                if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
-                    status_msg = f"- Merging '{region_item}'..."
-                    # print(status_msg)
-                    self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+        for region_item in region_items:
+            if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
+                status_msg = f"- Merging '{region_item}'..."
+                # print(status_msg)
+                self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
 
-                    # Merging Server Logs
-                    for server_item in server_items:
-                        if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
-                            # print("-- Merging '{}'...".format(server_item))
-                            server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
-                            server_logs = []
-                            for server_file in server_files:
-                                # Merging Database Logs
-                                with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
-                                    try:
-                                        json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
-                                        server_logs.extend(json_decoded['output'])
-                                    except Exception:
-                                        pass
+                # Merging Server Logs
+                for server_item in server_items:
+                    if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
+                        # print("-- Merging '{}'...".format(server_item))
+                        server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
+                        server_logs = []
+                        for server_file in server_files:
+                            # Merging Database Logs
+                            with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
+                                try:
+                                    json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
+                                    server_logs.extend(json_decoded['output'])
+                                except Exception:
+                                    pass
 
-                            # Write Server File
-                            with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
-                                json.dump({"output": server_logs}, f, separators=(',', ':'))
+                        # Write Server File
+                        with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
+                            json.dump({"output": server_logs}, f, separators=(',', ':'))
 
-                    # Merging Region Logs
-                    region_logs = []
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
-                    for server_item in server_items:
-                        if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
-                            with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
-                                json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
-                                region_logs.extend(json_decoded['output'])
+                # Merging Region Logs
+                region_logs = []
+                server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                for server_item in server_items:
+                    if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
+                        with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
+                            json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
+                            region_logs.extend(json_decoded['output'])
 
-                    # Write Region Logs
-                    with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
-                        json.dump({"output": region_logs}, f, separators=(',', ':'))
-                    self._progress.track_logs(value={'status': 'success'})
+                # Write Region Logs
+                with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
+                    json.dump({"output": region_logs}, f, separators=(',', ':'))
+                self._progress.track_logs(value={'status': 'success'})
 
-            # Merging Environment Logs
-            environment_logs = []
-            status_msg = "- Generating a Single Log File..."
-            # print(status_msg)
-            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+        # Merging Environment Logs
+        environment_logs = []
+        status_msg = "- Generating a Single Log File..."
+        # print(status_msg)
+        self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+        region_items = os.listdir(execution_logs_path)
+        for region_item in region_items:
+            if region_item.endswith('.json'):
+                with open("{}/{}".format(execution_logs_path, region_item)) as f:
+                    json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
+                    environment_logs.extend(json_decoded['output'])
 
-            region_items = os.listdir(execution_logs_path)
-            for region_item in region_items:
-                if os.path.isfile("{}/{}".format(execution_logs_path, region_item)):
-                    with open("{}/{}".format(execution_logs_path, region_item)) as f:
-                        json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
-                        environment_logs.extend(json_decoded['output'])
+        # Write Environment Log
+        with open("{}/meteor.json".format(self._args.path), 'w') as f:
+            json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
-            # Write Environment Log
-            with open("{}/meteor.json".format(self._args.path), 'w') as f:
-                json.dump({"output": environment_logs}, f, separators=(',', ':'))
+        # Delete compressed region files
+        for region_item in region_items:
+            if region_item.endswith('.tar.gz'):
+                os.remove(f"{execution_logs_path}/{region_item}")
 
-            # Compress Execution Logs and Delete Uncompressed Folder
-            shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
-            shutil.rmtree("{}/execution".format(self._args.path))
-            self._progress.track_logs(value={'status': 'success'})
+        # Compress Execution Logs and Delete Uncompressed Folder
+        shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
+        shutil.rmtree("{}/execution".format(self._args.path))
+        self._progress.track_logs(value={'status': 'success'})
 
-            # Return All Logs
-            return environment_logs
-
-        except Exception as e:
-            # print("--> Error Merging Logs:\n{}".format(str(e)))
-            raise
+        # Return All Logs
+        return environment_logs
 
     def __summary(self, data):
         # print("+==================================================================+")
