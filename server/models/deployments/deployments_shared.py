@@ -162,7 +162,6 @@ class Deployments_Shared:
             SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s
-            JOIN deployments_shared ds ON ds.user_id = %(user_id)s AND ds.execution_id = e.id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
             LEFT JOIN environments env ON env.id = e.environment_id
@@ -181,6 +180,15 @@ class Deployments_Shared:
         return self._sql.execute(query, args)
 
     def delete_others(self, user_id, execution_id):
+        query = """
+            DELETE ds 
+            FROM deployments_shared ds
+            JOIN executions e ON e.id = ds.execution_id
+            JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %s
+            WHERE execution_id = %s
+        """
+        self._sql.execute(query, (user_id, execution_id))
+
         query = """
             UPDATE executions
             SET shared = 0

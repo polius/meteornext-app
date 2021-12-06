@@ -67,6 +67,28 @@ class Shared:
                     self._shared.pin_you(user['id'], item, 0)
                 return jsonify({'message': f"Deployment{'s' if len(data) > 1 else ''} unpinned"}), 200
 
+        @shared_blueprint.route('/deployments/shared/others', methods=['GET','DELETE'])
+        @jwt_required()
+        def shared_others_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['deployments_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            data = request.get_json()
+
+            if request.method == 'GET':
+                return self.get_others(user['id'])
+            elif request.method == 'DELETE':
+                return self.delete_others(user['id'], data)
+
         return shared_blueprint
 
     ####################
@@ -107,3 +129,14 @@ class Shared:
         for execution in data:
             self._shared.delete_you(user_id, execution)
         return jsonify({'message': 'Selected deployments successfully removed'}), 200
+
+    def get_others(self, user_id):
+        dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+        dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        deployments = self._shared.get_others(user_id, dfilter=dfilter, dsort=dsort)
+        return jsonify({'deployments': deployments}), 200
+
+    def delete_others(self, user_id, data):
+        for execution in data:
+            self._shared.delete_others(user_id, execution)
+        return jsonify({'message': 'Selected deployments successfully unshared'}), 200
