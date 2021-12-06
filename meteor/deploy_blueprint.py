@@ -26,7 +26,7 @@ class deploy_blueprint:
 
     def execute(self, server):
         # Create Execution Server Folder (if exists, then recreate)
-        execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.path, self._region['name'], server['name'])
+        execution_server_folder = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}/"
         if os.path.exists(execution_server_folder):
             shutil.rmtree(execution_server_folder)
         os.mkdir(execution_server_folder)
@@ -254,9 +254,9 @@ class deploy_blueprint:
 
         # Store Logs
         if mode == 'main':
-            execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.path, self._region['name'], server['name'], database)
+            execution_log_path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}/{database}.json"
         else:
-            execution_log_path = "{0}/execution/{1}/{2}_{3}.json".format(self._args.path, self._region['name'], server['name'], mode)
+            execution_log_path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}_{mode}.json"
 
         if len(query_instance.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:

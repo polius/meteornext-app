@@ -82,7 +82,6 @@ class core:
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 signal.signal(signal.SIGTERM,signal.SIG_IGN)
                 self.clean()
-                self.show_execution_time(only_validate=True)
                 self._progress.end(execution_status=0)
                 sys.exit()
 
@@ -92,7 +91,6 @@ class core:
             self.clean()
             if self._args.deploy or self._args.test:
                 self.slack(status=2, summary=None, error=str(e))
-            self.show_execution_time(only_validate=True)
             if e.__class__ == Exception:
                 self._progress.error(e)
             else:
@@ -114,14 +112,6 @@ class core:
         signal.signal(signal.SIGTERM,signal.SIG_IGN)
 
         try:
-            # Display error
-            if error.__class__ == Exception:
-                pass
-                # print("+==================================================================+")
-                # print("|  ERRORS                                                          |")
-                # print("+==================================================================+")
-                # print(error)
-
             # Kill ongoing queries
             if error.__class__ == KeyboardInterrupt:
                 self.__kill_queries()
@@ -142,10 +132,6 @@ class core:
                 self.slack(status=1, summary=summary)
             elif error.__class__ == Exception:
                 self.slack(status=2, summary=summary, error=str(error).rstrip())
-            # Show Execution Time
-            self.show_execution_time()
-            # Show Logs Location
-            self.show_logs_location()
             # Track Execution Status
             if error is None:
                 self._progress.end(execution_status=status)
@@ -165,10 +151,6 @@ class core:
             sys.exit()
 
     def __kill_queries(self):
-        # print("+==================================================================+")
-        # print("|  KILL QUERIES                                                    |")
-        # print("+==================================================================+")
-        # print("- Killing ongoing queries...")
         threads = []
         for region in self._imports.config['regions']:
             for server in region['sql']:
@@ -191,19 +173,14 @@ class core:
             elif connection['sql']['engine'] == 'Aurora MySQL':
                 for result in results['query_result']:
                     conn.execute(query=f"CALL mysql.rds_kill({result['id']})", retry=False)
-            # print(f"- Region '{connection['name']}': {len(results['query_result'])}")
         finally:
             conn.stop()
 
     def __get_logs(self):
-        # print("+==================================================================+")
-        # print("|  LOGS                                                            |")
-        # print("+==================================================================+")
         # Download Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
         if len(ssh_regions) > 0:
             status_msg = "- Downloading Logs from Regions..."
-            # print(status_msg)
             self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
             threads = []
             for region in ssh_regions:
@@ -227,7 +204,6 @@ class core:
         for region_item in region_items:
             if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
                 status_msg = f"- Merging '{region_item}'..."
-                # print(status_msg)
                 self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
                 server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
@@ -235,7 +211,6 @@ class core:
                 # Merging Server Logs
                 for server_item in server_items:
                     if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
-                        # print("-- Merging '{}'...".format(server_item))
                         server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
                         server_logs = []
                         for server_file in server_files:
@@ -268,7 +243,6 @@ class core:
         # Merging Environment Logs
         environment_logs = []
         status_msg = "- Generating a Single Log File..."
-        # print(status_msg)
         self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
         region_items = os.listdir(execution_logs_path)
         for region_item in region_items:
@@ -295,18 +269,12 @@ class core:
         return environment_logs
 
     def __summary(self, data):
-        # print("+==================================================================+")
-        # print("|  SUMMARY                                                         |")
-        # print("+==================================================================+")
         # Init summary
         summary = {}
         summary['total_queries'] = len(data)
 
         # Init queries progress
         queries = {}
-
-        # Total Queries
-        # print("- Total Queries: {}".format(summary['total_queries']))
 
         # Analyze Test Execution Logs 
         summary['meteor_query_error'] = 0
@@ -321,17 +289,10 @@ class core:
             # Count Query Rollback
             summary['meteor_query_rollback'] += 1 if int(d['meteor_status']) == 2 else 0
 
-        # Queries Succeeded
+        # Compute summary
         queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
-        # print("- Queries Succeeded: {} (~{}%)".format(summary['meteor_query_success'], float(queries_succeeded_value)))
-
-        # Queries Failed
         queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
-        # print("- Queries Failed: {} (~{}%)".format(summary['meteor_query_error'], float(queries_failed_value)))
-
-        # Queries Rollback
         queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_rollback']) / float(summary['total_queries']) * 100, 2)
-        # print("- Queries Rollback: {} (~{}%)".format(summary['meteor_query_rollback'], float(queries_rollback_value)))
 
         # Track progress
         queries['total'] = summary['total_queries']
@@ -346,11 +307,7 @@ class core:
         return summary
 
     def clean(self):
-        # print("+==================================================================+")
-        # print("|  CLEAN                                                           |")
-        # print("+==================================================================+")
         status_msg = "- Cleaning Regions Logs..."
-        # print(status_msg)
         self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Delete SSH Deployment Logs
@@ -386,11 +343,7 @@ class core:
         if not self._imports.config['slack']['enabled']:
             return
 
-        # print("+==================================================================+")
-        # print("|  SLACK                                                           |")
-        # print("+==================================================================+")
         status_msg = "- Sending Slack to '#{}'...".format(self._imports.config['slack']['channel_name'])
-        # print(status_msg)
         self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Get Webhook Data
@@ -499,35 +452,4 @@ class core:
             self._progress.track_tasks(value={'status': 'success'})
             
         except Exception as e:
-            response = "Slack message could not be sent. Invalid Webhook URL."
-            # print(response)
             self._progress.track_tasks(value={'status': 'failed'})
-
-    def show_execution_time(self, only_validate=False):
-        # print("+==================================================================+")
-        # print("|  EXECUTION TIME                                                  |")
-        # print("+==================================================================+")
-        if not only_validate:
-            execution_mode = 'Deployment' if self._args.deploy else 'Test Execution'
-            # Validation
-            validation_time = str(timedelta(seconds=self._validation.time - self._start_time))
-            # print("- Validation Time: {}".format(validation_time))
-
-            # Deployment / Test Execution
-            deployment_time = str(timedelta(seconds=self._deployment.time - self._validation.time))
-            # print("- {} Time: {}".format(execution_mode, deployment_time))
-
-            # Post Deployment / Test Execution
-            post_time = str(timedelta(seconds=time.time() - self._deployment.time))
-            # print("- Post {} Time: {}".format(execution_mode, post_time))
-
-        # Overall
-        overall_time = str(timedelta(seconds=time.time() - self._start_time))
-        # print("- Overall Time: {}".format(overall_time))
-
-    def show_logs_location(self):
-        # print("+==================================================================+")
-        # print("|  OUTPUT                                                          |")
-        # print("+==================================================================+")
-        logs_path = "{}.tar.gz".format(self._args.path)
-        # print("- Logs: {}".format(logs_path))

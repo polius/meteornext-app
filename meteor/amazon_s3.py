@@ -17,13 +17,8 @@ class amazon_s3:
     def upload_logs(self):
         # Upload Logs to S3
         if self._config['amazon_s3']['enabled']:
-            # print("+==================================================================+")
-            # print("|  AMAZON S3                                                       |")
-            # print("+==================================================================+")
             try:
                 # Upload Logs to S3
-                status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._config['amazon_s3']['bucket_name'])
-                # print(status_msg)
                 self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Logs to Amazon S3..."})
                 execution_name = self._args.path[self._args.path.rfind('/')+1:]
 
@@ -39,7 +34,6 @@ class amazon_s3:
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
             except Exception:
-                # print("- Uploading Process Failed.")
                 self._progress.track_tasks(value={'status': 'false'})
                 raise
             else:

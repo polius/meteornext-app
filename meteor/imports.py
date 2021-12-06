@@ -26,8 +26,7 @@ class imports:
             with open(file_path) as data_file:
                 data = json.load(data_file, object_pairs_hook=OrderedDict)
                 return data
-        except Exception as e:
-            print(str(e))
+        except Exception:
             sys.exit()
 
     def __load_blueprint(self):
