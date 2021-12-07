@@ -123,12 +123,12 @@ class Shared:
 
         # Add new deployment
         self._shared.post_you(user_id, uri)
-        return jsonify({'message': 'Deployment successfully added'}), 200
+        return jsonify({'message': 'Deployment added'}), 200
 
     def delete_you(self, user_id, data):
         for execution in data:
             self._shared.delete_you(user_id, execution)
-        return jsonify({'message': 'Selected deployments successfully removed'}), 200
+        return jsonify({'message': 'Selected deployments removed'}), 200
 
     def get_others(self, user_id):
         dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
@@ -139,4 +139,4 @@ class Shared:
     def delete_others(self, user_id, data):
         for execution in data:
             self._shared.delete_others(user_id, execution)
-        return jsonify({'message': 'Selected deployments successfully unshared'}), 200
+        return jsonify({'message': 'Selected deployments unshared'}), 200

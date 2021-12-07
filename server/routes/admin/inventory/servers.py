@@ -144,7 +144,7 @@ class Servers:
             server['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
         # Add server
         self._servers.post(user, server)
-        return jsonify({'message': 'Server added successfully'}), 200
+        return jsonify({'message': 'Server added'}), 200
 
     def put(self, user, server):
         # Check group & user
@@ -164,7 +164,7 @@ class Servers:
                 return jsonify({'message': 'This server exists in some environments or clients. Are you sure to proceed?'}), 202
         # Edit server
         self._servers.put(user, server)
-        return jsonify({'message': 'Server edited successfully'}), 200
+        return jsonify({'message': 'Server edited'}), 200
 
     def delete(self):
         servers = json.loads(request.args['servers'])
@@ -178,4 +178,4 @@ class Servers:
         # Delete servers
         for server in servers:
             self._servers.delete(server)
-        return jsonify({'message': 'Selected servers deleted successfully'}), 200
+        return jsonify({'message': 'Selected servers deleted'}), 200

@@ -516,7 +516,7 @@ export default {
           this.$store.dispatch('client/addHistory', history)
           // Get rights
           if (queries[0].startsWith('DROP USER')) {
-            EventBus.$emit('send-notification', 'User successfully deleted', '#00b16a')
+            EventBus.$emit('send-notification', 'User deleted', '#00b16a')
             new Promise((resolve) => { this.getRights(resolve) }).then(() => {
               // Clean Rights
               this.rights = { sidebar: this.rights.sidebar, login: {}, server: {}, schema: [], resources: {}, syntax: '' }
@@ -525,7 +525,7 @@ export default {
             })
           }
           else {
-            EventBus.$emit('send-notification', 'Rights successfully saved', '#00b16a')
+            EventBus.$emit('send-notification', 'Rights saved', '#00b16a')
             let user = this.getUser()
             if (['new','clone'].includes(this.mode)) {
               new Promise((resolve) => { this.getRights(resolve) }).then(() => {

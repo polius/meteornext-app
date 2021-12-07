@@ -465,7 +465,7 @@ export default {
     },
     saveName(item) {
       if (this.inlineEditingName == item.name) {
-        this.notification('Deployment edited successfully', '#00b16a')
+        this.notification('Deployment edited', '#00b16a')
         return
       }
       this.loading = true
@@ -502,7 +502,7 @@ export default {
     },
     saveRelease(item) {
       if (this.inlineEditingRelease == item.release) {
-        this.notification('Deployment edited successfully', '#00b16a')
+        this.notification('Deployment edited', '#00b16a')
         return
       }
       this.loading = true

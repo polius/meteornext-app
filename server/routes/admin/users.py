@@ -83,7 +83,7 @@ class Users:
 
         # Add user
         self._users.post(user_id, data)
-        return jsonify({'message': 'User added successfully'}), 200
+        return jsonify({'message': 'User added'}), 200
 
     def put(self, user_id, data):
         user = self._users.get(data['current_username'])
@@ -110,7 +110,7 @@ class Users:
 
         # Edit user
         self._users.put(user_id, data)
-        return jsonify({'message': 'User edited successfully'}), 200
+        return jsonify({'message': 'User edited'}), 200
 
     def delete(self):
         # Get users list
@@ -126,7 +126,7 @@ class Users:
 
         # Remove user
         self._users.delete(users)
-        return jsonify({'message': 'Selected users deleted successfully'}), 200
+        return jsonify({'message': 'Selected users deleted'}), 200
 
     def check_password_policy(self, password):
         security = json.loads(self._settings.get(setting_name='SECURITY'))

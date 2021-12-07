@@ -5,7 +5,6 @@ import json
 import gzip
 import boto3
 import signal
-import subprocess
 import botocore
 import datetime
 import unicodedata
@@ -139,8 +138,7 @@ class Deployments:
 
             if len(results) == 0:
                 return jsonify({'title': 'Unknown deployment', 'description': 'This deployment does not currently exist' }), 400
-            else:
-                results = results[0]
+            results = results[0]
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -157,17 +155,11 @@ class Deployments:
             
             # Get Execution Results File
             if results['logs'] == 'local':
-                deployments_path = os.path.join(files['local']['path'], 'deployments', uri)
-                results_folder = os.path.join(files['local']['path'], 'results')
-                results_path = os.path.join(files['local']['path'], 'results', uri)
+                path = os.path.join(files['local']['path'], 'deployments')
                 # Check if exists
-                if not os.path.exists(deployments_path + '.tar.gz'):
+                if not os.path.exists(f"{path}/{uri}.json"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                elif not os.path.exists(results_path + '.json'):
-                    if not os.path.exists(results_folder):
-                        os.makedirs(results_folder)
-                    subprocess.run(f"tar Oxzf '{deployments_path}'.tar.gz './meteor.json' > {results_path}.json", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                return send_from_directory(results_folder, uri + '.json')
+                return send_from_directory(path, f"{uri}.json")
 
             elif results['logs'] == 'amazon_s3':
                 # Check Amazon S3 credentials are setup
@@ -180,7 +172,7 @@ class Deployments:
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='results/{}.json.gz'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='deployments/{}.json.gz'.format(uri))
                     with gzip.open(obj['Body'], 'rb') as fopen:
                         return jsonify(json.load(fopen)), 200
                 except botocore.exceptions.ClientError as e:
@@ -481,16 +473,16 @@ class Deployments:
             self._meteor.execute(meteor)
             return jsonify({'message': 'Deployment Launched', 'data': response}), 200
 
-        return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
+        return jsonify({'message': 'Deployment created', 'data': response}), 200
 
     def __put(self, user, data):
         # Edit Metadata
         if 'name' in data.keys():
             self._deployments.putName(user, data)
-            return jsonify({'message': 'Deployment edited successfully'}), 200
+            return jsonify({'message': 'Deployment edited'}), 200
         elif 'release' in data.keys():
             self._deployments.putRelease(user, data)
-            return jsonify({'message': 'Deployment edited successfully'}), 200
+            return jsonify({'message': 'Deployment edited'}), 200
 
         # Get Data
         execution = {
@@ -566,7 +558,7 @@ class Deployments:
             self._executions.put(user['id'], execution)
             coins = user['coins']
             if not execution['start_execution']:
-                return jsonify({'message': 'Deployment edited successfully', 'data': {'uri': execution['uri']}}), 200
+                return jsonify({'message': 'Deployment edited', 'data': {'uri': execution['uri']}}), 200
 
         # Create a new execution
         else:
@@ -610,7 +602,7 @@ class Deployments:
             self._meteor.execute(meteor)
             return jsonify({'message': 'Deployment Launched', 'data': response}), 200
 
-        return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
+        return jsonify({'message': 'Deployment created', 'data': response}), 200
 
     def __start(self, user, data):
         # Check files path permissions

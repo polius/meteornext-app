@@ -34,6 +34,5 @@ class imports:
             file_path = "{}/blueprint.py".format(self._args.path)
             blueprint = importlib.util.spec_from_file_location("blueprint", file_path).loader.load_module().blueprint()
             return blueprint
-        except Exception as e:
-            print(str(e))
+        except Exception:
             sys.exit()

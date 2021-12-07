@@ -26,7 +26,7 @@ class deploy_blueprint:
 
     def execute(self, server):
         # Create Execution Server Folder (if exists, then recreate)
-        execution_server_folder = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}/"
+        execution_server_folder = f"{self._args.path}/execution/{self._region['id']}/{server['id']}/"
         if os.path.exists(execution_server_folder):
             shutil.rmtree(execution_server_folder)
         os.mkdir(execution_server_folder)
@@ -187,7 +187,7 @@ class deploy_blueprint:
         current_thread = threading.current_thread()
         d = len(self._progress)
         progress = float(d)/float(len(databases)) * 100
-        item = {"r": self._region['name'], "s": server['name'], "p": float('%.2f' % progress), "d": d, "t": len(databases)}
+        item = {"id": server['id'], "name": server['name'], "shared": server['shared'], "p": float('%.2f' % progress), "d": d, "t": len(databases)}
         current_thread.progress.append(item)
 
     def __execute_main_databases(self, server):
@@ -254,9 +254,9 @@ class deploy_blueprint:
 
         # Store Logs
         if mode == 'main':
-            execution_log_path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}/{database}.json"
+            execution_log_path = f"{self._args.path}/execution/{self._region['id']}/{server['id']}/{database}.json"
         else:
-            execution_log_path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/{server['name']}_{server['id']}_{mode}.json"
+            execution_log_path = f"{self._args.path}/execution/{self._region['id']}/{server['id']}_{mode}.json"
 
         if len(query_instance.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:

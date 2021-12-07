@@ -88,10 +88,10 @@ class Notifications:
 
     def put(self, user_id, data):
         self._notifications.put(user_id, data)
-        return jsonify({'message': 'Notification edited successfully'}), 200
+        return jsonify({'message': 'Notification edited'}), 200
 
     def delete(self, user_id, data):
         # Check inconsistencies
         for notification in data:
             self._notifications.delete(user_id, notification)
-        return jsonify({'message': 'Selected notifications deleted successfully'}), 200
+        return jsonify({'message': 'Selected notifications deleted'}), 200

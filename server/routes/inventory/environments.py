@@ -86,7 +86,7 @@ class Environments:
             return jsonify({'message': 'Shared environments cannot contain personal servers'}), 400
         # Add environment
         self._environments.post(user['id'], user['group_id'], environment)
-        return jsonify({'message': 'Environment added successfully'}), 200
+        return jsonify({'message': 'Environment added'}), 200
 
     def put(self, user, environment):
         # Check privileges
@@ -100,7 +100,7 @@ class Environments:
             return jsonify({'message': 'Shared environments cannot contain personal servers'}), 400
         # Edit environment
         self._environments.put(user['id'], user['group_id'], environment)
-        return jsonify({'message': 'Environment edited successfully'}), 200
+        return jsonify({'message': 'Environment edited'}), 200
 
     def delete(self, user):
         environments = json.loads(request.args['environments'])
@@ -112,4 +112,4 @@ class Environments:
         # Delete environments
         for environment in environments:
             self._environments.delete(environment)
-        return jsonify({'message': 'Selected environments deleted successfully'}), 200
+        return jsonify({'message': 'Selected environments deleted'}), 200

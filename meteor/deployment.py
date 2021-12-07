@@ -26,21 +26,12 @@ class deployment:
             # Handle SIGTERM
             signal.signal(signal.SIGTERM, self.__sigterm)
 
-            # Get Deployment Start Datetime
-            started_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-            started_time = time.time()
-
             # Create Execution Folder
             if not os.path.exists(f"{self._args.path}/execution"):
                 os.makedirs(f"{self._args.path}/execution")
 
-            # Create Deployments Folder
-            if not os.path.exists(f"{self._args.path}/deployments"):
-                os.makedirs(f"{self._args.path}/deployments")
-
-            # Init Progress dictionary
-            progress = {i['name']: {} for i in self._config['regions']}
-
+            # Init Progress
+            progress = [{"id": i['id'], "name": i['name'], "shared": i['shared'], "servers": []} for i in self._config['regions']]
             # Start Deployment
             for region in self._config['regions']:
                 r = Region(self._args, region)
@@ -50,22 +41,23 @@ class deployment:
 
             while any(t.is_alive() for t in self._threads):
                 # Track Overall Progress
-                self.__track_overall(progress, started_datetime, started_time)
+                self.__track_overall(progress)
                 # Check Sigterm
                 if self._sigterm:
                     raise KeyboardInterrupt()
                 time.sleep(1)
 
             # Track again Overall Progress 
-            self.__track_overall(progress, started_datetime, started_time)
+            self.__track_overall(progress)
 
             # Check Critical Errors
             errors = []
-            for region in self._config['regions']:
-                if 'errors' in progress[region['name']]:
-                    for i in progress[region['name']]['errors']:
-                        if i not in errors:
-                            errors.append(i)
+            for region in progress:
+                if 'errors' in region:
+                    for error in region['errors']:
+                        if error not in errors:
+                            errors.append(error)
+
             if len(errors) > 0:
                 errors_parsed = ''
                 for i in errors:
@@ -75,10 +67,13 @@ class deployment:
 
             # Print Execution Finished
             queries_failed = False
-            for i in progress.values():
-                for j in i['progress'].values():
-                    if j['e']:
+            for region in progress:
+                for server in region['servers']:
+                    if server['e']:
                         queries_failed = True
+                        break
+                if queries_failed:
+                    break
 
             # Return status
             return 1 if queries_failed else 0
@@ -121,7 +116,7 @@ class deployment:
         for t in self._threads:
             t.join()
 
-    def __track_overall(self, progress, started_datetime, started_time):
+    def __track_overall(self, progress):
         # Start tracking all regions
         threads = []
         for region in self._imports.config['regions']:
@@ -129,7 +124,7 @@ class deployment:
             r = Region(self._args, region)
             t = threading.Thread(target=r.get_progress)
             t.daemon = True
-            t.region = region['name']
+            t.region = region
             t.progress = {}
             threads.append(t)
             t.start()
@@ -137,26 +132,24 @@ class deployment:
         # Wait tracking to finish in all regions
         for t in threads:
             t.join()
-            if len(t.progress.keys()) > 0:
-                progress[t.region] = t.progress
-
-        # Track execution process
-        track = {}
-        for k, v in progress.items():
-            track[k] = v['progress'] if 'progress' in v else {}
-        self._progress.track_execution(value=track)
+            index = next((i for i, x in enumerate(progress) if x["id"] == t.region['id']), None)
+            if 'execution' in t.progress:
+                progress[index]['servers'] = t.progress['execution']
+            if 'errors' in t.progress:
+                progress[index]['errors'] = t.progress['errors']
+        self._progress.track_execution(value=progress)
 
     ##########
     # REMOTE #
     ##########
     def deploy(self):
-        region = [i for i in self._config['regions'] if i['name'] == self._args.region]
+        region = [i for i in self._config['regions'] if i['id'] == int(self._args.region)]
         if len(region) > 0:
             deploy_region = deploy_regions(self._args, self._imports, region[0])
             deploy_region.start()
 
     def compress(self):
-        region = [i for i in self._config['regions'] if i['name'] == self._args.region]
+        region = [i for i in self._config['regions'] if i['id'] == int(self._args.region)]
         if len(region) > 0:
             r = Region(self._args, region[0])
             r.compress_logs()

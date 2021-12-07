@@ -117,7 +117,7 @@ class Regions:
             region['key'] = origin['key'] if region['key'] == '<ssh_key>' else region['key']
         # Add region
         self._regions.post(user['id'], user['group_id'], region)
-        return jsonify({'message': 'Region added successfully'}), 200
+        return jsonify({'message': 'Region added'}), 200
 
     def put(self, user, region):
         # Check privileges
@@ -128,7 +128,7 @@ class Regions:
             return jsonify({'message': 'This region name currently exists'}), 400
         # Edit region
         self._regions.put(user['id'], user['group_id'], region)
-        return jsonify({'message': 'Region edited successfully'}), 200
+        return jsonify({'message': 'Region edited'}), 200
 
     def delete(self, user):
         regions = json.loads(request.args['regions'])
@@ -144,4 +144,4 @@ class Regions:
         # Delete regions
         for region in regions:
             self._regions.delete(user['id'], user['group_id'], region)
-        return jsonify({'message': 'Selected regions deleted successfully'}), 200
+        return jsonify({'message': 'Selected regions deleted'}), 200

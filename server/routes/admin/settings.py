@@ -229,7 +229,7 @@ class Settings:
             'value': json.dumps(data)
         }
         self._settings.post(user_id, settings)
-        return jsonify({'message': 'Changes saved successfully'}), 200
+        return jsonify({'message': 'Changes saved'}), 200
 
     def post_security(self, user_id, data):
         # Store Settings Files
@@ -238,7 +238,7 @@ class Settings:
             'value': json.dumps(data)
         }
         self._settings.post(user_id, settings)
-        return jsonify({'message': 'Changes saved successfully'}), 200
+        return jsonify({'message': 'Changes saved'}), 200
 
     def check_url(self, security=None):
         if security is None:

@@ -136,7 +136,7 @@ class Auxiliary:
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Add auxiliary
         self._auxiliary.post(user, auxiliary)
-        return jsonify({'message': 'Auxiliary connection added successfully'}), 200
+        return jsonify({'message': 'Auxiliary connection added'}), 200
 
     def put(self, user, auxiliary):
         # Check group & user
@@ -149,11 +149,11 @@ class Auxiliary:
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Edit auxiliary
         self._auxiliary.put(user, auxiliary)
-        return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
+        return jsonify({'message': 'Auxiliary connection edited'}), 200
 
     def delete(self):
         data = json.loads(request.args['auxiliary'])
         # Delete auxiliary
         for auxiliary in data:
             self._auxiliary.delete(auxiliary)
-        return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
+        return jsonify({'message': 'Selected auxiliary connections deleted'}), 200

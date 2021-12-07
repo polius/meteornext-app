@@ -54,7 +54,7 @@ class MFA:
             elif request.method == 'DELETE':
                 # Clean the user MFA
                 self._user_mfa.disable_mfa({'user_id': user['id']})
-                return jsonify({'message': 'MFA successfully disabled'}), 200
+                return jsonify({'message': 'MFA disabled'}), 200
 
         @mfa_blueprint.route('/mfa/2fa', methods=['GET','POST'])
         @jwt_required(optional=True)
@@ -84,7 +84,7 @@ class MFA:
                 if 'value' not in data or len(data['value']) == 0 or not mfa.verify(data['value'], valid_window=1):
                     return jsonify({'message': 'Invalid MFA Code'}), 400
                 self._user_mfa.enable_2fa({'user_id': user['id'], '2fa_hash': data['hash']})
-                return jsonify({'message': 'MFA successfully enabled'}), 200
+                return jsonify({'message': 'MFA enabled'}), 200
 
         @mfa_blueprint.route('/mfa/webauthn/register', methods=['GET','POST'])
         @jwt_required(optional=True)
@@ -111,7 +111,7 @@ class MFA:
                 try:
                     self.post_webauthn_register(user, data)
                     if 'store' in data and data['store']:
-                        return jsonify({'message': 'MFA successfully enabled'}), 200
+                        return jsonify({'message': 'MFA enabled'}), 200
                     return jsonify({"message": 'Credentials validated'}), 200
                 except Exception as e:
                     return jsonify({'message': str(e)}), 400
@@ -271,5 +271,5 @@ class MFA:
         # Check user & password
         if len(user) == 0 or not bcrypt.checkpw(data['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
             return []
-        # Login successfully
+        # Login success
         return user

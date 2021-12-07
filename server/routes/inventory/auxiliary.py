@@ -135,7 +135,7 @@ class Auxiliary:
             auxiliary['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>' else auxiliary['ssl_ca_certificate']
         # Add auxiliary
         self._auxiliary.post(user['id'], user['group_id'], auxiliary)
-        return jsonify({'message': 'Auxiliary connection added successfully'}), 200
+        return jsonify({'message': 'Auxiliary connection added'}), 200
 
     def put(self, user, auxiliary):
         # Check privileges
@@ -146,7 +146,7 @@ class Auxiliary:
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Edit auxiliary
         self._auxiliary.put(user['id'], user['group_id'], auxiliary)
-        return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
+        return jsonify({'message': 'Auxiliary connection edited'}), 200
 
     def delete(self, user):
         data = json.loads(request.args['auxiliary'])
@@ -158,4 +158,4 @@ class Auxiliary:
         # Delete auxiliary
         for auxiliary in data:
             self._auxiliary.delete(user['id'], user['group_id'], auxiliary)
-        return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
+        return jsonify({'message': 'Selected auxiliary connections deleted'}), 200

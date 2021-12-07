@@ -54,7 +54,7 @@ class Deployments:
                     self._deployments.put_name(deployment_json['user_id'], deployment_json)
                 elif deployment_json['put'] == 'release':
                     self._deployments.put_release(deployment_json['user_id'], deployment_json)
-                return jsonify({'message': 'Deployment edited successfully'}), 200
+                return jsonify({'message': 'Deployment edited'}), 200
 
         @admin_deployments_blueprint.route('/admin/deployments/releases', methods=['GET'])
         @jwt_required()

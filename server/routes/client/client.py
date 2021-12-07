@@ -62,28 +62,28 @@ class Client:
             elif request.method == 'POST':
                 if 'servers' in client_json:
                     self._client.add_servers(client_json['servers'], user)
-                    return jsonify({"message": "Servers successfully added"}), 200
+                    return jsonify({"message": "Servers added"}), 200
                 elif 'folder' in client_json:
                     if (self._client.exists_folder({'name': client_json['folder']}, user['id'])):
                         return jsonify({"message": "This folder name currently exists"}), 400
                     self._client.add_folder(client_json['folder'], user['id'])
-                    return jsonify({"message": "Folder successfully created"}), 200
+                    return jsonify({"message": "Folder created"}), 200
             elif request.method == 'PUT':
                 if 'servers' in client_json:
                     self._client.move_servers(client_json['servers'], user)
-                    return jsonify({"message": "Servers successfully moved"}), 200
+                    return jsonify({"message": "Servers moved"}), 200
                 elif 'folder' in client_json:
                     if (self._client.exists_folder(client_json['folder'], user['id'])):
                         return jsonify({"message": "This folder name currently exists"}), 400
                     self._client.rename_folder(client_json['folder'], user['id'])
-                    return jsonify({"message": "Folder successfully renamed"}), 200
+                    return jsonify({"message": "Folder renamed"}), 200
             elif request.method == 'DELETE':
                 if 'servers' in client_json:
                     self._client.remove_servers(client_json['servers'], user['id'])
-                    return jsonify({"message": "Servers successfully deleted"}), 200
+                    return jsonify({"message": "Servers deleted"}), 200
                 elif 'folders' in client_json:
                     self._client.remove_folders(client_json['folders'], user['id'])
-                    return jsonify({"message": "Folder successfully deleted"}), 200
+                    return jsonify({"message": "Folder deleted"}), 200
 
         @client_blueprint.route('/client/servers/unassigned', methods=['GET'])
         @jwt_required()
@@ -506,14 +506,10 @@ class Client:
             try:
                 conn.execute(request.files['file'].read().decode("utf-8"), database=request.form['database'], import_file=True)
                 conn.commit()
-                return jsonify({'message': 'File successfully uploaded'}), 200
+                return jsonify({'message': 'File uploaded'}), 200
             except Exception as e:
                 conn.rollback()
                 return jsonify({'message': str(e)}), 400
-
-            # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
-            # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
-            # stdout, stderr = proc.communicate()
 
         @client_blueprint.route('/client/export', methods=['GET'])
         @jwt_required()
@@ -572,7 +568,7 @@ class Client:
             # Start clone
             try:
                 self.__clone_object(client_json['options'], conn)
-                return jsonify({"message": 'Object cloned successfully'}), 200
+                return jsonify({"message": 'Object cloned'}), 200
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
 
@@ -598,13 +594,13 @@ class Client:
                 return jsonify({'saved': saved_queries}), 200
             elif request.method == 'POST':
                 qid = self._client.add_saved_query(saved_json, user['id'])
-                return jsonify({'data': qid, 'message': 'Saved query added successfully'}), 200
+                return jsonify({'data': qid, 'message': 'Saved query added'}), 200
             elif request.method == 'PUT':
                 qid = self._client.edit_saved_query(saved_json, user['id'])
-                return jsonify({'message': 'Saved query edited successfully'}), 200
+                return jsonify({'message': 'Saved query edited'}), 200
             elif request.method == 'DELETE':
                 self._client.delete_saved_queries(saved_json, user['id'])
-                return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
+                return jsonify({'message': 'Selected saved queries deleted'}), 200
 
         @client_blueprint.route('/client/settings', methods=['GET','PUT'])
         @jwt_required()
@@ -650,7 +646,7 @@ class Client:
 
             # Kill Query
             self._connections.kill(user['id'], request.args['connection'])
-            return jsonify({'message': 'Query successfully stopped'}), 200
+            return jsonify({'message': 'Query stopped'}), 200
 
         @client_blueprint.route('/client/rights', methods=['GET'])
         @jwt_required()
@@ -719,7 +715,7 @@ class Client:
 
             # Close Connection
             self._connections.close(user['id'], request.args['connection'])
-            return jsonify({'message': 'Connection successfully closed'}), 200
+            return jsonify({'message': 'Connection closed'}), 200
 
         @client_blueprint.route('/client/pks', methods=['GET'])
         @jwt_required()

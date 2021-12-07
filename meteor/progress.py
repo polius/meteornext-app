@@ -7,32 +7,10 @@ class progress:
         self._args = args
         self._config = imports.config
         self._progress = {}
-        self._sql = None
-
-        # Init Connection
-        self.__init()
-
-    def __init(self):
-        ssh = {"enabled": False}
-        sql = {
-            "engine": "MySQL",
-            "hostname": self._config['meteor_next']['hostname'],
-            "port": self._config['meteor_next']['port'],
-            "username": self._config['meteor_next']['username'],
-            "password": self._config['meteor_next']['password'],
-            "database": self._config['meteor_next']['database'],
-            "autocommit": True,
-            "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
-            "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
-            "ssl_client_key": self._config['meteor_next']['ssl_client_key'],
-            "ssl_verify_ca": self._config['meteor_next']['ssl_verify_ca']
-        }
-        self._sql = connector({"ssh": ssh, "sql": sql})
+        self._sql = self.__connector()
 
     def start(self, pid):
-        # Init the connection
         self._sql.start()
-        # Track progress
         logs = 'amazon_s3' if self._config['amazon_s3']['enabled'] else 'local'
         query = "UPDATE executions SET status = 'IN PROGRESS', logs = '{}', started = '{}', pid = '{}' WHERE id = {}".format(logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
@@ -48,7 +26,6 @@ class progress:
         progress = json.dumps(self._progress).replace("'", "\\'")
         query = "UPDATE executions SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
-        self._sql.stop()
 
     def track_syntax(self, value):
         if 'syntax' not in self._progress:
@@ -62,7 +39,7 @@ class progress:
     
     def track_execution(self, value):
         if 'execution' not in self._progress:
-            self._progress['execution'] = {}
+            self._progress['execution'] = []
         self._progress['execution'] = value
         self.__store()
 
@@ -91,6 +68,8 @@ class progress:
         self.__store()
 
     def start_region_update(self, region_id):
+        sql = self.__connector()
+        sql.start()
         query = """
             INSERT INTO regions_update (execution_id, region_id)
             SELECT *
@@ -110,26 +89,51 @@ class progress:
             )
         """
         args = {'execution_id': self._config['params']['id'], 'region_id': region_id}
-        result = self._sql.execute(query=query, args=args, database=self._config['meteor_next']['database'])
+        result = sql.execute(query=query, args=args, database=self._config['meteor_next']['database'])
+        sql.stop()
         return result['query_result'] > 0
 
     def finish_region_update(self, region_id):
+        sql = self.__connector()
+        sql.start()
         query = """
             DELETE FROM regions_update
             WHERE region_id = %s
         """
-        self._sql.execute(query=query, args=(region_id), database=self._config['meteor_next']['database'])
+        sql.execute(query=query, args=(region_id), database=self._config['meteor_next']['database'])
+        sql.stop()
 
     def check_region_update(self, region_id):
+        sql = self.__connector()
+        sql.start()
         query = """
             SELECT COUNT(*) AS 'n'
             FROM regions_update
             WHERE region_id = %s
         """
-        return self._sql.execute(query=query, args=(region_id), database=self._config['meteor_next']['database'])['query_result'][0]['n'] == 0
+        result = sql.execute(query=query, args=(region_id), database=self._config['meteor_next']['database'])['query_result'][0]['n'] == 0
+        sql.stop()
+        return result
 
     def __store(self):
         self._progress['updated'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         progress = json.dumps(self._progress).replace("'", "\\\'")
         query = "UPDATE executions SET progress = '{}' WHERE id = {}".format(progress, self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+
+    def __connector(self):
+        ssh = {"enabled": False}
+        sql = {
+            "engine": "MySQL",
+            "hostname": self._config['meteor_next']['hostname'],
+            "port": self._config['meteor_next']['port'],
+            "username": self._config['meteor_next']['username'],
+            "password": self._config['meteor_next']['password'],
+            "database": self._config['meteor_next']['database'],
+            "autocommit": True,
+            "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
+            "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
+            "ssl_client_key": self._config['meteor_next']['ssl_client_key'],
+            "ssl_verify_ca": self._config['meteor_next']['ssl_verify_ca']
+        }
+        return connector({"ssh": ssh, "sql": sql})

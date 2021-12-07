@@ -65,24 +65,30 @@ class Regions:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM regions
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], group_id, user_id, region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": region['name'], "group_id": group_id, "owner_id": user_id, "shared": region['shared'], "id": region['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM regions
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], group_id, user_id))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": region['name'], "group_id": group_id, "owner_id": user_id, "shared": region['shared']})[0]['exist'] == 1
 
     def exist_in_server(self, user_id, group_id, region_id):
         query = """
