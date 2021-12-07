@@ -80,7 +80,7 @@ class Executions:
 
     def getScheduled(self):
         query = """
-            SELECT e.id, e.mode, u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT e.id, e.mode, e.uri, u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             JOIN environments env ON env.id = e.environment_id
