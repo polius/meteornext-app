@@ -283,7 +283,6 @@ export default {
     cloneCloud() {
       this.mode = 'clone'
       this.item = {...this.selected[0]}
-      delete this.item['id']
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
       this.bucketsSelected = []
