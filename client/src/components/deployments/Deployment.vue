@@ -1164,8 +1164,7 @@
         }
         axios.post('/deployments/start', payload)
         .then((response) => {
-          if (response.data.message != '') this.notification(response.data.message, '#00b16a')
-          this.notification('Starting the execution. Please wait...', 'primary')
+          this.notification(response.data.message, '#00b16a')
           this.start_execution = true
           this.getDeployment()
         })

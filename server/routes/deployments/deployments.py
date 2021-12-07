@@ -447,7 +447,7 @@ class Deployments:
         self._users.consume_coins(user, group['coins_execution'])
 
         # Build Response Data
-        response = {'id': execution_id, 'coins': user['coins'] - group['coins_execution'] }
+        response = {'uri': execution['uri'], 'coins': user['coins'] - group['coins_execution'] }
 
         if execution['start_execution'] and not group['deployments_execution_concurrent']:
             # Build Meteor Execution
@@ -668,11 +668,8 @@ class Deployments:
         if not group['deployments_execution_concurrent']:
             self._meteor.execute(meteor)
 
-        # Build Response Data
-        response = {'id': execution['id']}
-
         # Return Successful Message
-        return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
+        return jsonify({'message': 'Deployment Launched'}), 200
 
     def __stop(self, user, data):
         # Check params
