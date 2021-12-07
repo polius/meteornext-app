@@ -60,7 +60,7 @@ class Profile:
             # Change password
             try:
                 self.change_password(user, data['current'], data['new'], data['repeat'])
-                return jsonify({'message': 'Password successfully changed'}), 200
+                return jsonify({'message': 'Password changed'}), 200
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 

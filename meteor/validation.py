@@ -29,9 +29,9 @@ class validation:
     def __validate_regions(self):
         try:
             # Init validation
-            progress = {}
+            progress = []
             for region in self._config['regions']:
-                progress[region['name']] = {}
+                progress.append({'id': region['id'], 'name': region['name'], 'shared': region['shared']})
             self._progress.track_validation(progress)
 
             # Generate App Version
@@ -52,7 +52,7 @@ class validation:
             for region in self._config['regions']:
                 validate_region = validate_regions(self._args, region, self._progress)
                 t = threading.Thread(target=validate_region.validate)
-                t.progress = {}
+                t.progress = {'id': region['id']}
                 t.daemon = True
                 t.alive = True
                 threads.append(t)
@@ -83,16 +83,17 @@ class validation:
         error = False
         for t in threads:
             # Build progress dictionary
+            index = next((i for i, x in enumerate(progress) if x["id"] == t.progress['id']), None)
             if 'success' in t.progress:
-                progress[t.progress['region']] = { "success": t.progress['success'] }
+                progress[index]['success'] = t.progress['success']
             # Check SSH error
             if 'error' in t.progress:
                 error = True
-                progress[t.progress['region']]['error'] = t.progress['error']
+                progress[index]['error'] = t.progress['error']
             # Check SQL errors
             if 'errors' in t.progress:
                 error = True
-                progress[t.progress['region']]['errors'] = t.progress['errors']
+                progress[index]['errors'] = t.progress['errors']
 
         self._progress.track_validation(progress)
         return error

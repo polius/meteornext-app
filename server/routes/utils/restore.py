@@ -369,7 +369,7 @@ class Restore:
     def delete(self, user, data):
         for item in data:
             self._restore.delete(user, item)
-        return jsonify({'message': 'Selected restores deleted successfully'}), 200
+        return jsonify({'message': 'Selected restores deleted'}), 200
 
     def stop(self, user, data):
         # Check params
@@ -482,7 +482,7 @@ class Restore:
         # Stop the scan
         self._scans.put_status(data['id'], 'STOPPED')
         self._scan_app.stop(scan['pid'])
-        return jsonify({'message': 'Scan successfully stopped'}), 200
+        return jsonify({'message': 'Scan stopped'}), 200
 
     def get_s3_buckets(self, user):
         # Get Cloud Key

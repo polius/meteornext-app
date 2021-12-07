@@ -82,21 +82,27 @@ class Cloud:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM cloud
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['owner_id'], cloud['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": cloud['name'], "group_id": cloud['group_id'], "owner_id": cloud['owner_id'], "shared": cloud['shared'], "id": cloud['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM cloud
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": cloud['name'], "group_id": cloud['group_id'], "owner_id": cloud['owner_id'], "shared": cloud['shared']})[0]['exist'] == 1

@@ -64,6 +64,7 @@ class Meteor:
             region_data = {
                 "id": region['id'],
                 "name": region['name'],
+                "shared": region['shared'],
                 "ssh": {
                     "enabled": True if region['ssh_tunnel'] else False,
                     "hostname": "" if region['hostname'] is None else region['hostname'],
@@ -86,6 +87,7 @@ class Meteor:
                     region_data['sql'].append({
                         "id": server['id'],
                         "name": server['name'],
+                        "shared": server['shared'],
                         "engine": server['engine'],
                         "hostname": server['hostname'],
                         "username": server['username'],
@@ -101,10 +103,13 @@ class Meteor:
             config['regions'].append(region_data)
 
         # Compile Auxiliary Connections
-        config['auxiliary_connections'] = {}
+        config['auxiliary_connections'] = []
         for aux in auxiliary:
             # Init Auxiliary Conf
-            config['auxiliary_connections'][aux['name']] = {
+            config['auxiliary_connections'].append({
+                "id": aux['id'],
+                "name": aux['name'],
+                "shared": aux['shared'],
                 "ssh": { "enabled": False },
                 "sql": {
                     "engine": aux['engine'],
@@ -117,7 +122,7 @@ class Meteor:
                     "ssl_client_key": aux['ssl_client_key'],
                     "ssl_verify_ca": aux['ssl_verify_ca']
                 }
-            }
+            })
 
         # Generate key files
         for key in keys:
@@ -227,7 +232,7 @@ class blueprint:
         execution_method = deployment['method'].lower()
 
         # Build Meteor Command
-        command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
+        command = f"{meteor_path} --path '{execution_path}' --uri '{deployment['uri']}' --{execution_method}"
 
         # Execute Meteor
         # p = subprocess.Popen(command, shell=True)

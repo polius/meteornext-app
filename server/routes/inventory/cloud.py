@@ -104,7 +104,7 @@ class Cloud:
             cloud['secret_key'] = origin['secret_key']
         # Add cloud key
         self._cloud.post(user['id'], user['group_id'], cloud)
-        return jsonify({'message': 'Cloud key added successfully'}), 200
+        return jsonify({'message': 'Cloud key added'}), 200
 
     def put(self, user, cloud):
         # Check privileges
@@ -119,7 +119,7 @@ class Cloud:
         cloud['secret_key'] = '<secret_key>' if type(cloud['secret_key']) is dict else cloud['secret_key']
         # Edit cloud key
         self._cloud.put(user['id'], user['group_id'], cloud)
-        return jsonify({'message': 'Cloud key edited successfully'}), 200
+        return jsonify({'message': 'Cloud key edited'}), 200
 
     def delete(self, user):
         data = json.loads(request.args['cloud'])
@@ -131,7 +131,7 @@ class Cloud:
         # Delete cloud keys
         for cloud in data:
             self._cloud.delete(user['id'], user['group_id'], cloud)
-        return jsonify({'message': 'Selected cloud keys deleted successfully'}), 200
+        return jsonify({'message': 'Selected cloud keys deleted'}), 200
 
     def test(self, user, data):
         # Get Cloud Key

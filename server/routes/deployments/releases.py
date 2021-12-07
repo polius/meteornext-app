@@ -64,7 +64,7 @@ class Releases:
                 return jsonify({'data': self._releases.getActive(user['id'])}), 200
             elif request.method == 'PUT':
                 self._releases.putActive(user['id'], release_json)
-                return jsonify({'message': 'Release edited successfully'}), 200
+                return jsonify({'message': 'Release edited'}), 200
 
         return releases_blueprint
 
@@ -79,17 +79,17 @@ class Releases:
             return jsonify({'message': 'This release currently exists'}), 400
         else:
             self._releases.post(user_id, data)
-            return jsonify({'message': 'Release added successfully'}), 200
+            return jsonify({'message': 'Release added'}), 200
 
     def put(self, user_id, data):
         if self._releases.exist(user_id, data):
             return jsonify({'message': 'This new release currently exists'}), 400
         else:
             self._releases.put(user_id, data)
-            return jsonify({'message': 'Release edited successfully'}), 200
+            return jsonify({'message': 'Release edited'}), 200
 
     def delete(self, user_id, data):
         for release in data:
             self._deployments.removeRelease(release)
             self._releases.delete(user_id, release)
-        return jsonify({'message': 'Selected releases deleted successfully'}), 200
+        return jsonify({'message': 'Selected releases deleted'}), 200

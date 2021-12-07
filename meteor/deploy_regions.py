@@ -18,7 +18,7 @@ class deploy_regions:
     def start(self):
         try:
             # Create Execution Folder
-            path = f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}"
+            path = f"{self._args.path}/execution/{self._region['id']}"
             if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -53,7 +53,7 @@ class deploy_regions:
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
     def __track_progress(self, deploy):
-        progress = {"progress": {}}
+        progress = {"execution": []}
         tracking = True
         while tracking:
             # Check if all processes have finished
@@ -61,16 +61,21 @@ class deploy_regions:
                 tracking = False
 
             # Calculate Progress
-            for r in range(len(deploy.progress)):
+            for _ in range(len(deploy.progress)):
                 item = deploy.progress.pop(0)
-                progress['progress'][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'], "e": deploy.error }
+                index = next((i for i, x in enumerate(progress['execution']) if x["id"] == item['id']), None)
+                item = {"id": item['id'], "name": item['name'], "shared": item['shared'], "p": item['p'], "d": item['d'], "t": item['t'], "e": deploy.error}
+                if index is None:
+                    progress['execution'].append(item)
+                else:
+                    progress['execution'][index] = item
 
             # Get Errors
             if len(deploy.critical) > 0:
                 progress['errors'] = deploy.critical
 
             # Write Progress
-            with open(f"{self._args.path}/execution/{self._region['name']}_{self._region['id']}/progress.json", 'w') as outfile:
+            with open(f"{self._args.path}/execution/{self._region['id']}/progress.json", 'w') as outfile:
                 json.dump(progress, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
             # Sleep for 1 second

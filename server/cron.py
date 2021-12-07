@@ -99,12 +99,9 @@ class Cron:
                     # Expire deployments
                     for i in expired:
                         # DISK
-                        deployments_path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
-                        if os.path.isfile(deployments_path + '.tar.gz'):
-                            os.remove(deployments_path + '.tar.gz')
-                        results_path = os.path.join(setting['local']['path'], 'results', i['uri'])
-                        if os.path.isfile(results_path + '.json'):
-                            os.remove(results_path + '.json')
+                        path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
+                        if os.path.isfile(path + '.json'):
+                            os.remove(path + '.json')
                         # SQL
                         self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
         except Exception:

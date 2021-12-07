@@ -80,14 +80,14 @@ class Restore:
         if data['action'] == 'recover':
             for item in data['items']:
                 self._restore.put(item, 0)
-            return jsonify({'message': 'Selected restores successfully recovered'}), 200
+            return jsonify({'message': 'Selected restores recovered'}), 200
 
         elif data['action'] == 'delete':
             for item in data['items']:
                 self._restore.put(item, 1)
-            return jsonify({'message': 'Selected restores successfully deleted'}), 200
+            return jsonify({'message': 'Selected restores deleted'}), 200
 
         elif data['action'] == 'permanently':
             for item in data['items']:
                 self._restore.delete(item)
-            return jsonify({'message': 'Selected restores successfully permanently deleted'}), 200
+            return jsonify({'message': 'Selected restores permanently deleted'}), 200

@@ -184,12 +184,11 @@ class Servers:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
-                    WHERE name = %(name)s
+                    WHERE BINARY name = %(name)s
                     AND group_id = %(group_id)s
-                    AND (shared = 1 OR owner_id = %(owner_id)s)
                     AND (
-                        shared = %(shared)s
-                        OR owner_id = %(owner_id)s
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
                     )
                     AND id != %(id)s
                 ) AS exist
@@ -200,12 +199,11 @@ class Servers:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
-                    WHERE name = %(name)s
+                    WHERE BINARY name = %(name)s
                     AND group_id = %(group_id)s
-                    AND (shared = 1 OR owner_id = %(owner_id)s)
                     AND (
-                        shared = %(shared)s
-                        OR owner_id = %(owner_id)s
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
                     )
                 ) AS exist
             """

@@ -14,6 +14,7 @@ class meteor:
     def __init_parser(self):
         parser = argparse.ArgumentParser(description='meteor')
         parser.add_argument('--path', required=False, action='store', dest='path', help=argparse.SUPPRESS)
+        parser.add_argument('--uri', required=False, action='store', dest='uri', help=argparse.SUPPRESS)
         parser.add_argument('--validate', required=False, action='store_true', dest='validate', help=argparse.SUPPRESS)
         parser.add_argument('--test', required=False, action='store_true', dest='test', help=argparse.SUPPRESS)
         parser.add_argument('--deploy', required=False, action='store_true', dest='deploy', help=argparse.SUPPRESS)

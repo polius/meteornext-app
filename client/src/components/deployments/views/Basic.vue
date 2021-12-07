@@ -384,7 +384,7 @@ export default {
       // Post-tasks
       this.query_selected = []
       this.queryDialog = false
-      this.notification('Queries added successfully', '#00b16a')
+      this.notification('Queries added', '#00b16a')
     },
     editQueryConfirm() {
       // Check if all fields are filled
@@ -408,7 +408,7 @@ export default {
       this.query_items.splice(i, 1, {"id": this.query_items[i]['id'], "query": this.code})
       this.query_selected = []
       this.queryDialog = false
-      this.notification('Query edited successfully', '#00b16a')
+      this.notification('Query edited', '#00b16a')
     },
     deleteQueryConfirm() {
       while(this.query_selected.length > 0) {
@@ -421,7 +421,7 @@ export default {
           }
         }
       }
-      this.notification('Selected queries removed successfully', '#00b16a')
+      this.notification('Selected queries removed', '#00b16a')
       this.queryDialog = false
     },
     parseQueries() {

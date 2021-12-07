@@ -106,16 +106,22 @@
         </v-card>
 
         <!-- VALIDATION -->
-        <div v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
+        <div v-if="validation_items.length > 0 && Object.keys(validation_items[0]).length != 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
-        <v-card v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" style="margin-top:15px;">
-          <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer mobile-breakpoint="0">
+        <v-card v-if="validation_items.length > 0 && Object.keys(validation_items[0]).length != 0" style="margin-top:15px;">
+          <v-data-table :headers="validation_headers" :items="validation_items" hide-default-footer mobile-breakpoint="0">
+            <template v-for="header in validation_headers" v-slot:[`header.${header.value}`]>
+              <div :key="header.value">
+                <v-icon size="14" :title="header.shared ? 'Shared' : 'Personal'" :color="header.shared ? '#EB5F5D' : 'warning'" style="margin-right:8px; margin-bottom:2px">{{ header.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                {{ header.text }}
+              </div>
+            </template>
             <template v-slot:item="">
               <tr>
-                <td v-for="item in Object.keys(validation_data[0])" :key="item">
-                  <span v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_data[0][item] }}</b></span>
-                  <span v-else-if="validation_data[0][item] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_data[0][item] }}</b></span>
-                  <span v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="#EF5354" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                <td v-for="item in Object.keys(validation_items[0])" :key="item">
+                  <span v-if="validation_items[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_items[0][item] }}</b></span>
+                  <span v-else-if="validation_items[0][item] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_items[0][item] }}</b></span>
+                  <span v-else-if="validation_items[0][item] == 'FAILED'" class="error--text"><v-icon small color="#EF5354" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_items[0][item] }}</b></span>
                 </td>
               </tr>
             </template>
@@ -123,18 +129,21 @@
         </v-card>
 
         <!-- VALIDATION - ERROR -->
-        <div v-if="validation_data.length > 0 && validation_error" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
-        <v-card v-if="validation_data.length > 0 && validation_error" style="margin-top:15px;">
+        <div v-if="validation_items.length > 0 && validation_error" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
+        <v-card v-if="validation_items.length > 0 && validation_error" style="margin-top:15px;">
           <v-card-text style="padding:10px 15px 10px 17px;">
             <v-container style="padding:0px!important; margin:0px!important;">
               <v-layout wrap>
                 <v-flex xs12>
-                  <div v-for="region in Object.keys(deployment['progress']['validation'])" :key="region">
-                    <div v-if="!deployment['progress']['validation'][region]['success']">
-                      <div v-if="'error' in deployment['progress']['validation'][region] || 'errors' in deployment['progress']['validation'][region]" class="subtitle-1 font-weight-medium warning--text">{{ region }}</div>
-                      <div v-if="'error' in deployment['progress']['validation'][region]" class="body-1 font-weight-regular">{{ deployment['progress']['validation'][region]['error'] }}</div>
-                      <div v-for="item in deployment['progress']['validation'][region]['errors']" :key="item['server']">
-                        <div class="body-1 font-weight-regular"><b>- {{ item['server'] }}.</b> {{ item['error'] }} </div>
+                  <div v-for="region in Object.values(deployment['progress']['validation'])" :key="region.id">
+                    <div v-if="!region.success">
+                      <div v-if="'error' in region || 'errors' in region" class="subtitle-1 font-weight-medium warning--text">
+                        <v-icon size="14" :title="region.shared ? 'Shared' : 'Personal'" :color="region.shared ? '#EB5F5D' : 'warning'" style="margin-right:5px; margin-bottom:2px">{{ region.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                        {{ region.name }}
+                      </div>
+                      <div v-if="'error' in region" class="body-1 font-weight-regular">{{ region.error }}</div>
+                      <div v-for="server in region.errors" :key="server.id">
+                        <div class="body-1 font-weight-regular"><span style="font-weight:500">- {{ server['name'] }}.</span> {{ server['error'] }} </div>
                       </div>
                     </div>
                   </div>
@@ -148,21 +157,30 @@
         <div v-if="execution_headers.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
         <v-card v-if="execution_headers.length > 0" style="margin-top:15px;">
           <!-- Overall -->
-          <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer mobile-breakpoint="0">
-            <template v-slot:item="props">
+          <v-data-table :headers="execution_headers" :items="this.index(execution_summary)" hide-default-footer mobile-breakpoint="0">
+            <template v-for="header in execution_headers" v-slot:[`header.${header.value}`]>
+              <div :key="header.value">
+                <!-- <v-icon size="14" :title="header.shared ? 'Shared' : 'Personal'" :color="header.shared ? '#EB5F5D' : 'warning'" style="margin-right:8px; margin-bottom:2px">{{ header.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon> -->
+                {{ header.text }}
+              </div>
+            </template>
+            <template v-slot:item="">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item]) + `width: ${100/execution_headers.length}%`">
-                  <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_overall[props.item.i][item]) }}</v-icon><b>{{ execution_overall[props.item.i][item] }}</b></span>
+                <td v-for="item in Object.values(execution_headers)" :key="item.value" :style="regionColor(execution_summary[0][item.value]) + `width: ${100/execution_headers.length}%`">
+                  <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_summary[0][item.value]) }}</v-icon><b>{{ execution_summary[0][item.value] }}</b></span>
                 </td>
              </tr>
             </template>
           </v-data-table>
           <!-- Servers -->
-          <v-data-table v-if="execution_progress.length > 0" :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11" mobile-breakpoint="0">
+          <v-data-table v-if="execution_items.length > 0" :headers="execution_headers" :items="this.index(execution_items)" hide-default-header :hide-default-footer="execution_items.length < 11" mobile-breakpoint="0">
             <template v-slot:item="props">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="`width: ${100/execution_headers.length}%`">
-                  <span v-if="item in execution_progress[props.item.i]" :style="serverColor(execution_progress[props.item.i][item]['progress'])"><b>{{ execution_progress[props.item.i][item]['server'] }}</b> {{ execution_progress[props.item.i][item]['progress'] }}</span>
+                <td v-for="item in Object.values(execution_headers)" :key="item.value" :style="`width: ${100/execution_headers.length}%`">
+                  <div v-if="item.value in execution_items[props.item.i]">
+                    <v-icon size="14" :title="execution_items[props.item.i][item.value].shared ? 'Shared' : 'Personal'" :color="execution_items[props.item.i][item.value].shared ? '#EB5F5D' : 'warning'" style="margin-right:10px; margin-bottom:1px">{{ execution_items[props.item.i][item.value].shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                    <span :style="serverColor(execution_items[props.item.i][item.value]['progress'])"><b>{{ execution_items[props.item.i][item.value]['server'] }}</b> {{ execution_items[props.item.i][item.value]['progress'] }}</span>
+                  </div>
                 </td>
              </tr>
             </template>
@@ -632,13 +650,13 @@
 
       // Validation
       validation_headers: [],
-      validation_data: [],
+      validation_items: [],
       validation_error: false,
 
       // Execution
       execution_headers: [],
-      execution_overall: [],
-      execution_progress: [],
+      execution_summary: [],
+      execution_items: [],
 
       // Post Execution
       logs_headers: [{ text: 'LOGS', align:'left', value: 'message', sortable: false }],
@@ -873,10 +891,10 @@
           { text: 'Ended', value: 'ended', sortable: false },
           { text: 'Overall', value: 'overall', sortable: false },
         ]
-        this.validation_data = []
+        this.validation_items = []
         this.execution_headers = []
-        this.execution_progress = []
-        this.execution_overall = []
+        this.execution_items = []
+        this.execution_summary = []
         this.logs_data = []
         this.tasks_data = []
         this.queries_data = []
@@ -974,81 +992,72 @@
         if (!('validation' in this.deployment['progress'])) return
         // Init variables
         this.validation_headers = []
-        this.validation_data = [{}]
-        var i = 0
+        this.validation_items = [{}]
 
         // Fill variables
-        for (let [key, value] of Object.entries(this.deployment['progress']['validation']).sort()) {
-          this.validation_headers.push({ text: key, align: 'left', value: 'r' + i.toString(), sortable: false})
+        for (const value of Object.values(this.deployment['progress']['validation']).sort()) {
+          this.validation_headers.push({ text: value.name, align: 'left', value: value.id, sortable: false, shared: value.shared})
           var status = 'VALIDATING' 
           if ('success' in value) {
             status = (value['success'] ? 'SUCCEEDED' : 'FAILED')
             if (!this.validation_error && !value['success']) this.validation_error = true
           }
-          this.validation_data[0]['r' + i.toString()] = status
-          i += 1
+          this.validation_items[0][value.id] = status
         }
       },
       parseExecution() {
         // Init variables
         var execution_headers = []
-        var execution_overall = [{}]
-        var execution_progress = []
+        var execution_summary = [{}]
+        var execution_items = []
         var overall_progress = {}
-        var i = 0
 
         // Init Execution Headers (if hasn't started yet)
         if (!('execution' in this.deployment['progress'])) {
-          if (this.deployment['method'] != 'validate' && this.validation_data.length > 0) {
-            var succeeded = true
-            for (let i = 0; i < Object.values(this.validation_data[0]).length; ++i ) { 
-              succeeded &= (Object.values(this.validation_data[0])[i] == 'SUCCEEDED')
+          if (this.deployment['method'] != 'validate' && this.validation_items.length > 0) {
+            let succeeded = true
+            for (let value of Object.values(this.validation_items[0])) { 
+              succeeded &= (value == 'SUCCEEDED')
             }
             if (succeeded) {
               this.execution_headers = JSON.parse(JSON.stringify(this.validation_headers))
-              for (let i = 0; i < this.execution_headers.length; ++i) {
-                execution_overall[0][[i]] = "Initiating..."
+              for (let region of this.execution_headers) {
+                execution_summary[0][region.id] = "Initiating..."
               }
             }
-            this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
+            this.execution_summary = JSON.parse(JSON.stringify(execution_summary))
           }
           return
         }
 
         // Init Execution Progress (if has started)
-        for (let[key] of Object.entries(this.deployment['progress']['execution']).sort()) {
-          overall_progress[[i]] = {"d": 0, "t": 0}
-          execution_headers.push({ text: key, align: 'left', value: i, sortable: false})
-          var j = 0
-          for (let [key2, value2] of Object.entries(this.deployment['progress']['execution'][key])) {
-            overall_progress[[i]]['d'] += value2['d']
-            overall_progress[[i]]['t'] += value2['t']
-            var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)'
-
-            if (j >= execution_progress.length) execution_progress.push({[[i]]: {"server": key2, "progress": progress}})
-            else execution_progress[j][i] = {"server": key2, "progress": progress}
-            j = j+1
+        for (const region of Object.values(this.deployment['progress']['execution']).sort()) {
+          overall_progress[region.id] = {"d": 0, "t": 0}
+          execution_headers.push({ text: region.name, align: 'left', value: region.id, sortable: false, shared: region.shared})
+          for (const [index, server] of Object.entries(region.servers)) {
+            overall_progress[region.id]['d'] += server['d']
+            overall_progress[region.id]['t'] += server['t']
+            let progress = server['p'] + '% (' + server['d'] + '/' + server['t'] + ' DBs)'
+            if (index >= execution_items.length) execution_items.push({[region.id]: {"server": server.name, "shared": server.shared, "progress": progress}})
+            else execution_items[index][region.id] = {"server": server.name, "shared": server.shared, "progress": progress}
           }
-          
+  
           // Add overall
-          if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) {
-            if ('logs' in this.deployment['progress']) execution_overall[0][[i]] = "100% (0/0 DBs)"
-            else execution_overall[0][[i]] = "Initiating..."
+          if (region.servers.length == 0) {
+            if ('logs' in this.deployment['progress']) execution_summary[0][region.id] = "100% (0/0 DBs)"
+            else execution_summary[0][region.id] = "Initiating..."
           }
           else {
-            var execution_total = (overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100).toFixed(2)
+            var execution_total = (overall_progress[region.id]['d'] / overall_progress[region.id]['t'] * 100).toFixed(2)
             if (execution_total == 100) execution_total = 100
-            execution_overall[0][[i]] = execution_total + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
+            execution_summary[0][region.id] = execution_total + '% (' + overall_progress[region.id]['d'] + '/' + overall_progress[region.id]['t'] + ' DBs)'
           }
-          i = i+1
         }
-        // Sort Servers
-        // execution_progress.sort((a, b) => (a[0].server > b[0].server) ? 1 : -1)
 
         // Assign variables
         this.execution_headers = JSON.parse(JSON.stringify(execution_headers))
-        this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
-        this.execution_progress = JSON.parse(JSON.stringify(execution_progress))
+        this.execution_summary = JSON.parse(JSON.stringify(execution_summary))
+        this.execution_items = JSON.parse(JSON.stringify(execution_items))
       },
       parseLogs() {
         if (!('logs' in this.deployment['progress'])) return
@@ -1372,7 +1381,7 @@
         // Post-tasks
         this.information_dialog_query_selected = []
         this.query_dialog = false
-        this.notification('Queries added successfully', '#00b16a')
+        this.notification('Queries added', '#00b16a')
       },
       editQueryConfirm() {
         // Parse Queries
@@ -1390,7 +1399,7 @@
         this.information_dialog_data.queries.splice(i, 1, {"id": this.query_dialog_code[i]['id'], "query": this.query_dialog_code})
         this.information_dialog_query_selected = []
         this.query_dialog = false
-        this.notification('Query edited successfully', '#00b16a')
+        this.notification('Query edited', '#00b16a')
       },
       deleteQueryConfirm() {
         while(this.information_dialog_query_selected.length > 0) {
@@ -1403,7 +1412,7 @@
             }
           }
         }
-        this.notification('Selected queries removed successfully', '#00b16a')
+        this.notification('Selected queries removed', '#00b16a')
         this.query_dialog = false
       },
       parseQueriesFormat() {
@@ -1472,9 +1481,10 @@
         if (mode == 'BASIC') return 'rgb(250, 130, 49)'
         else if (mode == 'PRO') return 'rgb(235, 95, 93)'
       },
-      regionColor (index, region) {
+      regionColor (region) {
+        if (region === undefined) return 'background-color: rgb(250, 130, 49);'
         if (region.startsWith('100%')) return 'background-color: rgb(0, 177, 106);'
-        else return 'background-color: rgb(250, 130, 49);'
+        return 'background-color: rgb(250, 130, 49);'
       },
       regionIcon (progress) {
         if (progress.startsWith('100%')) return 'fas fa-check'

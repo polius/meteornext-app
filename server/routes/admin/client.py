@@ -76,10 +76,10 @@ class Client:
             elif request.method == 'POST':
                 # Attach Servers
                 self._client.attach_servers(request.get_json())
-                return jsonify({'message': 'Server(s) Successfully Attached'}), 200
+                return jsonify({'message': 'Server(s) attached'}), 200
             elif request.method == 'DELETE':
                 # Detach Servers
                 self._client.detach_servers(json.loads(request.args['servers']))
-                return jsonify({'message': 'Server(s) Successfully Detached'}), 200
+                return jsonify({'message': 'Server(s) detached'}), 200
 
         return admin_client_blueprint

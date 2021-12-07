@@ -780,7 +780,7 @@ export default {
       axios.post('/utils/restore', data, options)
       .then((response) => {
         if (this.progress == 100) {
-          this.notification("File successfully uploaded.", "#00b16a")
+          this.notification("File uploaded.", "#00b16a")
           setTimeout(() => this.$router.push('/utils/restore/' + response.data.id), 1000)
         }
       })

@@ -122,7 +122,7 @@ class core:
             # Compile Logs
             self._logs.compile(logs, summary)
             # Upload Logs to S3
-            self._amazon_s3.upload_logs()
+            self._amazon_s3.upload()
             # Clean Environments
             self.clean()
             # Slack Message
@@ -203,7 +203,8 @@ class core:
         # Merge Logs
         for region_item in region_items:
             if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
-                status_msg = f"- Merging '{region_item}'..."
+                region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
+                status_msg = f"- Merging {region_name}..."
                 self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
                 server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
@@ -251,18 +252,6 @@ class core:
                     json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
                     environment_logs.extend(json_decoded['output'])
 
-        # Write Environment Log
-        with open("{}/meteor.json".format(self._args.path), 'w') as f:
-            json.dump({"output": environment_logs}, f, separators=(',', ':'))
-
-        # Delete compressed region files
-        for region_item in region_items:
-            if region_item.endswith('.tar.gz'):
-                os.remove(f"{execution_logs_path}/{region_item}")
-
-        # Compress Execution Logs and Delete Uncompressed Folder
-        shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
-        shutil.rmtree("{}/execution".format(self._args.path))
         self._progress.track_logs(value={'status': 'success'})
 
         # Return All Logs

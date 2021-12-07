@@ -100,7 +100,7 @@ class Monitoring:
             except Exception as e:
                 return jsonify({'message': "Slack message could not be sent. Invalid Webhook URL"}), 400
             else:
-                return jsonify({'message': "Slack message successfully sent"}), 200
+                return jsonify({'message': "Slack message sent"}), 200
 
         return monitoring_blueprint
 

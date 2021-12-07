@@ -24,14 +24,14 @@ class validate_regions:
             try:
                 self.__validate_ssh()
             except Exception as e:
-                current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e).capitalize()}
+                current_thread.progress = {'id': self._region['id'], 'success': False, 'error': str(e)[0].upper() + str(e)[1:]}
                 return
 
         if not current_thread.alive:
             return
 
         # SQL Validation
-        progress = {'region': self._region['name'], 'errors': []}
+        progress = {'id': self._region['id'], 'errors': []}
         threads = []
         for server in self._region['sql']:
             t = threading.Thread(target=self.__validate_sql, args=(server,))
@@ -48,8 +48,8 @@ class validate_regions:
         connection_succeeded = True
         for t in threads:
             connection_succeeded &= t.progress['success']
-            if t.progress['success'] == False:
-                progress['errors'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
+            if not t.progress['success']:
+                progress['errors'].append({'id': t.progress['id'], 'name': t.progress['name'], 'shared': t.progress['shared'], 'error': t.progress['error'].replace('"', '\\"')})
 
         # In case of no errors, remove the 'errors' key
         if len(progress['errors']) == 0:
@@ -129,7 +129,7 @@ class validate_regions:
                 else:
                     conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                     conn.close()
-                current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": True}
+                current_thread.progress = {"id": server['id'], "name": server['name'], "shared": server['shared'], "success": True}
                 error = None
                 break
             except Exception as e:
@@ -143,7 +143,7 @@ class validate_regions:
         sys.stderr = sys_stderr
 
         if error:
-            current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": False, "error": str(error).replace('\n','')}
+            current_thread.progress = {"id": server['id'], "name": server['name'], "shared": server['shared'], "success": False, "error": str(error).replace('\n','')}
 
     def __get_ssl(self, server):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}

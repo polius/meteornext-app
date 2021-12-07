@@ -76,25 +76,31 @@ class Environments:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM environments 
-                    WHERE name = %s 
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
-                    AND id != %s
+                    FROM environments
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
+                    AND id != %(id)s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], group_id, user_id, environment['id']))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": environment['name'], "group_id": group_id, "owner_id": user_id, "shared": environment['shared'], "id": environment['id']})[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM environments 
-                    WHERE name = %s
-                    AND group_id = %s
-                    AND (shared = 1 OR owner_id = %s)
+                    FROM environments
+                    WHERE BINARY name = %(name)s
+                    AND group_id = %(group_id)s
+                    AND (
+                        (%(shared)s = 1 AND shared = 1)
+                        OR (%(shared)s = 0 AND owner_id = %(owner_id)s)
+                    )
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], group_id, user_id))[0]['exist'] == 1
+            return self._sql.execute(query, {"name": environment['name'], "group_id": group_id, "shared": environment['shared'], "owner_id": user_id})[0]['exist'] == 1
 
     def get_servers(self, user_id, group_id):
         query = """

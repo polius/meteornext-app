@@ -92,7 +92,7 @@ class Groups:
             except Exception as e:
                 return jsonify({'message': "Slack message could not be sent. Invalid Webhook URL"}), 400
             else:
-                return jsonify({'message': "Slack message successfully sent"}), 200
+                return jsonify({'message': "Slack message sent"}), 200
 
         @groups_blueprint.route('/admin/groups/usage', methods=['GET'])
         @jwt_required()

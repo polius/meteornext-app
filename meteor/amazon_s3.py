@@ -1,4 +1,7 @@
+import os
+import gzip
 import boto3
+import shutil
 
 class amazon_s3:
     def __init__(self, args, imports, progress):
@@ -14,24 +17,25 @@ class amazon_s3:
             )
             self._amazon_s3 = session.resource('s3')
 
-    def upload_logs(self):
+    def upload(self):
         # Upload Logs to S3
         if self._config['amazon_s3']['enabled']:
             try:
-                # Upload Logs to S3
-                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Logs to Amazon S3..."})
-                execution_name = self._args.path[self._args.path.rfind('/')+1:]
+                # Compress Deployment
+                with open(f"{self._args.path}/../{self._args.uri}.json", 'rb') as f_in:
+                    with gzip.open(f"{self._args.path}/../{self._args.uri}.json.gz", 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
 
-                # 1. Upload Compressed Logs Folder to '/deployments'
-                file_path = "{}.tar.gz".format(self._args.path)
+                # Upload Deployment to S3
+                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3..."})
+                file_path = f"{self._args.path}/meteor.json.gz"
                 bucket_name = self._config['amazon_s3']['bucket_name']
-                s3_path = "deployments/{}.tar.gz".format(execution_name)
+                s3_path = f"deployments/{self._args.uri}.json.gz"
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
-                # 2. Upload Results File to '/results'
-                file_path = "{}/meteor.json.gz".format(self._args.path)
-                s3_path = "results/{}.json.gz".format(execution_name)
-                self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
+                # Remove compressed deployment
+                if os.path.exists(f"{self._args.path}/../{self._args.uri}.json.gz"):
+                    os.remove(f"{self._args.path}/../{self._args.uri}.json.gz")
 
             except Exception:
                 self._progress.track_tasks(value={'status': 'false'})

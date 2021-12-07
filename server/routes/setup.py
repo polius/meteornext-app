@@ -243,7 +243,7 @@ class Setup:
             Cron(self._app, self._license, sql)
 
             # Build return message
-            return jsonify({'message': 'Setup Finished Successfully'}), 200
+            return jsonify({'message': 'Setup Finished'}), 200
 
         return setup_blueprint
 

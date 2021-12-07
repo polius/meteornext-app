@@ -103,7 +103,7 @@ class Environments:
             return jsonify({'message': 'This environment name currently exists'}), 400
         # Add environment
         self._environments.post(user, environment)
-        return jsonify({'message': 'Environment added successfully'}), 200
+        return jsonify({'message': 'Environment added'}), 200
 
     def put(self, user, environment):
         # Check group & user
@@ -116,11 +116,11 @@ class Environments:
             return jsonify({'message': 'This environment name currently exists'}), 400
         # Edit environment
         self._environments.put(user, environment)
-        return jsonify({'message': 'Environment edited successfully'}), 200
+        return jsonify({'message': 'Environment edited'}), 200
 
     def delete(self):
         environments = json.loads(request.args['environments'])
         # Delete environments
         for environment in environments:
             self._environments.delete(environment)
-        return jsonify({'message': 'Selected environments deleted successfully'}), 200
+        return jsonify({'message': 'Selected environments deleted'}), 200
