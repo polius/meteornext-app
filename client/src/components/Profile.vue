@@ -13,8 +13,8 @@
                   <v-text-field readonly v-model="profile.username" :loading="loading" :disabled="loading" label="Username" style="padding-top:5px"></v-text-field>
                   <v-text-field readonly v-model="profile.group" :loading="loading" :disabled="loading" label="Group" style="padding-top:0px"></v-text-field>
                   <v-text-field readonly v-model="profile.email" :loading="loading" :disabled="loading" label="Email" type="email" style="padding-top:0px"></v-text-field>
-                  <v-btn :disabled="loading" @click="passwordDialog = true">Change Password</v-btn>
-                  <v-btn :disabled="loading" @click="mfaDialog = true" style="margin-left:5px">Manage MFA</v-btn>
+                  <v-btn  :disabled="loading" @click="passwordDialog = true"><v-icon size="14" style="margin-right:10px">fas fa-key</v-icon>Change Password</v-btn>
+                  <v-btn  :disabled="loading" @click="mfaDialog = true" style="margin-left:5px"><v-icon size="14" style="margin-right:10px">fas fa-shield-alt</v-icon>Manage MFA</v-btn>
                 </v-flex>
               </v-layout>
             </v-container>
