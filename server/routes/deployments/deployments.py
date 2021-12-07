@@ -556,6 +556,7 @@ class Deployments:
         # Edit the execution
         if current_execution['status'] in ['CREATED','SCHEDULED']:
             self._executions.put(user['id'], execution)
+            execution_id = current_execution['id']
             coins = user['coins']
             if not execution['start_execution']:
                 return jsonify({'message': 'Deployment edited', 'data': {'uri': execution['uri']}}), 200
@@ -654,6 +655,7 @@ class Deployments:
             'databases': execution['databases'],
             'code': execution['code'],
             'url': execution['url'],
+            'uri': execution['uri'],
             'execution_threads': group['deployments_execution_threads'],
             'execution_timeout': group['deployments_execution_timeout']
         }

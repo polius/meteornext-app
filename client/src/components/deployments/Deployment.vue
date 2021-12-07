@@ -580,8 +580,8 @@
 <style scoped>
 /* .v-data-table
   ::v-deep tr:hover:not(.v-data-table__selected) {
-  background: transparent !important;
-} */
+    background: transparent !important;
+  } */
 </style>
 
 <script>
@@ -962,6 +962,8 @@
         // +---------------------+
         if (data['progress']) {
           this.deployment['progress'] = JSON.parse(data['progress'])
+          if ('validation' in this.deployment['progress']) this.deployment['progress']['validation'].sort((a,b) => a.name.localeCompare(b.name))
+          if ('execution' in this.deployment['progress']) this.deployment['progress']['execution'].sort((a,b) => a.name.localeCompare(b.name))
 
           // Parse Last Updated
           this.last_updated = this.deployment['progress']['updated']
@@ -995,7 +997,7 @@
         this.validation_items = [{}]
 
         // Fill variables
-        for (const value of Object.values(this.deployment['progress']['validation']).sort()) {
+        for (const value of Object.values(this.deployment['progress']['validation'])) {
           this.validation_headers.push({ text: value.name, align: 'left', value: value.id, sortable: false, shared: value.shared})
           var status = 'VALIDATING' 
           if ('success' in value) {
@@ -1288,8 +1290,6 @@
             this.$router.push({ name: 'deployment', params: { uri: data['uri'] }})
           }
           else this.getDeployment()
-          // Get executions list
-          this.getExecutions()
           // Hide the Information dialog
           this.information_dialog = false
         })
@@ -1487,8 +1487,9 @@
         return 'background-color: rgb(250, 130, 49);'
       },
       regionIcon (progress) {
+        if (progress === undefined) return 'fas fa-spinner'  
         if (progress.startsWith('100%')) return 'fas fa-check'
-        else return 'fas fa-spinner'  
+        return 'fas fa-spinner'  
       },
       serverColor (progress) {
         if (progress.startsWith('100%')) return 'color: #00b16a;'
