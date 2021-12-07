@@ -291,7 +291,6 @@ export default {
       this.mode = 'clone'
       this.item = {...this.selected[0]}
       this.item.shared = (!this.owner) ? false : this.item.shared
-      delete this.item['id']
       this.dialog_title = 'CLONE ENVIRONMENT'
       this.dialog = true
       setTimeout(this.updateSelected, 1)

@@ -294,26 +294,21 @@ export default {
     cloneCloud() {
       this.mode = 'clone'
       this.users = []
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        delete this.item['id']
-        this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
-        this.bucketsSelected = []
-        this.getUsers()
-        this.dialog_title = 'CLONE CLOUD KEY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+      this.bucketsSelected = []
+      this.getUsers()
+      this.dialog_title = 'CLONE CLOUD KEY'
+      this.dialog = true
     },
     editCloud() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
-        this.bucketsSelected = []
-        this.getUsers()
-        this.dialog_title = 'EDIT CLOUD KEY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+      this.bucketsSelected = []
+      this.getUsers()
+      this.dialog_title = 'EDIT CLOUD KEY'
+      this.dialog = true
     },
     deleteCloud() {
       this.mode = 'delete'

@@ -346,7 +346,6 @@ export default {
       this.mode = 'clone'
       this.users = []
       this.item = {...this.selected[0]}
-      delete this.item['id']
       this.getUsers()
       this.getServers()
       this.dialog_title = 'CLONE ENVIRONMENT'
