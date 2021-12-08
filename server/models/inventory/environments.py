@@ -104,7 +104,7 @@ class Environments:
 
     def get_servers(self, user_id, group_id):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
             FROM servers s
             LEFT JOIN regions r ON r.id = s.region_id
             LEFT JOIN (

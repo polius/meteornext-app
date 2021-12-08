@@ -167,7 +167,7 @@
             <template v-slot:item="">
               <tr>
                 <td v-for="item in Object.values(execution_headers)" :key="item.value" :style="regionColor(execution_summary[0][item.value]) + `width: ${100/execution_headers.length}%`">
-                  <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_summary[0][item.value]) }}</v-icon><b>{{ execution_summary[0][item.value] }}</b></span>
+                  <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_summary[0][item.value]) }}</v-icon><span style="font-weight:700">{{ execution_summary[0][item.value] === undefined ? 'Initiating...' : execution_summary[0][item.value] }}</span></span>
                 </td>
              </tr>
             </template>
@@ -179,7 +179,7 @@
                 <td v-for="item in Object.values(execution_headers)" :key="item.value" :style="`width: ${100/execution_headers.length}%`">
                   <div v-if="item.value in execution_items[props.item.i]">
                     <v-icon size="14" :title="execution_items[props.item.i][item.value].shared ? 'Shared' : 'Personal'" :color="execution_items[props.item.i][item.value].shared ? '#EB5F5D' : 'warning'" style="margin-right:10px; margin-bottom:1px">{{ execution_items[props.item.i][item.value].shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                    <span :style="serverColor(execution_items[props.item.i][item.value]['progress'])"><b>{{ execution_items[props.item.i][item.value]['server'] }}</b> {{ execution_items[props.item.i][item.value]['progress'] }}</span>
+                    <span :style="serverColor(execution_items[props.item.i][item.value]['progress'])"><span style="font-weight:700">{{ execution_items[props.item.i][item.value]['server'] }}</span> {{ execution_items[props.item.i][item.value]['progress'] }}</span>
                   </div>
                 </td>
              </tr>

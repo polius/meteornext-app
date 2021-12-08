@@ -21,7 +21,7 @@ class Cron:
             self.__one_time()
             # Schedule Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__check_license)
+            schedule.every().day.do(self.__run_threaded, self.__check_license)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
