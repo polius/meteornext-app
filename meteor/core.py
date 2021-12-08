@@ -296,7 +296,7 @@ class core:
         return summary
 
     def clean(self):
-        status_msg = "- Cleaning Regions Logs..."
+        status_msg = "- Cleaning Regions..."
         self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Delete SSH Deployment Logs
