@@ -7,6 +7,7 @@
       <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
       <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
       <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn>
+      <v-btn @click="manageLicense" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">MANAGE LICENSE</v-btn>
       <!-- DIALOG -->
       <v-dialog v-model="dialog" width="1024px">
         <v-card>
@@ -30,10 +31,10 @@
                       <div style="padding-right:18px">{{ item.servers }}</div>
                     </template>
                     <template v-slot:[`item.resources`]="{ item }">
-                      <div style="padding-right:18px">{{ item.resources }}</div>
+                      <div style="padding-right:18px">{{ item.resources == -1 ? 'Unlimited' : item.resources }}</div>
                     </template>
                     <template v-slot:[`item.exceeded`]="{ item }">
-                      <v-icon small :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-right:8px; font-size:17px">{{ !item.exceeded ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }}</v-icon>
+                      <v-icon small :title="!item.exceeded ? 'This user has no resources disabled' : 'This user has resources disabled'" :color="!item.exceeded ? '#00b16a' : '#EF5354'" style="margin-right:8px; font-size:17px">{{ !item.exceeded ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }}</v-icon>
                     </template>
                     <template v-slot:[`footer.prepend`]>
                       <div v-if="expiredResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some users have disabled resources. Consider the possibility of upgrading your license.</div>
@@ -145,6 +146,9 @@ export default {
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    manageLicense() {
+      window.open('https://account.meteor2.io', '_blank').focus()
     },
     filterBy(val) {
       this.filter = val
