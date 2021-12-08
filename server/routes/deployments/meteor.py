@@ -103,26 +103,23 @@ class Meteor:
             config['regions'].append(region_data)
 
         # Compile Auxiliary Connections
-        config['auxiliary_connections'] = []
+        config['auxiliary_connections'] = {}
         for aux in auxiliary:
-            # Init Auxiliary Conf
-            config['auxiliary_connections'].append({
-                "id": aux['id'],
-                "name": aux['name'],
-                "shared": aux['shared'],
-                "ssh": { "enabled": False },
-                "sql": {
-                    "engine": aux['engine'],
-                    "hostname": aux['hostname'],
-                    "username": aux['username'],
-                    "password": aux['password'],
-                    "port": int(aux['port']),
-                    "ssl_ca_certificate": aux['ssl_ca_certificate'],
-                    "ssl_client_certificate": aux['ssl_client_certificate'],
-                    "ssl_client_key": aux['ssl_client_key'],
-                    "ssl_verify_ca": aux['ssl_verify_ca']
+            if aux['name'] not in config['auxiliary_connections'] or not aux['shared']:
+                config['auxiliary_connections'][aux['name']] = {
+                    "ssh": { "enabled": False },
+                    "sql": {
+                        "engine": aux['engine'],
+                        "hostname": aux['hostname'],
+                        "username": aux['username'],
+                        "password": aux['password'],
+                        "port": int(aux['port']),
+                        "ssl_ca_certificate": aux['ssl_ca_certificate'],
+                        "ssl_client_certificate": aux['ssl_client_certificate'],
+                        "ssl_client_key": aux['ssl_client_key'],
+                        "ssl_verify_ca": aux['ssl_verify_ca']
+                    }
                 }
-            })
 
         # Generate key files
         for key in keys:

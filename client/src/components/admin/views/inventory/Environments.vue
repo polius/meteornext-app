@@ -51,8 +51,12 @@
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center">Select a group</div>
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                        <template v-slot:label="{ item }">
+                          <v-icon v-if="item.children" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="item.shared ? 'margin-right:10px; margin-bottom:2px' : 'margin-left:2px; margin-right:16px; margin-bottom:2px'">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
                         <template v-slot:prepend="{ item }">
-                          <v-icon v-if="!item.children" small>fas fa-database</v-icon>
+                          <v-icon v-if="!item.children" small>fas fa-server</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
                           <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
@@ -282,7 +286,7 @@ export default {
           found = (servers[i]['region_id'] == regions[j]['id'])
           if (found) break
         }
-        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
+        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'], shared: servers[i]['region_shared'] })
       }
       // Sort regions ASC by name
       regions.sort(function(a,b) { 
@@ -292,7 +296,7 @@ export default {
       })
       // Fill treeview
       for (let i = 0; i < regions.length; ++i) {
-        let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], children: []}
+        let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], shared: regions[i]['shared'], children: []}
         for (let j = 0; j < servers.length; ++j) {
           if (regions[i]['name'] == servers[j]['region_name']) {
             region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'], owner: servers[j]['server_owner'] })
