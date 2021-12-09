@@ -24,6 +24,8 @@ var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_t
 var IMPORT_FILE;
 var DATA;
 var COLUMNS;
+var INFO;
+var ERROR;
 // +----------+
 // | SETTINGS |
 // +----------+
@@ -483,13 +485,6 @@ function compile_meteor() {
   COLUMNS = IMPORT_FILE.COLUMNS;
   // Compile data
   DATA = IMPORT_FILE.DATA
-  // DATA = IMPORT_FILE['DATA'].reduce((acc, val) => {
-  //   acc.push(val.reduce((acc2, val2, index) => {
-  //     acc2[COLUMNS[index]] = val2;
-  //     return acc2;
-  //   }, {}))
-  //   return acc; 
-  // }, [])
   // Compile info
   if ('INFO' in IMPORT_FILE) INFO = IMPORT_FILE.INFO
   // Compile errors
@@ -1466,11 +1461,11 @@ function export_data() {
 
 function export_meteor(rows_to_export, columns_to_export) {
   // Generate Meteor Download File
-  var data_to_export = '';
-  data_to_export += 'var DATA = ' + JSON.stringify(rows_to_export) + ';\n';
-  data_to_export += 'var COLUMNS = ' + JSON.stringify(columns_to_export) + ';';
-  if (typeof INFO != 'undefined') data_to_export += '\nvar INFO = {"mode": "' + INFO['mode'] + '"};';
-  download('meteor.json', data_to_export);
+  let export_data = {"DATA":{},"COLUMNS":{}}
+  export_data['DATA'] = rows_to_export
+  export_data['COLUMNS'] = columns_to_export
+  if (INFO !== undefined) export_data['INFO'] = INFO
+  download('meteor.json', JSON.stringify(export_data))
 }
 
 function export_json(rows_to_export) {
