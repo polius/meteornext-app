@@ -124,7 +124,7 @@ class deploy_blueprint:
                     if len(t.critical) > 0:
                         for i in t.critical:
                             if i not in current_thread.critical:
-                                current_thread.critical.append(i)
+                                current_thread.critical.append(json.dumps(i)[1:-1])
 
                 # Check errors
                 current_thread.error = current_thread.error or any(t.error for t in threads)

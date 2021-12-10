@@ -120,7 +120,7 @@ class core:
             # Get Summary
             summary = self.__summary(logs)       
             # Compile Logs
-            self._logs.compile(logs, summary)
+            self._logs.compile(logs, summary, error)
             # Upload Logs to S3
             self._amazon_s3.upload()
             # Clean Environments
@@ -266,28 +266,28 @@ class core:
         queries = {}
 
         # Analyze Test Execution Logs 
-        summary['meteor_query_error'] = 0
-        summary['meteor_query_success'] = 0
-        summary['meteor_query_rollback'] = 0
+        summary['queries_failed'] = 0
+        summary['queries_success'] = 0
+        summary['queries_rollback'] = 0
 
         for d in data:
             # Count Query Errors
-            summary['meteor_query_error'] += 1 if int(d['meteor_status']) == 0 else 0
+            summary['queries_failed'] += 1 if int(d['meteor_status']) == 0 else 0
             # Count Query Success
-            summary['meteor_query_success'] += 1 if int(d['meteor_status']) == 1 else 0
+            summary['queries_success'] += 1 if int(d['meteor_status']) == 1 else 0
             # Count Query Rollback
-            summary['meteor_query_rollback'] += 1 if int(d['meteor_status']) == 2 else 0
+            summary['queries_rollback'] += 1 if int(d['meteor_status']) == 2 else 0
 
         # Compute summary
-        queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
-        queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
-        queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_rollback']) / float(summary['total_queries']) * 100, 2)
+        queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_success']) / float(summary['total_queries']) * 100, 2)
+        queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
+        queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_rollback']) / float(summary['total_queries']) * 100, 2)
 
         # Track progress
         queries['total'] = summary['total_queries']
-        queries['succeeded'] = {'t': summary['meteor_query_success'], 'p': float(queries_succeeded_value)}
-        queries['failed'] = {'t': summary['meteor_query_error'], 'p': float(queries_failed_value)}
-        queries['rollback'] = {'t': summary['meteor_query_rollback'], 'p': float(queries_rollback_value)}
+        queries['succeeded'] = {'t': summary['queries_success'], 'p': float(queries_succeeded_value)}
+        queries['failed'] = {'t': summary['queries_failed'], 'p': float(queries_failed_value)}
+        queries['rollback'] = {'t': summary['queries_rollback'], 'p': float(queries_rollback_value)}
 
         # Write Progress
         self._progress.track_queries(value=queries)
@@ -363,12 +363,12 @@ class core:
 
         if summary is not None:
             summary_msg = "- Total Queries: {}".format(summary['total_queries'])
-            queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
-            summary_msg += "\n- Queries Succeeded: {0} (~{1}%)".format(summary['meteor_query_success'], float(queries_succeeded_value))
-            queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
-            summary_msg += "\n- Queries Failed: {0} (~{1}%)".format(summary['meteor_query_error'], float(queries_failed_value))
-            queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_rollback']) / float(summary['total_queries']) * 100, 2)
-            summary_msg += "\n- Queries Rollback: {0} (~{1}%)".format(summary['meteor_query_rollback'], float(queries_rollback_value))
+            queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_success']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Succeeded: {0} (~{1}%)".format(summary['queries_success'], float(queries_succeeded_value))
+            queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Failed: {0} (~{1}%)".format(summary['queries_failed'], float(queries_failed_value))
+            queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_rollback']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Rollback: {0} (~{1}%)".format(summary['queries_rollback'], float(queries_rollback_value))
         else:
             summary_msg = ''
 
