@@ -706,18 +706,18 @@ function init_info_modal() {
     $("#info-modal-fields").prepend('<span id="info-queries" class="tag is-info" style="font-size:1.1rem; font-weight:500; width:100%;">Queries Executed: <b style="margin-left:5px;">' + INFO['total_queries'] + '</b></span>');
     $("#info-execution-title").text('DEPLOYMENT');
     // Queries Succeeded
-    var info_queries_succeeded_value = INFO['total_queries'] - INFO['meteor_query_error'];
+    var info_queries_succeeded_value = INFO['total_queries'] - INFO['queries_failed'];
     var info_queries_succeeded_percentage = 0.0;
     if (INFO['total_queries'] != 0) {
-      info_queries_succeeded_percentage = (Number.parseFloat(Number.parseInt(INFO['total_queries']) - Number.parseInt(INFO['meteor_query_error'])) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+      info_queries_succeeded_percentage = (Number.parseFloat(Number.parseInt(INFO['total_queries']) - Number.parseInt(INFO['queries_failed'])) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
     }
     $("#info-modal-fields").append('<div style="margin-top:10px;"><span id="info-queries-succeeded" class="tag" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#00c4a7; color:#fff;">Queries Succeeded: <b style="margin-left:5px;">' + info_queries_succeeded_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + info_queries_succeeded_percentage + '%)</span></span></div>');
 
     // Queries Failed
-    var info_queries_failed_value = INFO['meteor_query_error'];
+    var info_queries_failed_value = INFO['queries_failed'];
     var queries_failed_percentage = 0.0;
     if (INFO['total_queries'] != 0) {
-      queries_failed_percentage = (Number.parseFloat(INFO['meteor_query_error']) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+      queries_failed_percentage = (Number.parseFloat(INFO['queries_failed']) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
     }
     $("#info-modal-fields").append('<div><span id="info-queries-failed" class="tag" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#ff6961; color:#fff;">Queries Failed: <b style="margin-left:5px;">' + info_queries_failed_value + '</b> <span style="font-weight:400; margin-left:5px;">(~' + queries_failed_percentage + '%)</span></span></div>');
   }
@@ -727,7 +727,7 @@ function init_info_modal() {
   // +--------+
   if (typeof ERROR == 'undefined') {
     var test_execution = ('queries_failed' in INFO) ? 'Test ' : ''
-    if (('meteor_query_error' in INFO && INFO['meteor_query_error'] > 0) || ('queries_failed' in INFO && INFO['queries_failed'] > 0)) {
+    if (('queries_failed' in INFO && INFO['queries_failed'] > 0) || ('queries_failed' in INFO && INFO['queries_failed'] > 0)) {
       $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; text-size:0.9rem;">' + test_execution + 'Execution Finished With Errors</h3>');
     }
     else {
@@ -740,8 +740,8 @@ function init_info_modal() {
   }
   else {
     // Execution Failed
-    $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; margin-bottom: 1.0rem;">Execution Failed. An error has been detected in <b>query_execution.py</b></h3>');
-    $("#info-modal-fields").append('<h3 class="tag is-danger" style="background-color:#f03434; padding-top:5px; padding-bottom: 5px; height: auto; font-size:0.95rem; white-space: pre-wrap; margin-bottom: 1.0rem;">' + ERROR + '</h3>');
+    $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; margin-bottom: 1.0rem;">Execution Failed. An error occurred.</h3>');
+    $("#info-modal-fields").append('<h3 class="tag is-danger" style="background-color:#ef5353; padding-top:5px; padding-bottom: 5px; height: auto; font-size:0.95rem; white-space: pre-wrap; width:100%">' + ERROR + '</h3>');
   }
 }
 

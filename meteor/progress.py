@@ -22,8 +22,8 @@ class progress:
         self._sql.stop()
 
     def error(self, error_msg):
-        self._progress['error'] = str(error_msg).replace('"', '\\"').replace("\n", "\\n")
-        progress = json.dumps(self._progress).replace("'", "\\'")
+        self._progress['error'] = error_msg
+        progress = json.dumps(self._progress)
         query = "UPDATE executions SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
 
