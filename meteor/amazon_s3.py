@@ -28,7 +28,7 @@ class amazon_s3:
 
                 # Upload Deployment to S3
                 self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3..."})
-                file_path = f"{self._args.path}/meteor.json.gz"
+                file_path = f"{self._args.path}/../{self._args.uri}.json.gz"
                 bucket_name = self._config['amazon_s3']['bucket_name']
                 s3_path = f"deployments/{self._args.uri}.json.gz"
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)

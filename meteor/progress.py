@@ -12,20 +12,19 @@ class progress:
     def start(self, pid):
         self._sql.start()
         logs = 'amazon_s3' if self._config['amazon_s3']['enabled'] else 'local'
-        query = "UPDATE executions SET status = 'IN PROGRESS', logs = '{}', started = '{}', pid = '{}' WHERE id = {}".format(logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
-        self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+        query = "UPDATE executions SET status = 'IN PROGRESS', logs = %s, started = %s, pid = %s WHERE id = %s".format()
+        self._sql.execute(query=query, args=(logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id']), database=self._config['meteor_next']['database'])
 
     def end(self, execution_status):
         status = 'SUCCESS' if execution_status == 0 else 'WARNING' if execution_status == 1 else 'STOPPED'
-        query = "UPDATE executions SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
-        self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+        query = "UPDATE executions SET status = %s, ended = %s, error = 0 WHERE id = %s"
+        self._sql.execute(query=query, args=(status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id']), database=self._config['meteor_next']['database'])
         self._sql.stop()
 
     def error(self, error_msg):
-        self._progress['error'] = error_msg
-        progress = json.dumps(self._progress)
-        query = "UPDATE executions SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
-        self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+        self._progress['error'] = str(error_msg)
+        query = "UPDATE executions SET status = 'FAILED', progress = %s, ended = %s, error = 1 WHERE id = %s"
+        self._sql.execute(query=query, args=(json.dumps(self._progress), datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id']), database=self._config['meteor_next']['database'])
 
     def track_syntax(self, value):
         if 'syntax' not in self._progress:
@@ -117,9 +116,8 @@ class progress:
 
     def __store(self):
         self._progress['updated'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        progress = json.dumps(self._progress).replace("'", "\\\'")
-        query = "UPDATE executions SET progress = '{}' WHERE id = {}".format(progress, self._config['params']['id'])
-        self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+        query = "UPDATE executions SET progress = %s WHERE id = %s"
+        self._sql.execute(query=query, args=(json.dumps(self._progress), self._config['params']['id']), database=self._config['meteor_next']['database'])
 
     def __connector(self):
         ssh = {"enabled": False}
