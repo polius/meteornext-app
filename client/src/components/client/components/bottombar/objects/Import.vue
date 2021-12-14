@@ -12,7 +12,17 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form @submit.prevent ref="dialogForm" style="margin-top:0px; margin-bottom:15px;">
-                  <v-file-input :disabled="step == 'success'" v-model="file" dense outlined show-size accept=".sql" label="Click to select a .sql file" truncate-length="100" hide-details style="padding:0px"></v-file-input>
+                  <v-card>
+                    <v-row no-gutters align="center" justify="center">
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon size="20" color="info">fas fa-info-circle</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#e2e2e2">To import files larger than 100 MB use the Utils - Restore section.</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <v-file-input :disabled="step == 'success'" v-model="file" dense outlined show-size accept=".sql" label="Click to select a .sql file" truncate-length="100" hide-details style="margin-top:20px"></v-file-input>
                   <div v-if="start" style="margin-top:15px">
                     <v-progress-linear v-if="!(['success','fail','stop'].includes(step))" :value="progress" rounded color="primary" height="25">
                       <template v-slot="{ value }">
@@ -123,7 +133,7 @@ export default {
       }
       // Check input file size
       if (this.file.size > 104857600) {
-        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (100MB)', 'warning')
+        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (100MB)', '#EF5354')
         return
       }
       // Init vars

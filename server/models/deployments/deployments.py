@@ -123,7 +123,7 @@ class Deployments:
 
     def getResults(self, uri):
         query = """
-            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.logs, e.shared
+            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.logs, d.shared
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             WHERE e.uri = %(uri)s
@@ -172,3 +172,18 @@ class Deployments:
             WHERE release_id = %s
         """
         return self._sql.execute(query, (release_id))
+
+    def setShared(self, deployment_id, shared):
+        query = """
+            UPDATE deployments
+            SET shared = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (shared, deployment_id))
+
+        if not shared:
+            query = """
+                DELETE FROM deployments_shared
+                WHERE deployment_id = %s
+            """
+            self._sql.execute(query, (deployment_id))

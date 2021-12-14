@@ -34,7 +34,7 @@ class core:
         # Init Classes
         self._imports = imports(self._args)
         self._progress = progress(self._args, self._imports)
-        self._logs = logs(self._args, self._imports)
+        self._logs = logs(self._args, self._imports, self._progress)
         self._amazon_s3 = amazon_s3(self._args, self._imports, self._progress)
         self._validation = validation(self._args, self._imports, self._progress)
         self._deployment = deployment(self._args, self._imports, self._progress)
@@ -178,20 +178,24 @@ class core:
 
     def __get_logs(self):
         # Download Logs
-        ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
-        if len(ssh_regions) > 0:
-            status_msg = "- Downloading Logs from Regions..."
-            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-            threads = []
-            for region in ssh_regions:
-                r = Region(self._args, region)
-                t = threading.Thread(target=r.get_logs)
-                threads.append(t)
-                t.start()
-            for t in threads:
-                t.join()
+        try:
+            ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
+            if len(ssh_regions) > 0:
+                status_msg = "- Downloading Logs from Regions..."
+                self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+                threads = []
+                for region in ssh_regions:
+                    r = Region(self._args, region)
+                    t = threading.Thread(target=r.get_logs)
+                    threads.append(t)
+                    t.start()
+                for t in threads:
+                    t.join()
+                self._progress.track_logs(value={'status': 'success'})
 
-            self._progress.track_logs(value={'status': 'success'})
+        except Exception:
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
 
         # If current environment has no regions / servers
         try:
@@ -201,58 +205,66 @@ class core:
             return []
 
         # Merge Logs
-        for region_item in region_items:
-            if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
-                region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
-                status_msg = f"- Merging {region_name}..."
-                self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+        try:
+            for region_item in region_items:
+                if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
+                    region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
+                    status_msg = f"- Merging {region_name}..."
+                    self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
-                server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
 
-                # Merging Server Logs
-                for server_item in server_items:
-                    if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
-                        server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
-                        server_logs = []
-                        for server_file in server_files:
-                            # Merging Database Logs
-                            with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
-                                try:
-                                    json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
-                                    server_logs.extend(json_decoded['output'])
-                                except Exception:
-                                    pass
+                    # Merging Server Logs
+                    for server_item in server_items:
+                        if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
+                            server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
+                            server_logs = []
+                            for server_file in server_files:
+                                # Merging Database Logs
+                                with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
+                                    try:
+                                        json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
+                                        server_logs.extend(json_decoded['output'])
+                                    except Exception:
+                                        pass
 
-                        # Write Server File
-                        with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
-                            json.dump({"output": server_logs}, f, separators=(',', ':'))
+                            # Write Server File
+                            with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
+                                json.dump({"output": server_logs}, f, separators=(',', ':'))
 
-                # Merging Region Logs
-                region_logs = []
-                server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
-                for server_item in server_items:
-                    if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
-                        with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
-                            json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
-                            region_logs.extend(json_decoded['output'])
+                    # Merging Region Logs
+                    region_logs = []
+                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                    for server_item in server_items:
+                        if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
+                            with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
+                                json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
+                                region_logs.extend(json_decoded['output'])
 
-                # Write Region Logs
-                with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
-                    json.dump({"output": region_logs}, f, separators=(',', ':'))
-                self._progress.track_logs(value={'status': 'success'})
+                    # Write Region Logs
+                    with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
+                        json.dump({"output": region_logs}, f, separators=(',', ':'))
+                    self._progress.track_logs(value={'status': 'success'})
+
+        except Exception:
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
 
         # Merging Environment Logs
-        environment_logs = []
-        status_msg = "- Generating a Single Log File..."
-        self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-        region_items = os.listdir(execution_logs_path)
-        for region_item in region_items:
-            if region_item.endswith('.json'):
-                with open("{}/{}".format(execution_logs_path, region_item)) as f:
-                    json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
-                    environment_logs.extend(json_decoded['output'])
+        try:
+            environment_logs = []
+            status_msg = "- Generating a Single Log File..."
+            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+            region_items = os.listdir(execution_logs_path)
+            for region_item in region_items:
+                if region_item.endswith('.json'):
+                    with open("{}/{}".format(execution_logs_path, region_item)) as f:
+                        json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
+                        environment_logs.extend(json_decoded['output'])
 
-        self._progress.track_logs(value={'status': 'success'})
+        except Exception:
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
 
         # Return All Logs
         return environment_logs
@@ -345,8 +357,8 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_information = "{}/deployment/{}".format(self._imports.config['params']['url'], self._imports.config['params']['id'])
-        logs_results = "{}/viewer/{}".format(self._imports.config['params']['url'], self._args.path[self._args.path.rfind('/')+1:])
+        logs_information = f"{self._imports.config['params']['url']}/deployment/{self._args.uri}"
+        logs_results = f"{self._imports.config['params']['url']}/viewer/{self._args.uri}"
 
         # Current Time
         current_time = calendar.timegm(time.gmtime())

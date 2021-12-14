@@ -500,7 +500,7 @@ class Client:
                 return jsonify({"message": 'The file extension is not valid'}), 400
 
             if request.content_length > 100 * 1024 * 1024:
-                return jsonify({"message": 'The upload file exceeds the maximum allowed size (100MB)'}), 400
+                return jsonify({"message": 'The upload file exceeds the maximum allowed size (100MB). Please use the CLIENT section to import this file.'}), 400
 
             # Execute uploaded file
             try:

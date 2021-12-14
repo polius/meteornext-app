@@ -22,7 +22,7 @@
           </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn v-show="tab == 0" @click="importClick()" title="Import a shared deployment from another user" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>IMPORT</v-btn>
-          <v-btn :disabled="selected.length == 0" @click="removeDialog = true" title="Remove a shared deployment" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>REMOVE</v-btn>
+          <v-btn :disabled="selected.length == 0" @click="removeDialog = true" :title="tab == 0 ? 'Remove a shared deployment from the list' : 'Unshare a deployment'" text><v-icon small style="padding-right:10px">{{ tab == 0 ? 'fas fa-minus' : 'fas fa-unlink' }}</v-icon>{{ tab == 0 ? 'REMOVE' : 'UNSHARE' }}</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-btn v-show="tab == 0" @click="pinSharedDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -106,7 +106,7 @@
     <v-dialog v-model="removeDialog" max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-minus</v-icon>REMOVE DEPLOYMENTS</v-toolbar-title>
+          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">{{ tab == 0 ? 'fas fa-minus' : 'fas fa-unlink' }}</v-icon>{{ tab == 0 ? 'REMOVE DEPLOYMENTS' : 'UNSHARE DEPLOYMENTS' }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="removeDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -444,7 +444,7 @@ export default {
     submitRemove() {
       this.loading = true
       const url = this.tab == 0 ? '/deployments/shared/you' : '/deployments/shared/others'
-      const payload = this.selected.map(x => x.execution_id)
+      const payload = this.selected.map(x => x.id)
       axios.delete(url, { data: payload })
         .then((response) => {
           this.removeDialog = false
@@ -563,7 +563,7 @@ export default {
     },
     pinSharedDeployments() {
       const toPin = this.selected.find(x => !x.is_pinned)
-      const payload = this.selected.map(x => x.execution_id)
+      const payload = this.selected.map(x => x.id)
       if (toPin) {
         axios.post('/deployments/shared/you/pinned', payload)
           .then((response) => {

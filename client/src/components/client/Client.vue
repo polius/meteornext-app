@@ -193,7 +193,7 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
-    notification(message, color='', timeout=5) {
+    notification(message, color='', timeout=3) {
       this.snackbarText = message
       this.snackbarColor = color
       this.snackbarTimeout = Number(timeout*1000)

@@ -6,7 +6,7 @@ class Executions:
 
     def get(self, uri):
         query = """
-            SELECT e.id, e.deployment_id AS 'deployment_id', e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, e.shared, e.pid
+            SELECT e.id, e.deployment_id, e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, d.shared, e.pid
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             LEFT JOIN releases r ON r.id = d.release_id
@@ -59,28 +59,9 @@ class Executions:
             query = "UPDATE executions SET `status` = 'STOPPED' WHERE id = %s AND status = 'QUEUED'"
             self._sql.execute(query, (execution_id))
 
-    def setShared(self, user_id, execution_id, shared):
-        query = """
-            UPDATE executions
-            JOIN deployments ON deployments.id = executions.deployment_id AND deployments.user_id = %s
-            SET executions.shared = %s
-            WHERE executions.id = %s
-        """
-        self._sql.execute(query, (user_id, shared, execution_id))
-
-        if not shared:
-            query = """
-                DELETE ds 
-                FROM deployments_shared ds
-                JOIN executions e ON e.id = ds.execution_id
-                JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %s
-                WHERE execution_id = %s
-            """
-            self._sql.execute(query, (user_id, execution_id))
-
     def getScheduled(self):
         query = """
-            SELECT e.id, e.mode, e.uri, u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT e.id, e.mode, e.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             JOIN environments env ON env.id = e.environment_id

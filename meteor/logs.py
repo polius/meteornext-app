@@ -1,9 +1,10 @@
 import json
 
 class logs:
-    def __init__(self, args, imports):
+    def __init__(self, args, imports, progress):
         self._args = args
         self._imports = imports
+        self._progress = progress
 
     def compile(self, logs, summary, error=None):
         try:
@@ -17,5 +18,9 @@ class logs:
             with open(f"{self._args.path}/../{self._args.uri}.json", 'w') as outfile:
                 json.dump(file, outfile, separators=(',', ':'))
 
-        except Exception as e:
-            raise Exception('An error occurred compiling logs. ' + str(e))
+            self._progress.track_logs(value={'status': 'success'})
+
+        except Exception:
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
+

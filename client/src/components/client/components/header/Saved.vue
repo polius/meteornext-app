@@ -190,6 +190,8 @@ export default {
           this.items[curr]['name'] = payload['name']
           this.items[curr]['query'] = payload['query']
           this.saveButtonDisabled = true
+          EventBus.$emit('send-notification', 'Queries saved', '#00b16a')
+          this.dialog = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
