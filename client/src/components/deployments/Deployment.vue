@@ -918,7 +918,7 @@
         this.deployment['databases'] = this.deployment['mode'] == 'BASIC' ? data['databases'] : ''
         this.deployment['code'] = this.deployment['mode'] == 'PRO' ? data['code'] : ''
         this.deployment['method'] = data['method'].toLowerCase()
-        if (this.deployment['status'] != data['status'] && data['owner']) this.getExecutions()
+        this.getExecutions()
         this.deployment['status'] = data['status']
         this.deployment['stopped'] = data['stopped']
         this.deployment['queue'] = data['queue']
