@@ -369,7 +369,7 @@ class Deployments:
         authority = self._deployments.getUser(execution['deployment_id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
-        elif authority[0]['id'] != user['id'] and not user['admin']:
+        if authority[0]['id'] != user['id'] and not execution['shared'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Get deployment executions

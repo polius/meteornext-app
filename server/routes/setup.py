@@ -71,6 +71,7 @@ class Setup:
         try:
             if self._conf:
                 # Set unique hardware id
+                # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
                 self._conf['license']['uuid'] = str(uuid.getnode())
                 # Init sql pool
                 sql = connectors.pool.Pool(self._conf['sql'])
@@ -117,7 +118,7 @@ class Setup:
             self._license = License(setup_json)
             self._license.validate()
             return jsonify({"message": self._license.status['response']}), self._license.status['code']
-            
+
         @setup_blueprint.route('/setup/sql', methods=['POST'])
         def setup_sql():
             # Protect api call once is already configured
