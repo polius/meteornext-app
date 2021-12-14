@@ -6,7 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
-          <v-btn v-if="'status' in deployment" :disabled="!deployment.owner" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>EXECUTIONS</v-btn>
+          <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>EXECUTIONS</v-btn>
           <v-btn v-if="'status' in deployment" :disabled="!deployment.owner || ['STARTING','IN PROGRESS','STOPPING','QUEUED'].includes(deployment['status'])" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!deployment.owner || start_execution" v-if="['CREATED','SCHEDULED'].includes(deployment['status'])" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
@@ -1453,11 +1453,10 @@
           shared: !this.deployment['shared']
         }
         axios.post('/deployments/shared', payload)
-        .then(() => {
+        .then((response) => {
           // Update new shared value
           this.deployment['shared'] = !this.deployment['shared']
-          if (this.deployment['shared']) this.notification('This deployment is now shared', '#00b16a')
-          else this.notification('This deployment is now private', '#00b16a')
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

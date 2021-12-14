@@ -736,9 +736,12 @@ class Deployments:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Change deployment shared value
-        self._executions.setShared(user['id'], execution['id'], data['shared'])
+        self._deployments.setShared(execution['deployment_id'], data['shared'])
 
-        return jsonify({'message': 'Success'}), 200
+        # Return message
+        if data['shared']:
+            return jsonify({'message': 'This deployment is now shared'}), 200
+        return jsonify({'message': 'This deployment is now private'}), 200
 
     ####################
     # Internal Methods #

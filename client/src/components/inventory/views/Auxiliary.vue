@@ -504,7 +504,7 @@ export default {
       setTimeout(() => {
         this.snackbarText = message
         this.snackbarColor = color
-        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
+        this.snackbarTimeout = persistent ? Number(0) : Number(3000)
         this.snackbar = true
       }, 10)
     }

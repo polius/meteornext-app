@@ -190,7 +190,7 @@ export default {
     columnsRaw: [],
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(5000),
+    snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
@@ -368,7 +368,7 @@ export default {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
     },
-    notification(message, color, timeout=5) {
+    notification(message, color, timeout=3) {
       this.snackbar = false
       setTimeout(() => {
         this.snackbarText = message

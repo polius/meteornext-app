@@ -58,7 +58,7 @@ class Deployments_Shared:
             SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', ds.is_pinned, u.username AS 'owner'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
-            JOIN deployments_shared ds ON ds.user_id = %(user_id)s AND ds.execution_id = e.id
+            JOIN deployments_shared ds ON ds.user_id = %(user_id)s AND ds.deployment_id = d.id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
             LEFT JOIN environments env ON env.id = e.environment_id
@@ -70,7 +70,12 @@ class Deployments_Shared:
                 JOIN (SELECT @cnt := 0) t
                 WHERE status = 'QUEUED'
             ) q ON q.deployment_id = d.id
-            WHERE e.shared = 1
+            WHERE e.id IN (
+                SELECT MAX(id)
+                FROM executions e2
+                WHERE e2.deployment_id = e.deployment_id
+            )
+            AND d.shared = 1
             {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
             ORDER BY ds.id DESC
         """.format(name, release, environment, mode, method, status, owner, created_from, created_to, started_from, started_to, ended_from, ended_to)
@@ -78,41 +83,41 @@ class Deployments_Shared:
 
     def check_uri(self, user_id, uri):
         query = """
-            SELECT d.user_id, ds.execution_id IS NOT NULL AS 'already_added'
+            SELECT d.user_id, ds.deployment_id IS NOT NULL AS 'already_added'
             FROM executions e
-            JOIN deployments d ON d.id = e.deployment_id
-            LEFT JOIN deployments_shared ds ON ds.execution_id = e.id AND ds.user_id = %s
+            JOIN deployments d ON d.id = e.deployment_id AND d.shared = 1
+            LEFT JOIN deployments_shared ds ON ds.deployment_id = d.id AND ds.user_id = %s
             WHERE e.uri = %s
-            AND e.shared = 1
         """
         return self._sql.execute(query, (user_id, uri))
 
     def post_you(self, user_id, uri):
         query = """
-            INSERT IGNORE INTO deployments_shared (user_id, execution_id, created)
-            SELECT %s, id, %s
-            FROM executions
-            WHERE uri = %s
-            AND shared = 1
+            INSERT IGNORE INTO deployments_shared (user_id, deployment_id, created)
+            SELECT %s, d.id, %s
+            FROM deployments d
+            JOIN executions e ON e.deployment_id = d.id AND e.uri = %s
+            AND d.shared = 1
+            LIMIT 1
         """
         self._sql.execute(query, (user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), uri))
 
-    def delete_you(self, user_id, execution_id):
+    def delete_you(self, user_id, deployment_id):
         query = """
             DELETE FROM deployments_shared
             WHERE user_id = %s
-            AND execution_id = %s
+            AND deployment_id = %s
         """
-        self._sql.execute(query, (user_id, execution_id))
+        self._sql.execute(query, (user_id, deployment_id))
 
-    def pin_you(self, user_id, execution_id, value):
+    def pin_you(self, user_id, deployment_id, value):
         query = """
             UPDATE deployments_shared
             SET is_pinned = %s
             WHERE user_id = %s
-            AND execution_id = %s
+            AND deployment_id = %s
         """
-        self._sql.execute(query, (value, user_id, execution_id))
+        self._sql.execute(query, (value, user_id, deployment_id))
 
     ######################
     # SHARED WITH OTHERS #
@@ -173,26 +178,29 @@ class Deployments_Shared:
                 JOIN (SELECT @cnt := 0) t
                 WHERE status = 'QUEUED'
             ) q ON q.deployment_id = d.id
-            WHERE e.shared = 1
+            WHERE e.id IN (
+                SELECT MAX(id)
+                FROM executions e2
+                WHERE e2.deployment_id = e.deployment_id
+            )
+            AND d.shared = 1
             {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}
             ORDER BY created DESC, id DESC
         """.format(name, release, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to)
         return self._sql.execute(query, args)
 
-    def delete_others(self, user_id, execution_id):
+    def delete_others(self, user_id, deployment_id):
         query = """
             DELETE ds 
             FROM deployments_shared ds
-            JOIN executions e ON e.id = ds.execution_id
-            JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %s
-            WHERE execution_id = %s
+            JOIN deployments d ON d.id = ds.deployment_id AND d.user_id = %s AND d.id = %s
         """
-        self._sql.execute(query, (user_id, execution_id))
+        self._sql.execute(query, (user_id, deployment_id))
 
         query = """
-            UPDATE executions
+            UPDATE deployments
             SET shared = 0
             WHERE user_id = %s
             AND id = %s
         """
-        self._sql.execute(query, (user_id, execution_id))
+        self._sql.execute(query, (user_id, deployment_id))

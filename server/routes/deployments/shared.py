@@ -58,13 +58,13 @@ class Shared:
             data = request.get_json() if request.get_json() else request.form
 
             if request.method == 'POST':
-                for item in data:
-                    self._shared.pin_you(user['id'], item, 1)
+                for deployment_id in data:
+                    self._shared.pin_you(user['id'], deployment_id, 1)
                 return jsonify({'message': f"Deployment{'s' if len(data) > 1 else ''} pinned"}), 200
 
             elif request.method == 'DELETE':
-                for item in data:
-                    self._shared.pin_you(user['id'], item, 0)
+                for deployment_id in data:
+                    self._shared.pin_you(user['id'], deployment_id, 0)
                 return jsonify({'message': f"Deployment{'s' if len(data) > 1 else ''} unpinned"}), 200
 
         @shared_blueprint.route('/deployments/shared/others', methods=['GET','DELETE'])
@@ -126,8 +126,8 @@ class Shared:
         return jsonify({'message': 'Deployment added'}), 200
 
     def delete_you(self, user_id, data):
-        for execution in data:
-            self._shared.delete_you(user_id, execution)
+        for deployment_id in data:
+            self._shared.delete_you(user_id, deployment_id)
         return jsonify({'message': 'Selected deployments removed'}), 200
 
     def get_others(self, user_id):
@@ -137,6 +137,6 @@ class Shared:
         return jsonify({'deployments': deployments}), 200
 
     def delete_others(self, user_id, data):
-        for execution in data:
-            self._shared.delete_others(user_id, execution)
+        for deployment_id in data:
+            self._shared.delete_others(user_id, deployment_id)
         return jsonify({'message': 'Selected deployments unshared'}), 200

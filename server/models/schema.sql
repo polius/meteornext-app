@@ -261,10 +261,12 @@ CREATE TABLE `deployments` (
   `name` VARCHAR(191) NOT NULL,
   `release_id` INT UNSIGNED NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
+  `shared` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `name` (`name`),
   KEY `release_id` (`release_id`),
   KEY `user_id` (`user_id`),
+  KEY `shared` (`shared`),
   FOREIGN KEY (`release_id`) REFERENCES `releases` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -290,7 +292,6 @@ CREATE TABLE `executions` (
  `url` VARCHAR(191) NULL,
  `uri` VARCHAR(191) NOT NULL,
  `logs` VARCHAR(191) NULL,
- `shared` TINYINT(1) NOT NULL DEFAULT 0,
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
  `user_id` INT UNSIGNED NULL,
   PRIMARY KEY (`id`),
@@ -303,7 +304,6 @@ CREATE TABLE `executions` (
   KEY `scheduled` (`scheduled`),
   KEY `started` (`started`),
   KEY `ended` (`ended`),
-  KEY `shared` (`shared`),
   KEY `expired` (`expired`),
   KEY `user_id` (`user_id`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
@@ -337,14 +337,14 @@ CREATE TABLE `deployments_pinned` (
 CREATE TABLE `deployments_shared` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
-  `execution_id` INT UNSIGNED NOT NULL,
+  `deployment_id` INT UNSIGNED NOT NULL,
   `is_pinned` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   `created` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `user_id__execution_id` (`user_id`,`execution_id`),
-  INDEX `execution_id` (`execution_id`),
+  UNIQUE `user_id__deployment_id` (`user_id`,`deployment_id`),
+  INDEX `deployment_id` (`deployment_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `notifications` (
