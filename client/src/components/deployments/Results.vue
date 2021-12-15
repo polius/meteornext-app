@@ -1,5 +1,5 @@
 <template>
-  <iframe ref="frame" :src="url + `/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
+  <iframe ref="frame" :src="url + `/viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
 </template>
 
 <script>

@@ -357,8 +357,8 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_information = f"{self._imports.config['params']['url']}/deployment/{self._args.uri}"
-        logs_results = f"{self._imports.config['params']['url']}/viewer/{self._args.uri}"
+        logs_information = f"{self._imports.config['params']['url']}/deployments/{self._args.uri}"
+        logs_results = f"{self._imports.config['params']['url']}/results/{self._args.uri}"
 
         # Current Time
         current_time = calendar.timegm(time.gmtime())

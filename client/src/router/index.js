@@ -109,33 +109,20 @@ let router = new VueRouter({
           name: 'deployments.new',
           component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresDeployments: true }
-        }
-      ]
-    },
-    {
-      path: '/viewer',
-      name: 'viewer',
-      component: () => import('../components/deployments/Viewer'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/viewer/:uri',
-      name: 'viewer_uri',
-      component: () => import('../components/deployments/Viewer'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/deployment',
-      component: () => import('../components/deployments/Navigation'),
-      meta: { requiresAuth: true },
-      children: [
+        },
         {
           path: ':uri',
-          name: 'deployment',
+          name: 'deployments.execution',
           component: () => import('../components/deployments/Deployment'),
-          meta: { requiresAuth: true }
-        }
+          meta: { requiresDeployments: true }
+        },
       ]
+    },
+    {
+      path: '/results/:uri?',
+      name: 'results',
+      component: () => import('../components/deployments/Results'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/monitoring',

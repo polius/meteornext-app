@@ -51,8 +51,8 @@
       <router-link v-if="inventory_enabled" title="Inventory" class="nav-link" to="/inventory">
         <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
       </router-link>
-      <!-- VIEWER -->
-      <router-link title="Viewer" class="nav-link" to="/viewer" target="_blank">
+      <!-- RESULTS -->
+      <router-link title="Results" class="nav-link" to="/results" target="_blank">
         <v-btn icon><v-icon>fas fa-chart-area</v-icon></v-btn>
       </router-link>
       <!-- ADMINISTRATION -->
@@ -263,7 +263,7 @@ export default {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
     showTopNavbar() {
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer') && !window.location.pathname.startsWith('/install')) return true
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/results') && !window.location.pathname.startsWith('/install')) return true
       return false
     },
     openNotifications() {

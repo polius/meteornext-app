@@ -119,6 +119,7 @@ class Client:
             SELECT *
             FROM client_saved_queries
             WHERE user_id = %s
+            ORDER BY id DESC
         """
         return self._sql.execute(query, (user_id))
 
