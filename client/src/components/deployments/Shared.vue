@@ -22,8 +22,8 @@
           </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn v-show="tab == 0" @click="importClick()" title="Import a shared deployment from another user" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>IMPORT</v-btn>
-          <v-btn :disabled="selected.length == 0" @click="removeDialog = true" :title="tab == 0 ? 'Remove a shared deployment from the list' : 'Unshare a deployment'" text><v-icon small style="padding-right:10px">{{ tab == 0 ? 'fas fa-minus' : 'fas fa-unlink' }}</v-icon>{{ tab == 0 ? 'REMOVE' : 'UNSHARE' }}</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+          <v-btn :disabled="selected.length == 0" @click="removeDialog = true" :title="tab == 0 ? 'Remove a shared deployment from the list' : 'Unshare a deployment'" text><v-icon small style="padding-right:10px">{{ tab == 0 ? 'fas fa-minus' : 'fas fa-unlink' }}</v-icon>{{ tab == 0 ? 'REMOVE' : 'UNSHARE' }}</v-btn>
           <v-btn v-show="tab == 0" @click="pinSharedDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
