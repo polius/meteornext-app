@@ -18,7 +18,7 @@
         <div v-else-if="(start_execution && deployment['status'] == 'IN PROGRESS') || deployment['status'] == 'IN PROGRESS'" class="subtitle-1" style="margin-left:5px;">Execution in progress...</div>
         <div v-else-if="deployment['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
-        <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
+        <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:20px;"></v-progress-circular>
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="#00b16a" style="font-weight:500; margin-left:5px; margin-right:5px;" title="The execution finished successfully">SUCCESS</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="#ff9800" style="font-weight:500; margin-left:5px; margin-right:5px;" title="Some queries failed">WARNING</v-chip>
