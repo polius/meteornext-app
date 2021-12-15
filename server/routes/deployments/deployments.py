@@ -181,6 +181,7 @@ class Deployments:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
                 except Exception:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
+            return jsonify({'title': 'Unknown deployment', 'description': 'This deployment does not currently exist' }), 400
 
         @deployments_blueprint.route('/deployments/executions', methods=['GET'])
         @jwt_required()
