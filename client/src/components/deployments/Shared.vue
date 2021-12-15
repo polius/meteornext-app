@@ -88,8 +88,8 @@
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-form ref="importForm" @submit.prevent>
-            <div class="text-body-1" style="margin-top:5px">Enter the deployment URL to be imported in your list.</div>
-            <v-text-field autofocus v-model="importValue" v-on:keyup.enter="submitImport" outlined label="Deployment URL" :rules="[v => this.validURL(v) || '' ]" hide-details style="margin-top:15px"></v-text-field>
+            <div class="text-body-1" style="margin-top:5px">Enter a deployment URL to import it in your list.</div>
+            <v-text-field autofocus v-model="importValue" v-on:keyup.enter="submitImport" outlined label="Deployment URL" :rules="[v => this.validURL(v) || '' ]" hide-details style="margin-top:20px"></v-text-field>
           </v-form>
           <v-divider style="margin-top:20px"></v-divider>
           <div style="margin-top:20px;">
@@ -484,7 +484,7 @@ export default {
         .finally(() => this.loading = false)
     },
     infoDeploy() {
-      this.$router.push({ name:'deployment', params: { uri: this.selected[0]['uri'] }})
+      this.$router.push({ name: 'deployments.execution', params: { uri: this.selected[0]['uri'] }})
     },
     getModeColor (mode) {
       if (mode == 'BASIC') return 'rgb(250, 130, 49)'

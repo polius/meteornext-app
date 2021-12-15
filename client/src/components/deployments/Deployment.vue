@@ -30,8 +30,8 @@
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <div v-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)">
             <v-btn v-if="!show_results" text title="Show Execution Results" @click="showResults()" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
-            <v-btn :disabled="!deployment.owner" text title="Share Deployment" @click="shareDeploymentDialog = true" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
           </div>
+          <v-btn :disabled="!deployment.owner" text title="Share Deployment" @click="shareDeploymentDialog = true" style="height:100%"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -42,7 +42,7 @@
 
       <!-- RESULTS -->
       <v-card-text v-if="show_results" style="padding:0px; background-color:rgb(55, 53, 64); height:calc(100vh - 180px)">
-        <Viewer :src="deployment['uri']" :height="`calc(100vh - 181px)`"></Viewer>
+        <Results :src="deployment['uri']" :height="`calc(100vh - 181px)`"></Results>
       </v-card-text>
 
       <v-card-text v-else>
@@ -616,8 +616,8 @@
   import 'codemirror/addon/display/fullscreen.js'
   import 'codemirror/addon/display/fullscreen.css'
 
-  // VIEWER
-  import Viewer from './Viewer'
+  // RESULTS
+  import Results from './Results'
 
   export default  {
     data: () => ({
@@ -824,7 +824,7 @@
         vm.prevRoute = from
       })
     },
-    components: { codemirror, Viewer },
+    components: { codemirror, Results },
     created() {
       this.init()
     },
@@ -865,7 +865,7 @@
             const data = response.data.deployment
             this.environments = response.data.environments
             this.parseRequest(data)
-            if (this.$router.currentRoute.name == 'deployment') {
+            if (this.$router.currentRoute.name == 'deployments.execution') {
               if (data['status'] == 'QUEUED' || data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') {
                 clearTimeout(this.timer)
                 this.timer = setTimeout(this.getDeployment, 1000)
@@ -936,7 +936,7 @@
 
         // Parse Shared
         this.shareDeploymentUrl = window.location.href
-        this.shareDeploymentResultsUrl = window.location.protocol + '//' + window.location.host + `/viewer/` + this.deployment['uri']
+        this.shareDeploymentResultsUrl = window.location.protocol + '//' + window.location.host + `/results/` + this.deployment['uri']
 
         // Parse Scheduled
         if (this.deployment['scheduled']) {
@@ -1233,7 +1233,7 @@
       selectExecution(uri) {
         this.select_dialog = false
         if (this.deployment['uri'] != uri) {
-          this.$router.push({ name:'deployment', params: { uri: uri }})
+          this.$router.push({ name: 'deployments.execution', params: { uri: uri }})
           this.show_results = false
           this.clear()
           this.init()
@@ -1286,7 +1286,7 @@
           this.clear()
           // Get new deployment
           if (this.information_dialog_mode == 're-deploy') {
-            this.$router.push({ name: 'deployment', params: { uri: data['uri'] }})
+            this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'] }})
           }
           else this.getDeployment()
           // Hide the Information dialog

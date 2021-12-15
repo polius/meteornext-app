@@ -483,7 +483,7 @@ export default {
           // Refresh user coins
           this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployment', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
+          this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

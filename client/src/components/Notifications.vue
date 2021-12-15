@@ -125,13 +125,13 @@ export default {
     infoNotification() {
       const id = this.selected[0].data.id
       if (this.selected[0].category == 'deployment') {
-        this.$router.push({ name:'deployment', params: { uri: id }})
+        this.$router.push({ name: 'deployments.execution', params: { uri: id }})
       }
       else if (this.selected[0].category == 'monitoring') {
-        this.$router.push({ name:'monitor', params: { id: id }})
+        this.$router.push({ name: 'monitor', params: { id: id }})
       }
       else if (this.selected[0].category == 'utils-restore') {
-        this.$router.push({ name:'utils.restore.info', params: { id: id }})
+        this.$router.push({ name: 'utils.restore.info', params: { id: id }})
       }
     },
     deleteNotification() {
