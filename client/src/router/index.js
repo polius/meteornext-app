@@ -113,7 +113,7 @@ let router = new VueRouter({
         {
           path: ':uri',
           name: 'deployments.execution',
-          component: () => import('../components/deployments/Deployment'),
+          component: () => import('../components/deployments/Execution'),
           meta: { requiresDeployments: true }
         },
       ]
