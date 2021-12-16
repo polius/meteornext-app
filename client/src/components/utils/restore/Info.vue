@@ -344,6 +344,8 @@ export default {
         value: upload.value,
         transferred: this.formatBytes(upload.transferred)
       }
+      // Calculate Overall
+      this.parseOverall()
     },
     parseProgress(progress) {
       this.progress = {
@@ -354,6 +356,9 @@ export default {
         eta: progress.eta
       }
       // Calculate Overall
+      this.parseOverall()
+    },
+    parseOverall() {
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
     },
