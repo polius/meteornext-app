@@ -1,9 +1,9 @@
-import sys
 import time
 import json
 import paramiko
 import subprocess
 from io import StringIO
+from datetime import datetime
 
 class Core:
     def __init__(self, sql, restore_id, region):
@@ -103,7 +103,12 @@ class Core:
             # Update restore upload progress
             query = """
                 UPDATE `restore`
-                SET `upload` = %s
+                SET
+                    `upload` = %s,
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(json.dumps(upload), self._id))
+            self._sql.execute(query, args=(json.dumps(upload), self.__utcnow(), self._id))
+
+    def __utcnow(self):
+        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
