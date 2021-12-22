@@ -452,5 +452,5 @@ class core:
                 raise Exception()
             self._progress.track_tasks(value={'status': 'success'})
             
-        except Exception as e:
+        except Exception:
             self._progress.track_tasks(value={'status': 'failed'})

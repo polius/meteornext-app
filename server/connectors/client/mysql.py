@@ -54,7 +54,7 @@ class MySQL:
         return self._connection_id
 
     def connect(self):
-        retries = 1
+        retries = 2
         exception = None
         for _ in range(retries+1):
             # Close existing connections
@@ -85,7 +85,7 @@ class MySQL:
             finally:
                 self.__close_ssl(ssl)
         if exception:
-            if type(exception).__name__ == 'sshtunnel.BaseSSHTunnelForwarderError':
+            if type(exception).__name__ == 'BaseSSHTunnelForwarderError':
                 raise Exception("Can't connect to the SSH Server")
             raise exception
 
@@ -119,15 +119,22 @@ class MySQL:
         except Exception:
             self.connect()
 
+        # Check transaction
+        if not import_file:
+            if query.strip()[:17].upper().startswith('START TRANSACTION') or query.strip()[:5].upper().startswith('BEGIN'):
+                self._is_transaction = True
+            elif query.strip()[:6].upper().startswith('COMMIT') or query.strip()[:8].upper().startswith('ROLLBACK'):
+                self._is_transaction = False
+
+        # Execute query
         try:
-            # Check transaction
-            if not import_file:
-                if query.strip()[:17].upper().startswith('START TRANSACTION') or query.strip()[:5].upper().startswith('BEGIN'):
-                    self._is_transaction = True
-                elif query.strip()[:6].upper().startswith('COMMIT') or query.strip()[:8].upper().startswith('ROLLBACK'):
-                    self._is_transaction = False
-            # Execute query
             return self.__execute_query(query, args, database, fetch)
+        except Exception as e:
+            # Handle MySQL error "Table definition has changed, please retry transaction" when cloning an object.
+            if e.__class__.__name__ == 'OperationalError' and e.args[0] == 1412:
+                self.connect()
+                return self.__execute_query(query, args, database, fetch)
+            raise
         finally:
             self._last_execution = time.time()
             self._is_executing = False
@@ -559,6 +566,7 @@ class MySQL:
         return result
 
     def get_all_rights(self):
+        self.execute("FLUSH PRIVILEGES")
         query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY `user`, `host`"
         return self.execute(query)['data']
 
