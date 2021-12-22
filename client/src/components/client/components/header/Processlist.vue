@@ -7,7 +7,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="body-1">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="settingsProcesslist" style=":100%"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
+          <v-btn text @click="settingsProcesslist" style="height:100%"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
           <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -393,7 +393,7 @@ export default {
       }
       else {
         this.snackbarText = 'Processlist stopped'
-        this.snackbarColor = '#EF5354'
+        this.snackbarColor = '#00b16a'
         clearTimeout(this.timer)
       }
       this.snackbar = true
@@ -502,7 +502,7 @@ export default {
     killQuerySubmit() {
       // Build queries
       let queries = this.selected.map(x => x.Id)
-      if (this.server.type == 'Aurora MySQL') {
+      if (this.server.engine == 'Aurora MySQL') {
         if (this.killDialogCheckbox) queries = queries.map(x => 'CALL mysql.rds_kill(' + x + ')')
         else queries = queries.map(x => 'CALL mysql.rds_kill_query(' + x + ')')
       }
@@ -520,8 +520,14 @@ export default {
       }
       // Kill queries
       axios.post('/client/execute', payload)
-      EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
-      this.killDialog = false
+        .then(() => {
+            EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+          .finally(() => this.killDialog = false)
     }
   }
 }

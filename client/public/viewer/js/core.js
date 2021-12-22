@@ -1164,21 +1164,21 @@ function compile_query(data) {
     // Rebuild Data
     if (data[i]['meteor_output'] == '[]') {
       if (!transformation_checkbox_checked) {
-        var new_row = JSON.parse(JSON.stringify(data[i]));
-        for (var c = 0; c < columns.length; ++c) {
-          new_row[columns[c]] = '';
+        let row = JSON.parse(JSON.stringify(data[i]));
+        for (let c = 0; c < columns.length; ++c) {
+          row[columns[c]] = '';
         }
-        new_data.push(new_row);
+        new_data.push(row);
       }
     }
     else if (data[i]['meteor_output'] != '') {
-      for (var j = 0; j < data[i]['meteor_output'].length; ++j) {
-        var new_row = JSON.parse(JSON.stringify(data[i]));
-        for (var c = 0; c < columns.length; ++c) {
-          new_row[columns[c]] = data[i]['meteor_output'][j][columns[c]];
+      let row = JSON.parse(JSON.stringify({...data[i], meteor_output:[]}));
+      for (let j = 0; j < data[i]['meteor_output'].length; ++j) {
+        for (let c = 0; c < columns.length; ++c) {
+          row[columns[c]] = data[i]['meteor_output'][j][columns[c]];
         }
-        new_row['meteor_output'] = [data[i]['meteor_output'][j]];
-        new_data.push(new_row);
+        row['meteor_output'] = [data[i]['meteor_output'][j]];
+        new_data.push(row);
       }
     }
   }

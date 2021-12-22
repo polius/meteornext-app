@@ -300,32 +300,34 @@ export default {
   methods: {
     initAceEditor() {
       if (this.dialogQueryEditor != null) return
-      this.dialogQueryEditor = ace.edit("dialogQueryEditorContent", {
-        mode: "ace/mode/mysql",
-        theme: "ace/theme/monokai",
-        keyboardHandler: "ace/keyboard/vscode",
-        fontSize: 14,
-        showPrintMargin: false,
-        wrap: false,
-        indentedSoftWrap: false,
-        showLineNumbers: true,
-        scrollPastEnd: true,
-        readOnly: true,
+      this.$nextTick(() => {
+        this.dialogQueryEditor = ace.edit("dialogQueryEditorContent", {
+          mode: "ace/mode/mysql",
+          theme: "ace/theme/monokai",
+          keyboardHandler: "ace/keyboard/vscode",
+          fontSize: 14,
+          showPrintMargin: false,
+          wrap: false,
+          indentedSoftWrap: false,
+          showLineNumbers: true,
+          scrollPastEnd: true,
+          readOnly: true,
+        })
+        this.dialogQueryEditor.container.addEventListener("keydown", (e) => {
+          // - Increase Font Size -
+          if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+            this.dialogQueryEditor.setFontSize(size + 1)
+            e.preventDefault()
+          }
+          // - Decrease Font Size -
+          else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
+            this.dialogQueryEditor.setFontSize(Math.max(size - 1 || 1))
+            e.preventDefault()
+          }
+        }, false);
       })
-      this.dialogQueryEditor.container.addEventListener("keydown", (e) => {
-        // - Increase Font Size -
-        if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
-          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
-          this.dialogQueryEditor.setFontSize(size + 1)
-          e.preventDefault()
-        }
-        // - Decrease Font Size -
-        else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
-          let size = parseInt(this.dialogQueryEditor.getFontSize(), 10) || 12
-          this.dialogQueryEditor.setFontSize(Math.max(size - 1 || 1))
-          e.preventDefault()
-        }
-      }, false);
     },
     onGridReady(params) {
       this.gridApi.content = params.api
