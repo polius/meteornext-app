@@ -5,7 +5,7 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium" style="font-size:0.9rem!important"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-database</v-icon>RESTORE</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
-          <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="margin-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-btn :disabled="selected.length == 0" text @click="manageRestore()"><v-icon small style="margin-right:10px;">fas fa-mouse-pointer</v-icon>MANAGE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>

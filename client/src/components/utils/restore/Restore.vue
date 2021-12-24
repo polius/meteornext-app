@@ -6,8 +6,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newRestore()"><v-icon small style="margin-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-btn :disabled="selected.length == 0" text @click="deleteRestore()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="getRestore" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
