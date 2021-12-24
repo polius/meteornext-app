@@ -1,9 +1,9 @@
 <template>
   <v-main>
     <div>
-      <v-tabs background-color="#019875" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
+      <v-tabs background-color="#019875" color="white" slider-color="white" slot="extension" class="elevation-2">
         <v-tabs-slider></v-tabs-slider>
-          <v-tab disabled to="/utils" style="opacity:1"><span class="pl-2 pr-2 white--text"><v-icon small style="margin-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
+          <v-tab disabled style="opacity:1"><span class="pl-2 pr-2 white--text"><v-icon small style="margin-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab to="/utils/restore"><span class="pl-2 pr-2">Restore</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -24,8 +24,7 @@
 export default {
   data() {
     return {
-      tabs: 0
     }
-  }
+  },
 }
 </script>
