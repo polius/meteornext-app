@@ -335,7 +335,7 @@ class License:
             self._license_params['challenge'] = str(uuid.uuid4())
 
             # Check license
-            response = requests.post("https://license.meteor2.io/", json=self._license_params, allow_redirects=False)
+            response = requests.post("https://license.meteor2.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
             response_code = response.status_code
             response_text = json.loads(response.text)['response']
             date = json.loads(response.text)['date']
