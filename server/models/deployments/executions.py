@@ -61,9 +61,10 @@ class Executions:
 
     def getScheduled(self):
         query = """
-            SELECT e.id, e.mode, e.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT e.id, d.name, r.name AS 'release', e.mode, e.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
+            JOIN releases r ON r.id = d.release_id
             JOIN environments env ON env.id = e.environment_id
             JOIN users u ON u.id <=> e.user_id
             JOIN groups g ON g.id = u.group_id
@@ -74,9 +75,10 @@ class Executions:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT e.id, e.mode, u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', e.url, e.uri
+            SELECT e.id, d.name, r.name AS 'release', e.mode, u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', e.url, e.uri
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
+            JOIN releases r ON r.id = d.release_id
             JOIN environments env ON env.id = e.environment_id
             JOIN users u ON u.id = e.user_id
             LEFT JOIN users u2 ON u2.id = e.user_id
