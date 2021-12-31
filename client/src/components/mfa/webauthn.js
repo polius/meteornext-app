@@ -28,7 +28,7 @@ export async function webauthnRegisterFinish(credential, user={}) {
 
 export async function webauthnLogin(PublicKeyCredentialRequestOptions) {
   // Convert certain members of the PublicKeyCredentialRequestOptions into byte arrays as expected by the spec.
-  const transformedCredentialRequestOptions = transformCredentialRequestOptions(PublicKeyCredentialRequestOptions);
+  const transformedCredentialRequestOptions = transformCredentialRequestOptions(JSON.parse(PublicKeyCredentialRequestOptions));
   // Request the authenticator to create an assertion signature using the credential private key
   const assertion = await navigator.credentials.get({ publicKey: transformedCredentialRequestOptions });
   // Encode the byte arrays contained in the assertion data as strings for posting to the server
@@ -55,36 +55,31 @@ function transformCredentialCreateOptions(credentialCreateOptionsFromServer) {
 
 // Transforms the binary data in the credential into base64 strings
 function transformNewAssertionForServer(newAssertion) {
-  const attObj = new Uint8Array(newAssertion.response.attestationObject)
-  const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON)
-  const rawId = new Uint8Array(newAssertion.rawId)
-  const registrationClientExtensions = newAssertion.getClientExtensionResults()
   return {
     id: newAssertion.id,
-    rawId: b64enc(rawId),
+    rawId: b64enc(new Uint8Array(newAssertion.rawId)),
     type: newAssertion.type,
-    attObj: b64enc(attObj),
-    clientData: b64enc(clientDataJSON),
-    registrationClientExtensions: JSON.stringify(registrationClientExtensions)
+    response: {
+      attestationObject: b64enc(new Uint8Array(newAssertion.response.attestationObject)),
+      clientDataJSON: b64enc(new Uint8Array(newAssertion.response.clientDataJSON))
+    },
+    registrationClientExtensions: JSON.stringify(newAssertion.getClientExtensionResults())
   }
 }
 
 const transformAssertionForServer = (newAssertion) => {
-  const authData = new Uint8Array(newAssertion.response.authenticatorData);
-  const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON);
-  const rawId = new Uint8Array(newAssertion.rawId);
-  const sig = new Uint8Array(newAssertion.response.signature);
-  const assertionClientExtensions = newAssertion.getClientExtensionResults();
-
   return {
     id: newAssertion.id,
-    rawId: b64enc(rawId),
+    rawId: b64enc(new Uint8Array(newAssertion.rawId)),
+    response: {
+      authenticatorData: b64RawEnc(new Uint8Array(newAssertion.response.authenticatorData)),
+      clientDataJSON: b64RawEnc(new Uint8Array(newAssertion.response.clientDataJSON)),
+      signature: b64RawEnc(new Uint8Array(newAssertion.response.signature)),
+      userHandle: b64RawEnc(new Uint8Array(newAssertion.response.userHandle)),
+    },
     type: newAssertion.type,
-    authData: b64RawEnc(authData),
-    clientData: b64RawEnc(clientDataJSON),
-    signature: hexEncode(sig),
-    assertionClientExtensions: JSON.stringify(assertionClientExtensions)
-  };
+    clientExtensionResults: newAssertion.getClientExtensionResults()
+  }
 }
 
 function transformCredentialRequestOptions(credentialRequestOptionsFromServer) {

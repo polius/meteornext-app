@@ -26,7 +26,7 @@ class builder:
         self.__build_client()
         # Build Docker
         subprocess.call("docker pull nginx:latest", shell=True)
-        subprocess.call("cd {} ; docker build -t meteor2:latest -f build/docker.dockerfile .".format(self._pwd), shell=True)
+        subprocess.call("cd {} ; docker buildx build -t meteor2:latest -f build/docker.dockerfile --no-cache --platform linux/amd64 --load .".format(self._pwd), shell=True)
         subprocess.call("docker save meteor2 | gzip > {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
         self.__clean_docker()
         print("\n- Build Path: {}/dist/meteor2.tar.gz".format(self._pwd))
@@ -39,8 +39,8 @@ class builder:
         subprocess.call("rm -rf {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteor2build:latest >/dev/null 2>&1", shell=True)
-        subprocess.call("docker pull amazonlinux:1", shell=True)
-        subprocess.call("docker build -t meteor2build:latest - < server.dockerfile", shell=True)
+        subprocess.call("docker pull amazonlinux:2", shell=True)
+        subprocess.call("docker buildx build -t meteor2build:latest --no-cache --platform linux/amd64 --load - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteor2build:latest".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteor2build:latest", shell=True)
 
@@ -52,9 +52,10 @@ class builder:
         subprocess.call("cd {}/dist/ ; tar -czvf client.tar.gz client ; rm -rf client".format(self._pwd), shell=True)
 
     def __clean_docker(self):
-        subprocess.call("rm -rf {}/.cache".format(self._pwd), shell=True)
+        subprocess.call("sudo rm -rf {}/.cache".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
         subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteor2) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteor2) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rmi meteor2:latest >/dev/null 2>&1", shell=True)
+        subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)

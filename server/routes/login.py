@@ -91,7 +91,7 @@ class Login:
                 elif user['mfa'] == 'webauthn':
                     try:
                         if 'mfa' not in login_json:
-                            return jsonify({"code": "webauthn", "data": self._mfa.get_webauthn_login(user, user_mfa), "message": "Requesting Webauthn credentials"}), 202
+                            return jsonify({"code": "webauthn", "data": self._mfa.get_webauthn_login(user_mfa), "message": "Requesting Webauthn credentials"}), 202
                         else:
                             self._mfa.post_webauthn_login(user, user_mfa)
                     except Exception as e:

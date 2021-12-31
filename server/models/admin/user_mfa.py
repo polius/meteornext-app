@@ -19,10 +19,10 @@ class User_MFA:
     def enable_webauthn(self, data):
         self.disable_mfa(data)
         query = """
-            INSERT INTO user_mfa (user_id, webauthn_ukey, webauthn_pub_key, webauthn_credential_id, webauthn_sign_count, webauthn_rp_id, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO user_mfa (user_id, webauthn_pub_key, webauthn_credential_id, webauthn_sign_count, webauthn_rp_id, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        self._sql.execute(query, (data['user_id'], data['webauthn_ukey'], data['webauthn_pub_key'], data['webauthn_credential_id'], data['webauthn_sign_count'], data['webauthn_rp_id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (data['user_id'], data['webauthn_pub_key'], data['webauthn_credential_id'], data['webauthn_sign_count'], data['webauthn_rp_id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put_webauthn_sign_count(self, data):
         query = """

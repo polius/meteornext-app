@@ -11,7 +11,7 @@ class Users:
                     u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.admin, u.disabled, u.change_password, u.last_ping,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
-                        WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
+                        WHEN mfa.webauthn_pub_key IS NOT NULL THEN 'webauthn'
                         ELSE NULL
                     END AS 'mfa'
                 FROM users u
@@ -31,7 +31,7 @@ class Users:
                     g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
-                        WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
+                        WHEN mfa.webauthn_pub_key IS NOT NULL THEN 'webauthn'
                         ELSE NULL
                     END AS 'mfa'
                 FROM users u
