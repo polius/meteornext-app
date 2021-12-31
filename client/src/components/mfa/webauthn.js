@@ -110,11 +110,3 @@ function b64RawEnc(buf) {
     .replace(/\+/g, "-")
     .replace(/\//g, "_");
 }
-
-function hexEncode(buf) {
-  return Array.from(buf)
-    .map(function (x) {
-      return ("0" + x.toString(16)).substr(-2);
-    })
-    .join("");
-}
