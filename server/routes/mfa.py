@@ -1,8 +1,22 @@
-import os
+import json
 import pyotp
 import bcrypt
 import secrets
-import webauthn
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+    options_to_json,
+    base64url_to_bytes,
+)
+from webauthn.helpers import bytes_to_base64url
+from webauthn.helpers.structs import (
+    PublicKeyCredentialDescriptor,
+    RegistrationCredential,
+    UserVerificationRequirement,
+    AuthenticationCredential,
+)
 from flask import Blueprint, jsonify, request, session
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -48,7 +62,7 @@ class MFA:
                 user_mfa = self._user_mfa.get({'user_id': user['id']})
                 return_data = { 'mfa': None, 'created': None}
                 if len(user_mfa) > 0:
-                    return_data['mode'] = '2fa' if user_mfa[0]['2fa_hash'] is not None else 'webauthn' if user_mfa[0]['webauthn_ukey'] is not None else None
+                    return_data['mode'] = '2fa' if user_mfa[0]['2fa_hash'] is not None else 'webauthn' if user_mfa[0]['webauthn_pub_key'] is not None else None
                     return_data['created'] = user_mfa[0]['created_at']
                 return jsonify({'data': return_data}), 200
             elif request.method == 'DELETE':
@@ -104,7 +118,7 @@ class MFA:
 
             if request.method == 'GET':              
                 # Generate webauthn challenge
-                return jsonify(self.get_webauthn_register(user))
+                return self.get_webauthn_register(user)
 
             elif request.method == 'POST':
                 # Validate challenge & Register webauthn credential
@@ -122,118 +136,74 @@ class MFA:
     # Internal Methods #
     ####################
     def get_webauthn_register(self, user):
-        # Clear session variables prior to starting a new registration
-        session.pop('register_ukey', None)
-        session.pop('register_username', None)
-        session.pop('register_display_name', None)
-        session.pop('challenge', None)
-        session['register_username'] = user['username']
-        session['register_display_name'] = user['username']
-
         # Generate challenge and store it to the user session
-        challenge = self.__generate_challenge(32)
-        ukey = self.__generate_ukey()
-        rp_id = request.host
-        session['challenge'] = challenge.rstrip('=')
-        session['register_ukey'] = ukey
+        session['challenge'] = self.__generate_challenge()
 
-        # Make credentials
-        make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', rp_id, ukey, user['username'], user['username'], 'https://www.w3.org', attestation='none')
-        return make_credential_options.registration_dict
+        # Generate registration options
+        registration_options = generate_registration_options(
+            rp_id=request.host,
+            rp_name="Meteor Next",
+            user_id=user['username'],
+            user_name=user['username'],
+            user_display_name=user['username'],
+            challenge=session['challenge'],
+        )
+        return options_to_json(registration_options)
 
     def post_webauthn_register(self, user, data):
-        # Get session data
-        challenge = session['challenge']
-        username = session['register_username']
-        display_name = session['register_display_name']
-        ukey = session['register_ukey']
-        
-        # Build webauthn registration response
-        rp_id = request.host
-        origin = 'https://' + request.host
-        registration_response = data['credential']
-        trust_anchor_dir = ''
-        trusted_attestation_cert_required = False
-        self_attestation_permitted = True
-        none_attestation_permitted = True
-        webauthn_registration_response = webauthn.WebAuthnRegistrationResponse(
-            rp_id,
-            origin,
-            registration_response,
-            challenge,
-            trust_anchor_dir,
-            trusted_attestation_cert_required,
-            self_attestation_permitted,
-            none_attestation_permitted,
-            uv_required=False
+        # Registration Response Verification
+        registration_verification = verify_registration_response(
+            credential=RegistrationCredential.parse_raw(json.dumps(data['credential'])),
+            expected_challenge=session['challenge'],
+            expected_origin='https://' + request.host,
+            expected_rp_id=request.host,
+            require_user_verification=False,
         )
-        # Verify webauthn registration response
-        webauthn_credential = webauthn_registration_response.verify()
 
         # Store webauthn credentials
         if 'store' in data and data['store'] is True:
             storage = {
                 'user_id': user['id'],
-                'webauthn_ukey': ukey,
-                'webauthn_pub_key': webauthn_credential.public_key,
-                'webauthn_credential_id': webauthn_credential.credential_id,
-                'webauthn_sign_count': webauthn_credential.sign_count,
-                'webauthn_rp_id': rp_id
+                'webauthn_pub_key': bytes_to_base64url(registration_verification.credential_public_key),
+                'webauthn_credential_id': data['credential']['id'],
+                'webauthn_sign_count': 0,
+                'webauthn_rp_id': request.host
             }
             self._user_mfa.enable_webauthn(storage)
 
-    def get_webauthn_login(self, user, user_mfa):
-        session.pop('challenge', None)
-        challenge = self.__generate_challenge(32)
-        session['challenge'] = challenge.rstrip('=')
-        webauthn_user = webauthn.WebAuthnUser(
-            user_mfa['webauthn_ukey'],
-            user['username'],
-            user['username'],
-            'https://www.w3.org',
-            user_mfa['webauthn_credential_id'],
-            user_mfa['webauthn_pub_key'],
-            user_mfa['webauthn_sign_count'],
-            user_mfa['webauthn_rp_id']
+    def get_webauthn_login(self, user_mfa):
+        # Generate a new challenge
+        session['challenge'] = self.__generate_challenge()
+
+        # Generate authentification options
+        authentication_options = generate_authentication_options(
+            rp_id=request.host,
+            challenge=session['challenge'],
+            allow_credentials=[PublicKeyCredentialDescriptor(id=base64url_to_bytes(user_mfa['webauthn_credential_id']))],
+            user_verification=UserVerificationRequirement.PREFERRED,
         )
-        webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(webauthn_user, challenge)
-        return webauthn_assertion_options.assertion_dict
+        return options_to_json(authentication_options)
 
     def post_webauthn_login(self, user, user_mfa):
         # Get request data
         data = request.get_json()
-        # Parse data
-        origin = 'https://' + request.host
-        challenge = session.get('challenge')
-        assertion_response = data['mfa']
-        webauthn_user = webauthn.WebAuthnUser(
-            user_mfa['webauthn_ukey'],
-            user['username'],
-            user['username'],
-            'https://www.w3.org',
-            user_mfa['webauthn_credential_id'],
-            user_mfa['webauthn_pub_key'],
-            user_mfa['webauthn_sign_count'],
-            user_mfa['webauthn_rp_id']
+
+        # Authentication Response Verification
+        authentication_verification = verify_authentication_response(
+            credential=AuthenticationCredential.parse_raw(json.dumps(data['mfa'])),
+            expected_challenge=session['challenge'],
+            expected_rp_id=request.host,
+            expected_origin='https://' + request.host,
+            credential_public_key=base64url_to_bytes(user_mfa['webauthn_pub_key']),
+            credential_current_sign_count=user_mfa['webauthn_sign_count'],
+            require_user_verification=False,
         )
-        webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
-            webauthn_user,
-            assertion_response,
-            challenge,
-            origin,
-            uv_required=False
-        )
-        # Verify webauthn login response
-        sign_count = webauthn_assertion_response.verify()
 
         # Update sign_count
-        self._user_mfa.put_webauthn_sign_count({'webauthn_sign_count': sign_count, 'user_id': user['id']})
+        self._user_mfa.put_webauthn_sign_count({'webauthn_sign_count': authentication_verification.new_sign_count, 'user_id': user['id']})
 
-    def __generate_challenge(self, challenge_len=32):
-        return secrets.token_urlsafe(challenge_len)
-
-    def __generate_ukey(self):
-        return self.__generate_challenge(20)
+    def __generate_challenge(self, length=64):
+        return secrets.token_bytes(length)
 
     def get_user(self, data):
         # From Login force MFA
