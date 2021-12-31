@@ -391,6 +391,16 @@ class core:
                     "text": "",
                     "fields": [
                         {
+                            "title": "Name",
+                            "value": "```{}```".format(self._imports.config['params']['name']),
+                            "short": False
+                        },
+                        {
+                            "title": "Release",
+                            "value": "```{}```".format(self._imports.config['params']['release']),
+                            "short": False
+                        },
+                        {
                             "title": "Environment",
                             "value": "```{}```".format(self._imports.config['params']['environment']),
                             "short": False
@@ -433,7 +443,7 @@ class core:
         
         # Add summary to the webhook_data
         if summary is not None:
-            webhook_data['attachments'][0]['fields'].insert(4, {"title": "Summary", "value": "```{}```".format(summary_msg), "short": False})
+            webhook_data['attachments'][0]['fields'].insert(6, {"title": "Summary", "value": "```{}```".format(summary_msg), "short": False})
 
         # Show Error Message
         if error is not None:

@@ -451,9 +451,14 @@ class Deployments:
         response = {'uri': execution['uri'], 'coins': user['coins'] - group['coins_execution'] }
 
         if execution['start_execution'] and not group['deployments_execution_concurrent']:
+            # Get Deployment Details
+            deployment = self._deployments.get(user_id=user['id'], deployment_id=execution['deployment_id'])[0]
+
             # Build Meteor Execution
             meteor = {
                 'id': execution_id,
+                'name': deployment['name'],
+                'release': deployment['release'],
                 'user_id': user['id'],
                 'username': user['username'],
                 'group_id': group['id'],
@@ -581,9 +586,14 @@ class Deployments:
         response = { 'uri': execution['uri'], 'coins': coins }
 
         if execution['start_execution'] and not group['deployments_execution_concurrent']:
+            # Get Deployment Details
+            deployment = self._deployments.get(user_id=user['id'], deployment_id=execution['deployment_id'])[0]
+
             # Build Meteor Execution
             meteor = {
                 'id': execution_id,
+                'name': deployment['name'],
+                'release': deployment['release'],
                 'user_id': user['id'],
                 'username': user['username'],
                 'group_id': user['group_id'],
@@ -642,9 +652,14 @@ class Deployments:
         # Get Group
         group = self._groups.get(group_id=user['group_id'])[0]
 
+        # Get Deployment
+        deployment = self._deployments.get(user_id=user['id'], deployment_id=execution['deployment_id'])[0]
+
         # Build Meteor Execution
         meteor = {
             'id': execution['id'],
+            'name': deployment['name'],
+            'release': deployment['release'],
             'user_id': user['id'],
             'username': user['username'],
             'group_id': user['group_id'],

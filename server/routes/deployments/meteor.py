@@ -183,6 +183,8 @@ class Meteor:
             "user": deployment['username'],
             "threads": deployment['execution_threads'],
             "timeout": deployment['execution_timeout'],
+            'name': deployment['name'],
+            "release": deployment['release'],
             "environment": deployment['environment_name'],
             "url": deployment['url']
         }
