@@ -38,6 +38,11 @@ if [[ -n $SQL_SSL_VERIFY_CA && $SQL_SSL_VERIFY_CA == 1 ]]; then
     jq '.sql += {"ssl_verify_ca": 1}' < server.conf > server.tmp && mv server.tmp server.conf
 fi
 
+# Check optional 'SENTRY' variable
+if [[ -n $SENTRY_DSN ]]; then
+    jq '.sentry += {"dsn": "$SENTRY_DSN"}' < server.conf > server.tmp && mv server.tmp server.conf
+fi
+
 # Check optional 'SECURE' variable
 if [[ -n $SECURE && $SECURE = "1" ]]; then
     export STS='add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload;" always;'

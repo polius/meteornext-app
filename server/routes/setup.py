@@ -7,6 +7,8 @@ import bcrypt
 import hashlib
 import requests
 import traceback
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from datetime import datetime
 from flask import request, jsonify, Blueprint
 
@@ -68,28 +70,27 @@ class Setup:
         except Exception:
             print("- Meteor initiated. No configuration detected. Install is required.")
 
-        try:
-            if self._conf:
-                # Set unique hardware id
-                # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
-                self._conf['license']['uuid'] = str(uuid.getnode())
-                # Init sql pool
-                sql = connectors.pool.Pool(self._conf['sql'])
-                # Init license
-                self._license = License(self._conf['license'])
-                self._license.validate()
-                # Register blueprints
-                self.__register_blueprints(sql)
-                # Start monitoring
-                monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
-                monitoring.start()
-                # Init cron
-                Cron(self._app, self._license, sql)
-                # Show success message
-                print("- Meteor initiated from existing configuration.")
-        except Exception as e:
-            print("- An error occurred initiating the server.")
-            print(str(e))
+        if self._conf:
+            # Init Sentry
+            if 'sentry' in self._conf:
+                sentry_sdk.init(dsn=self._conf['sentry']['dsn'], environment=self._conf['license']['access_key'], traces_sample_rate=1.0, integrations=[FlaskIntegration()])
+
+            # Set unique hardware id
+            # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
+            self._conf['license']['uuid'] = str(uuid.getnode())
+            # Init sql pool
+            sql = connectors.pool.Pool(self._conf['sql'])
+            # Init license
+            self._license = License(self._conf['license'])
+            self._license.validate()
+            # Register blueprints
+            self.__register_blueprints(sql)
+            # Start monitoring
+            monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
+            monitoring.start()
+            # Init cron
+            Cron(self._app, self._license, sql)
+            print("- Meteor initiated from existing configuration.")
 
     def blueprint(self):
         # Init blueprint
