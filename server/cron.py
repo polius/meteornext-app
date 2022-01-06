@@ -49,117 +49,106 @@ class Cron:
     def __executions(self):
         if not self._license.validated:
             return
-        try:
-            deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
-            deployments.check_finished()
-            deployments.check_scheduled()
-            deployments.check_queued()
-        except Exception:
-            traceback.print_exc()
+
+        # Check new scheduled & queued executions
+        deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
+        deployments.check_finished()
+        deployments.check_scheduled()
+        deployments.check_queued()
 
     def __check_license(self):
-        try:
-            self._license.validate(force=True)
-        except Exception:
-            traceback.print_exc()
+        # Check if the license is still active
+        self._license.validate(force=True)
 
     def __coins(self):
         if not self._license.validated:
             return
-        try:
-            query = """
-                UPDATE users u
-                JOIN groups g ON g.id = u.group_id
-                SET u.coins = IF (u.coins + g.coins_day > coins_max, coins_max, u.coins + g.coins_day);
-            """
-            self._sql.execute(query)
-        except Exception:
-            traceback.print_exc()
+
+        # Hand out coins for all users
+        query = """
+            UPDATE users u
+            JOIN groups g ON g.id = u.group_id
+            SET u.coins = IF (u.coins + g.coins_day > coins_max, coins_max, u.coins + g.coins_day);
+        """
+        self._sql.execute(query)
 
     def __logs(self):
         if not self._license.validated:
             return
-        try:
-            # Get expiration value
-            setting = self._sql.execute("SELECT value FROM settings WHERE name = 'FILES'")
 
-            # Check expiration is active
-            if len(setting) > 0:
-                setting = json.loads(setting[0]['value'])
-                if 'expire' in setting['local'] and setting['local']['expire'] is not None:
-                    query = """
-                        SELECT id, uri
-                        FROM executions
-                        WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
-                        AND uri IS NOT NULL
-                        AND expired = 0
-                    """.format(setting['local']['expire'])
-                    expired = self._sql.execute(query)
+        # Get expiration value
+        setting = self._sql.execute("SELECT value FROM settings WHERE name = 'FILES'")
 
-                    # Expire deployments
-                    for i in expired:
-                        # DISK
-                        path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
-                        if os.path.isfile(path + '.json'):
-                            os.remove(path + '.json')
-                        # SQL
-                        self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
-        except Exception:
-            traceback.print_exc()
+        # Check expiration is active
+        if len(setting) > 0:
+            setting = json.loads(setting[0]['value'])
+            if 'expire' in setting['local'] and setting['local']['expire'] is not None:
+                query = """
+                    SELECT id, uri
+                    FROM executions
+                    WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
+                    AND uri IS NOT NULL
+                    AND expired = 0
+                """.format(setting['local']['expire'])
+                expired = self._sql.execute(query)
+
+                # Expire deployments
+                for i in expired:
+                    # DISK
+                    path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
+                    if os.path.isfile(path + '.json'):
+                        os.remove(path + '.json')
+                    # SQL
+                    self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
 
     def __monitoring_clean(self):
         if not self._license.validated:
             return
-        try:
-            monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
-            monitoring.clean()
-        except Exception:
-            traceback.print_exc()
+
+        # Clean monitoring servers
+        monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
+        monitoring.clean()
 
     def __restore_clean(self):
         if not self._license.validated:
             return
-        try:
-            query = """
-                DELETE FROM restore_scans
-                WHERE `status` != 'IN PROGRESS'
-                AND DATE_ADD(`updated`, INTERVAL 1 DAY) <= CURRENT_DATE
-            """
-            self._sql.execute(query)
-        except Exception:
-            traceback.print_exc()
+
+        # Clean unfinished restores
+        query = """
+            DELETE FROM restore_scans
+            WHERE `status` != 'IN PROGRESS'
+            AND DATE_ADD(`updated`, INTERVAL 1 DAY) <= CURRENT_DATE
+        """
+        self._sql.execute(query)
 
     def __client_clean(self):
         if not self._license.validated:
             return
-        try:
-            query = """
-                DELETE cq
-                FROM client_queries cq
-                JOIN users u ON u.id = cq.user_id
-                JOIN groups g ON g.id = u.group_id
-                WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
-            """
-            self._sql.execute(query)
-        except Exception:
-            traceback.print_exc()
+
+        # Clean tracked queries
+        query = """
+            DELETE cq
+            FROM client_queries cq
+            JOIN users u ON u.id = cq.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
+        """
+        self._sql.execute(query)
 
     def __utils_scans(self):
         if not self._license.validated:
             return
+
         # Stop all scans not being tracked by the user
-        try:
-            query = """
-                SELECT id, pid
-                FROM restore_scans
-                WHERE status = 'IN PROGRESS'
-                AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
-            """
-            result = self._sql.execute(query)
-            scan = apps.restore.scan.Scan(self._sql)
-            for i in result:
-                query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
-                self._sql.execute(query, (i['id']))
-                scan.stop(i['pid'])
-        except Exception:
-            traceback.print_exc()
+        query = """
+            SELECT id, pid
+            FROM restore_scans
+            WHERE status = 'IN PROGRESS'
+            AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
+        """
+        result = self._sql.execute(query)
+        scan = apps.restore.scan.Scan(self._sql)
+        for i in result:
+            query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
+            self._sql.execute(query, (i['id']))
+            scan.stop(i['pid'])
