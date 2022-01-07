@@ -71,10 +71,6 @@ class Setup:
             print("- Meteor initiated. No configuration detected. Install is required.")
 
         if self._conf:
-            # Init Sentry
-            if 'sentry' in self._conf:
-                sentry_sdk.init(dsn=self._conf['sentry']['dsn'], environment=self._conf['license']['access_key'], traces_sample_rate=1.0, integrations=[FlaskIntegration()])
-
             # Set unique hardware id
             # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
             self._conf['license']['uuid'] = str(uuid.getnode())
@@ -330,6 +326,10 @@ class License:
             # Store last check date
             self._last_check_date = datetime.utcnow()
 
+            # Check sentry
+            if 'sentry' in self._license_status and self._license_status['sentry'] is not None:
+                sentry_sdk.init(dsn=self._license_status['sentry'], environment=self._license_params['access_key'], traces_sample_rate=1.0, integrations=[FlaskIntegration()])
+
     def __check(self):
         try:
             # Generate challenge
@@ -338,13 +338,15 @@ class License:
             # Check license
             response = requests.post("https://license.meteor2.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
             response_code = response.status_code
-            response_text = json.loads(response.text)['response']
-            date = json.loads(response.text)['date']
-            resources = json.loads(response.text)['resources'] if response_code == 200 else None
+            response_body = json.loads(response.text)['body']
+            response_text = response_body['response']
+            date = response_body['date']
+            resources = response_body['resources'] if response_code == 200 else None
+            sentry = response_body['sentry'] if response_code == 200 else None
 
             # Solve challenge
             if response_code == 200:
-                response_challenge = json.loads(response.text)['challenge']
+                response_challenge = response_body['challenge']
                 challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
                 challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
 
@@ -353,7 +355,7 @@ class License:
                     response_text = "The license is not valid"
                     response_code = 401
 
-            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources}
+            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources, "sentry": sentry}
         except Exception:
             if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
                 self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
