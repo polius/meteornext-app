@@ -171,8 +171,9 @@ class Region:
                         with open(path + '.err', 'a') as outfile:
                             outfile.write(line + '\n')
 
-                # Get stdout
+                # Get output
                 _stdout = stdout.readlines()
+                _stderr = stderr.readlines()
 
                 # Return Execution Output
                 return _stdout[0].strip() if len(_stdout) > 0 else ''
