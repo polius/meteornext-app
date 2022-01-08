@@ -337,7 +337,7 @@ class License:
 
             # Check license
             response = requests.post("https://license.meteor2.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
-            response_code = response.status_code
+            response_code = json.loads(response.text)['statusCode']
             response_body = json.loads(response.text)['body']
             response_text = response_body['response']
             date = response_body['date']

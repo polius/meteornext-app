@@ -1,10 +1,8 @@
-FROM amazonlinux:2
+FROM amazonlinux:1
 RUN yum update -y && \
     yum install gcc -y && \
     yum install xz -y && \
-    amazon-linux-extras enable python3.8 && \
     yum install python38-devel -y && \
-    ln -s /usr/bin/python3.8 /usr/bin/python3 && \
     python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \
