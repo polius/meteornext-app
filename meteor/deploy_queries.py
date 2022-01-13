@@ -54,7 +54,7 @@ class deploy_queries:
         for conn in self._aux.values():
             conn.stop()
 
-    def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
+    def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None, output=True):
         # Check Arguments
         if query is None or type(query) is not str:
             raise Exception('The query argument is mandatory')
@@ -64,6 +64,8 @@ class deploy_queries:
             raise Exception('The auxiliary argument has an invalid format (should be an string)')
         if alias is not None and type(alias) is not str:
             raise Exception('The alias argument has an invalid format (should be an string)')
+        if output is not True and output is not False:
+            raise Exception('The output argument has an invalid value (should be either True or False)')
 
         # Core Variables
         query_parsed = query.strip()
@@ -115,6 +117,8 @@ class deploy_queries:
 
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
+                if not output:
+                    execution_row['meteor_output'] = '-'
                 execution_row['meteor_response'] = ""
                 execution_row['meteor_execution_time'] = query_info['query_time']
                 execution_row['meteor_execution_rows'] = query_info['query_rows_affected']

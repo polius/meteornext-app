@@ -80,6 +80,10 @@ class build_server:
             if '__pycache__' in dirs:
                 shutil.rmtree("{}/{}".format(root, '__pycache__'), ignore_errors=True)
 
+        # Clean files folder
+        if binary_name == 'server':
+            shutil.rmtree(f"{build_path}/build/files", ignore_errors=True)
+
         # Start building process
         try:
             self.__compile(build_path, binary_name)
