@@ -140,7 +140,7 @@ class Region:
         # Return Execution Output
         return stdout[0] if len(stdout) > 0 else ''
 
-    def __ssh(self, command, path=None, retry=True):
+    def __ssh(self, command, retry=True):
         retries = 6 if retry else 1
         for i in range(retries):
             try:
@@ -162,14 +162,6 @@ class Region:
                 # Paramiko Execute Command
                 stdin, stdout, stderr = client.exec_command(command, get_pty=False)
                 stdin.close()
-
-                if path:
-                    while True:
-                        line = stderr.readline()
-                        if not line:
-                            break
-                        with open(path + '.err', 'a') as outfile:
-                            outfile.write(line + '\n')
 
                 # Get output
                 _stdout = stdout.readlines()

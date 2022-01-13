@@ -58,7 +58,12 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" autocomplete="username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px;">
+                      <template v-slot:[`append`]>
+                        <v-btn title="Generate password" @click="generatePassword" icon><v-icon>mdi-key</v-icon></v-btn>
+                        <v-btn :title="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword" icon><v-icon>{{ showPassword ? 'mdi-eye' : 'mdi-eye-off' }}</v-icon></v-btn>
+                      </template>
+                    </v-text-field>
                     <v-file-input v-if="item.key == null || typeof item.key === 'object'" v-model="item.key" filled label="Private Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
                     <v-card v-else style="height:52px">
                       <v-row no-gutters>
@@ -348,6 +353,16 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    generatePassword() {
+      axios.get('/inventory/genpass')
+        .then((response) => {
+          this.item.password = response.data.password
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
     },
     filterBy(val) {
       if (val == 'all') this.items = this.regions.slice(0)
