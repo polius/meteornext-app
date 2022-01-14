@@ -64,8 +64,8 @@ class MySQL:
                 ssl = self.__get_ssl()
                 # Start SSH Tunnel
                 if self._server['ssh']['enabled']:
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
+                    sshtunnel.SSH_TIMEOUT = 10.0
+                    sshtunnel.TUNNEL_TIMEOUT = 10.0
                     pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
                     self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
                     self._tunnel.start()
@@ -306,6 +306,7 @@ class MySQL:
         query = """
             SELECT schema_name AS 'name'
             FROM information_schema.schemata
+            ORDER BY schema_name
         """
         result = self.execute(query)['data']
         databases = []
@@ -318,6 +319,7 @@ class MySQL:
             SELECT table_name AS 'name', IF(table_type = 'VIEW', 'view','table') AS 'type'
             FROM information_schema.tables 
             WHERE table_schema = %s
+            ORDER BY table_name
         """
         return self.execute(query, args=(db))['data']
 
@@ -326,6 +328,7 @@ class MySQL:
             SELECT DISTINCT column_name AS 'name', column_type AS 'type'
             FROM information_schema.columns
             WHERE table_schema = %s
+            ORDER BY column_name
         """
         return self.execute(query, args=(db))['data']
 
@@ -341,7 +344,8 @@ class MySQL:
         query = """
             SELECT event_name AS 'name'
             FROM information_schema.events
-            WHERE event_schema = %s;
+            WHERE event_schema = %s
+            ORDER BY event_name
         """
         return self.execute(query, args=(db))['data']
 
@@ -350,6 +354,7 @@ class MySQL:
             SELECT routine_name AS 'name', LOWER(routine_type) AS 'type'
             FROM information_schema.routines
             WHERE routine_schema = %s
+            ORDER BY routine_name
         """
         return self.execute(query, args=(db))['data']
 

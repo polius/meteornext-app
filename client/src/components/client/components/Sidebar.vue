@@ -629,7 +629,7 @@ export default {
       let items = JSON.parse(JSON.stringify(this.sidebarOrigin))
       if (search.length > 0) {
         for (let i = items.length - 1; i >= 0; --i) {
-          items[i].children = items[i].children.filter(x => x.name.includes(search))
+          items[i].children = items[i].children.filter(x => x.name.toLowerCase().includes(search.toLowerCase()))
           items[i].name = items[i].id.charAt(0).toUpperCase() + items[i].id.slice(1) + ' (' + items[i].children.length + ')'
           if (items[i].children.length == 0) items.splice(i, 1)
         }
