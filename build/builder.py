@@ -39,7 +39,7 @@ class builder:
         subprocess.call("rm -rf {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteor2build:latest >/dev/null 2>&1", shell=True)
-        subprocess.call("docker pull amazonlinux:2", shell=True)
+        subprocess.call("docker pull amazonlinux:1", shell=True)
         subprocess.call("docker buildx build -t meteor2build:latest --no-cache --platform linux/amd64 --load - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteor2build:latest".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteor2build:latest", shell=True)

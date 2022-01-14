@@ -1164,21 +1164,20 @@ function compile_query(data) {
     // Rebuild Data
     if (data[i]['meteor_output'] == '[]') {
       if (!transformation_checkbox_checked) {
-        let row = JSON.parse(JSON.stringify(data[i]));
-        for (let c = 0; c < columns.length; ++c) {
-          row[columns[c]] = '';
-        }
-        new_data.push(row);
+        let expand = columns.reduce((acc, val) => {
+          acc[val] = ''
+          return acc
+        },{})
+        new_data.push({...data[i], meteor_output:[], ...expand});
       }
     }
     else if (data[i]['meteor_output'] != '') {
-      let row = JSON.parse(JSON.stringify({...data[i], meteor_output:[]}));
       for (let j = 0; j < data[i]['meteor_output'].length; ++j) {
-        for (let c = 0; c < columns.length; ++c) {
-          row[columns[c]] = data[i]['meteor_output'][j][columns[c]];
-        }
-        row['meteor_output'] = [data[i]['meteor_output'][j]];
-        new_data.push(row);
+        let expand = columns.reduce((acc, val) => {
+          acc[val] = data[i]['meteor_output'][j][val]
+          return acc
+        },{})
+        new_data.push({...data[i], meteor_output:[], ...expand});
       }
     }
   }
