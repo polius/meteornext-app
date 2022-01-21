@@ -320,6 +320,9 @@ export default {
         this.loading = true
         EventBus.$emit('get-objects', true, resolve, reject)
       })
+      .then(() => {
+        this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
+      })
       .finally(() => {
         this.databasePrev = this.database
       })
@@ -348,6 +351,12 @@ export default {
       // Check if no objects are selected
       if (objects['tables'].length == 0 && objects['views'].length == 0 && objects['triggers'].length == 0 && objects['functions'].length == 0 && objects['procedures'].length == 0 && objects['events'].length == 0) {
         EventBus.$emit('send-notification', 'Please select at least one object to export', '#EF5354')
+        return
+      }
+      // Limit export size
+      let table_size = this.gridApi['tables'].getSelectedRows().reduce((acc, val) => acc + val['data_length'], 0)
+      if ((table_size/1024/1024) > 100) {
+        EventBus.$emit('send-notification', 'The selected objects cannot be greater than 100 MB.', '#EF5354')
         return
       }
       // Init Export

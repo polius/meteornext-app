@@ -5,7 +5,9 @@
         <v-tabs-slider></v-tabs-slider>
           <v-tab disabled style="opacity:1"><span class="pl-2 pr-2 white--text"><v-icon small style="margin-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab to="/utils/restore"><span class="pl-2 pr-2">Restore</span></v-tab>
+          <v-tab to="/utils/restore"><span class="pl-2 pr-2"><v-icon size="14" style="margin-right:10px">fas fa-arrow-up</v-icon>Restore</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab to="/utils/export"><span class="pl-2 pr-2"><v-icon size="14" style="margin-right:10px">fas fa-arrow-down</v-icon>Export</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
     </div>

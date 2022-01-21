@@ -27,6 +27,7 @@ import routes.admin.inventory.servers
 import routes.admin.inventory.auxiliary
 import routes.admin.inventory.cloud
 import routes.admin.utils.restore
+import routes.admin.utils.export
 import routes.admin.client
 import routes.admin.monitoring
 import routes.inventory.inventory
@@ -44,6 +45,7 @@ import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
 import routes.client.client
 import routes.utils.restore
+import routes.utils.export
 import connectors.base
 import connectors.pool
 import models.admin.settings
@@ -274,6 +276,7 @@ class Setup:
         admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
         admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._app, sql, self._license)
         admin_utils_restore = routes.admin.utils.restore.Restore(self._app, sql, self._license)
+        admin_utils_export = routes.admin.utils.export.Export(self._app, sql, self._license)
         admin_client = routes.admin.client.Client(self._app, sql, self._license)
         admin_monitoring = routes.admin.monitoring.Monitoring(self._app, sql, self._license)
         inventory = routes.inventory.inventory.Inventory(self._app, sql, self._license)
@@ -291,8 +294,9 @@ class Setup:
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
         restore = routes.utils.restore.Restore(self._app, sql, self._license)
+        export = routes.utils.export.Export(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_restore, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore]
+        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_restore, admin_utils_export, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore, export]
 
         # Register all blueprints
         for i in self._blueprints:

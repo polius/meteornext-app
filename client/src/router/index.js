@@ -197,6 +197,24 @@ let router = new VueRouter({
           component: () => import('../components/utils/restore/Info'),
           meta: { requiresUtils: true }
         },
+        {
+          path: 'export',
+          name: 'utils.export',
+          component: () => import('../components/utils/export/Export'),
+          meta: { requiresUtils: true }
+        },
+        {
+          path: 'export/new',
+          name: 'utils.export.new',
+          component: () => import('../components/utils/export/New'),
+          meta: { requiresUtils: true }
+        },
+        {
+          path: 'export/:uri',
+          name: 'utils.export.info',
+          component: () => import('../components/utils/export/Info'),
+          meta: { requiresUtils: true }
+        },
       ]
     },
     {
@@ -226,6 +244,7 @@ let router = new VueRouter({
         {
           path: 'settings',
           name: 'admin.settings',
+          alias: ["/admin/settings/license", "/admin/settings/sql", "/admin/settings/files", "/admin/settings/security"],
           component: () => import('../components/admin/views/Settings'),
           meta: { requiresAdmin: true }
         },
@@ -252,6 +271,7 @@ let router = new VueRouter({
         {
           path: 'inventory',
           name: 'admin.inventory',
+          alias: ["/admin/inventory/servers", "/admin/inventory/regions", "/admin/inventory/environments", "/admin/inventory/auxiliary", "/admin/inventory/cloud"],
           component: () => import('../components/admin/views/Inventory'),
           meta: { requiresAdmin: true }
         },
@@ -270,12 +290,14 @@ let router = new VueRouter({
         {
           path: 'utils',
           name: 'admin.utils',
-          component: () => import('../components/admin/views/utils/Restore'),
+          alias: ["/admin/utils/restore", "/admin/utils/export"],
+          component: () => import('../components/admin/views/Utils'),
           meta: { requiresAdmin: true }
         },
         {
           path: 'client',
           name: 'admin.client',
+          alias: ["/admin/client/queries", "/admin/client/servers"],
           component: () => import('../components/admin/views/Client'),
           meta: { requiresAdmin: true }
         }

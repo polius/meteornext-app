@@ -514,12 +514,19 @@ export default {
       snackbarTimeout: Number(3000),
       snackbarText: '',
       snackbarColor: '',
+      // Previous Route
+      prevRoute: null
     }
   },
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
     readOnly: function() { return !this.owner && (Object.keys(this.serverItem).length == 0 || this.serverItem.shared == 1) },
+  },
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      vm.prevRoute = from
+    })
   },
   beforeRouteLeave(to, from, next) {
     this.stopScan(false)
@@ -708,7 +715,8 @@ export default {
     },
     goBack() {
       if (this.stepper == 1 && this.scanID != null) this.stopScan(false)
-      this.$router.push('/utils/restore')
+      if (this.prevRoute.path == '/admin/utils') this.$router.push('/admin/utils')
+      else this.$router.push('/utils/restore')
     },
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
