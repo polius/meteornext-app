@@ -37,3 +37,12 @@ class Base:
 
     def get_processlist(self):
         return self._sql.get_processlist()
+
+    def get_databases(self):
+        return self._sql.get_databases()
+
+    def get_database_size(self, database):
+        return self._sql.get_database_size(database)
+
+    def get_tables_detailed(self, database):
+        return self._sql.get_tables_detailed(database)

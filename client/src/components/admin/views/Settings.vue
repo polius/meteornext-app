@@ -5,10 +5,10 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium" style="font-size:0.95rem!important">SETTINGS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items style="padding-left:0px;">
-          <v-btn text @click="mode = 'license'" :style="{ backgroundColor : mode == 'license' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
-          <v-btn text @click="mode = 'sql'" :style="{ backgroundColor : mode == 'sql' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
-          <v-btn text @click="mode = 'files'" :style="{ backgroundColor : mode == 'files' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>FILES</v-btn>
-          <v-btn text @click="mode = 'security'" :style="{ backgroundColor : mode == 'security' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
+          <v-btn text @click="changeTab('license')" :style="{ backgroundColor : mode == 'license' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
+          <v-btn text @click="changeTab('sql')" :style="{ backgroundColor : mode == 'sql' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
+          <v-btn text @click="changeTab('files')" :style="{ backgroundColor : mode == 'files' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>FILES</v-btn>
+          <v-btn text @click="changeTab('security')" :style="{ backgroundColor : mode == 'security' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
       <v-container fluid grid-list-lg>
@@ -52,8 +52,20 @@ export default {
   components: { License, SQL, Files, Security },
   created() {
     this.getSettings()
+    if (this.$route.path.startsWith('/admin/settings/license')) this.mode = 'license'
+    else if (this.$route.path.startsWith('/admin/settings/sql')) this.mode = 'sql'
+    else if (this.$route.path.startsWith('/admin/settings/files')) this.mode = 'files'
+    else if (this.$route.path.startsWith('/admin/settings/security')) this.mode = 'security'
+    else this.$router.push('/admin/settings/license')
   },
   methods: {
+    changeTab(val) {
+      if (val == 'license' && this.$route.path != '/admin/settings/license') this.$router.push('/admin/settings/license')
+      else if (val == 'sql' && this.$route.path != '/admin/settings/sql') this.$router.push('/admin/settings/sql')
+      else if (val == 'files' && this.$route.path != '/admin/settings/files') this.$router.push('/admin/settings/files')
+      else if (val == 'security' && this.$route.path != '/admin/settings/security') this.$router.push('/admin/settings/security')
+      this.mode = val
+    },
     getSettings() {
       axios.get('/admin/settings')
         .then((response) => {

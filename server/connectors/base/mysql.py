@@ -174,3 +174,25 @@ class MySQL:
 
     def get_processlist(self):
         return self.execute('SELECT * FROM information_schema.processlist')
+
+    def get_databases(self):
+        return self.execute("SELECT schema_name AS 'name' FROM information_schema.schemata ORDER BY name")
+
+    def get_database_size(self, database):
+        query = """
+            SELECT SUM(data_length) AS 'size'
+            FROM information_schema.tables
+            WHERE table_schema = %s
+        """
+        size = self.execute(query, args=(database))[0]['size']
+        return 0 if size is None else int(size)
+
+    def get_tables_detailed(self, database):
+        query = """
+            SELECT table_name AS 'name', table_rows AS 'rows', data_length, index_length, (data_length + index_length) AS 'total_length', engine, row_format, avg_row_length, data_free, auto_increment, c.character_set_name AS 'charset', table_collation AS 'collation', table_comment AS 'comment', create_time AS 'created', update_time AS 'modified'
+            FROM information_schema.tables t
+            JOIN information_schema.collations c ON c.collation_name = t.table_collation
+            WHERE t.table_schema = %s
+            ORDER BY table_name
+        """
+        return self.execute(query, args=(database))

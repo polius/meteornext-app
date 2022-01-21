@@ -9,7 +9,7 @@
             <template v-slot:activator="{ attrs, on }">
               <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD KEYS' : '' }}</v-btn>
             </template>
-            <v-list-item-group v-model="tab">
+            <v-list-item-group @change="changeTab" v-model="tab">
               <v-list style="padding:0px">
                 <v-list-item v-for="item in ['servers','regions','environments','auxiliary','cloud keys']" :key="item" link>
                   <v-list-item-title v-text="item.toUpperCase()" class="text-subtitle-2"></v-list-item-title>
@@ -139,9 +139,24 @@ export default {
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
     EventBus.$on('notification', this.notification)
-    this.tab = 0
+    if (this.$route.path.startsWith('/admin/inventory/servers')) this.tab = 0
+    else if (this.$route.path.startsWith('/admin/inventory/regions')) this.tab = 1
+    else if (this.$route.path.startsWith('/admin/inventory/environments')) this.tab = 2
+    else if (this.$route.path.startsWith('/admin/inventory/auxiliary')) this.tab = 3
+    else if (this.$route.path.startsWith('/admin/inventory/cloud')) this.tab = 4
+    else {
+      this.$router.push('/admin/inventory/servers')
+      this.tab = 0
+    }
   },
   methods: {
+    changeTab(val) {
+      if (val == 0) this.$router.push("/admin/inventory/servers")
+      if (val == 1) this.$router.push("/admin/inventory/regions")
+      if (val == 2) this.$router.push("/admin/inventory/environments")
+      if (val == 3) this.$router.push("/admin/inventory/auxiliary")
+      if (val == 4) this.$router.push("/admin/inventory/cloud")
+    },
     getGroups() {
       axios.get('/admin/inventory/groups')
         .then((response) => {

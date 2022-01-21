@@ -94,7 +94,8 @@
             <v-list-item-content>
               <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#EF5354" style="margin-right:8px; margin-bottom:2px">fas fa-meteor</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="margin-right:8px; margin-bottom:2px">fas fa-desktop</v-icon>{{ notification['name'] }}</v-list-item-title>
-              <v-list-item-title v-else-if="notification['category'] == 'utils-restore'"><v-icon small title="Utils - Restore" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-database</v-icon>{{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-else-if="notification['category'] == 'utils-restore'"><v-icon small title="Utils - Import" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-arrow-up</v-icon>{{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-else-if="notification['category'] == 'utils-export'"><v-icon small title="Utils - Export" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-arrow-down</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>

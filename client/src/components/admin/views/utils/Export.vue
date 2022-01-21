@@ -10,17 +10,13 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
-          <div v-if="item.mode == 'file'">
-            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#23cba7" style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
-            File
+          <div v-if="item.mode == 'full'">
+            <v-icon small color="#EF5354" style="margin-right:5px; margin-bottom:4px">fas fa-star</v-icon>
+            Full
           </div>
-          <div v-else-if="item.mode == 'url'">
-            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#e47911" style="margin-right:5px; margin-bottom:2px">fas fa-link</v-icon>
-            URL
-          </div>
-          <div v-else-if="item.mode == 'cloud'">
-            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:18px; margin-right:5px; margin-bottom:3px">fas fa-cloud</v-icon>
-            Cloud Key
+          <div v-else-if="item.mode == 'partial'">
+            <v-icon small color="#ff9800" style="margin-right:5px; margin-bottom:4px">fas fa-star-half</v-icon>
+            Partial
           </div>
         </template>
         <template v-slot:[`item.server`]="{ item }">
@@ -64,12 +60,10 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
-                  <v-checkbox v-model="columnsRaw" label="User" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Source" value="source" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
@@ -101,13 +95,13 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="margin-bottom:10px">Choose the action to perform for the selected restore(s).</div>
+                <div class="subtitle-1" style="margin-bottom:10px">Choose the action to perform for the selected export(s).</div>
                 <v-radio-group v-model="manageOption" hide-details style="margin-top:0px; margin-bottom:20px">
                   <v-radio value="recover" color="#4caf50">
                     <template v-slot:label>
                       <div style="margin-left:5px">
                         <div class="body-1 white--text">Recover</div>
-                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Recover the restore making it visible.</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Recover the export making it visible.</div>
                       </div>
                     </template>
                   </v-radio>
@@ -115,7 +109,7 @@
                     <template v-slot:label>
                       <div style="margin-left:5px">
                         <div class="body-1 white--text">Delete</div>
-                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the restore making it not visible.</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the export making it not visible.</div>
                       </div>
                     </template>
                   </v-radio>
@@ -123,7 +117,7 @@
                     <template v-slot:label>
                       <div style="margin-left:5px">
                         <div class="body-1 white--text">Delete Permanently</div>
-                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the restore permanently. This action cannot be undone.</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the export permanently. This action cannot be undone.</div>
                       </div>
                     </template>
                   </v-radio>
@@ -189,24 +183,19 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete v-model="filter.mode" :items="restoreMode" multiple label="Mode" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.mode" :items="exportMode" multiple label="Mode" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
-                          <div v-if="item == 'file'"><v-icon small color="#23cba7" style="margin-left:6px; margin-right:18px">fas fa-file</v-icon>File</div>
-                          <div v-else-if="item == 'url'"><v-icon small color="#e47911" style="margin-left:3px; margin-right:14px">fas fa-link</v-icon>URL</div>
-                          <div v-else-if="item == 'cloud'"><v-icon size="18" color="#19b5fe" style="margin-right:10px">fas fa-cloud</v-icon>Cloud Key</div>
+                          <div v-if="item == 'full'"><v-icon small color="#EF5354" style="margin-left:5px; margin-right:18px">fas fa-star</v-icon>Full</div>
+                          <div v-else-if="item == 'partial'"><v-icon small color="#ff9800" style="margin-left:5px; margin-right:18px">fas fa-star-half</v-icon>Partial</div>
                         </template>
                         <template v-slot:selection="{ item }">
-                          <v-chip v-if="item == 'file'" label>
-                            <v-icon small color="#23cba7" style="margin-right:10px">fas fa-file</v-icon>
-                            File
+                          <v-chip v-if="item == 'full'" label>
+                            <v-icon small color="#EF5354" style="margin-right:10px">fas fa-star</v-icon>
+                            Full
                           </v-chip>
-                          <v-chip v-else-if="item == 'url'" label>
-                            <v-icon small color="#e47911" style="margin-right:10px">fas fa-link</v-icon>
-                            URL
-                          </v-chip>
-                          <v-chip v-else-if="item == 'cloud'" label>
-                            <v-icon size="18" color="#19b5fe" style="margin-top:2px; margin-left:2px; margin-right:12px">fas fa-cloud</v-icon>
-                            Cloud Key
+                          <v-chip v-else-if="item == 'partial'" label>
+                            <v-icon small color="#ff9800" style="margin-right:10px">fas fa-star-half</v-icon>
+                            Partial
                           </v-chip>
                         </template>
                       </v-autocomplete>
@@ -230,7 +219,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete v-model="filter.status" :items="restoreStatus" multiple label="Status" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.status" :items="exportStatus" multiple label="Status" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
                           <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
@@ -270,7 +259,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-checkbox v-model="filter.deleted" label="Include Deleted Restores" style="margin-top:0px" hide-details></v-checkbox>
+                      <v-checkbox v-model="filter.deleted" label="Include Deleted Exports" style="margin-top:0px" hide-details></v-checkbox>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -300,10 +289,9 @@ export default {
     headers: [
       { text: 'User', align: 'left', value: 'username' },
       { text: 'Mode', align: 'left', value: 'mode' },
-      { text: 'Source', align: 'left', value: 'source' },
-      { text: 'Size', align: 'left', value: 'size' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'Database', align: 'left', value: 'database' },
+      { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
@@ -335,8 +323,8 @@ export default {
     filter: {},
     filterApplied: false,
     filterUsers: [],
-    restoreMode: ['file','url','cloud'],
-    restoreStatus: ['IN PROGRESS','SUCCESS','FAILED','STOPPED'],
+    exportMode: ['full','partial'],
+    exportStatus: ['IN PROGRESS','SUCCESS','FAILED','STOPPED'],
 
     // Date / Time Picker
     dateTimeDialog: false,
@@ -354,7 +342,7 @@ export default {
     options: {
       handler (newValue, oldValue) {
         if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
-          this.getRestore()
+          this.getExport()
         }
         else this.onSearch()
       },
@@ -363,22 +351,22 @@ export default {
     search: function() {
       if (this.active) this.onSearch()
     },
-    selected(val) {
-      EventBus.$emit('utils-select-row', { from: 'restore', value: val.length })
+    selected(val) { 
+      EventBus.$emit('utils-select-row', { from: 'export', value: val.length })
     }
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   mounted() {
-    EventBus.$on('info-utils-restore', this.infoRestore)
-    EventBus.$on('manage-utils-restore', this.manageRestore)
-    EventBus.$on('filter-utils-restore', () => { this.filterDialog = true })
-    EventBus.$on('refresh-utils-restore', this.getRestore)
-    EventBus.$on('columns-utils-restore', this.openColumnsDialog)
+    EventBus.$on('info-utils-export', this.infoExport)
+    EventBus.$on('manage-utils-export', this.manageExport)
+    EventBus.$on('filter-utils-export', () => { this.filterDialog = true })
+    EventBus.$on('refresh-utils-export', this.getExport)
+    EventBus.$on('columns-utils-export', this.openColumnsDialog)
   },
   methods: {
-    getRestore() {
+    getExport() {
       this.loading = true
       var payload = {}
       // Build Filter
@@ -393,10 +381,10 @@ export default {
       // Build Sort
       const { sortBy, sortDesc } = this.options
       if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
-      // Get Restores
-      axios.get('/admin/utils/restore', { params: payload })
+      // Get Exports
+      axios.get('/admin/utils/export', { params: payload })
         .then((response) => {
-          this.origin = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.origin = response.data.export.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.filterUsers = response.data.users_list
           this.onSearch()
         })
@@ -406,29 +394,29 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    manageRestore() {
+    manageExport() {
       this.manageOption = 'recover'
       this.manageDialog = true
     },
     manageSubmit() {
-      // Check restore status
+      // Check export status
       if (['delete','permanently'].includes(this.manageOption) && this.selected.some(x => x.status == 'IN PROGRESS')) {
-        EventBus.$emit('send-notification', "Can't delete restores that are in progress", '#EF5354')
+        EventBus.$emit('send-notification', "Can't delete exports that are in progress", '#EF5354')
         this.deleteDialog = false
         return
       }
-      // Delete Restores
+      // Delete Exports
       this.loading = true
       const payload = { 
         action: this.manageOption,
         items: this.selected.map(x => x.id)
       }
-      axios.post('/admin/utils/restore/action', payload)
+      axios.post('/admin/utils/export/action', payload)
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a')
           this.selected = []
           this.manageDialog = false
-          this.getRestore()
+          this.getExport()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -444,8 +432,8 @@ export default {
       if (size == null) return null
       return pretty(size, {binary: true}).replace('i','')
     },
-    infoRestore() {
-      this.$router.push({ name: 'utils.restore.info', params: { id: this.selected[0]['id'] }})
+    infoExport() {
+      this.$router.push({ name: 'utils.export.info', params: { uri: this.selected[0]['uri'] }})
     },
     getServer(server_id) {
       EventBus.$emit('utils-get-server', server_id)
@@ -507,16 +495,16 @@ export default {
         return
       }
       this.filterDialog = false
-      EventBus.$emit('utils-toggle-filter', { from: 'restore', value: true })
+      EventBus.$emit('utils-toggle-filter', { from: 'export', value: true })
       this.filterApplied = true
-      this.getRestore()
+      this.getExport()
     },
     clearFilter() {
       this.filterDialog = false
       this.filter = {}
-      EventBus.$emit('utils-toggle-filter', { from: 'restore', value: false })
+      EventBus.$emit('utils-toggle-filter', { from: 'export', value: false })
       this.filterApplied = false
-      this.getRestore()
+      this.getExport()
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
