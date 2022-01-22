@@ -16,6 +16,9 @@
       <v-card>
         <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllRights" text title="Select all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllRights" text title="Deselect all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -371,6 +374,19 @@ export default {
       diff['revoke'] = diff['revoke'].concat(revokes)
       this.rightsDiff['schema'] = diff
     },
+    selectAllRights() {
+      this.deselectAllRights()
+      const columnRights = ['select','insert','update']
+      const tableRights = ['select','insert','update','delete','show_view']
+      const databaseRights = ['select','insert','update','delete','show_view','create_view','create_routine','alter_routine','execute','create','drop','alter','index','trigger','event','references','create_temporary_tables','lock_tables']
+      if (this.dialogOptions.item.type == 'Column') columnRights.forEach((item) => { this.dialogOptions.item.rights[item] = true })
+      else if (this.dialogOptions.item.type == 'Table') tableRights.forEach((item) => { this.dialogOptions.item.rights[item] = true })
+      else if (this.dialogOptions.item.type == 'Database') databaseRights.forEach((item) => { this.dialogOptions.item.rights[item] = true })
+    },
+    deselectAllRights() {
+      const rights = ['select','insert','update','delete','show_view','create_view','create_routine','alter_routine','execute','create','drop','alter','index','trigger','event','references','create_temporary_tables','lock_tables']
+      rights.forEach((item) => { this.dialogOptions.item.rights[item] = false })
+    }
   }
 }
 </script>
