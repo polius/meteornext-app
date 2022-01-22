@@ -74,7 +74,9 @@ class MySQL:
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                read_timeout = self._server['sql']['read_timeout'] if 'read_timeout' in self._server['sql'] else None
+                write_timeout = self._server['sql']['write_timeout'] if 'write_timeout' in self._server['sql'] else None
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, read_timeout=read_timeout, write_timeout=write_timeout, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
 
             except Exception as e:
