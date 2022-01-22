@@ -236,10 +236,16 @@ class Client:
             # Get Request Json
             client_json = request.get_json()
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
+
+            # Get Connection Timeout
+            cred['sql']['read_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] and group['client_limits_timeout_mode'] == 2 else None
+            cred['sql']['write_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] else None
+
+            # Get Connection
             conn = self._connections.connect(user['id'], client_json['connection'], cred)
 
             # Execute all queries

@@ -43,7 +43,7 @@
                   RIGHTS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access the inventory.</span>
                     <br>
@@ -56,7 +56,7 @@
                   OWNERS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>Owners can manage <strong>Shared</strong> resources (servers, regions, environments, auxiliary connections, cloud keys)</span>
                   </v-tooltip>
@@ -95,7 +95,7 @@
                   LIMITS
                 <v-tooltip right>
                   <template v-slot:activator="{ on }">
-                    <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
                     <b>Execution Threads</b>: Maximum number of spawned threads per server.
@@ -114,7 +114,7 @@
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
                       Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a deployment finishes.
@@ -157,7 +157,7 @@
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
                       Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a restore finishes.
@@ -181,6 +181,22 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">
+                  LIMITS
+                  <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                  </template>
+                  <span>
+                    <b>Execution Timeout Mode</b>: The type of queries that will be affected of the execution timeout.
+                    <br>
+                    <b>Execution Timeout Value</b>: Maximum execution time per query (in seconds).
+                  </span>
+                </v-tooltip>
+                </div>
+                <v-switch v-model="group.client_limits" label="Apply Limits" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
+                <v-select v-if="group.client_limits" v-model="group.client_limits_timeout_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Only SELECTs'}]" item-value="id" item-text="name" label="Execution Timeout Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
+                <v-text-field v-if="group.client_limits" v-model="group.client_limits_timeout_value" label="Execution Timeout Value" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px;"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">TRACKING</div>
                 <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
                 <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
