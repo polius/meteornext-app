@@ -5,8 +5,10 @@
         <v-toolbar flat dense color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>USER RIGHTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="!saveEnabled" @click="saveClick" color="#00b16a" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-save</v-icon>Save</v-btn>
-          <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" outlined style="margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
+          <div class="subtitle-1">{{ server.name }}</div>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn :disabled="!saveEnabled" @click="saveClick" color="#00b16a"><v-icon small style="margin-right:10px">fas fa-save</v-icon>Save</v-btn>
+          <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" color="#fa8231" style="margin-left:10px; margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
           <v-progress-circular v-if="rightsLoading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
@@ -54,14 +56,16 @@
     <!-- DIALOG: info -->
     <!------------------>
     <v-dialog v-model="infoDialog" persistent max-width="50%">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">fas fa-exclamation-triangle</v-icon>ERROR</v-toolbar-title>
+      </v-toolbar>
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">An error occurred</div>
               <v-flex xs12>
-                <v-form style="margin-top:10px; margin-bottom:15px;">
-                  <div class="body-2" style="font-weight:300; font-size:1.05rem!important; margin-top:12px;">{{ infoDialogText }}</div>
+                <v-form style="margin-bottom:15px;">
+                  <div class="body-2" style="font-weight:300; font-size:1.05rem!important">{{ infoDialogText }}</div>
                   <v-card style="margin-top:20px;">
                     <v-card-text style="padding:10px;">
                       <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ infoDialogError }}</div>
@@ -116,13 +120,15 @@
     <!-- DIALOG: error -->
     <!------------------->
     <v-dialog v-model="errorDialog" persistent max-width="70%">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">fas fa-exclamation-triangle</v-icon>Some errors have occurred</v-toolbar-title>
+      </v-toolbar>
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">Some errors have occurred</div>
               <v-flex xs12>
-                <v-form style="margin-bottom:15px;">
+                <v-form>
                   <div v-for="key in Object.keys(errors)" :key="key">
                     <div v-for="(item, index) in errors[key]" :key="index" style="margin-top:15px;">
                       <div class="body-1" style="font-size:1.05rem; font-weight:400; color:#fa8131">{{ key.toUpperCase() }}</div>
