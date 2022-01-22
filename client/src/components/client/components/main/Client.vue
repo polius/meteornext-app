@@ -1271,8 +1271,8 @@ export default {
     exportRowsSubmit() {
       this.loading = true
       if (this.dialogSelect == 'Meteor') {
-        let exportData = 'var DATA = ' + JSON.stringify(this.clientItems) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.clientHeaders.map(x => x.headerName.trim())) + ';'
-        this.download('export.js', exportData)
+        let exportData = '{"DATA":' + JSON.stringify(this.clientItems) + ',' + '"COLUMNS":' + JSON.stringify(this.clientHeaders.map(x => x.headerName.trim())) + '}'
+        this.download('export.json', exportData)
       }
       else if (this.dialogSelect == 'JSON') {
         let exportData = JSON.stringify(this.clientItems)
