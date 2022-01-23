@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="subtitle-1"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW RESTORE</v-toolbar-title>
+        <v-toolbar-title class="subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-plus</v-icon>NEW IMPORT</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="goBack"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -15,7 +15,7 @@
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="sourceForm" @submit.prevent>
-                      <div class="text-body-1">Choose a restoring method:</div>
+                      <div class="text-body-1">Choose an import method:</div>
                       <v-radio-group :readonly="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus)))" v-model="mode" style="margin-top:10px; margin-bottom:15px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
@@ -149,7 +149,7 @@
                           <v-divider style="margin-top:10px"></v-divider>
                           <!-- SCAN SELECT -->
                           <div v-if="scanStatus == 'STOPPED' || scanError == null">
-                            <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
+                            <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to import:</div>
                             <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                               <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                             </v-toolbar>
@@ -201,6 +201,7 @@
                       </v-autocomplete>
                       <v-text-field ref="database" @keyup.enter="nextStep" v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
                       <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
@@ -324,7 +325,7 @@
                   </v-card>
                 </div>
                 <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
-                  <v-btn :disabled="loading" :loading="loading" @click="submitRestore" color="#00b16a">RESTORE</v-btn>
+                  <v-btn :disabled="loading" :loading="loading" @click="submitImport" color="#00b16a">IMPORT</v-btn>
                   <v-btn :disabled="loading" @click="stepper = 2" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-stepper-content>
@@ -500,6 +501,7 @@ export default {
       server: null,
       database: '',
       createDatabase: false,
+      dropDatabase: false,
       // Dialog
       dialog: false,
       progress: 0,
@@ -570,6 +572,9 @@ export default {
     source() {
       if (this.mode == 'url') this.clearScan()
     },
+    createDatabase(val) {
+      if (!val) this.dropDatabase = false
+    },
   },
   methods: {
     clearScan() {
@@ -625,7 +630,7 @@ export default {
     },
     getServers() {
       this.loading = true
-      axios.get('/utils/restore/servers')
+      axios.get('/utils/imports/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -651,7 +656,7 @@ export default {
       // Test Connection
       this.loading = true
       const payload = { key: this.cloudKeysSelected[0]['id'] }
-      axios.get('/utils/restore/s3/buckets', { params: payload })
+      axios.get('/utils/imports/s3/buckets', { params: payload })
         .then((response) => {
           this.parseAWSBuckets(response.data.buckets)
         })
@@ -675,7 +680,7 @@ export default {
         prefix: this.parseAWSPrefix(search),
         path: this.parseAWSPath(),
       }
-      axios.get('/utils/restore/s3/objects', { params: payload })
+      axios.get('/utils/imports/s3/objects', { params: payload })
         .then((response) => {
           this.parseAWSObjects(response.data.objects, search)
         })
@@ -715,8 +720,8 @@ export default {
     },
     goBack() {
       if (this.stepper == 1 && this.scanID != null) this.stopScan(false)
-      if (this.prevRoute.path == '/admin/utils') this.$router.push('/admin/utils')
-      else this.$router.push('/utils/restore')
+      if (this.prevRoute.path == '/admin/utils/imports') this.$router.push('/admin/utils/imports')
+      else this.$router.push('/utils/imports')
     },
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
@@ -741,17 +746,17 @@ export default {
         this.stepper = this.stepper + 1
       }
     },
-    submitRestore() {
-      if (this.mode == 'file') this.checkFileRestore()
-      else if (this.mode == 'url') this.submitURLRestore()
-      else if (this.mode == 'cloud') this.submitCloudRestore()
+    submitImport() {
+      if (this.mode == 'file') this.checkFileImport()
+      else if (this.mode == 'url') this.submitURLImport()
+      else if (this.mode == 'cloud') this.submitCloudImport()
     },
-    checkFileRestore() {
+    checkFileImport() {
       this.loading = true
-      axios.get('/utils/restore/check', { params: { size: this.size }})
+      axios.get('/utils/imports/check', { params: { size: this.size }})
         .then((response) => {
-          if (response.data.check) this.submitFileRestore()
-          else this.notification('There is not enough space left to proceed with the restore.', '#EF5354')
+          if (response.data.check) this.submitFileImport()
+          else this.notification('There is not enough space left to proceed with the import.', '#EF5354')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -759,7 +764,7 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    submitFileRestore() {
+    submitFileImport() {
       this.progress = 0
       this.progressText = ''
       this.dialog = true
@@ -771,6 +776,7 @@ export default {
       data.append('server', this.server)
       data.append('database', this.database)
       data.append('createDatabase', this.createDatabase)
+      data.append('dropDatabase', this.dropDatabase)
       data.append('url', window.location.protocol + '//' + window.location.host)
       // Build request options
       const CancelToken = axios.CancelToken;
@@ -785,11 +791,11 @@ export default {
       }
       // Start import
       this.start = true
-      axios.post('/utils/restore', data, options)
+      axios.post('/utils/imports', data, options)
       .then((response) => {
         if (this.progress == 100) {
           this.notification("File uploaded.", "#00b16a")
-          setTimeout(() => this.$router.push('/utils/restore/' + response.data.id), 1000)
+          setTimeout(() => this.$router.push('/utils/import/' + response.data.id), 1000)
         }
       })
       .catch((error) => {
@@ -813,7 +819,7 @@ export default {
           region: this.awsBucketsSelected[0]['region']
         }
       }
-      axios.post('/utils/restore/scan', payload)
+      axios.post('/utils/imports/scan', payload)
       .then((response) => {
         this.size = response.data.size
         if ('id' in response.data) {
@@ -833,7 +839,7 @@ export default {
       .finally(() => this.loading = false)
     },
     getScan() {
-      axios.get('/utils/restore/scan', { params: { id: this.scanID }})
+      axios.get('/utils/imports/scan', { params: { id: this.scanID }})
       .then((response) => {
         this.scanStatus = response.data.status
         this.scanProgress = this.parseProgress(response.data.progress)
@@ -841,7 +847,7 @@ export default {
         this.scanError = response.data.error
         if ((this.scanProgress == null && this.scanStatus != 'FAILED') || this.scanStatus == 'IN PROGRESS') {
           clearTimeout(this.scanTimer)
-          if (this.$router.currentRoute.name == 'utils.restore.new') this.scanTimer = setTimeout(this.getScan, 1000)
+          if (this.$router.currentRoute.name == 'utils.imports.new') this.scanTimer = setTimeout(this.getScan, 1000)
         }
       })
       .catch((error) => {
@@ -852,7 +858,7 @@ export default {
     stopScan(notification) {
       if (this.scanStatus != 'IN PROGRESS') return
       const payload = { id: this.scanID }
-      axios.post('/utils/restore/scan/stop', payload)
+      axios.post('/utils/imports/scan/stop', payload)
       .then((response) => {
         if (notification) this.notification(response.data.message, '#00b16a')
       })
@@ -876,7 +882,7 @@ export default {
       }
       return val
     },
-    submitURLRestore() {
+    submitURLImport() {
       this.loading = true
       const payload = {
         mode: this.mode,
@@ -885,11 +891,12 @@ export default {
         server: this.server,
         database: this.database,
         createDatabase: this.createDatabase,
+        dropDatabase: this.dropDatabase,
         url: window.location.protocol + '//' + window.location.host
       }
-      axios.post('/utils/restore', payload)
+      axios.post('/utils/imports', payload)
       .then((response) => {
-        this.$router.push('/utils/restore/' + response.data.id)
+        this.$router.push('/utils/imports/' + response.data.id)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -897,7 +904,7 @@ export default {
       })
       .finally(() => this.loading = false)
     },
-    submitCloudRestore() {
+    submitCloudImport() {
       this.loading = true
       const payload = {
         mode: this.mode,
@@ -910,11 +917,12 @@ export default {
         server: this.server,
         database: this.database,
         createDatabase: this.createDatabase,
+        dropDatabase: this.dropDatabase,
         url: window.location.protocol + '//' + window.location.host
       }
-      axios.post('/utils/restore', payload)
+      axios.post('/utils/imports', payload)
       .then((response) => {
-        this.$router.push('/utils/restore/' + response.data.id)
+        this.$router.push('/utils/imports/' + response.data.id)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

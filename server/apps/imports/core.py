@@ -6,9 +6,9 @@ from io import StringIO
 from datetime import datetime
 
 class Core:
-    def __init__(self, sql, restore_id, region):
+    def __init__(self, sql, import_uri, region):
         self._sql = sql
-        self._id = restore_id
+        self._uri = import_uri
         self._region = region
         self._now = None
         # Properties
@@ -100,15 +100,15 @@ class Core:
         # Update progress
         upload = {"transferred": transferred, "value": int(transferred / total * 100)}
         if self._now is None or int(time.time() - self._now) > 2 or transferred == total:
-            # Update restore upload progress
+            # Update import upload progress
             query = """
-                UPDATE `restore`
+                UPDATE `imports`
                 SET
                     `upload` = %s,
                     `updated` = %s
-                WHERE `id` = %s
+                WHERE `uri` = %s
             """
-            self._sql.execute(query, args=(json.dumps(upload), self.__utcnow(), self._id))
+            self._sql.execute(query, args=(json.dumps(upload), self.__utcnow(), self._uri))
 
     def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

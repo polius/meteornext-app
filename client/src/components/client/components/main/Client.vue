@@ -478,7 +478,7 @@ export default {
                 this.showDialog(dialogOptions)
                 // Build BottomBar
                 this.parseClientBottomBar(data, current)
-                // Restore vars
+                // Import vars
                 this.currentCellEditNode = node
                 this.currentCellEditValues = values
                 // Add execution to history
@@ -625,7 +625,7 @@ export default {
     cellEditingDiscard() {
       // Close Dialog
       this.dialog = false
-      // Restore Values
+      // Import Values
       const diff = Object.keys(this.currentCellEditValues).filter(x => 'new' in this.currentCellEditValues[x]).reduce((acc,val) => { acc[val] = this.currentCellEditValues[val]['old']; return acc; },{})
       for (const [k,v] of Object.entries(diff)) this.currentCellEditNode.setDataValue(k, v)
       // Clean Vars

@@ -10,11 +10,11 @@ import models.admin.groups
 import models.admin.settings
 import models.inventory.servers
 import models.inventory.regions
-import models.utils.export
+import models.utils.exports
 import connectors.base
-import apps.export.export
+import apps.exports.exports
 
-class Export:
+class Exports:
     def __init__(self, app, sql, license):
         self._app = app
         self._license = license
@@ -24,17 +24,17 @@ class Export:
         self._settings = models.admin.settings.Settings(sql, license)
         self._servers = models.inventory.servers.Servers(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
-        self._export = models.utils.export.Export(sql, license)
+        self._export = models.utils.exports.Exports(sql, license)
         # Init core
-        self._export_app = apps.export.export.Export(sql)
+        self._export_app = apps.exports.exports.Exports(sql)
 
     def blueprint(self):
         # Init blueprint
-        export_blueprint = Blueprint('export', __name__, template_folder='export')
+        exports_blueprint = Blueprint('exports', __name__, template_folder='exports')
 
-        @export_blueprint.route('/utils/export', methods=['GET','POST','DELETE'])
+        @exports_blueprint.route('/utils/exports', methods=['GET','POST','DELETE'])
         @jwt_required()
-        def export_method():
+        def exports_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -56,9 +56,9 @@ class Export:
             elif request.method == 'DELETE':
                 return self.delete(user, data)
 
-        @export_blueprint.route('/utils/export/servers', methods=['GET'])
+        @exports_blueprint.route('/utils/exports/servers', methods=['GET'])
         @jwt_required()
-        def export_servers_method():
+        def exports_servers_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -73,9 +73,9 @@ class Export:
             # Get Servers List
             return jsonify({'servers': self._export.get_servers(user)}), 200
 
-        @export_blueprint.route('/utils/export/databases', methods=['GET'])
+        @exports_blueprint.route('/utils/exports/databases', methods=['GET'])
         @jwt_required()
-        def export_databases_method():
+        def exports_databases_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -109,9 +109,9 @@ class Export:
             finally:
                 conn.stop()
 
-        @export_blueprint.route('/utils/export/databases/size', methods=['GET'])
+        @exports_blueprint.route('/utils/exports/databases/size', methods=['GET'])
         @jwt_required()
-        def export_database_size_method():
+        def exports_database_size_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -145,9 +145,9 @@ class Export:
             finally:
                 conn.stop()
 
-        @export_blueprint.route('/utils/export/tables', methods=['GET'])
+        @exports_blueprint.route('/utils/exports/tables', methods=['GET'])
         @jwt_required()
-        def export_tables_method():
+        def exports_tables_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -181,9 +181,9 @@ class Export:
             finally:
                 conn.stop()
 
-        @export_blueprint.route('/utils/export/stop', methods=['POST'])
+        @exports_blueprint.route('/utils/exports/stop', methods=['POST'])
         @jwt_required()
-        def export_stop_method():
+        def exports_stop_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -201,7 +201,7 @@ class Export:
             # Stop export process
             return self.stop(user, data)
 
-        return export_blueprint
+        return exports_blueprint
 
     ####################
     # Internal Methods #
@@ -219,7 +219,7 @@ class Export:
             return jsonify({'message': 'This export does not exist'}), 400
         export = export[0]
 
-        # Check restore authority
+        # Check import authority
         if export['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 

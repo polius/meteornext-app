@@ -1,38 +1,38 @@
-class Restore:
+class Imports:
     def __init__(self, sql, license):
         self._sql = sql
         self._license = license
 
-    def get(self, user_id=None, restore_id=None):
-        if restore_id:
+    def get(self, user_id=None, import_uri=None):
+        if import_uri:
             query = """
-                SELECT r.*, s.name AS 'server'
-                FROM restore r
-                JOIN servers s ON s.id = r.server_id
-                WHERE r.id = %s
+                SELECT i.*, s.name AS 'server'
+                FROM imports i
+                JOIN servers s ON s.id = i.server_id
+                WHERE i.uri = %s
             """
-            return self._sql.execute(query, (restore_id))
+            return self._sql.execute(query, (import_uri))
         else:
             query = """
-                SELECT r.*, s.name AS 'server'
-                FROM restore r
-                JOIN servers s ON s.id = r.server_id
-                WHERE r.user_id = %s
+                SELECT i.*, s.name AS 'server'
+                FROM imports i
+                JOIN servers s ON s.id = i.server_id
+                WHERE i.user_id = %s
                 AND deleted = 0
-                ORDER BY r.id DESC
+                ORDER BY i.id DESC
             """
             return self._sql.execute(query, (user_id))
 
     def post(self, user, data):
         query = """
-            INSERT INTO restore (`mode`, `details`, `source`, `selected`, `size`, `server_id`, `database`, `create_database`, `status`, `started`, `uri`, `upload`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO imports (`mode`, `details`, `source`, `selected`, `size`, `server_id`, `database`, `create_database`, `drop_database`, `status`, `started`, `uri`, `upload`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['mode'], data['details'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], data['create_database'], data['status'], data['started'], data['uri'], data['upload'], user['id']))
+        return self._sql.execute(query, (data['mode'], data['details'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], data['create_database'], data['drop_database'], data['status'], data['started'], data['uri'], data['upload'], user['id']))
 
     def delete(self, user, item):
         query = """
-            UPDATE restore
+            UPDATE imports
             SET deleted = 1
             WHERE id = %s
             AND user_id = %s
@@ -59,11 +59,11 @@ class Restore:
         """
         return self._sql.execute(query, {"user_id": user['id'], "group_id": user['group_id'], "license": self._license.resources})
 
-    def stop(self, user, restore_id):
+    def stop(self, user, import_uri):
         query = """
-            UPDATE restore
+            UPDATE imports
             SET `stop` = 1
             WHERE `user_id` = %s
-            AND `id` = %s
+            AND `uri` = %s
         """
-        return self._sql.execute(query, (user['id'], restore_id))
+        return self._sql.execute(query, (user['id'], import_uri))

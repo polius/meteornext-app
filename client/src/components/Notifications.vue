@@ -32,7 +32,7 @@
           <template v-slot:[`item.category`]="{ item }">
             <div v-if="item.category == 'deployment'"><v-icon small color="#EF5354" title="Deployments" style="margin-right:10px">fas fa-meteor</v-icon>Deployments</div>
             <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" title="Monitoring" style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</div>
-            <div v-else-if="item.category == 'utils-restore'"><v-icon small color="#00b16a" title="Utils - Restore" style="margin-right:10px">fas fa-arrow-up</v-icon>Utils - Restore</div>
+            <div v-else-if="item.category == 'utils-import'"><v-icon small color="#00b16a" title="Utils - Import" style="margin-right:10px">fas fa-arrow-up</v-icon>Utils - Import</div>
             <div v-else-if="item.category == 'utils-export'"><v-icon small color="#00b16a" title="Utils - Export" style="margin-right:10px">fas fa-arrow-down</v-icon>Utils - Export</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
@@ -124,18 +124,17 @@ export default {
         .finally(() => this.loading = false)
     },
     infoNotification() {
-      const id = this.selected[0].data.id
       if (this.selected[0].category == 'deployment') {
-        this.$router.push({ name: 'deployments.execution', params: { uri: id }})
+        this.$router.push({ name: 'deployments.execution', params: { uri: this.selected[0].data.id }})
       }
       else if (this.selected[0].category == 'monitoring') {
-        this.$router.push({ name: 'monitor', params: { id: id }})
+        this.$router.push({ name: 'monitor', params: { id: this.selected[0].data.id }})
       }
-      else if (this.selected[0].category == 'utils-restore') {
-        this.$router.push({ name: 'utils.restore.info', params: { id: id }})
+      else if (this.selected[0].category == 'utils-import') {
+        this.$router.push({ name: 'utils.imports.info', params: { uri: this.selected[0].data.uri }})
       }
       else if (this.selected[0].category == 'utils-export') {
-        this.$router.push({ name: 'utils.export.info', params: { uri: id }})
+        this.$router.push({ name: 'utils.exports.info', params: { uri: this.selected[0].data.uri }})
       }
     },
     deleteNotification() {

@@ -41,7 +41,7 @@ class Scan:
             self.__core2(item, base_path)
         except Exception as e:
             query = """
-                UPDATE `restore_scans`
+                UPDATE `imports_scans`
                 SET
                     `error` = %s,
                     `status` = 'FAILED',
@@ -65,7 +65,7 @@ class Scan:
             time.sleep(1)
         self.__monitor(item, base_path)
 
-        # Update restore status
+        # Update import status
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         status = 'SUCCESS'
         if os.path.exists(error_path):
@@ -73,7 +73,7 @@ class Scan:
                 if len(f.read().decode('utf-8','ignore').strip()) > 0:
                     status = 'FAILED'
         query = """
-            UPDATE `restore_scans`
+            UPDATE `imports_scans`
             SET `status` = IF(`status` = 'STOPPED', `status`, %s),
                 `updated` = %s
             WHERE `id` = %s
@@ -110,9 +110,9 @@ class Scan:
         command = f"curl -sSL '{item['source'] if item['mode'] == 'url' else url}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | {tar} | awk '{{ print $6\"|\"$3; fflush() }}' > {data_path}"
         p = subprocess.Popen(command, shell=True, stderr=subprocess.DEVNULL)
 
-        # Add PID & started to the restore
+        # Add PID & started to the import
         query = """
-            UPDATE `restore_scans`
+            UPDATE `imports_scans`
             SET
                 `pid` = %s,
                 `updated` = %s
@@ -149,9 +149,9 @@ class Scan:
             with open(data_path, 'r') as f:
                 data = self.__parse_data(f.read())
 
-        # Update restore with progress file
+        # Update import with progress file
         query = """
-            UPDATE `restore_scans`
+            UPDATE `imports_scans`
             SET 
                 `progress` = %s,
                 `error` = %s,

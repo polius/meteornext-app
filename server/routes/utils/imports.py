@@ -11,39 +11,39 @@ from datetime import datetime
 
 import models.admin.users
 import models.admin.groups
-import models.utils.restore
+import models.utils.imports
 import models.utils.scans
 import models.admin.settings
 import models.inventory.servers
 import models.inventory.regions
 import models.inventory.cloud
-import apps.restore.restore
-import apps.restore.scan
+import apps.imports.imports
+import apps.imports.scan
 
-class Restore:
+class Imports:
     def __init__(self, app, sql, license):
         self._app = app
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._restore = models.utils.restore.Restore(sql, license)
+        self._imports = models.utils.imports.Imports(sql, license)
         self._scans = models.utils.scans.Scans(sql)
         self._settings = models.admin.settings.Settings(sql, license)
         self._servers = models.inventory.servers.Servers(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core
-        self._restore_app = apps.restore.restore.Restore(sql)
-        self._scan_app = apps.restore.scan.Scan(sql)
+        self._import_app = apps.imports.imports.Imports(sql)
+        self._scan_app = apps.imports.scan.Scan(sql)
 
     def blueprint(self):
         # Init blueprint
-        restore_blueprint = Blueprint('restore', __name__, template_folder='restore')
+        imports_blueprint = Blueprint('imports', __name__, template_folder='imports')
 
-        @restore_blueprint.route('/utils/restore', methods=['GET','POST','DELETE'])
+        @imports_blueprint.route('/utils/imports', methods=['GET','POST','DELETE'])
         @jwt_required()
-        def restore_method():
+        def imports_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -65,9 +65,9 @@ class Restore:
             elif request.method == 'DELETE':
                 return self.delete(user, data)
 
-        @restore_blueprint.route('/utils/restore/check', methods=['GET'])
+        @imports_blueprint.route('/utils/imports/check', methods=['GET'])
         @jwt_required()
-        def restore_check_method():
+        def imports_check_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -81,15 +81,15 @@ class Restore:
 
             # Check file size limit
             group = self._groups.get(group_id=user['group_id'])[0]
-            if group['utils_restore_limit'] is not None and int(request.args['size']) >= group['utils_restore_limit'] * 1024**2:
-                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
+            if group['utils_import_limit'] is not None and int(request.args['size']) >= group['utils_import_limit'] * 1024**2:
+                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_import_limit']} MB)"}), 400
 
             # Return if there's free space left to upload a file
             return jsonify({'check': shutil.disk_usage("/").free >= int(request.args['size'])}), 200
 
-        @restore_blueprint.route('/utils/restore/servers', methods=['GET'])
+        @imports_blueprint.route('/utils/imports/servers', methods=['GET'])
         @jwt_required()
-        def restore_servers_method():
+        def imports_servers_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -102,11 +102,11 @@ class Restore:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Servers List
-            return jsonify({'servers': self._restore.get_servers(user)}), 200
+            return jsonify({'servers': self._imports.get_servers(user)}), 200
 
-        @restore_blueprint.route('/utils/restore/stop', methods=['POST'])
+        @imports_blueprint.route('/utils/imports/stop', methods=['POST'])
         @jwt_required()
-        def restore_stop_method():
+        def imports_stop_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -121,12 +121,12 @@ class Restore:
             # Get Request Json
             data = request.get_json()
 
-            # Stop restore process
+            # Stop import process
             return self.stop(user, data)
 
-        @restore_blueprint.route('/utils/restore/scan', methods=['POST','GET'])
+        @imports_blueprint.route('/utils/imports/scan', methods=['POST','GET'])
         @jwt_required()
-        def restore_scan_method():
+        def imports_scan_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -156,9 +156,9 @@ class Restore:
                 except Exception as e:
                     return jsonify({'message': str(e)}), 400
 
-        @restore_blueprint.route('/utils/restore/scan/stop', methods=['POST'])
+        @imports_blueprint.route('/utils/imports/scan/stop', methods=['POST'])
         @jwt_required()
-        def restore_scan_stop_method():
+        def imports_scan_stop_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -176,9 +176,9 @@ class Restore:
             # Stop Scan
             return self.stop_scan(user, data)
 
-        @restore_blueprint.route('/utils/restore/s3/buckets', methods=['GET'])
+        @imports_blueprint.route('/utils/imports/s3/buckets', methods=['GET'])
         @jwt_required()
-        def restore_s3_buckets_method():
+        def imports_s3_buckets_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -193,9 +193,9 @@ class Restore:
             # Get Buckets
             return self.get_s3_buckets(user)
 
-        @restore_blueprint.route('/utils/restore/s3/objects', methods=['GET'])
+        @imports_blueprint.route('/utils/imports/s3/objects', methods=['GET'])
         @jwt_required()
-        def restore_s3_objects_method():
+        def imports_s3_objects_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -210,47 +210,47 @@ class Restore:
             # Get Objects
             return self.get_s3_objects(user)
 
-        return restore_blueprint
+        return imports_blueprint
 
     ####################
     # Internal Methods #
     ####################
     def get(self, user):
-        if 'id' not in request.args:
-            restore = self._restore.get(user_id=user['id'])
-            return jsonify({'restore': restore}), 200
+        if 'uri' not in request.args:
+            imports = self._imports.get(user_id=user['id'])
+            return jsonify({'imports': imports}), 200
 
-        # Get current restore
-        restore = self._restore.get(restore_id=request.args['id'])
+        # Get current import
+        imp = self._imports.get(import_uri=request.args['uri'])
 
-        # Check if restore exists
-        if len(restore) == 0:
-            return jsonify({'message': 'This restore does not exist'}), 400
-        restore = restore[0]
+        # Check if import exists
+        if len(imp) == 0:
+            return jsonify({'message': 'This import does not exist'}), 400
+        imp = imp[0]
 
-        # Check restore authority
-        if restore['user_id'] != user['id'] and not user['admin']:
+        # Check import authority
+        if imp['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Parse selected
-        if restore['selected']:
-            restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
+        if imp['selected']:
+            imp['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in imp['selected'].split('\n')]
 
         # Parse upload
-        restore['upload'] = json.loads(restore['upload']) if restore['upload'] else None
+        imp['upload'] = json.loads(imp['upload']) if imp['upload'] else None
 
         # Parse progress
-        if restore['progress']:
-            raw = restore['progress'].split(' ')
-            restore['progress'] = {"value": '0%', "transferred": '0B', "rate": '0B/s', "elapsed": '0:00:00', "eta": None}
+        if imp['progress']:
+            raw = imp['progress'].split(' ')
+            imp['progress'] = {"value": '0%', "transferred": '0B', "rate": '0B/s', "elapsed": '0:00:00', "eta": None}
             if len(raw) == 3:
-                restore['progress'] = {"value": '0%', "transferred": raw[0], "rate": raw[1], "elapsed": raw[2], "eta": None}
+                imp['progress'] = {"value": '0%', "transferred": raw[0], "rate": raw[1], "elapsed": raw[2], "eta": None}
             elif len(raw) == 4:
-                restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": None}
+                imp['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": None}
             elif len(raw) == 5:
-                restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": raw[4][3:]}
+                imp['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": raw[4][3:]}
         # Return data
-        return jsonify({'restore': restore}), 200
+        return jsonify({'import': imp}), 200
 
     def post(self, user, data):
         # Get group details
@@ -275,19 +275,19 @@ class Restore:
 
         # Init path
         path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'restores'),
-            "remote": '.meteor/restores'
+            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'imports'),
+            "remote": '.meteor/imports'
         }
 
-        # Make restore folder
+        # Make import folder
         if not os.path.exists(os.path.join(path['local'], uri)):
             os.makedirs(os.path.join(path['local'], uri))
 
         # Method: file
         if data['mode'] == 'file':
             # Check file size limit
-            if group['utils_restore_limit'] is not None and int(request.form['size']) >= group['utils_restore_limit'] * 1024**2:
-                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
+            if group['utils_import_limit'] is not None and int(request.form['size']) >= group['utils_import_limit'] * 1024**2:
+                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_import_limit']} MB)"}), 400
 
             # Check file constraints
             if 'source' not in request.files or request.files['source'].filename == '':
@@ -305,6 +305,7 @@ class Restore:
             selected = ''
             url = request.form['url']
             create_database = json.loads(data['createDatabase'])
+            drop_database = json.loads(data['dropDatabase'])
 
         elif data['mode'] == 'url':
             source = data['source']
@@ -312,6 +313,7 @@ class Restore:
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             url = data['url']
             create_database = data['createDatabase']
+            drop_database = data['dropDatabase']
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
@@ -327,6 +329,7 @@ class Restore:
             details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
             url = data['url']
             create_database = data['createDatabase']
+            drop_database = data['dropDatabase']
 
         # Build Item
         item = {
@@ -341,6 +344,7 @@ class Restore:
             'region_name': region['name'],
             'database': data['database'].strip(),
             'create_database': create_database,
+            'drop_database': drop_database,
             'status': 'IN PROGRESS',
             'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
@@ -349,7 +353,7 @@ class Restore:
             'slack_url': group['utils_slack_url'],
             'url': url
         }
-        item['id'] = self._restore.post(user, item)
+        item['id'] = self._imports.post(user, item)
 
         # Parse selected for import process
         item['selected'] = [i['file'] for i in data['selected']] if selected else []
@@ -361,39 +365,39 @@ class Restore:
             item['bucket'] = data['bucket']
 
         # Start import process
-        self._restore_app.start(user, item, server, region, path)
+        self._import_app.start(user, item, server, region, path)
 
         # Return tracking identifier
         return jsonify({'id': item['id']}), 200
 
     def delete(self, user, data):
         for item in data:
-            self._restore.delete(user, item)
-        return jsonify({'message': 'Selected restores deleted'}), 200
+            self._imports.delete(user, item)
+        return jsonify({'message': 'Selected imports deleted'}), 200
 
     def stop(self, user, data):
         # Check params
-        if 'id' not in data:
-            return jsonify({'message': 'id parameter is required'}), 400
+        if 'uri' not in data:
+            return jsonify({'message': 'uri parameter is required'}), 400
 
-        # Get current restore
-        restore = self._restore.get(restore_id=data['id'])
+        # Get current import
+        imp = self._imports.get(import_uri=data['uri'])
 
-        # Check if restore exists
-        if len(restore) == 0:
-            return jsonify({'message': 'This restore does not exist'}), 400
-        restore = restore[0]
+        # Check if import exists
+        if len(imp) == 0:
+            return jsonify({'message': 'This import does not exist'}), 400
+        imp = imp[0]
 
         # Check user authority
-        if restore['user_id'] != user['id'] and not user['admin']:
+        if imp['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check if the execution is in progress
-        if restore['status'] != 'IN PROGRESS':
+        if imp['status'] != 'IN PROGRESS':
             return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution
-        self._restore.stop(user, data['id'])
+        self._imports.stop(user, data['id'])
         return jsonify({'message': 'Stopping execution...'}), 200
 
     def get_scan(self, user, id):
@@ -466,7 +470,7 @@ class Restore:
         # Get current scan
         scan = self._scans.get(user_id=user['id'], scan_id=data['id'])
 
-        # Check if restore exists
+        # Check if import exists
         if len(scan) == 0:
             return jsonify({'message': 'This scan does not exist'}), 400
         scan = scan[0]

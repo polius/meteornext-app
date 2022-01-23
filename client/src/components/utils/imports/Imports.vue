@@ -2,14 +2,14 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">EXPORT</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">IMPORTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
-          <v-btn text @click="newExport()"><v-icon small style="margin-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="infoExport()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
-          <v-btn :disabled="selected.length == 0" text @click="deleteExport()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newImport()"><v-icon small style="margin-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="infoImport()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+          <v-btn :disabled="selected.length == 0" text @click="deleteImport()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="getExports" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="getImport" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -25,13 +25,17 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
-          <div v-if="item.mode == 'full'">
-            <v-icon small color="#EF5354" style="margin-right:5px; margin-bottom:4px">fas fa-star</v-icon>
-            Full
+          <div v-if="item.mode == 'file'">
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#23cba7" style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+            File
           </div>
-          <div v-else-if="item.mode == 'partial'">
-            <v-icon small color="#ff9800" style="margin-right:5px; margin-bottom:4px">fas fa-star-half</v-icon>
-            Partial
+          <div v-else-if="item.mode == 'url'">
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#e47911" style="margin-right:5px; margin-bottom:2px">fas fa-link</v-icon>
+            URL
+          </div>
+          <div v-else-if="item.mode == 'cloud'">
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:18px; margin-right:5px; margin-bottom:3px">fas fa-cloud</v-icon>
+            Cloud Key
           </div>
         </template>
         <template v-slot:[`item.size`]="{ item }">
@@ -56,7 +60,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to delete the selected export?</div>
+                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to delete the selected imports?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :disabled="loading" color="#00b16a" @click="deleteSubmit()">Confirm</v-btn>
@@ -88,9 +92,10 @@
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Source" value="source" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
@@ -125,9 +130,10 @@ export default {
   data: () => ({
     headers: [
       { text: 'Mode', align: 'left', value: 'mode' },
+      { text: 'Source', align: 'left', value: 'source' },
+      { text: 'Size', align: 'left', value: 'size' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'Database', align: 'left', value: 'database' },
-      { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
@@ -143,7 +149,7 @@ export default {
 
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['mode','server','database','size','status','started','ended','overall'],
+    columns: ['mode','server','database','status','started','ended','overall'],
     columnsRaw: [],
 
     // Snackbar
@@ -153,18 +159,18 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    this.getExports()
+    this.getImport()
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   methods: {
-    getExports() {
+    getImport() {
       this.loading = true
-      // Get Exports
-      axios.get('/utils/export')
+      // Get Imports
+      axios.get('/utils/imports')
         .then((response) => {
-          this.items = response.data.exports.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.items = response.data.imports.map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -172,25 +178,25 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    deleteExport() {
+    deleteImport() {
       this.deleteDialog = true
     },
     deleteSubmit() {
-      // Check export status
+      // Check import status
       if (this.selected.some(x => x.status == 'IN PROGRESS')) {
-        this.notification("Can't delete exports that are in progress", '#EF5354')
+        this.notification("Can't delete imports that are in progress", '#EF5354')
         this.deleteDialog = false
         return
       }
-      // Delete Exports
+      // Delete Imports
       this.loading = true
-      const payload = this.selected.map(x => x.uri)
-      axios.delete('/utils/export', { data: payload })
+      const payload = this.selected.map(x => x.id)
+      axios.delete('/utils/imports', { data: payload })
         .then(() => {
           this.selected = []
           this.deleteDialog = false
-          this.getExports()
-          this.notification("Selected exports deleted", '#00b16a')
+          this.getImport()
+          this.notification("Selected imports deleted", '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -211,18 +217,18 @@ export default {
       if (size == null) return null
       return pretty(size, {binary: true}).replace('i','')
     },
-    newExport() {
-      this.$router.push({ name: 'utils.export.new' })
+    newImport() {
+      this.$router.push({ name: 'utils.imports.new' })
     },
-    infoExport() {
-      this.$router.push({ name: 'utils.export.info', params: { uri: this.selected[0]['uri'] }})
+    infoImport() {
+      this.$router.push({ name: 'utils.imports.info', params: { uri: this.selected[0]['uri'] }})
     },
     openColumnsDialog() {
       this.columnsRaw = [...this.columns]
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['mode','server','database','size','status','started','ended','overall']
+      this.columnsRaw = ['mode','source','size','server','database','status','started','ended','overall']
     },
     deselectAllColumns() {
       this.columnsRaw = []
@@ -238,4 +244,4 @@ export default {
     }
   }
 }
-</script>2
+</script>

@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-btn v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :disabled="stop" text title="Stop Execution" @click="stopRestore" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+        <v-btn v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :disabled="stop" text title="Stop Execution" @click="stopImport" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         <v-divider v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && stop" class="subtitle-1">Stopping the execution...</div>
@@ -53,10 +53,10 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>{{ (information_items[0]['progress'] == null && information_items[0]['upload'] != null) ? "Transferring file to server's region. Please wait..." : 'Restoring the file. Please wait...' }}</div>
-              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File successfully restored.</div>
-              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while restoring the file.</div>
-              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Restore successfully stopped.</div>
+              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>{{ (information_items[0]['progress'] == null && information_items[0]['upload'] != null) ? "Transferring file to server's region. Please wait..." : 'Importing the file. Please wait...' }}</div>
+              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File successfully imported.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while importing the file.</div>
+              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Import successfully stopped.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
               <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
               <v-divider v-if="progress != null" style="margin-top:10px"></v-divider>
@@ -222,7 +222,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to stop the restore?</div>
+                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to stop the import?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :disabled="loading" color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
@@ -320,13 +320,13 @@ export default {
     })
   },
   created() {
-    this.getRestore()
+    this.getImport()
   },
   methods: {
-    getRestore() {
-      axios.get('/utils/restore', { params: { id: this.$route.params.id } })
+    getImport() {
+      axios.get('/utils/imports', { params: { uri: this.$route.params.uri } })
         .then((response) => {
-          this.information_items = [response.data.restore].map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.information_items = [response.data.import].map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           if (this.information_items[0]['mode'] == 'cloud') {
             const details = JSON.parse(this.information_items[0]['details'])
             this.cloudKeysItems = [details['cloud']]
@@ -338,7 +338,7 @@ export default {
           if (this.information_items[0]['progress'] != null) this.parseProgress(this.information_items[0]['progress'])
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
             clearTimeout(this.timer)
-            this.timer = setTimeout(this.getRestore, 1000)
+            this.timer = setTimeout(this.getImport, 1000)
           }
           this.parseOverall()
         })
@@ -375,8 +375,8 @@ export default {
       return val
     },
     goBack() {
-      if (this.prevRoute.path == '/admin/utils/restore') this.$router.push('/admin/utils/restore')
-      else this.$router.push('/utils/restore')
+      if (this.prevRoute.path == '/admin/utils/imports') this.$router.push('/admin/utils/imports')
+      else this.$router.push('/utils/imports')
     },
     getServer(server_id) {
       // Get Server
@@ -419,14 +419,14 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    stopRestore() {
+    stopImport() {
       this.stopDialog = true
     },
     stopSubmit() {
       this.loading = true
       this.stop = true
-      const payload = { id: this.$route.params.id }
-      axios.post('/utils/restore/stop', payload)
+      const payload = { uri: this.$route.params.uri }
+      axios.post('/utils/imports/stop', payload)
       .then(() => {
         this.stopDialog = false
       })
