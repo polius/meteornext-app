@@ -1,12 +1,12 @@
-class Restore:
+class Imports:
     def __init__(self, sql):
         self._sql = sql
 
     def get(self, rfilter=None, rsort=None):
         user = mode = size = server = database = status = started_from = started_to = ended_from = ended_to = ''
-        deleted = 'AND r.deleted = 0'
+        deleted = 'AND i.deleted = 0'
         args = {}
-        sort_column = 'r.id'
+        sort_column = 'i.id'
         sort_order = 'DESC'
         if rfilter is not None:
             matching = {
@@ -21,30 +21,30 @@ class Restore:
                 user = 'AND u.username = %(user)s'
                 args['user'] = rfilter['user']
             if 'mode' in rfilter and rfilter['mode'] is not None and len(rfilter['mode']) > 0:
-                mode = 'AND r.mode IN (%s)' % ','.join([f"%(mode{i})s" for i in range(len(rfilter['mode']))])
+                mode = 'AND i.mode IN (%s)' % ','.join([f"%(mode{i})s" for i in range(len(rfilter['mode']))])
                 for i,v in enumerate(rfilter['mode']):
                     args[f'mode{i}'] = v
             if 'server' in rfilter and len(rfilter['server']) > 0 and 'serverFilter' in rfilter and rfilter['serverFilter'] in matching:
                 server = f"AND s.name {matching[rfilter['serverFilter']]['operator']} %(server)s"
                 args['server'] = matching[rfilter['serverFilter']]['args'].format(rfilter['server'])
             if 'database' in rfilter and len(rfilter['database']) > 0 and 'databaseFilter' in rfilter and rfilter['databaseFilter'] in matching:
-                database = f"AND r.database {matching[rfilter['databaseFilter']]['operator']} %(database)s"
+                database = f"AND i.database {matching[rfilter['databaseFilter']]['operator']} %(database)s"
                 args['database'] = matching[rfilter['databaseFilter']]['args'].format(rfilter['database'])
             if 'status' in rfilter and rfilter['status'] is not None and len(rfilter['status']) > 0:
-                status = 'AND r.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(rfilter['status']))])
+                status = 'AND i.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(rfilter['status']))])
                 for i,v in enumerate(rfilter['status']):
                     args[f'status{i}'] = v
             if 'startedFrom' in rfilter and len(rfilter['startedFrom']) > 0:
-                started_from = 'AND r.started >= %(started_from)s'
+                started_from = 'AND i.started >= %(started_from)s'
                 args['started_from'] = rfilter['startedFrom']
             if 'startedTo' in rfilter and len(rfilter['startedTo']) > 0:
-                started_to = 'AND r.started <= %(started_to)s'
+                started_to = 'AND i.started <= %(started_to)s'
                 args['started_to'] = rfilter['startedTo']
             if 'endedFrom' in rfilter and len(rfilter['endedFrom']) > 0:
-                ended_from = 'AND r.ended >= %(ended_from)s'
+                ended_from = 'AND i.ended >= %(ended_from)s'
                 args['ended_from'] = rfilter['endedFrom']
             if 'endedTo' in rfilter and len(rfilter['endedTo']) > 0:
-                ended_to = 'AND r.ended <= %(ended_to)s'
+                ended_to = 'AND i.ended <= %(ended_to)s'
                 args['ended_to'] = rfilter['endedTo']
             if 'deleted' in rfilter and rfilter['deleted']:
                 deleted = ''
@@ -55,10 +55,10 @@ class Restore:
             sort_order = 'DESC' if rsort['desc'] else 'ASC'
 
         query = """
-                SELECT r.id, r.mode, r.source, r.size, r.server_id, s.name AS 'server', r.database, r.status, r.started, r.ended, CONCAT(TIMEDIFF(r.ended, r.started)) AS 'overall', r.user_id, u.username, r.deleted
-                FROM restore r
-                JOIN servers s ON s.id = r.server_id
-                JOIN users u ON u.id = r.user_id
+                SELECT i.id, i.mode, i.source, i.size, i.server_id, s.name AS 'server', i.database, i.uri, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.user_id, u.username, i.deleted
+                FROM imports i
+                JOIN servers s ON s.id = i.server_id
+                JOIN users u ON u.id = i.user_id
                 WHERE 1=1
                 {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}
                 ORDER BY {11} {12}
@@ -77,7 +77,7 @@ class Restore:
 
     def put(self, item, value):
         query = """
-            UPDATE restore
+            UPDATE imports
             SET deleted = %s
             WHERE id = %s
         """
@@ -85,7 +85,7 @@ class Restore:
 
     def delete(self, item):
         query = """
-            DELETE FROM restore
+            DELETE FROM imports
             WHERE id = %s
         """
         self._sql.execute(query, (item))

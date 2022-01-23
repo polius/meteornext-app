@@ -87,7 +87,7 @@ class Users:
             self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.shared = 0 JOIN users u ON u.id = e.owner_id AND u.username = %s", (user))
             self._sql.execute("DELETE e FROM environments e JOIN users u ON u.id = e.owner_id AND u.username = %s WHERE e.shared = 0", (user))
             self._sql.execute("DELETE c FROM cloud c JOIN users u ON u.id = c.owner_id AND u.username = %s WHERE c.shared = 0", (user))
-            self._sql.execute("DELETE r FROM restore r JOIN users u ON u.id = r.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE i FROM imports i JOIN users u ON u.id = i.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE go FROM group_owners go JOIN users u ON u.id = go.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE mfa FROM user_mfa mfa JOIN users u ON u.id = mfa.user_id WHERE u.username = %s", (user))
             self._sql.execute("DELETE FROM users WHERE username = %s", (user))

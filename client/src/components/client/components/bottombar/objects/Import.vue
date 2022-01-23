@@ -18,7 +18,7 @@
                         <v-icon size="20" color="info">fas fa-info-circle</v-icon>
                       </v-col>
                       <v-col>
-                        <div class="text-body-1" style="color:#e2e2e2">To import files larger than 100 MB use the Utils - Restore section.</div>
+                        <div class="text-body-1" style="color:#e2e2e2">To import files larger than 100 MB use the Utils section.</div>
                       </v-col>
                     </v-row>
                   </v-card>

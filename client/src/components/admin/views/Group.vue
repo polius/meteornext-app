@@ -88,7 +88,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.deployments_enabled" label="Perform Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-model="group.deployments_enabled" label="Access Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enabled" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enabled" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
@@ -151,8 +151,11 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
+                <v-switch v-if="group.utils_enabled" v-model="group.utils_import" label="IMPORT" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.utils_enabled" v-model="group.utils_export" label="EXPORT" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
-                <v-text-field v-model="group.utils_restore_limit" label="Maximum file upload size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_import_limit" label="Maximum import size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_export_limit" label="Maximum export size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px" hide-details></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
@@ -160,7 +163,7 @@
                       <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
-                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a restore finishes.
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime an import or an export finishes.
                     </span>
                   </v-tooltip>
                 </div>
@@ -311,7 +314,8 @@ export default {
       monitoring_enabled: false,
       monitoring_interval: 10,
       utils_enabled: false,
-      utils_restore_limit: null,
+      utils_import_limit: null,
+      utils_export_limit: null,
       utils_slack_enabled: false,
       utils_slack_name: '',
       utils_slack_url: '',
@@ -399,7 +403,8 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
-      if (!this.group.utils_restore_limit) this.group.utils_restore_limit = null
+      if (!this.group.utils_import_limit) this.group.utils_import_limit = null
+      if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Add group to the DB
       const payload = {
         mode: this.mode,
@@ -429,7 +434,8 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
-      if (!this.group.utils_restore_limit) this.group.utils_restore_limit = null
+      if (!this.group.utils_import_limit) this.group.utils_import_limit = null
+      if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -520,9 +526,6 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
-    },
-    changeUtilsRestoreLimit(val) {
-      if (!val) this.group.utils_restore_limit = null
     },
     goBack() {
       this.$router.push('/admin/groups')

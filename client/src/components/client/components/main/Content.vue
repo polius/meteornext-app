@@ -790,7 +790,7 @@ export default {
               this.showDialog(dialogOptions)
               // Build BottomBar
               this.parseContentBottomBar(data)
-              // Restore vars
+              // Import vars
               this.currentCellEditMode = mode
               this.currentCellEditNode = node
               this.currentCellEditValues = values
@@ -824,7 +824,7 @@ export default {
     cellEditingDiscard() {
       // Close Dialog
       this.dialog = false
-      // Restore Values
+      // Import Values
       const diff = Object.keys(this.currentCellEditValues).filter(x => 'new' in this.currentCellEditValues[x]).reduce((acc,val) => { acc[val] = this.currentCellEditValues[val]['old']; return acc; },{})
       if (Object.keys(diff).length == 0 && Object.keys(this.currentCellEditNode).length > 0) this.gridApi.content.applyTransaction({ remove: [this.currentCellEditNode.data] });
       for (const [k,v] of Object.entries(diff)) this.currentCellEditNode.setDataValue(k, v)

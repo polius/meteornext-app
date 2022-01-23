@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="subtitle-1"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW EXPORT</v-toolbar-title>
+        <v-toolbar-title class="subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-plus</v-icon>NEW EXPORT</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="goBack"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -369,7 +369,7 @@ export default {
   methods: {
     getServers() {
       this.loading = true
-      axios.get('/utils/export/servers')
+      axios.get('/utils/exports/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -384,7 +384,7 @@ export default {
       else {
         this.loading = true
         const payload = { server_id: this.server }
-        axios.get('/utils/export/databases', { params: payload })
+        axios.get('/utils/exports/databases', { params: payload })
           .then((response) => {
             this.databaseItems = response.data.databases
             this.$nextTick(() => {
@@ -407,7 +407,7 @@ export default {
       if (this.database == null) return
       this.loading = true
       const payload = { server_id: this.server, database: this.database }
-      axios.get('/utils/export/databases/size', { params: payload })
+      axios.get('/utils/exports/databases/size', { params: payload })
         .then((response) => {
           this.databaseSize = response.data.size
         })
@@ -463,7 +463,7 @@ export default {
       this.loading = true
       this.gridApi.showLoadingOverlay()
       const payload = { server_id: this.server, database: this.database }
-      axios.get('/utils/export/tables', { params: payload })
+      axios.get('/utils/exports/tables', { params: payload })
         .then((response) => {
           this.parseTables(response.data.tables)
           this.resizeTable()
@@ -547,9 +547,9 @@ export default {
         size: this.mode == 'full' ? this.databaseSize : this.tableSize,
         url: window.location.protocol + '//' + window.location.host
       }
-      axios.post('/utils/export', payload)
+      axios.post('/utils/exports', payload)
       .then((response) => {
-        this.$router.push('/utils/export/' + response.data.uri)
+        this.$router.push('/utils/exports/' + response.data.uri)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -582,8 +582,8 @@ export default {
       this.gridApi2.setQuickFilter(value)
     },
     goBack() {
-      if (this.prevRoute.path == '/admin/utils') this.$router.push('/admin/utils')
-      else this.$router.push('/utils/export')
+      if (this.prevRoute.path == '/admin/utils/exports') this.$router.push('/admin/utils/exports')
+      else this.$router.push('/utils/exports')
     },
     notification(message, color) {
       this.snackbarText = message

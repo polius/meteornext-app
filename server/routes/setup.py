@@ -26,8 +26,8 @@ import routes.admin.inventory.regions
 import routes.admin.inventory.servers
 import routes.admin.inventory.auxiliary
 import routes.admin.inventory.cloud
-import routes.admin.utils.restore
-import routes.admin.utils.export
+import routes.admin.utils.imports
+import routes.admin.utils.exports
 import routes.admin.client
 import routes.admin.monitoring
 import routes.inventory.inventory
@@ -44,8 +44,8 @@ import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
 import routes.client.client
-import routes.utils.restore
-import routes.utils.export
+import routes.utils.imports
+import routes.utils.exports
 import connectors.base
 import connectors.pool
 import models.admin.settings
@@ -173,7 +173,7 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_restore_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_import_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
                     groups.post(1, group)
 
                     # Create user
@@ -275,8 +275,8 @@ class Setup:
         admin_inventory_servers = routes.admin.inventory.servers.Servers(self._app, sql, self._license)
         admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
         admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._app, sql, self._license)
-        admin_utils_restore = routes.admin.utils.restore.Restore(self._app, sql, self._license)
-        admin_utils_export = routes.admin.utils.export.Export(self._app, sql, self._license)
+        admin_utils_imports = routes.admin.utils.imports.Imports(self._app, sql, self._license)
+        admin_utils_exports = routes.admin.utils.exports.Exports(self._app, sql, self._license)
         admin_client = routes.admin.client.Client(self._app, sql, self._license)
         admin_monitoring = routes.admin.monitoring.Monitoring(self._app, sql, self._license)
         inventory = routes.inventory.inventory.Inventory(self._app, sql, self._license)
@@ -293,10 +293,10 @@ class Setup:
         monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
-        restore = routes.utils.restore.Restore(self._app, sql, self._license)
-        export = routes.utils.export.Export(self._app, sql, self._license)
+        imports = routes.utils.imports.Imports(self._app, sql, self._license)
+        exports = routes.utils.exports.Exports(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_restore, admin_utils_export, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore, export]
+        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports]
 
         # Register all blueprints
         for i in self._blueprints:

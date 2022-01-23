@@ -177,42 +177,42 @@ let router = new VueRouter({
           path: '',
           name: 'utils',
           meta: { requiresUtils: true },
-          redirect: { name: 'utils.restore' }
+          redirect: { name: 'utils.imports' }
         },
         {
-          path: 'restore',
-          name: 'utils.restore',
-          component: () => import('../components/utils/restore/Restore'),
+          path: 'imports',
+          name: 'utils.imports',
+          component: () => import('../components/utils/imports/Imports'),
           meta: { requiresUtils: true }
         },
         {
-          path: 'restore/new',
-          name: 'utils.restore.new',
-          component: () => import('../components/utils/restore/New'),
+          path: 'imports/new',
+          name: 'utils.imports.new',
+          component: () => import('../components/utils/imports/New'),
           meta: { requiresUtils: true }
         },
         {
-          path: 'restore/:id',
-          name: 'utils.restore.info',
-          component: () => import('../components/utils/restore/Info'),
+          path: 'imports/:uri',
+          name: 'utils.imports.info',
+          component: () => import('../components/utils/imports/Info'),
           meta: { requiresUtils: true }
         },
         {
-          path: 'export',
-          name: 'utils.export',
-          component: () => import('../components/utils/export/Export'),
+          path: 'exports',
+          name: 'utils.exports',
+          component: () => import('../components/utils/exports/Exports'),
           meta: { requiresUtils: true }
         },
         {
-          path: 'export/new',
-          name: 'utils.export.new',
-          component: () => import('../components/utils/export/New'),
+          path: 'exports/new',
+          name: 'utils.exports.new',
+          component: () => import('../components/utils/exports/New'),
           meta: { requiresUtils: true }
         },
         {
-          path: 'export/:uri',
-          name: 'utils.export.info',
-          component: () => import('../components/utils/export/Info'),
+          path: 'exports/:uri',
+          name: 'utils.exports.info',
+          component: () => import('../components/utils/exports/Info'),
           meta: { requiresUtils: true }
         },
       ]
@@ -290,7 +290,7 @@ let router = new VueRouter({
         {
           path: 'utils',
           name: 'admin.utils',
-          alias: ["/admin/utils/restore", "/admin/utils/export"],
+          alias: ["/admin/utils/imports", "/admin/utils/exports"],
           component: () => import('../components/admin/views/Utils'),
           meta: { requiresAdmin: true }
         },

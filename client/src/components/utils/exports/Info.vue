@@ -321,7 +321,7 @@ export default {
       },0)
     },
     getExport() {
-      axios.get('/utils/export', { params: { uri: this.$route.params.uri } })
+      axios.get('/utils/exports', { params: { uri: this.$route.params.uri } })
         .then((response) => {
           this.information_items = [response.data.export].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           if (this.information_items[0]['mode'] == 'partial') this.objectsItems = JSON.parse(this.information_items[0]['tables'])['t']
@@ -359,8 +359,8 @@ export default {
       return val
     },
     goBack() {
-      if (this.prevRoute.path == '/admin/utils/export') this.$router.push('/admin/utils/export')
-      else this.$router.push('/utils/export')
+      if (this.prevRoute.path == '/admin/utils/exports') this.$router.push('/admin/utils/exports')
+      else this.$router.push('/utils/exports')
     },
     getServer(server_id) {
       // Get Server
@@ -410,7 +410,7 @@ export default {
       this.loading = true
       this.stop = true
       const payload = { uri: this.$route.params.uri }
-      axios.post('/utils/export/stop', payload)
+      axios.post('/utils/exports/stop', payload)
       .then(() => {
         this.stopDialog = false
       })

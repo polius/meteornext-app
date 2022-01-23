@@ -1,4 +1,4 @@
-class Export:
+class Exports:
     def __init__(self, sql):
         self._sql = sql
 

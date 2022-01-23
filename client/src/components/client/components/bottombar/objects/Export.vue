@@ -355,8 +355,8 @@ export default {
       }
       // Limit export size
       let table_size = this.gridApi['tables'].getSelectedRows().reduce((acc, val) => acc + val['data_length'], 0)
-      if ((table_size/1024/1024) > 100) {
-        EventBus.$emit('send-notification', 'The selected objects cannot be greater than 100 MB.', '#EF5354')
+      if ((table_size/1024/1024) > 10) {
+        EventBus.$emit('send-notification', 'To export objects larger than 10MB use the Utils section.', '#EF5354')
         return
       }
       // Init Export

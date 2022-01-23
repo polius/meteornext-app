@@ -3,11 +3,10 @@ import json
 import time
 import schedule
 import threading
-import traceback
 
 import routes.deployments.deployments
 import apps.monitoring.monitoring
-import apps.restore.scan
+import apps.imports.scan
 
 class Cron:
     def __init__(self, app, license, sql):
@@ -25,7 +24,7 @@ class Cron:
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__restore_clean)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__import_clean)
             schedule.every().hour.do(self.__run_threaded, self.__client_clean)
             schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
 
@@ -109,13 +108,13 @@ class Cron:
         monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
         monitoring.clean()
 
-    def __restore_clean(self):
+    def __import_clean(self):
         if not self._license.validated:
             return
 
-        # Clean unfinished restores
+        # Clean unfinished imports
         query = """
-            DELETE FROM restore_scans
+            DELETE FROM imports_scans
             WHERE `status` != 'IN PROGRESS'
             AND DATE_ADD(`updated`, INTERVAL 1 DAY) <= CURRENT_DATE
         """
@@ -142,13 +141,13 @@ class Cron:
         # Stop all scans not being tracked by the user
         query = """
             SELECT id, pid
-            FROM restore_scans
+            FROM imports_scans
             WHERE status = 'IN PROGRESS'
             AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
         """
         result = self._sql.execute(query)
-        scan = apps.restore.scan.Scan(self._sql)
+        scan = apps.imports.scan.Scan(self._sql)
         for i in result:
-            query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
+            query = "UPDATE imports_scans SET status = 'STOPPED' WHERE id = %s"
             self._sql.execute(query, (i['id']))
             scan.stop(i['pid'])

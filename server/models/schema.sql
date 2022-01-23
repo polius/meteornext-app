@@ -33,7 +33,9 @@ CREATE TABLE `groups` (
   `monitoring_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `monitoring_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `utils_enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `utils_restore_limit` BIGINT UNSIGNED NULL,
+  `utils_import` tinyint(1) NOT NULL DEFAULT '0',
+  `utils_export` tinyint(1) NOT NULL DEFAULT '0',
+  `utils_import_limit` BIGINT UNSIGNED NULL,
   `utils_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
   `utils_slack_name` VARCHAR(191) NULL,
   `utils_slack_url` VARCHAR(191) NULL,
@@ -511,7 +513,7 @@ CREATE TABLE `client_queries` (
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `restore` (
+CREATE TABLE `imports` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('file','url','cloud') NOT NULL,
  `details` TEXT NULL,
@@ -521,6 +523,7 @@ CREATE TABLE `restore` (
  `server_id` INT UNSIGNED NOT NULL,
  `database` VARCHAR(191) NOT NULL,
  `create_database` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
+ `drop_database` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
  `status` ENUM('CREATED','IN PROGRESS','SUCCESS','FAILED','STOPPED') NOT NULL,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
@@ -549,7 +552,7 @@ CREATE TABLE `restore` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `restore_scans` (
+CREATE TABLE `imports_scans` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('url','cloud') NOT NULL,
  `cloud_id` INT UNSIGNED NULL,

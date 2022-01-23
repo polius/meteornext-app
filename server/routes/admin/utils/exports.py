@@ -3,25 +3,25 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
-import models.admin.utils.export
+import models.admin.utils.exports
 import routes.admin.settings
 
-class Export:
+class Exports:
     def __init__(self, app, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._export = models.admin.utils.export.Export(sql)
+        self._export = models.admin.utils.exports.Exports(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
-        admin_utils_export_blueprint = Blueprint('admin_utils_export', __name__, template_folder='admin_utils_export')
+        admin_utils_exports_blueprint = Blueprint('admin_utils_exports', __name__, template_folder='admin_utils_exports')
 
-        @admin_utils_export_blueprint.route('/admin/utils/export', methods=['GET'])
+        @admin_utils_exports_blueprint.route('/admin/utils/exports', methods=['GET'])
         @jwt_required()
-        def admin_utils_export_method():
+        def admin_utils_exports_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -40,9 +40,9 @@ class Export:
             # Get Exports
             return self.get()
 
-        @admin_utils_export_blueprint.route('/admin/utils/export/action', methods=['POST'])
+        @admin_utils_exports_blueprint.route('/admin/utils/exports/action', methods=['POST'])
         @jwt_required()
-        def admin_utils_export_action_method():
+        def admin_utils_exports_action_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -64,7 +64,7 @@ class Export:
             # Apply action
             return self.action(data)
 
-        return admin_utils_export_blueprint
+        return admin_utils_exports_blueprint
 
     ####################
     # Internal Methods #
@@ -74,7 +74,7 @@ class Export:
         esort = json.loads(request.args['sort']) if 'sort' in request.args else None
         export = self._export.get(efilter, esort)
         users_list = self._export.get_users_list()
-        return jsonify({'export': export, 'users_list': users_list}), 200
+        return jsonify({'exports': export, 'users_list': users_list}), 200
 
     def action(self, data):
         if data['action'] == 'recover':

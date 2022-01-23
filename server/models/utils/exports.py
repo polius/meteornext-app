@@ -1,5 +1,6 @@
 import json
-class Export:
+
+class Exports:
     def __init__(self, sql, license):
         self._sql = sql
         self._license = license
