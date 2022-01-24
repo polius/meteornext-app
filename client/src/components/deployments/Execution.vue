@@ -311,7 +311,7 @@
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
                       <v-toolbar-items v-else style="padding-left:0px;">
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click='showQuery()'><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>SHOW</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click='showQuery()'><v-icon small style="margin-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -322,6 +322,9 @@
                           :indeterminate="information_dialog_query_selected.length > 0 && information_dialog_query_selected.length != information_dialog_data.queries.length"
                           @click="information_dialog_query_selected.length == information_dialog_data.queries.length ? information_dialog_query_selected = [] : information_dialog_query_selected = [...information_dialog_data.queries]">
                         </v-simple-checkbox>
+                      </template>
+                      <template v-slot:[`item.query`]="{ item }">
+                        <td style="padding-top:5px; padding-bottom:5px">{{ item.query }}</td>
                       </template>
                     </v-data-table>
                   </v-card>
@@ -962,8 +965,8 @@
         // +---------------------+
         if (data['progress']) {
           this.deployment['progress'] = JSON.parse(data['progress'])
-          if ('validation' in this.deployment['progress']) this.deployment['progress']['validation'].sort((a,b) => a.name.localeCompare(b.name))
-          if ('execution' in this.deployment['progress']) this.deployment['progress']['execution'].sort((a,b) => a.name.localeCompare(b.name))
+          if ('validation' in this.deployment['progress']) this.deployment['progress']['validation'].sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+          if ('execution' in this.deployment['progress']) this.deployment['progress']['execution'].sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
           // Parse Last Updated
           this.last_updated = this.deployment['progress']['updated']
@@ -1033,10 +1036,10 @@
         }
 
         // Init Execution Progress (if has started)
-        for (const region of Object.values(this.deployment['progress']['execution']).sort()) {
+        for (const region of Object.values(this.deployment['progress']['execution'])) {
           overall_progress[region.id] = {"d": 0, "t": 0}
           execution_headers.push({ text: region.name, align: 'left', value: region.id, sortable: false, shared: region.shared})
-          for (const [index, server] of Object.entries(region.servers)) {
+          for (const [index, server] of Object.entries(region.servers.sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())))) {
             overall_progress[region.id]['d'] += server['d']
             overall_progress[region.id]['t'] += server['t']
             let progress = server['p'] + '% (' + server['d'] + '/' + server['t'] + ' DBs)'
@@ -1312,8 +1315,8 @@
       showQuery() {
         this.query_dialog_mode = 'info'
         this.query_dialog_code = this.information_dialog_query_selected[0]['query']
-        this.query_dialog_title = 'SHOW QUERY'
-        this.query_dialog_icon = 'fas fa-info'
+        this.query_dialog_title = 'DETAILS'
+        this.query_dialog_icon = 'fas fa-bookmark'
         this.cmOptions2.readOnly = true
         this.query_dialog = true
       },

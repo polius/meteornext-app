@@ -151,12 +151,12 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
-                <v-switch v-if="group.utils_enabled" v-model="group.utils_import" label="IMPORT" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.utils_enabled" v-model="group.utils_export" label="EXPORT" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.utils_enabled" v-model="group.utils_import" label="IMPORTS" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.utils_enabled" v-model="group.utils_export" label="EXPORTS" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
                 <v-text-field v-model="group.utils_import_limit" label="Maximum import size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
                 <v-text-field v-model="group.utils_export_limit" label="Maximum export size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px" hide-details></v-text-field>
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">

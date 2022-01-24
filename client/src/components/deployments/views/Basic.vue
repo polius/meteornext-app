@@ -47,6 +47,9 @@
                     @click="query_selected.length == query_items.length ? query_selected = [] : query_selected = [...query_items]">
                   </v-simple-checkbox>
                 </template>
+                <template v-slot:[`item.query`]="{ item }">
+                  <td style="padding-top:5px; padding-bottom:5px">{{ item.query }}</td>
+                </template>
               </v-data-table>
             </v-card>
 
