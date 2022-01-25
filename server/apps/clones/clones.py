@@ -11,28 +11,32 @@ import threading
 from datetime import datetime, timedelta
 
 import models.notifications
-import apps.exports.core
+import apps.clones.core
 
-class Exports:
+class Clones:
     def __init__(self, sql):
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, server, region, path, amazon_s3):
+    def start(self, user, item, servers, regions, path, amazon_s3):
         # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, server, region, path,amazon_s3,))
+        t = threading.Thread(target=self.__core, args=(user, item, servers, regions, path,amazon_s3,))
         t.daemon = True
         t.start()
 
-    def __core(self, user, item, server, region, paths, amazon_s3):
+    def __core(self, user, item, servers, regions, paths, amazon_s3):
         try:
             start_time = time.time()
-            core = apps.export.core.Core(region)
-            self.__check(core)
-            self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
+            core = {
+                "origin": apps.clones.core.Core(regions['origin']),
+                "destination": apps.clones.core.Core(regions['destination'])
+            }
+            self.__check(core['origin'])
+            self.__check(core['destination'])
+            self.__core2(start_time, core, user, item, servers, regions, paths, amazon_s3)
         except Exception as e:
             query = """
-                UPDATE `exports`
+                UPDATE `clones`
                 SET
                     `status` = 'FAILED',
                     `error` = %s,
@@ -40,8 +44,10 @@ class Exports:
                 WHERE `id` = %s
             """
             self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
-            self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
+        finally:
+            self.__clean(core['origin'], regions['origin'], item, paths)
+            self.__clean(core['destination'], regions['destination'], item, paths)
 
     def __check(self, core):
         for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
@@ -49,10 +55,10 @@ class Exports:
             if len(p['stderr']) > 0:
                 raise Exception(p['stderr'])
 
-    def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
-        # Update export status
+    def __core2(self, start_time, core, user, item, servers, regions, paths, amazon_s3):
+        # Update clone status
         query = """
-            UPDATE `exports`
+            UPDATE `clones`
             SET
                 `status` = 'IN PROGRESS',
                 `started` = %s
@@ -61,22 +67,26 @@ class Exports:
         self._sql.execute(query, args=(self.__utcnow(), item['id']))
 
         # Define new path
-        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
+        path = {
+            "origin": paths['remote'] if regions['origin']['ssh_tunnel'] else paths['local'],
+            "destination": paths['remote'] if regions['destination']['ssh_tunnel'] else paths['local']
+        }
 
-        # Start export
+        # Start Clone (Export)
         export_status = [None]
-        t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3, export_status,))
+        url = [None]
+        t = threading.Thread(target=self.__export, args=(core['origin'], item, servers['origin'], path['origin'], amazon_s3, export_status,))
         t.daemon = True
         t.start()
 
-        # Start Monitor
+        # Start Monitor (Export)
         monitor_status = [None]
         alive = True
         while t.is_alive() and alive:
-            alive = self.__monitor(core, item, path, monitor_status)
+            alive = self.__monitor_export(core['origin'], item, path['origin'], monitor_status)
             time.sleep(1)
         if alive:
-            self.__monitor(core, item, path, monitor_status)
+            self.__monitor_export(core['origin'], item, path['origin'], monitor_status)
 
         # Generated Presigned URL 
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
@@ -85,7 +95,7 @@ class Exports:
         except Exception as e:
             # Update export status
             query = """
-                UPDATE `exports`
+                UPDATE `clones`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', 'FAILED'),
                     `ended` = %s,
@@ -93,36 +103,62 @@ class Exports:
                 WHERE `id` = %s
             """
             self._sql.execute(query, args=(self.__utcnow(), str(e), item['id']))
-        else:
-            # Update export status
-            status = 'SUCCESS' if not export_status[0] and not monitor_status[0] else 'FAILED'
-            query = """
-                UPDATE `exports`
-                SET
-                    `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                    `ended` = %s,
-                    `url` = %s
-                WHERE `id` = %s
-            """
-            self._sql.execute(query, args=(status, self.__utcnow(), url, item['id']))
 
-        # Clean files
-        self.__clean(core, region, item, paths)
+        # Update clone status
+        # status = 'SUCCESS' if not export_status[0] and not monitor_status[0] else 'FAILED'
+        # query = """
+        #     UPDATE `clones`
+        #     SET
+        #         `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
+        #         `ended` = %s,
+        #         `url` = %s
+        #     WHERE `id` = %s
+        # """
+        # self._sql.execute(query, args=(status, self.__utcnow(), url[0], item['id']))
 
-        # Get export details
+        # ...
+
+        # Start Clone (Import)
+        import_status = [None]
+        t = threading.Thread(target=self.__import, args=(core['destination'], item, servers['destination'], path, amazon_s3, import_status,))
+        t.daemon = True
+        t.start()
+
+        # Start Monitor (Import)
+        monitor_status = [None]
+        alive = True
+        while t.is_alive() and alive:
+            alive = self.__monitor_import(core, item, path, monitor_status)
+            time.sleep(1)
+        if alive:
+            self.__monitor_import(core, item, path, monitor_status)
+
+        # Update clone status
+        status = 'SUCCESS' if not export_status[0] and not monitor_status[0] else 'FAILED'
         query = """
-            SELECT `status`, `error`
-            FROM `exports`
+            UPDATE `clones`
+            SET
+                `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
+                `ended` = %s,
+                `url` = %s
             WHERE `id` = %s
         """
-        export = self._sql.execute(query, args=(item['id']))[0]
+        self._sql.execute(query, args=(status, self.__utcnow(), url[0], item['id']))
+
+        # Get clones details
+        query = """
+            SELECT `status`, `error`
+            FROM `clones`
+            WHERE `id` = %s
+        """
+        clone = self._sql.execute(query, args=(item['id']))[0]
 
         # Send notification
-        if export['status'] in ['SUCCESS','FAILED']:
+        if clone['status'] in ['SUCCESS','FAILED']:
             notification = {
-                'name': f"An export has finished",
-                'status': 'ERROR' if export['status'] == 'FAILED' else 'SUCCESS',
-                'category': 'utils-export',
+                'name': f"A clone has finished",
+                'status': 'ERROR' if clone['status'] == 'FAILED' else 'SUCCESS',
+                'category': 'utils-clone',
                 'data': '{{"id":"{}"}}'.format(item['id']),
                 'date': self.__utcnow(),
                 'show': 1
@@ -130,12 +166,12 @@ class Exports:
             self._notifications.post(user_id=user['id'], notification=notification)
 
         # Send Slack message
-        if export['status'] == 'SUCCESS':
+        if clone['status'] == 'SUCCESS':
             self.__slack(item, start_time, 0)
-        elif export['status'] == 'STOPPED':
+        elif clone['status'] == 'STOPPED':
             self.__slack(item, start_time, 1)
-        elif export['status'] == 'FAILED':
-            self.__slack(item, start_time, 2, export['error'])
+        elif clone['status'] == 'FAILED':
+            self.__slack(item, start_time, 2, clone['error'])
 
     def __export(self, core, item, server, path, amazon_s3, status):
         # Build paths
@@ -164,19 +200,19 @@ class Exports:
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
+            command = f"echo 'CLONE.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/clones/{item['uri']}.sql.gz 2> {error_aws_path}"
 
-        # Start Export process
+        # Start Clone process
         p = core.execute(command)
 
         # Check if subprocess command has been killed (= stopped by user).
         status[0] = len(p['stderr']) > 0
 
-    def __monitor(self, core, item, path, status):
+    def __monitor_export(self, core, item, path, status):
         # Check if a stop it's been requested
         if not self.__alive(item):
             # SIGKILL
-            command = f"ps -U $USER -u $USER u | grep 'EXPORT.{item['uri']}' | grep -v grep | awk '{{print $2}}' | xargs pkill -9 -P 2> /dev/null"
+            command = f"ps -U $USER -u $USER u | grep 'CLONE.{item['uri']}' | grep -v grep | awk '{{print $2}}' | xargs pkill -9 -P 2> /dev/null"
             core.execute(command)
             return False
 
@@ -200,9 +236,78 @@ class Exports:
         # Update status
         status[0] = error
 
-        # Update export with progress file
+        # Update clone with progress file
         query = """
-            UPDATE `exports`
+            UPDATE `clones`
+            SET 
+                `progress` = %s,
+                `error` = %s,
+                `updated` = %s
+            WHERE `id` = %s
+        """
+        now = self.__utcnow()
+        self._sql.execute(query, args=(progress, error, now, item['id']))
+        return True
+
+    def __import(self, core, item, server, path, amazon_s3, status):
+        # Build paths
+        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+
+        # Get file size
+        client = boto3.client('s3', aws_access_key_id=amazon_s3['access_key'], aws_secret_access_key=amazon_s3['secret_key'])
+        response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
+        size = response['ContentLength']
+
+        # MySQL & Aurora MySQL engines
+        if server['engine'] in ('MySQL', 'Aurora MySQL'):
+            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql -h{server['hostname']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+
+        # Start Import process
+        p = core.execute(command)
+
+        # Check if subprocess command has been killed (= stopped by user).
+        status[0] = len(p['stderr']) > 0
+
+    def __monitor_import(self, core, item, path, status):
+        # Check if a stop it's been requested
+        if not self.__alive(item):
+            # SIGKILL
+            command = f"ps -U $USER -u $USER u | grep 'CLONE.{item['uri']}' | grep -v grep | awk '{{print $2}}' | xargs pkill -9 -P 2> /dev/null"
+            core.execute(command)
+            core.stop()
+            return False
+
+        # Init path vars
+        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+
+        # Read progress file
+        p = core.execute(f"[ -f {progress_path} ] && tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1")
+        progress = self.__parse_progress(p['stdout']) if len(p['stdout']) > 0 else None
+
+        # Read error (sql) file
+        p = core.execute(f"[ -f {error_sql_path} ] && cat < {error_sql_path}")
+        error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+        if not error:
+            # Read error (gunzip) file
+            p = core.execute(f"[ -f {error_gunzip_path} ] && cat < {error_gunzip_path}")
+            error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+            if not error:
+                # Read error (curl) file
+                p = core.execute(f"[ -f {error_curl_path} ] && cat < {error_curl_path}")
+                error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+
+        # Update status
+        status[0] = error
+
+        # Update clone with progress file
+        query = """
+            UPDATE `clone`
             SET 
                 `progress` = %s,
                 `error` = %s,
@@ -217,14 +322,14 @@ class Exports:
         # Check if process has been requested to be stopped
         query = """
             SELECT `stop`
-            FROM `exports`
+            FROM `clones`
             WHERE `id` = %s
         """
         result = self._sql.execute(query, args=(item['id']))
 
         if len(result) == 0 or result[0]['stop'] == 1:
             query = """
-                UPDATE `exports`
+                UPDATE `clones`
                 SET
                     `status` = 'STOPPED',
                     `updated` = %s
@@ -277,7 +382,7 @@ class Exports:
                         },
                         {
                             "title": "Information",
-                            "value": f"```{item['url']}/utils/exports/{item['uri']}```",
+                            "value": f"```{item['url']}/utils/clones/{item['uri']}```",
                             "short": False
                         },
                         {

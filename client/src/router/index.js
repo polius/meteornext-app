@@ -215,6 +215,24 @@ let router = new VueRouter({
           component: () => import('../components/utils/exports/Info'),
           meta: { requiresUtils: true }
         },
+        {
+          path: 'clones',
+          name: 'utils.clones',
+          component: () => import('../components/utils/clones/Clones'),
+          meta: { requiresUtils: true }
+        },
+        {
+          path: 'clones/new',
+          name: 'utils.clones.new',
+          component: () => import('../components/utils/clones/New'),
+          meta: { requiresUtils: true }
+        },
+        {
+          path: 'clones/:uri',
+          name: 'utils.clones.info',
+          component: () => import('../components/utils/clones/Info'),
+          meta: { requiresUtils: true }
+        },
       ]
     },
     {
@@ -290,7 +308,7 @@ let router = new VueRouter({
         {
           path: 'utils',
           name: 'admin.utils',
-          alias: ["/admin/utils/imports", "/admin/utils/exports"],
+          alias: ["/admin/utils/imports", "/admin/utils/exports", "/admin/utils/clones"],
           component: () => import('../components/admin/views/Utils'),
           meta: { requiresAdmin: true }
         },

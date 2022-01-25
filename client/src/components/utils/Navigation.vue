@@ -9,6 +9,8 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab to="/utils/exports"><span class="pl-2 pr-2"><v-icon size="14" style="margin-right:10px">fas fa-arrow-down</v-icon>Exports</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab to="/utils/clones"><span class="pl-2 pr-2"><v-icon size="14" style="margin-right:10px">fas fa-clone</v-icon>Clones</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
     </div>
     <v-container fluid style="padding:10px!important">

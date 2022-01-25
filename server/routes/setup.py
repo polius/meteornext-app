@@ -28,6 +28,7 @@ import routes.admin.inventory.auxiliary
 import routes.admin.inventory.cloud
 import routes.admin.utils.imports
 import routes.admin.utils.exports
+import routes.admin.utils.clones
 import routes.admin.client
 import routes.admin.monitoring
 import routes.inventory.inventory
@@ -46,6 +47,7 @@ import routes.monitoring.views.queries
 import routes.client.client
 import routes.utils.imports
 import routes.utils.exports
+import routes.utils.clones
 import connectors.base
 import connectors.pool
 import models.admin.settings
@@ -277,6 +279,7 @@ class Setup:
         admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._app, sql, self._license)
         admin_utils_imports = routes.admin.utils.imports.Imports(self._app, sql, self._license)
         admin_utils_exports = routes.admin.utils.exports.Exports(self._app, sql, self._license)
+        admin_utils_clones = routes.admin.utils.clones.Clones(self._app, sql, self._license)
         admin_client = routes.admin.client.Client(self._app, sql, self._license)
         admin_monitoring = routes.admin.monitoring.Monitoring(self._app, sql, self._license)
         inventory = routes.inventory.inventory.Inventory(self._app, sql, self._license)
@@ -295,8 +298,9 @@ class Setup:
         client = routes.client.client.Client(self._app, sql, self._license)
         imports = routes.utils.imports.Imports(self._app, sql, self._license)
         exports = routes.utils.exports.Exports(self._app, sql, self._license)
+        clones = routes.utils.clones.Clones(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports]
+        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports, clones]
 
         # Register all blueprints
         for i in self._blueprints:
