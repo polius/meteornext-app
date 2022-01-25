@@ -312,7 +312,7 @@ class Imports:
                         },
                         {
                             "title": "Information",
-                            "value": f"```{item['url']}/utils/import/{item['id']}```",
+                            "value": f"```{item['url']}/utils/imports/{item['id']}```",
                             "short": False
                         },
                         {

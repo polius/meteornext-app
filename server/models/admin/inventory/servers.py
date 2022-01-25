@@ -166,6 +166,30 @@ class Servers:
         """
         self._sql.execute(query, (server_id))
 
+        # Delete from 'imports'
+        query = """
+            DELETE i
+            FROM `imports` i
+            JOIN servers s ON s.id = i.server_id AND s.id = %s
+        """
+        self._sql.execute(query, (server_id))
+
+        # Delete from 'exports'
+        query = """
+            DELETE e
+            FROM `exports` e
+            JOIN servers s ON s.id = e.server_id AND s.id = %s
+        """
+        self._sql.execute(query, (server_id))
+
+        # Delete from 'clones'
+        query = """
+            DELETE c
+            FROM `clones` c
+            JOIN servers s ON (s.id = c.origin_server OR s.id = c.destination_server) AND s.id = %s
+        """
+        self._sql.execute(query, (server_id))
+
         # Delete from 'servers'
         query = """
             DELETE FROM servers

@@ -6,8 +6,9 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-tabs background-color="primary" color="white" v-model="tabs" slider-color="white" slot="extension">
-            <v-tab title="Manage Imports"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-arrow-up</v-icon>IMPORTS</span></v-tab>
-            <v-tab title="Manage Exports"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>EXPORTS</span></v-tab>
+            <v-tab title="Manage Imports"><span class="pl-2 pr-2"><v-icon small style="margin-right:10px">fas fa-arrow-up</v-icon>IMPORTS</span></v-tab>
+            <v-tab title="Manage Exports"><span class="pl-2 pr-2"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>EXPORTS</span></v-tab>
+            <v-tab title="Manage Clones"><span class="pl-2 pr-2"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONES</span></v-tab>
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="rowsSelected != 1" text @click="infoClick"><v-icon small style="margin-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
@@ -21,8 +22,9 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="columnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <Import v-show="tabs == 0" :active="tabs == 0" :search="search" />
-      <Export v-show="tabs == 1" :active="tabs == 1" :search="search" />
+      <Imports v-show="tabs == 0" :active="tabs == 0" :search="search" />
+      <Exports v-show="tabs == 1" :active="tabs == 1" :search="search" />
+      <Clones v-show="tabs == 2" :active="tabs == 2" :search="search" />
     </v-card>
     <!------------------->
     <!-- SERVER DIALOG -->
@@ -103,8 +105,9 @@
 <script>
 import axios from 'axios'
 import EventBus from '../js/event-bus'
-import Import from './utils/Imports.vue'
-import Export from './utils/Exports.vue'
+import Imports from './utils/Imports.vue'
+import Exports from './utils/Exports.vue'
+import Clones from './utils/Clones.vue'
 
 export default {
   data() {
@@ -114,11 +117,13 @@ export default {
       search: '',
       filter: {
         import: false,
-        export: false
+        export: false,
+        clone: false,
       },
       selected: {
         import: 0,
-        export: 0
+        export: 0,
+        clone: 0,
       },
       // Server Dialog
       serverDialog: false,
@@ -126,7 +131,7 @@ export default {
       showPassword: false,
     }
   },
-  components: { Import, Export },
+  components: { Imports, Exports, Clones },
   mounted() {
     EventBus.$on('utils-toggle-filter', (value) => { this.filter[value.from] = value.value })
     EventBus.$on('utils-get-server', this.getServer)
@@ -135,21 +140,24 @@ export default {
   created() {
     if (this.$route.path == '/admin/utils/imports') this.tabs = 0
     else if (this.$route.path == '/admin/utils/exports') this.tabs = 1
+    else if (this.$route.path == '/admin/utils/clones') this.tabs = 2
     else this.$router.push('/admin/utils/imports')
   },
   computed: {
     filterActive: function() {
-      return (this.filter['import'] && this.tabs == 0) || (this.filter['export'] && this.tabs == 1)
+      return (this.filter['import'] && this.tabs == 0) || (this.filter['export'] && this.tabs == 1) || (this.filter['clone'] && this.tabs == 2)
     },
     rowsSelected: function() {
       if (this.tabs == 0) return this.selected['import']
-      return this.selected['export']
+      else if (this.tabs == 1) return this.selected['export']
+      return this.selected['clone']
     }
   },
   watch: {
     tabs: function(val) {
       if (val == 0 && this.$route.path != '/admin/utils/imports') this.$router.push('/admin/utils/imports')
       else if (val == 1 && this.$route.path != '/admin/utils/exports') this.$router.push('/admin/utils/exports')
+      else if (val == 2 && this.$route.path != '/admin/utils/clones') this.$router.push('/admin/utils/clones')
     },
   },
   methods: {
@@ -178,23 +186,28 @@ export default {
     },
     infoClick() {
       if (this.tabs == 0) EventBus.$emit('info-utils-import')
-      else EventBus.$emit('info-utils-export')
+      else if (this.tabs == 1) EventBus.$emit('info-utils-export')
+      else EventBus.$emit('info-utils-clone')
     },
     manageClick() {
       if (this.tabs == 0) EventBus.$emit('manage-utils-import')
-      else EventBus.$emit('manage-utils-export')
+      else if (this.tabs == 1) EventBus.$emit('manage-utils-export')
+      else EventBus.$emit('manage-utils-clone')
     },
     filterClick() {
       if (this.tabs == 0) EventBus.$emit('filter-utils-import')
-      else EventBus.$emit('filter-utils-export')
+      else if (this.tabs == 1) EventBus.$emit('filter-utils-export')
+      else EventBus.$emit('filter-utils-clone')
     },
     refreshClick() {
       if (this.tabs == 0) EventBus.$emit('refresh-utils-import')
-      else EventBus.$emit('refresh-utils-export')
+      else if (this.tabs == 1) EventBus.$emit('refresh-utils-export')
+      else EventBus.$emit('refresh-utils-clone')
     },
     columnsClick() {
       if (this.tabs == 0) EventBus.$emit('columns-utils-import')
-      else EventBus.$emit('columns-utils-export')
+      else if (this.tabs == 1) EventBus.$emit('columns-utils-export')
+      else EventBus.$emit('columns-utils-clone')
     },
     testConnection() {
       // Test Connection

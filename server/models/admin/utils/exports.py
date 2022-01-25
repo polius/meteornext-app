@@ -24,9 +24,9 @@ class Exports:
                 mode = 'AND e.mode IN (%s)' % ','.join([f"%(mode{i})s" for i in range(len(efilter['mode']))])
                 for i,v in enumerate(efilter['mode']):
                     args[f'mode{i}'] = v
-            if 'server' in efilter and len(efilter['server']) > 0 and 'serveefilter' in efilter and efilter['serveefilter'] in matching:
-                server = f"AND s.name {matching[efilter['serveefilter']]['operator']} %(server)s"
-                args['server'] = matching[efilter['serveefilter']]['args'].format(efilter['server'])
+            if 'server' in efilter and len(efilter['server']) > 0 and 'serverFilter' in efilter and efilter['serverFilter'] in matching:
+                server = f"AND s.name {matching[efilter['serverFilter']]['operator']} %(server)s"
+                args['server'] = matching[efilter['serverFilter']]['args'].format(efilter['server'])
             if 'database' in efilter and len(efilter['database']) > 0 and 'databaseFilter' in efilter and efilter['databaseFilter'] in matching:
                 database = f"AND e.database {matching[efilter['databaseFilter']]['operator']} %(database)s"
                 args['database'] = matching[efilter['databaseFilter']]['args'].format(efilter['database'])
