@@ -145,7 +145,7 @@ class Exports:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
         # Build options
-        options = '--single-transaction'
+        options = '--single-transaction --max_allowed_packet=1G'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
