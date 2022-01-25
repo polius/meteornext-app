@@ -790,6 +790,8 @@ class Client:
                     if options['include'] in ['Structure','Structure + Content']:
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
+                        yield 'LOCK TABLES `{}` WRITE;\n'.format(table)
+                        yield 'ALTER TABLE `{}` DISABLE KEYS;\n\n'.format(table)
                         conn.execute(query=f"SELECT SQL_NO_CACHE * FROM `{table}`", database=request.args['database'], fetch=False)
                         first = True
                         while True:
@@ -809,6 +811,8 @@ class Client:
                             data += ';\n\n'
                             yield data
                             first = True
+                        yield 'ALTER TABLE `{}` ENABLE KEYS;\n'.format(table)
+                        yield 'UNLOCK TABLES;\n\n'
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 

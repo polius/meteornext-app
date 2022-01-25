@@ -374,14 +374,18 @@ export default {
       // Build Header
       if (this.tab == 'sql') {
         let header = ''
-        header += '# ************************************************************\n'
-        header += '# Meteor Next - Export SQL\n'
-        header += '# Host: ' + this.server['hostname'] + ' (' + this.server['engine'] + ' ' + this.server['version'] + ')\n'
-        header += '# Database: ' + this.database + '\n'
-        header += '# Generation Time: ' + moment.utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC\n'
-        header += '# ************************************************************\n\n'
-        header += 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
-        header += 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
+        header += "# ************************************************************\n"
+        header += "# Meteor Next - Export SQL\n"
+        header += "# Host: " + this.server['hostname'] + " (" + this.server['engine'] + " " + this.server['version'] + ")\n"
+        header += "# Database: " + this.database + "\n"
+        header += "# Generation Time: " + moment.utc().format('YYYY-MM-DD HH:mm:ss') + " UTC\n"
+        header += "# ************************************************************\n\n"
+        header += "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n"
+        header += "SET @OLD_TIME_ZONE=@@TIME_ZONE, TIME_ZONE='+00:00';\n"
+        header += "SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;\n"
+        header += "SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;\n"
+        header += "SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n"
+        header += "SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0;\n\n"
         this.exportData = new Blob([header])
       }
 
@@ -391,8 +395,12 @@ export default {
       }).then (() => {
         // Build Footer
         if (this.tab == 'sql') {
-          let footer = ''
-          footer += 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
+          let footer = ""
+          footer += "SET TIME_ZONE=@OLD_TIME_ZONE;\n"
+          footer += "SET SQL_MODE=@OLD_SQL_MODE;\n"
+          footer += "SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;\n"
+          footer += "SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\n"
+          footer += "SET SQL_NOTES=@OLD_SQL_NOTES;\n\n"
           if (this.exportErrors.length > 0) {
             footer += '# ************************************************************\n'
             footer += '# Export finished with errors\n'
