@@ -9,8 +9,10 @@ CREATE TABLE `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 INSERT INTO settings (`id`, `name`, `value`) VALUES 
-(1, 'FILES', '{"local":{"path":"","expire":"7"},"amazon_s3":{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}'),
-(2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}');
+(1, 'FILES', '{"path":""}'),
+(2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}'),
+(3, 'AMAZON', '{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}'),
+(4, 'DEPLOYMENTS', '{"retention":"0"}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

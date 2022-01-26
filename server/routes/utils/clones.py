@@ -268,7 +268,7 @@ class Clones:
 
         # Init path
         path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'clones'),
+            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'clones'),
             "remote": '.meteor/clones'
         }
 

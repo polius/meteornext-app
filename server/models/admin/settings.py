@@ -6,9 +6,12 @@ class Settings:
         self._license = license
 
     def get(self, setting_name=None):
-        if setting_name:
+        if type(setting_name) is str:
             query = "SELECT value FROM settings WHERE name = %s"
             return self._sql.execute(query, (setting_name.upper()))[0]['value']
+        elif type(setting_name) is list:
+            query = "SELECT name, value FROM settings WHERE name IN ({})".format(','.join(['%s'] * len(setting_name)))
+            return self._sql.execute(query, args=(setting_name))
         else:
             query = "SELECT name, value FROM settings"
             return self._sql.execute(query)

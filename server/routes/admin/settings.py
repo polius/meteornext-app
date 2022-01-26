@@ -24,7 +24,7 @@ class Settings:
         # Init blueprint
         settings_blueprint = Blueprint('settings', __name__, template_folder='settings')
 
-        @settings_blueprint.route('/admin/settings', methods=['GET'])
+        @settings_blueprint.route('/admin/settings', methods=['GET','POST'])
         @jwt_required()
         def settings_method():
             # Check license
@@ -47,8 +47,8 @@ class Settings:
 
             if request.method == 'GET':
                 return self.get()
-            elif request.method == 'PUT':
-                return self.put(user['id'], settings_json)
+            elif request.method == 'POST':
+                return self.post(user['id'], settings_json['name'], settings_json['value'])
 
         @settings_blueprint.route('/admin/settings/license', methods=['GET'])
         @jwt_required()
@@ -111,31 +111,7 @@ class Settings:
             usage = self._settings.get_license_usage()
             return jsonify({'usage': usage}), 200
 
-        @settings_blueprint.route('/admin/settings/files', methods=['POST'])
-        @jwt_required()
-        def settings_files_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Check Security (Administration URL)
-            if not self.check_url():
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['admin']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Request Json
-            settings_json = request.get_json()
-
-            # Store Settings Files
-            return self.post_files(user['id'], settings_json)
-
-        @settings_blueprint.route('/admin/settings/files/test', methods=['POST'])
+        @settings_blueprint.route('/admin/settings/amazon/test', methods=['POST'])
         @jwt_required()
         def settings_files_test_method():
             # Check license
@@ -157,31 +133,7 @@ class Settings:
             settings_json = request.get_json()
 
             # Test Amazon S3 Credentials
-            return self.test_files_credentials(settings_json)
-
-        @settings_blueprint.route('/admin/settings/security', methods=['POST'])
-        @jwt_required()
-        def settings_security_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Check Security (Administration URL)
-            if not self.check_url():
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['admin']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Request Json
-            settings_json = request.get_json()
-
-            # Store Settings Security
-            return self.post_security(user['id'], settings_json)
+            return self.test_amazon_credentials(settings_json)
 
         return settings_blueprint
 
@@ -203,11 +155,13 @@ class Settings:
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
 
-        # Get Files & Security Settings
-        settings['files'] = {}
+        # Get Files / Security / Amazon / Deployments Settings
+        settings['files'] = settings['amazon'] = settings['deployments'] = settings['security'] = {}
+        settings['amazon'] = {}
+        settings['deployments'] = {}
         settings['security'] = {}
         for i in s:
-            if i['name'] in ['FILES', 'SECURITY']:
+            if i['name'] in ['FILES', 'SECURITY', 'AMAZON', 'DEPLOYMENTS']:
                 settings[i['name'].lower()] = json.loads(i['value'])
 
         # Get current Domain URL from Security
@@ -219,23 +173,15 @@ class Settings:
         # Return Settings
         return jsonify({'settings': settings}), 200
 
-    def post_files(self, user_id, data):
-        # Check files path permissions
-        if not self.check_files_path(data['local']['path']):
-            return jsonify({'message': 'No write permissions in the files folder'}), 400
-        # Store Settings Files
+    def post(self, user_id, name, value):
+        if name == 'FILES':
+            # Check files path permissions
+            if not self.check_files_path(value['path']):
+                return jsonify({'message': 'No write permissions in the files folder'}), 400
+        # Store Settings
         settings = {
-            'name': 'FILES',
-            'value': json.dumps(data)
-        }
-        self._settings.post(user_id, settings)
-        return jsonify({'message': 'Changes saved'}), 200
-
-    def post_security(self, user_id, data):
-        # Store Settings Files
-        settings = {
-            'name': 'SECURITY',
-            'value': json.dumps(data)
+            'name': name,
+            'value': json.dumps(value)
         }
         self._settings.post(user_id, settings)
         return jsonify({'message': 'Changes saved'}), 200
@@ -272,7 +218,7 @@ class Settings:
             return True
         return False
 
-    def test_files_credentials(self, data):
+    def test_amazon_credentials(self, data):
         # Generate Temp File
         file = tempfile.NamedTemporaryFile()
         file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Files).\nIt is safe to delete it.'.encode())
