@@ -92,8 +92,8 @@ export default {
       }
       // Update Security values to the DB
       this.loading = true
-      const payload = this.security
-      axios.post('/admin/settings/security', payload)
+      const payload = { name: 'SECURITY', value: this.security }
+      axios.post('/admin/settings', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

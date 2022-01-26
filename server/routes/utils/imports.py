@@ -275,7 +275,7 @@ class Imports:
 
         # Init path
         path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'imports'),
+            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'imports'),
             "remote": '.meteor/imports'
         }
 
@@ -452,7 +452,7 @@ class Imports:
         data['id'] = self._scans.post(user, data)
 
         # Make scan folder
-        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'scans')
+        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'scans')
         if not os.path.exists(os.path.join(local_path, data['uri'])):
             os.makedirs(os.path.join(local_path, data['uri']))
 

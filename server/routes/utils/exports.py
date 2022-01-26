@@ -259,7 +259,7 @@ class Exports:
 
         # Init path
         path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'exports'),
+            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'exports'),
             "remote": '.meteor/exports'
         }
 

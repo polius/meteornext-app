@@ -75,30 +75,30 @@ class Cron:
         if not self._license.validated:
             return
 
-        # Get expiration value
-        setting = self._sql.execute("SELECT value FROM settings WHERE name = 'FILES'")
+        # Get setting values
+        setting = self._sql.execute("SELECT name, value FROM settings WHERE name IN ('FILES','DEPLOYMENTS')")
+        files = json.loads([i['value'] for i in setting if i['name'] == 'FILES'][0])
+        deployments = json.loads([i['value'] for i in setting if i['name'] == 'DEPLOYMENTS'][0])
 
-        # Check expiration is active
-        if len(setting) > 0:
-            setting = json.loads(setting[0]['value'])
-            if 'expire' in setting['local'] and setting['local']['expire'] is not None:
-                query = """
-                    SELECT id, uri
-                    FROM executions
-                    WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
-                    AND uri IS NOT NULL
-                    AND expired = 0
-                """.format(setting['local']['expire'])
-                expired = self._sql.execute(query)
+        # Check deployments expiration value
+        if int(deployments['retention']) > 0:
+            query = """
+                SELECT id, uri
+                FROM executions
+                WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
+                AND uri IS NOT NULL
+                AND expired = 0
+            """.format(deployments['retention'])
+            expired = self._sql.execute(query)
 
-                # Expire deployments
-                for i in expired:
-                    # DISK
-                    path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
-                    if os.path.isfile(path + '.json'):
-                        os.remove(path + '.json')
-                    # SQL
-                    self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
+            # Expire deployments
+            for i in expired:
+                # DISK
+                path = os.path.join(files['path'], 'deployments', i['uri'])
+                if os.path.isfile(path + '.json'):
+                    os.remove(path + '.json')
+                # SQL
+                self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
 
     def __monitoring_clean(self):
         if not self._license.validated:

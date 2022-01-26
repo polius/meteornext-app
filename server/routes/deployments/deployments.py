@@ -155,7 +155,7 @@ class Deployments:
             
             # Get Execution Results File
             if results['logs'] == 'local':
-                path = os.path.join(files['local']['path'], 'deployments')
+                path = os.path.join(files['path'], 'deployments')
                 # Check if exists
                 if not os.path.exists(f"{path}/{uri}.json"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
@@ -763,8 +763,8 @@ class Deployments:
     # Internal Methods #
     ####################
     def __check_files_path(self):
-        files_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path']
-        return self.__check_local_path(files_path)
+        path = json.loads(self._settings.get(setting_name='FILES'))['path']
+        return self.__check_local_path(path)
 
     def __check_local_path(self, path):
         while not os.path.exists(path) and path != '/':
