@@ -233,14 +233,14 @@ class Clones:
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
-        # Get server details (origin)
+        # Get server details (source)
         servers = {}
-        servers['origin'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['origin_server'])
-        if len(servers['origin']) == 0:
-            return jsonify({"message": 'The origin server does not exist.'}), 400
-        elif not servers['origin'][0]['active']:
-            return jsonify({"message": 'The origin server is disabled.'}), 400
-        servers['origin'] = servers['origin'][0]
+        servers['source'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['source_server'])
+        if len(servers['source']) == 0:
+            return jsonify({"message": 'The source server does not exist.'}), 400
+        elif not servers['source'][0]['active']:
+            return jsonify({"message": 'The source server is disabled.'}), 400
+        servers['source'] = servers['source'][0]
 
         # Get server details (destination)
         servers['destination'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['destination_server'])
@@ -250,12 +250,12 @@ class Clones:
             return jsonify({"message": 'The destination server is disabled.'}), 400
         servers['destination'] = servers['destination'][0]
 
-        # Get region details (origin)
+        # Get region details (source)
         regions = {}
-        regions['origin'] = self._regions.get(user_id=user['id'], group_id=user['group_id'], region_id=servers['origin']['region_id'])
-        if len(regions['origin']) == 0:
-            return jsonify({"message": 'The origin server does not have a region.'}), 400
-        regions['origin'] = regions['origin'][0]
+        regions['source'] = self._regions.get(user_id=user['id'], group_id=user['group_id'], region_id=servers['source']['region_id'])
+        if len(regions['source']) == 0:
+            return jsonify({"message": 'The source server does not have a region.'}), 400
+        regions['source'] = regions['source'][0]
 
         # Get region details (destination)
         regions['destination'] = self._regions.get(user_id=user['id'], group_id=user['group_id'], region_id=servers['destination']['region_id'])
@@ -281,8 +281,8 @@ class Clones:
         # Build Item
         item = {
             'user_id': user['id'],
-            'origin_server': data['origin_server'],
-            'origin_database': data['origin_database'].strip(),
+            'source_server': data['source_server'],
+            'source_database': data['source_database'].strip(),
             'destination_server': data['destination_server'],
             'destination_database': data['destination_database'].strip(),
             'mode': data['mode'],

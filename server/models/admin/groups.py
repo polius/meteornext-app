@@ -131,7 +131,7 @@ class Groups:
         self._sql.execute("DELETE cs FROM client_servers cs JOIN servers s ON s.id = cs.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE i FROM `imports` i JOIN servers s ON s.id = i.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE e FROM `exports` e JOIN servers s ON s.id = e.server_id AND s.group_id = %s", (group))
-        self._sql.execute("DELETE c FROM `clones` c JOIN servers s ON (s.id = c.origin_server OR s.id = c.destination_server) AND s.group_id = %s", (group))
+        self._sql.execute("DELETE c FROM `clones` c JOIN servers s ON (s.id = c.source_server OR s.id = c.destination_server) AND s.group_id = %s", (group))
         self._sql.execute("DELETE a FROM auxiliary a WHERE a.group_id = %s", (group))
         self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.group_id = %s", (group))

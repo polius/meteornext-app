@@ -321,6 +321,7 @@
                       </v-autocomplete>
                       <v-text-field readonly v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
                       <v-checkbox readonly v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox readonly v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
                     </v-card-text>
                   </v-card>
                 </div>

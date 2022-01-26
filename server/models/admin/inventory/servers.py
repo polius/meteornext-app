@@ -186,7 +186,7 @@ class Servers:
         query = """
             DELETE c
             FROM `clones` c
-            JOIN servers s ON (s.id = c.origin_server OR s.id = c.destination_server) AND s.id = %s
+            JOIN servers s ON (s.id = c.source_server OR s.id = c.destination_server) AND s.id = %s
         """
         self._sql.execute(query, (server_id))
 
