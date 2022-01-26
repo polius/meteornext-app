@@ -8,18 +8,18 @@ class Clones:
     def get(self, user_id=None, clone_uri=None):
         if clone_uri:
             query = """
-                SELECT c.*, s.name AS 'origin_server_name', s2.name AS 'destination_server_name'
+                SELECT c.*, s.name AS 'source_server_name', s2.name AS 'destination_server_name'
                 FROM clones c
-                JOIN servers s ON s.id = c.origin_server
+                JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server
                 WHERE c.uri = %s
             """
             return self._sql.execute(query, (clone_uri))
         else:
             query = """
-                SELECT c.*, s.name AS 'origin_server_name', s2.name AS 'destination_server_name'
+                SELECT c.*, s.name AS 'source_server_name', s2.name AS 'destination_server_name'
                 FROM clones c
-                JOIN servers s ON s.id = c.origin_server
+                JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server
                 WHERE c.user_id = %s
                 AND c.deleted = 0
@@ -30,10 +30,10 @@ class Clones:
     def post(self, user, data):
         tables = f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}"
         query = """
-            INSERT INTO clones (`origin_server`, `origin_database`, `destination_server`, `destination_database`, `mode`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `started`, `uri`, `user_id`)
+            INSERT INTO clones (`source_server`, `source_database`, `destination_server`, `destination_database`, `mode`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `started`, `uri`, `user_id`)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['origin_server'], data['origin_database'], data['destination_server'], data['destination_database'], data['mode'], tables, data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['started'], data['uri'], user['id']))
+        return self._sql.execute(query, (data['source_server'], data['source_database'], data['destination_server'], data['destination_database'], data['mode'], tables, data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['started'], data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """

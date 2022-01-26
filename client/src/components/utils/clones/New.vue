@@ -15,7 +15,7 @@
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="sourceForm" @submit.prevent>
-                      <v-autocomplete @change="getDatabases" ref="server" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details autofocus>
+                      <v-autocomplete :loading="loading" @change="getDatabases('source')" ref="sourceServer" v-model="sourceServer" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details autofocus>
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -27,23 +27,56 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete @change="getDatabaseSize" ref="database" :loading="loading" :disabled="server == null" v-model="database" :items="databaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
-                      <div v-if="databaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(this.databaseSize) }}</span></div>
+                      <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="sourceServer == null" v-model="sourceDatabase" :items="sourceDatabaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <div v-if="sourceDatabaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(this.sourceDatabaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
-                          <v-btn :disabled="databaseSize == null" color="primary" @click="nextStep">CONTINUE</v-btn>
+                          <v-btn :disabled="sourceServer == null || sourceDatabaseSize == null" color="primary" @click="nextStep">CONTINUE</v-btn>
                           <v-btn @click="goBack" text style="margin-left:5px">CANCEL</v-btn>
                         </v-col>
                         <v-col cols="auto">
-                          <v-btn @click="getServer(server)" :disabled="server == null" text>SERVER DETAILS</v-btn>
+                          <v-btn @click="getServer(sourceServer)" :disabled="sourceServer == null" text>SERVER DETAILS</v-btn>
                         </v-col>
                       </v-row>
                     </v-form>
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step :complete="stepper > 2" step="2">SETUP</v-stepper-step>
+              <v-stepper-step :complete="stepper > 2" step="2">DESTINATION</v-stepper-step>
               <v-stepper-content step="2" style="padding-top:0px; padding-left:10px">
+                <v-card style="margin:5px">
+                  <v-card-text>
+                    <v-form ref="destinationForm" @submit.prevent>
+                      <v-autocomplete :loading="loading" @change="getDatabases('destination')" ref="destinationServer" v-model="destinationServer" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details autofocus>
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
+                      <v-text-field :disabled="destinationServer == null" ref="destinationDatabase" v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-text-field>
+                      <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+                      <v-row no-gutters style="margin-top:20px;">
+                        <v-col cols="auto" class="mr-auto">
+                          <v-btn :disabled="destinationServer == null || destinationDatabase == null" color="primary" @click="nextStep">CONTINUE</v-btn>
+                          <v-btn @click="stepper -= 1" text style="margin-left:5px">CANCEL</v-btn>
+                        </v-col>
+                        <v-col cols="auto">
+                          <v-btn @click="getServer(destinationServer)" :disabled="destinationServer == null" text>SERVER DETAILS</v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-form>
+                  </v-card-text>
+                </v-card>
+              </v-stepper-content>
+              <v-stepper-step :complete="stepper > 3" step="3">SETUP</v-stepper-step>
+              <v-stepper-content step="3" style="padding-top:0px; padding-left:10px">
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="setupForm" @submit.prevent>
@@ -85,8 +118,8 @@
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step :complete="stepper > 3" step="3">OBJECTS</v-stepper-step>
-              <v-stepper-content step="3" style="padding-top:0px; padding-left:10px">
+              <v-stepper-step :complete="stepper > 4" step="4">OBJECTS</v-stepper-step>
+              <v-stepper-content step="4" style="padding-top:0px; padding-left:10px">
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="objectsForm" @submit.prevent>
@@ -100,7 +133,7 @@
                       <div style="height:50vh; margin-left:-17px; margin-right:-17px">
                         <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady" @selection-changed="onSelectionChanged" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="tablesHeaders" :defaultColDef="defaultColDef" :rowData="tablesItems"></ag-grid-vue>
                       </div>
-                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.databaseSize)}` }}</span></div>
+                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.sourceDatabaseSize)}` }}</span></div>
                       <div class="text-body-1 white--text" style="margin-top:15px">OPTIONS</div>
                       <v-checkbox v-model="exportTriggers" label="Export Triggers" hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox v-model="exportRoutines" label="Export Routines (Functions and Procedures)" hide-details style="margin-top:10px"></v-checkbox>
@@ -113,15 +146,15 @@
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step step="4">OVERVIEW</v-stepper-step>
-              <v-stepper-content step="4" style="margin:0px; padding:0px 10px 0px 0px">
+              <v-stepper-step step="5">OVERVIEW</v-stepper-step>
+              <v-stepper-content step="5" style="margin:0px; padding:0px 10px 0px 0px">
                 <div style="margin-left:10px">
                   <v-card style="margin:5px">
                     <v-toolbar dense flat color="#2e3131">
                       <v-toolbar-title class="subtitle-1">SOURCE</v-toolbar-title>
                     </v-toolbar>
                     <v-card-text>
-                      <v-autocomplete readonly v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details>
+                      <v-autocomplete readonly v-model="sourceServer" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details>
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -133,7 +166,31 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete readonly :loading="loading" v-model="database" :items="databaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete readonly :loading="loading" v-model="sourceDatabase" :items="sourceDatabaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                    </v-card-text>
+                  </v-card>
+                </div>
+                <div style="margin-left:10px">
+                  <v-card style="margin:5px; margin-top:10px">
+                    <v-toolbar dense flat color="#2e3131">
+                      <v-toolbar-title class="subtitle-1">DESTINATION</v-toolbar-title>
+                    </v-toolbar>
+                    <v-card-text>
+                      <v-autocomplete readonly v-model="destinationServer" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px" hide-details>
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
+                      <v-text-field readonly v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-text-field>
+                      <v-checkbox readonly v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox readonly v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -191,7 +248,7 @@
                       <div style="height:50vh">
                         <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady2" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="tablesHeaders" :defaultColDef="defaultColDef2" :rowData="tablesSelected"></ag-grid-vue>
                       </div>
-                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.databaseSize)}` }}</span></div>
+                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.sourceDatabaseSize)}` }}</span></div>
                       <div class="text-body-1 white--text" style="margin-top:15px">OPTIONS</div>
                       <v-checkbox readonly v-model="exportTriggers" label="Export Triggers" hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox readonly v-model="exportRoutines" label="Export Routines (Functions and Procedures)" hide-details style="margin-top:10px"></v-checkbox>
@@ -300,13 +357,18 @@ export default {
     return {
       loading: false,
       stepper: 1,
-      // Source
+      // Servers
       serverItems: [],
-      server: null,
-      databaseItems: [],
-      database: null,
-      databaseSize: null,
-      tableSize: 0,
+      // Source
+      sourceServer: null,
+      sourceDatabaseItems: [],
+      sourceDatabase: null,
+      sourceDatabaseSize: null,
+      // Destination
+      destinationServer: null,
+      destinationDatabase: null,
+      createDatabase: false,
+      dropDatabase: false,
       // Setup
       mode: 'full',
       format: 'sql',
@@ -327,6 +389,7 @@ export default {
       tablesHeaders: [],
       tablesItems: [],
       tablesSelected: [],
+      tableSize: 0,
       exportTriggers: false,
       exportRoutines: false,
       exportEvents: false,
@@ -379,37 +442,51 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    getDatabases() {
-      if (this.server == null) this.databaseItems = []
-      else {
-        this.loading = true
-        const payload = { server_id: this.server }
-        axios.get('/utils/clones/databases', { params: payload })
-          .then((response) => {
-            this.databaseItems = response.data.databases
+    getDatabases(origin) {
+      let payload = {}
+      if (origin == 'source') {
+        this.sourceDatabaseItems = []
+        if (this.sourceServer == null) return
+        payload = { server_id: this.sourceServer }
+      }
+      else if (origin == 'destination') {
+        if (this.destinationServer == null) return
+        payload = { server_id: this.destinationServer }
+      }
+      this.loading = true
+      axios.get('/utils/clones/databases', { params: payload })
+        .then((response) => {
+          if (origin == 'source') {
+            this.sourceDatabaseItems = response.data.databases
             this.$nextTick(() => {
               this.$refs.sourceForm.resetValidation()
-              this.$refs.server.blur()
-              this.$refs.database.focus()
+              this.$refs.sourceServer.blur()
+              this.$refs.sourceDatabase.focus()
             })
-          })
-          .catch((error) => {
-            this.databaseItems = []
-            this.database = null
-            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-          })
-          .finally(() => this.loading = false)
-      }
+          }
+        })
+        .catch((error) => {
+          if (origin == 'source') {
+            this.sourceServer = null
+            this.sourceDatabaseItems = []
+            this.sourceDatabase = null
+          }
+          else if (origin == 'destination') {
+            this.destinationServer = null
+          }
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
     },
     getDatabaseSize() {
-      this.databaseSize = null
-      if (this.database == null) return
+      this.sourceDatabaseSize = null
+      if (this.sourceDatabase == null) return
+      const payload = { server_id: this.sourceServer, database: this.sourceDatabase }
       this.loading = true
-      const payload = { server_id: this.server, database: this.database }
       axios.get('/utils/clones/databases/size', { params: payload })
         .then((response) => {
-          this.databaseSize = response.data.size
+          this.sourceDatabaseSize = response.data.size
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -462,7 +539,7 @@ export default {
       if (!force && this.tablesItems.length != 0) return
       this.loading = true
       this.gridApi.showLoadingOverlay()
-      const payload = { server_id: this.server, database: this.database }
+      const payload = { server_id: this.sourceServer, database: this.sourceDatabase }
       axios.get('/utils/clones/tables', { params: payload })
         .then((response) => {
           this.parseTables(response.data.tables)
@@ -533,10 +610,12 @@ export default {
     submitClone() {
       this.loading = true
       const payload = {
-        origin_schema: this.originSchema,
-        origin_database: this.originDatabase,
+        source_server: this.sourceServer,
+        source_database: this.sourceDatabase,
         destination_schema: this.destinationSchema,
         destination_database: this.destinationDatabase,
+        create_database: this.createDatabase,
+        drop_database: this.dropDatabase,
         mode: this.mode,
         format: this.format,
         tables: this.mode == 'full' ? null : this.gridApi.getSelectedRows().map((val) => ({ n: val.name, r: val.rows, s: val.data_length })),
@@ -546,7 +625,7 @@ export default {
         export_triggers: this.exportTriggers,
         export_routines: this.exportRoutines,
         export_events: this.exportEvents,
-        size: this.mode == 'full' ? this.databaseSize : this.tableSize,
+        size: this.mode == 'full' ? this.sourceDatabaseSize : this.tableSize,
         url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/clones', payload)
@@ -563,12 +642,20 @@ export default {
       if (this.stepper == 1) {
         if (!this.$refs.sourceForm.validate()) return
         this.stepper += 1
+        this.$nextTick(() => {
+          this.$refs.destinationForm.resetValidation()
+          this.$refs.destinationServer.focus()
+        })
       }
       else if (this.stepper == 2) {
+        if (!this.$refs.destinationForm.validate()) return
+        this.stepper += 1
+      }
+      else if (this.stepper == 3) {
         if (this.mode == 'partial') { this.getTables(false); this.stepper += 1 }
         else this.stepper += 2
       }
-      else if (this.stepper == 3) {
+      else if (this.stepper == 4) {
         if (this.tablesSelected.length == 0) {
           this.notification('Please select at least one table to clone', '#EF5354')
           return

@@ -628,8 +628,8 @@ CREATE TABLE `exports` (
 
 CREATE TABLE `clones` (
  `id` INT UNSIGNED AUTO_INCREMENT,
- `origin_server` INT UNSIGNED NOT NULL,
- `origin_database` VARCHAR(191) NOT NULL,
+ `source_server` INT UNSIGNED NOT NULL,
+ `source_database` VARCHAR(191) NOT NULL,
  `destination_server` INT UNSIGNED NOT NULL,
  `destination_database` VARCHAR(191) NOT NULL,
  `mode` ENUM('full','partial') NOT NULL,
@@ -654,8 +654,8 @@ CREATE TABLE `clones` (
  `user_id` INT UNSIGNED NOT NULL,
  `deleted` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
-  KEY `origin_server` (`origin_server`),
-  KEY `origin_database` (`origin_database`),
+  KEY `source_server` (`source_server`),
+  KEY `source_database` (`source_database`),
   KEY `destination_server` (`destination_server`),
   KEY `destination_database` (`destination_database`),
   KEY `mode` (`mode`),
@@ -675,7 +675,7 @@ CREATE TABLE `clones` (
   KEY `url` (`url`(191)),
   KEY `user_id` (`user_id`),
   KEY `deleted` (`deleted`),
-  FOREIGN KEY (`origin_server`) REFERENCES `servers` (`id`),
+  FOREIGN KEY (`source_server`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`destination_server`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

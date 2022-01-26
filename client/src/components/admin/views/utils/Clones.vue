@@ -289,8 +289,8 @@ export default {
     headers: [
       { text: 'User', align: 'left', value: 'username' },
       { text: 'Mode', align: 'left', value: 'mode' },
-      { text: 'Origin Server', align: 'left', value: 'origin_server' },
-      { text: 'Origin Database', align: 'left', value: 'origin_database' },
+      { text: 'Source Server', align: 'left', value: 'source_server' },
+      { text: 'Source Database', align: 'left', value: 'source_database' },
       { text: 'Destination Server', align: 'left', value: 'destination_server' },
       { text: 'Destination Database', align: 'left', value: 'destination_database' },
       { text: 'Size', align: 'left', value: 'size' },

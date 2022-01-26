@@ -28,10 +28,10 @@ class Clones:
         try:
             start_time = time.time()
             core = {
-                "origin": apps.clones.core.Core(regions['origin']),
+                "source": apps.clones.core.Core(regions['source']),
                 "destination": apps.clones.core.Core(regions['destination'])
             }
-            self.__check(core['origin'])
+            self.__check(core['source'])
             self.__check(core['destination'])
             self.__core2(start_time, core, user, item, servers, regions, paths, amazon_s3)
         except Exception as e:
@@ -46,7 +46,7 @@ class Clones:
             self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
             self.__slack(item, start_time, 2, str(e))
         finally:
-            self.__clean(core['origin'], regions['origin'], item, paths)
+            self.__clean(core['source'], regions['source'], item, paths)
             self.__clean(core['destination'], regions['destination'], item, paths)
 
     def __check(self, core):
@@ -68,14 +68,14 @@ class Clones:
 
         # Define new path
         path = {
-            "origin": paths['remote'] if regions['origin']['ssh_tunnel'] else paths['local'],
+            "source": paths['remote'] if regions['source']['ssh_tunnel'] else paths['local'],
             "destination": paths['remote'] if regions['destination']['ssh_tunnel'] else paths['local']
         }
 
         # Start Clone (Export)
         export_status = [None]
         url = [None]
-        t = threading.Thread(target=self.__export, args=(core['origin'], item, servers['origin'], path['origin'], amazon_s3, export_status,))
+        t = threading.Thread(target=self.__export, args=(core['source'], item, servers['source'], path['source'], amazon_s3, export_status,))
         t.daemon = True
         t.start()
 
@@ -83,10 +83,10 @@ class Clones:
         monitor_status = [None]
         alive = True
         while t.is_alive() and alive:
-            alive = self.__monitor_export(core['origin'], item, path['origin'], monitor_status)
+            alive = self.__monitor_export(core['source'], item, path['source'], monitor_status)
             time.sleep(1)
         if alive:
-            self.__monitor_export(core['origin'], item, path['origin'], monitor_status)
+            self.__monitor_export(core['source'], item, path['source'], monitor_status)
 
         # Generated Presigned URL 
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
