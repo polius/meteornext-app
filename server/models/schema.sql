@@ -11,8 +11,7 @@ CREATE TABLE `settings` (
 INSERT INTO settings (`id`, `name`, `value`) VALUES 
 (1, 'FILES', '{"path":""}'),
 (2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}'),
-(3, 'AMAZON', '{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}'),
-(4, 'DEPLOYMENTS', '{"retention":"0"}');
+(3, 'AMAZON', '{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -29,6 +28,7 @@ CREATE TABLE `groups` (
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
   `deployments_execution_timeout` INT UNSIGNED NULL,
   `deployments_execution_concurrent` INT UNSIGNED NULL,
+  `deployments_expiration_days` INT UNSIGNED NOT NULL DEFAULT '0',
   `deployments_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
   `deployments_slack_name` VARCHAR(191) NULL,
   `deployments_slack_url` VARCHAR(191) NULL,

@@ -9,7 +9,6 @@
           <v-btn text @click="changeTab('sql')" :style="{ backgroundColor : mode == 'sql' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
           <v-btn text @click="changeTab('files')" :style="{ backgroundColor : mode == 'files' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>FILES</v-btn>
           <v-btn text @click="changeTab('amazon')" :style="{ backgroundColor : mode == 'amazon' ? '#489ff0' : '' }"><v-icon style="font-size:20px; margin-right:10px; margin-top:3px">fab fa-aws</v-icon>AMAZON S3</v-btn>
-          <v-btn text @click="changeTab('deployments')" :style="{ backgroundColor : mode == 'deployments' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>DEPLOYMENTS</v-btn>
           <v-btn text @click="changeTab('security')" :style="{ backgroundColor : mode == 'security' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
@@ -19,7 +18,6 @@
           <SQL v-else-if="mode == 'sql'" :info="settings.sql" :init="loading"/>
           <Files v-else-if="mode == 'files'" :info="settings.files" :init="loading"/>
           <Amazon v-else-if="mode == 'amazon'" :info="settings.amazon" :init="loading"/>
-          <Deployments v-else-if="mode == 'deployments'" :info="settings.deployments" :init="loading"/>
           <Security v-else-if="mode == 'security'" :info="settings.security" :init="loading"/>
         </v-layout>
       </v-container>
@@ -39,13 +37,12 @@ import License from './settings/License'
 import SQL from './settings/SQL'
 import Files from './settings/Files'
 import Amazon from './settings/Amazon'
-import Deployments from './settings/Deployments'
 import Security from './settings/Security'
 
 export default {
   data: () => ({
     // Settings
-    settings: { license: {}, sql: {}, files: {}, amazon: {}, deployments: {}, security: {}},
+    settings: { license: {}, sql: {}, files: {}, amazon: {}, security: {}},
     mode: 'license',
     loading: true,
 
@@ -55,14 +52,13 @@ export default {
     snackbarColor: '',
     snackbarText: ''
   }),
-  components: { License, SQL, Files, Amazon, Deployments, Security },
+  components: { License, SQL, Files, Amazon, Security },
   created() {
     this.getSettings()
     if (this.$route.path.startsWith('/admin/settings/license')) this.mode = 'license'
     else if (this.$route.path.startsWith('/admin/settings/sql')) this.mode = 'sql'
     else if (this.$route.path.startsWith('/admin/settings/files')) this.mode = 'files'
     else if (this.$route.path.startsWith('/admin/settings/amazon')) this.mode = 'amazon'
-    else if (this.$route.path.startsWith('/admin/settings/deployments')) this.mode = 'deployments'
     else if (this.$route.path.startsWith('/admin/settings/security')) this.mode = 'security'
     else this.$router.push('/admin/settings/license')
   },
@@ -72,7 +68,6 @@ export default {
       else if (val == 'sql' && this.$route.path != '/admin/settings/sql') this.$router.push('/admin/settings/sql')
       else if (val == 'files' && this.$route.path != '/admin/settings/files') this.$router.push('/admin/settings/files')
       else if (val == 'amazon' && this.$route.path != '/admin/settings/amazon') this.$router.push('/admin/settings/amazon')
-      else if (val == 'deployments' && this.$route.path != '/admin/settings/deployments') this.$router.push('/admin/settings/deployments')
       else if (val == 'security' && this.$route.path != '/admin/settings/security') this.$router.push('/admin/settings/security')
       this.mode = val
     },

@@ -120,13 +120,16 @@
 import axios from 'axios';
 import moment from 'moment';
 import pretty from 'pretty-bytes';
+import EventBus from '../event-bus'
 
 export default {
   data: () => ({
     headers: [
       { text: 'Mode', align: 'left', value: 'mode' },
-      { text: 'Server', align: 'left', value: 'server' },
-      { text: 'Database', align: 'left', value: 'database' },
+      { text: '↑ Server', align: 'left', value: 'source_server' },
+      { text: '↑ Database', align: 'left', value: 'source_database' },
+      { text: '↓ Server', align: 'left', value: 'destination_server' },
+      { text: '↓ Database', align: 'left', value: 'destination_database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Started', align: 'left', value: 'started' },
@@ -137,20 +140,12 @@ export default {
     selected: [],
     search: '',
     loading: false,
-
     // Delete Dialog
     deleteDialog: false,
-
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['mode','server','database','size','status','started','ended','overall'],
     columnsRaw: [],
-
-    // Snackbar
-    snackbar: false,
-    snackbarTimeout: Number(3000),
-    snackbarText: '',
-    snackbarColor: ''
   }),
   created() {
     this.getClones()
@@ -168,7 +163,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -178,7 +173,7 @@ export default {
     deleteSubmit() {
       // Check clone status
       if (this.selected.some(x => x.status == 'IN PROGRESS')) {
-        this.notification("Can't delete clones that are in progress", '#EF5354')
+        EventBus.$emit('send-notification', "Can't delete clones that are in progress", '#EF5354')
         this.deleteDialog = false
         return
       }
@@ -190,11 +185,11 @@ export default {
           this.selected = []
           this.deleteDialog = false
           this.getClones()
-          this.notification("Selected clones deleted", '#00b16a')
+          EventBus.$emit('send-notification', "Selected clones deleted", '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -231,11 +226,6 @@ export default {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color
-      this.snackbar = true
-    }
   }
 }
 </script>2

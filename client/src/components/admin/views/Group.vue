@@ -111,6 +111,18 @@
                 <v-text-field v-model="group.deployments_execution_timeout" label="Execution Timeout" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
+                  RETENTION
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                  </template>
+                  <span>
+                    <b>Expiration Days</b>: The amount of days that have to pass before deleting old deployments.
+                  </span>
+                </v-tooltip>
+                </div>
+                <v-select v-model="group.deployments_expiration_days" :items="[{id: 0, text: 'Never'}, {id: 1, text: '1 Day'}, {id: 7, text: '1 Week'}, {id: 30, text: '1 Month'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Expiration Days" style="margin-top:15px"></v-select>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
@@ -308,6 +320,7 @@ export default {
       deployments_execution_threads: 10,
       deployments_execution_timeout: null,
       deployments_execution_concurrent: null,
+      deployments_expiration_days: 0,
       deployments_slack_enabled: false,
       deployments_slack_name: '',
       deployments_slack_url: '',
