@@ -112,6 +112,7 @@
                         <v-btn :title="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword" icon><v-icon>{{ showPassword ? 'mdi-eye' : 'mdi-eye-off' }}</v-icon></v-btn>
                       </template>
                     </v-text-field>
+                    <!-- SSL -->
                     <div v-if="(item.ssl_client_key == null || typeof item.ssl_client_key === 'object') && (item.ssl_client_certificate == null || typeof item.ssl_client_certificate === 'object') && (item.ssl_ca_certificate == null || typeof item.ssl_ca_certificate === 'object')">
                       <v-switch v-model="item.ssl" :readonly="readOnly" flat label="SSL Connection" hide-details style="margin-top:20px"></v-switch>
                       <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
