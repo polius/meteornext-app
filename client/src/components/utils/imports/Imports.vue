@@ -38,6 +38,14 @@
             Cloud Key
           </div>
         </template>
+        <template v-slot:[`item.server`]="{ item }">
+          <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
+              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+            </v-icon>
+            {{ item.server }}
+          </v-btn>
+        </template>
         <template v-slot:[`item.size`]="{ item }">
           {{ formatBytes(item.size) }}
         </template>
@@ -112,12 +120,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -125,6 +127,7 @@
 import axios from 'axios';
 import moment from 'moment';
 import pretty from 'pretty-bytes';
+import EventBus from '../event-bus'
 
 export default {
   data: () => ({
@@ -143,20 +146,12 @@ export default {
     selected: [],
     search: '',
     loading: false,
-
     // Delete Dialog
     deleteDialog: false,
-
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['mode','server','database','status','started','ended','overall'],
     columnsRaw: [],
-
-    // Snackbar
-    snackbar: false,
-    snackbarTimeout: Number(3000),
-    snackbarText: '',
-    snackbarColor: ''
   }),
   created() {
     this.getImport()
@@ -174,9 +169,12 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    getServer(server_id) {
+      EventBus.$emit('get-server', server_id)
     },
     deleteImport() {
       this.deleteDialog = true
@@ -184,7 +182,7 @@ export default {
     deleteSubmit() {
       // Check import status
       if (this.selected.some(x => x.status == 'IN PROGRESS')) {
-        this.notification("Can't delete imports that are in progress", '#EF5354')
+        EventBus.$emit('send-notification', "Can't delete imports that are in progress", '#EF5354')
         this.deleteDialog = false
         return
       }
@@ -196,11 +194,11 @@ export default {
           this.selected = []
           this.deleteDialog = false
           this.getImport()
-          this.notification("Selected imports deleted", '#00b16a')
+          EventBus.$emit('send-notification', "Selected imports deleted", '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -237,11 +235,6 @@ export default {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color
-      this.snackbar = true
-    }
   }
 }
 </script>

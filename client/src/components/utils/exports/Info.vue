@@ -138,79 +138,9 @@
         </div>
       </v-card-text>
     </v-card>
-    <!------------------->
-    <!-- SERVER DIALOG -->
-    <!------------------->
-    <v-dialog v-model="serverDialog" max-width="768px">
-      <v-card>
-        <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">SERVER</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn readonly title="Create the server only for a user" :color="!server.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn readonly title="Create the server for all users in a group" :color="server.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
-        </v-toolbar>
-        <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 15px 15px;">
-          <v-container style="padding:0px">
-            <v-layout wrap>
-              <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px;">
-                  <v-row no-gutters style="margin-bottom:15px">
-                    <v-col>
-                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                    <v-col v-if="!server.shared" style="margin-left:20px">
-                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="6" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.name" label="Name"></v-text-field>
-                    </v-col>
-                    <v-col cols="6" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.region" label="Region">
-                        <template v-slot:prepend-inner>
-                          <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                        </template>
-                      </v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <div style="margin-bottom:20px">
-                    <v-row no-gutters>
-                      <v-col cols="8" style="padding-right:10px">
-                        <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
-                      </v-col>
-                      <v-col cols="4" style="padding-left:10px">
-                        <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
-                      </v-col>
-                    </v-row>
-                    <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
-                  </div>
-                </v-form>
-                <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
-                  <v-col>
-                    <v-btn :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
-                  </v-col>
-                </v-row>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <!----------------->
+    <!-- STOP DIALOG -->
+    <!----------------->
     <v-dialog v-model="stopDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -234,12 +164,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -254,6 +178,7 @@
 import moment from 'moment'
 import axios from 'axios'
 import pretty from 'pretty-bytes'
+import EventBus from '../event-bus'
 
 export default {
   data() {
@@ -283,17 +208,8 @@ export default {
       ],
       objectsItems: [],
       objectsSize: 0,
-      // Server Dialog
-      serverDialog: false,
-      server: {},
-      showPassword: false,
       // Stop Dialog
       stopDialog: false,
-      // Snackbar
-      snackbar: false,
-      snackbarTimeout: Number(3000),
-      snackbarText: '',
-      snackbarColor: '',
       // Previous Route
       prevRoute: null
     }
@@ -334,7 +250,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     parseProgress(progress) {
@@ -363,45 +279,7 @@ export default {
       else this.$router.push('/utils/exports')
     },
     getServer(server_id) {
-      // Get Server
-      this.loading = true
-      this.showPassword = false
-      this.serverDialog = true
-      const payload = { server_id: server_id }
-      axios.get('/inventory/servers', { params: payload })
-        .then((response) => {
-          // Build usage
-          let usage = []
-          if (response.data.data[0].usage.includes('D')) usage.push('Deployments')
-          if (response.data.data[0].usage.includes('M')) usage.push('Monitoring')
-          if (response.data.data[0].usage.includes('U')) usage.push('Utils')
-          if (response.data.data[0].usage.includes('C')) usage.push('Client')
-          // Add server
-          this.server = {...response.data.data[0], usage: usage.join(', ')}
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
-    },
-    testConnection() {
-      // Test Connection
-      this.notification('Testing Server...', 'info')
-      this.loading = true
-      const payload = {
-        region: this.server.region_id,
-        server: this.server.id
-      }
-      axios.post('/inventory/servers/test', payload)
-        .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
+      EventBus.$emit('get-server', server_id)
     },
     stopExport() {
       this.stopDialog = true
@@ -417,13 +295,13 @@ export default {
       .catch((error) => {
         this.stop = false
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
       .finally(() => this.loading = false)
     },
     copyClipboard(text) {
         navigator.clipboard.writeText(text)
-        this.notification('Link copied to clipboard', '#00b16a', Number(2000))
+        EventBus.$emit('send-notification', 'Link copied to clipboard', '#00b16a', Number(2000))
       },
     getProgressColor(status) {
       if (status == 'IN PROGRESS') return '#ff9800'
@@ -438,11 +316,6 @@ export default {
       if (size == null) return null
       return pretty(size, {binary: true}).replace('i','')
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
-    }
   },
 }
 </script>
