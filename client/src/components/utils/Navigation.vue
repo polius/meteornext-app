@@ -78,6 +78,28 @@
                     </v-row>
                     <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
+                    <!-- SSL -->
+                    <v-card v-if="server.ssl" style="height:52px; margin-top:15px; margin-bottom:15px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <!-- SSH -->
+                    <v-card v-if="server.ssh" style="height:52px; margin-top:15px; margin-bottom:15px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                        </v-col>
+                      </v-row>
+                    </v-card>
                     <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
                   </div>
                 </v-form>
@@ -143,6 +165,7 @@ export default {
           if (response.data.data[0].usage.includes('C')) usage.push('Client')
           // Add server
           this.server = {...response.data.data[0], usage: usage.join(', ')}
+          console.log(this.server)
         })
         .catch((error) => {
           console.log(error)
@@ -156,8 +179,8 @@ export default {
       this.notification('Testing Server...', 'info')
       this.loading = true
       const payload = {
-        region_id: this.server.region_id,
-        server: { engine: this.server.engine, hostname: this.server.hostname, port: this.server.port, username: this.server.username, password: this.server.password }
+        region: this.server.region_id,
+        server: this.server.id,
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {

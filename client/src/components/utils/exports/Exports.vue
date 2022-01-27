@@ -34,6 +34,14 @@
             Partial
           </div>
         </template>
+        <template v-slot:[`item.server`]="{ item }">
+          <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
+              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+            </v-icon>
+            {{ item.server }}
+          </v-btn>
+        </template>
         <template v-slot:[`item.size`]="{ item }">
           {{ formatBytes(item.size) }}
         </template>
@@ -158,6 +166,9 @@ export default {
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    getServer(server_id) {
+      EventBus.$emit('get-server', server_id)
     },
     deleteExport() {
       this.deleteDialog = true
