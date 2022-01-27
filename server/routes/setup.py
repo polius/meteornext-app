@@ -175,7 +175,7 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_import_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
                     groups.post(1, group)
 
                     # Create user
@@ -186,7 +186,7 @@ class Setup:
 
                     # Init Files Local Path
                     settings = models.admin.settings.Settings(sql, self._license)
-                    setting = {"name": "FILES", "value": f'{{"local":{{"path":"{self._files_folder}","expire":"0"}},"amazon_s3":{{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}}}'}
+                    setting = {"name": "FILES", "value": f'{{"path":"{self._files_folder}"}}'}
                     settings.post(1, setting)
 
             except Exception as e:

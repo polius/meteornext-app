@@ -98,6 +98,8 @@
                     <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
+                    <b>Coins per execution</b>: Required coins needed to perform a deployment.
+                    <br>
                     <b>Execution Threads</b>: Maximum number of spawned threads per server.
                     <br>
                     <b>Execution Timeout</b>: Maximum execution time per query (in seconds).
@@ -163,11 +165,18 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
-                <v-switch v-if="group.utils_enabled" v-model="group.utils_import" label="IMPORTS" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.utils_enabled" v-model="group.utils_export" label="EXPORTS" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
-                <v-text-field v-model="group.utils_import_limit" label="Maximum import size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
-                <v-text-field v-model="group.utils_export_limit" label="Maximum export size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px" hide-details></v-text-field>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
+                  LIMITS
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>
+                      <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
+                    </span>
+                  </v-tooltip>
+                </div>
+                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
@@ -327,7 +336,7 @@ export default {
       monitoring_enabled: false,
       monitoring_interval: 10,
       utils_enabled: false,
-      utils_import_limit: null,
+      utils_limit: null,
       utils_export_limit: null,
       utils_slack_enabled: false,
       utils_slack_name: '',
@@ -416,7 +425,7 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
-      if (!this.group.utils_import_limit) this.group.utils_import_limit = null
+      if (!this.group.utils_limit) this.group.utils_limit = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Add group to the DB
       const payload = {
@@ -447,7 +456,7 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
-      if (!this.group.utils_import_limit) this.group.utils_import_limit = null
+      if (!this.group.utils_limit) this.group.utils_limit = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Edit group to the DB
       const payload = {
