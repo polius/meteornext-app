@@ -64,8 +64,7 @@ class Exports:
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
         # Start export
-        export_status = [None]
-        t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3, export_status,))
+        t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3,))
         t.daemon = True
         t.start()
 
@@ -95,7 +94,7 @@ class Exports:
             self._sql.execute(query, args=(self.__utcnow(), str(e), item['id']))
         else:
             # Update export status
-            status = 'SUCCESS' if not export_status[0] and not monitor_status[0] else 'FAILED'
+            status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
             query = """
                 UPDATE `exports`
                 SET
@@ -123,7 +122,7 @@ class Exports:
                 'name': f"An export has finished",
                 'status': 'ERROR' if export['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-export',
-                'data': '{{"id":"{}"}}'.format(item['id']),
+                'data': '{{"id":"{}"}}'.format(item['uri']),
                 'date': self.__utcnow(),
                 'show': 1
             }
@@ -137,14 +136,14 @@ class Exports:
         elif export['status'] == 'FAILED':
             self.__slack(item, start_time, 2, export['error'])
 
-    def __export(self, core, item, server, path, amazon_s3, status):
+    def __export(self, core, item, server, path, amazon_s3):
         # Build paths
         error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
         error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
         # Build options
-        options = '--single-transaction --max_allowed_packet=1G'
+        options = '--single-transaction --max_allowed_packet=1024M --default-character-set=utf8mb4'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
@@ -162,15 +161,15 @@ class Exports:
         # Build tables
         tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in item['tables']])
 
+        # Remove definers
+        remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
+
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
+            command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
 
         # Start Export process
         p = core.execute(command)
-
-        # Check if subprocess command has been killed (= stopped by user).
-        status[0] = len(p['stderr']) > 0
 
     def __monitor(self, core, item, path, status):
         # Check if a stop it's been requested

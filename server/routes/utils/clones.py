@@ -286,7 +286,6 @@ class Clones:
             'destination_server': data['destination_server'],
             'destination_database': data['destination_database'].strip(),
             'mode': data['mode'],
-            'format': data['format'],
             'tables': data['tables'],
             'export_schema': data['export_schema'],
             'export_data': data['export_data'],

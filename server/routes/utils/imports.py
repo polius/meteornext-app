@@ -82,7 +82,7 @@ class Imports:
             # Check file size limit
             group = self._groups.get(group_id=user['group_id'])[0]
             if group['utils_limit'] is not None and int(request.args['size']) >= group['utils_limit'] * 1024**2:
-                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_limit']} MB)"}), 400
+                return jsonify({'message': f"The file size exceeds the maximum allowed size ({group['utils_limit']} MB)"}), 400
 
             # Return if there's free space left to upload a file
             return jsonify({'check': shutil.disk_usage("/").free >= int(request.args['size'])}), 200
@@ -287,7 +287,7 @@ class Imports:
         if data['mode'] == 'file':
             # Check file size limit
             if group['utils_limit'] is not None and int(request.form['size']) >= group['utils_limit'] * 1024**2:
-                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_limit']} MB)"}), 400
+                return jsonify({'message': f"The upload file exceeds the maximum allowed size ({group['utils_limit']} MB)"}), 400
 
             # Check file constraints
             if 'source' not in request.files or request.files['source'].filename == '':
@@ -368,7 +368,7 @@ class Imports:
         self._import_app.start(user, item, server, region, path)
 
         # Return tracking identifier
-        return jsonify({'id': item['id']}), 200
+        return jsonify({'uri': item['uri']}), 200
 
     def delete(self, user, data):
         for item in data:
@@ -397,7 +397,7 @@ class Imports:
             return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution
-        self._imports.stop(user, data['id'])
+        self._imports.stop(user, data['uri'])
         return jsonify({'message': 'Stopping execution...'}), 200
 
     def get_scan(self, user, id):

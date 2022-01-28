@@ -245,7 +245,7 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="['file','url'].includes(mode)">
-                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="padding-top:8px" hide-details></v-text-field>
+                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="padding-top:15px" hide-details></v-text-field>
                         <div class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'cloud'">
@@ -716,8 +716,8 @@ export default {
       axios.post('/utils/imports', data, options)
       .then((response) => {
         if (this.progress == 100) {
-          EventBus.$emit('send-notification', "File uploaded.", "#00b16a")
-          setTimeout(() => this.$router.push('/utils/import/' + response.data.id), 1000)
+          EventBus.$emit('send-notification', "File successfully uploaded.", "#00b16a")
+          setTimeout(() => this.$router.push('/utils/imports/' + response.data.uri), 1000)
         }
       })
       .catch((error) => {
@@ -818,7 +818,7 @@ export default {
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
-        this.$router.push('/utils/imports/' + response.data.id)
+        this.$router.push('/utils/imports/' + response.data.uri)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -844,7 +844,7 @@ export default {
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
-        this.$router.push('/utils/imports/' + response.data.id)
+        this.$router.push('/utils/imports/' + response.data.uri)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

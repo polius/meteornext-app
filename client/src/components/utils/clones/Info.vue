@@ -92,19 +92,6 @@
                   </template>
                 </v-radio>
               </v-radio-group>
-              <div class="text-body-1 white--text">FORMAT</div>
-              <v-radio-group readonly v-model="information_items[0]['format']" style="margin-top:10px; margin-bottom:15px" hide-details>
-                <v-radio value="sql">
-                  <template v-slot:label>
-                    SQL
-                  </template>
-                </v-radio>
-                <v-radio disabled value="csv">
-                  <template v-slot:label>
-                    CSV
-                  </template>
-                </v-radio>
-              </v-radio-group>
               <div class="text-body-1 white--text">SETTINGS</div>
               <v-checkbox readonly v-model="information_items[0]['export_schema']" label="Export Schema (Add CREATE TABLE statements)." hide-details style="margin-top:10px"></v-checkbox>
               <v-checkbox readonly v-model="information_items[0]['export_data']" label="Export Data (Dump table contents)." hide-details style="margin-top:10px"></v-checkbox>

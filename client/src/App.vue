@@ -96,6 +96,7 @@
               <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="margin-right:8px; margin-bottom:2px">fas fa-desktop</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'utils-import'"><v-icon small title="Utils - Import" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-arrow-up</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'utils-export'"><v-icon small title="Utils - Export" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-arrow-down</v-icon>{{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-else-if="notification['category'] == 'utils-clone'"><v-icon small title="Utils - Clone" color="#00b16a" style="margin-right:8px; margin-bottom:2px">fas fa-clone</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -295,7 +296,17 @@ export default {
           }
           else if (notification.category == 'utils-import') {
             if (this.$router.history.current.name != 'utils.imports.info' || this.$router.history.current.params.uri != data.uri) {
-              this.$router.push({ name: 'utils.imports.info', params: { uri:  data.uri }})
+              this.$router.push({ name: 'utils.imports.info', params: { uri:  data.id }})
+            }
+          }
+          else if (notification.category == 'utils-export') {
+            if (this.$router.history.current.name != 'utils.exports.info' || this.$router.history.current.params.uri != data.uri) {
+              this.$router.push({ name: 'utils.exports.info', params: { uri:  data.id }})
+            }
+          }
+          else if (notification.category == 'utils-clone') {
+            if (this.$router.history.current.name != 'utils.clones.info' || this.$router.history.current.params.uri != data.uri) {
+              this.$router.push({ name: 'utils.clones.info', params: { uri:  data.id }})
             }
           }
           this.rightDrawer = false
