@@ -88,8 +88,7 @@ class Imports:
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
         # Start Import
-        import_status = [None]
-        t = threading.Thread(target=self.__import, args=(core, item, server, path, import_status,))
+        t = threading.Thread(target=self.__import, args=(core, item, server, path,))
         t.daemon = True
         t.start()
 
@@ -103,7 +102,7 @@ class Imports:
             self.__monitor(core, item, path, monitor_status)
 
         # Update import status
-        status = 'SUCCESS' if not import_status[0] and not monitor_status[0] else 'FAILED'
+        status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
         query = """
             UPDATE `imports`
             SET
@@ -131,7 +130,7 @@ class Imports:
                 'name': f"An import has finished",
                 'status': 'ERROR' if imp['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-import',
-                'data': '{{"id":"{}"}}'.format(item['id']),
+                'data': '{{"id":"{}"}}'.format(item['uri']),
                 'date': self.__utcnow(),
                 'show': 1
             }
@@ -145,7 +144,7 @@ class Imports:
         elif imp['status'] == 'FAILED':
             self.__slack(item, start_time, 2, imp['error'])
 
-    def __import(self, core, item, server, path, status):
+    def __import(self, core, item, server, path):
         # Build paths
         error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
         error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
@@ -179,9 +178,6 @@ class Imports:
 
         # Start Import process
         p = core.execute(command)
-
-        # Check if subprocess command has been killed (= stopped by user).
-        status[0] = len(p['stderr']) > 0
 
     def __monitor(self, core, item, path, status):
         # Check if a stop it's been requested

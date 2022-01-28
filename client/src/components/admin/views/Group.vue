@@ -212,7 +212,7 @@
                     <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Execution Timeout Mode</b>: The type of queries that will be affected of the execution timeout.
+                    <b>Execution Timeout Mode</b>: The type of queries that will be affected by the execution timeout.
                     <br>
                     <b>Execution Timeout Value</b>: Maximum execution time per query (in seconds).
                   </span>

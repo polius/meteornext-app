@@ -165,10 +165,8 @@ export default {
           if (response.data.data[0].usage.includes('C')) usage.push('Client')
           // Add server
           this.server = {...response.data.data[0], usage: usage.join(', ')}
-          console.log(this.server)
         })
         .catch((error) => {
-          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })

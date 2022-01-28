@@ -301,6 +301,12 @@ export default {
         EventBus.$emit('send-notification', 'Please select at least one object to clone', '#EF5354')
         return
       }
+      // Limit export size
+      let table_size = this.gridApi['tables'].getSelectedRows().reduce((acc, val) => acc + val['data_length'], 0)
+      if ((table_size/1024/1024) > 10) {
+        EventBus.$emit('send-notification', 'To clone objects larger than 10MB use the Utils section.', '#EF5354')
+        return
+      }
       // Init Clone
       this.loading = true
       this.progressStep = 'clone'

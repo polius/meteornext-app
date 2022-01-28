@@ -34,6 +34,7 @@
             <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" title="Monitoring" style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</div>
             <div v-else-if="item.category == 'utils-import'"><v-icon small color="#00b16a" title="Utils - Import" style="margin-right:10px">fas fa-arrow-up</v-icon>Utils - Import</div>
             <div v-else-if="item.category == 'utils-export'"><v-icon small color="#00b16a" title="Utils - Export" style="margin-right:10px">fas fa-arrow-down</v-icon>Utils - Export</div>
+            <div v-else-if="item.category == 'utils-clone'"><v-icon small color="#00b16a" title="Utils - Clone" style="margin-right:10px">fas fa-clone</v-icon>Utils - Clone</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
             {{ dateFormat(item.date) }}
@@ -131,10 +132,13 @@ export default {
         this.$router.push({ name: 'monitor', params: { id: this.selected[0].data.id }})
       }
       else if (this.selected[0].category == 'utils-import') {
-        this.$router.push({ name: 'utils.imports.info', params: { uri: this.selected[0].data.uri }})
+        this.$router.push({ name: 'utils.imports.info', params: { uri: this.selected[0].data.id }})
       }
       else if (this.selected[0].category == 'utils-export') {
-        this.$router.push({ name: 'utils.exports.info', params: { uri: this.selected[0].data.uri }})
+        this.$router.push({ name: 'utils.exports.info', params: { uri: this.selected[0].data.id }})
+      }
+      else if (this.selected[0].category == 'utils-clone') {
+        this.$router.push({ name: 'utils.clones.info', params: { uri: this.selected[0].data.id }})
       }
     },
     deleteNotification() {

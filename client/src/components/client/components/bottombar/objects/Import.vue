@@ -18,7 +18,7 @@
                         <v-icon size="20" color="info">fas fa-info-circle</v-icon>
                       </v-col>
                       <v-col>
-                        <div class="text-body-1" style="color:#e2e2e2">To import files larger than 100 MB use the Utils section.</div>
+                        <div class="text-body-1" style="color:#e2e2e2">To import files larger than 10 MB use the Utils section.</div>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -132,8 +132,8 @@ export default {
         return
       }
       // Check input file size
-      if (this.file.size > 104857600) {
-        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (100MB)', '#EF5354')
+      if (this.file.size/1024/1024 > 10) {
+        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (10MB)', '#EF5354')
         return
       }
       // Init vars
