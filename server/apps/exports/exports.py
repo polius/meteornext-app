@@ -128,7 +128,7 @@ class Exports:
                 'name': f"An export has finished",
                 'status': 'ERROR' if export['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-export',
-                'data': '{{"id":"{}"}}'.format(item['uri']),
+                'data': f'{{"id":"{item["uri"]}"}}',
                 'date': self.__utcnow(),
                 'show': 1
             }
