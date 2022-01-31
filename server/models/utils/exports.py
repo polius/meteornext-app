@@ -8,7 +8,7 @@ class Exports:
     def get(self, user_id=None, export_uri=None):
         if export_uri:
             query = """
-                SELECT e.*, s.name AS 'server'
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared'
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 WHERE e.uri = %s
@@ -16,7 +16,7 @@ class Exports:
             return self._sql.execute(query, (export_uri))
         else:
             query = """
-                SELECT e.*, s.name AS 'server'
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared'
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 WHERE e.user_id = %s

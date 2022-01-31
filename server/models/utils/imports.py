@@ -6,7 +6,7 @@ class Imports:
     def get(self, user_id=None, import_uri=None):
         if import_uri:
             query = """
-                SELECT i.*, s.name AS 'server'
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared'
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 WHERE i.uri = %s
@@ -14,7 +14,7 @@ class Imports:
             return self._sql.execute(query, (import_uri))
         else:
             query = """
-                SELECT i.*, s.name AS 'server'
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared'
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 WHERE i.user_id = %s

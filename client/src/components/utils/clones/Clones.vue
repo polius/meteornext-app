@@ -34,12 +34,20 @@
             Partial
           </div>
         </template>
-        <template v-slot:[`item.server`]="{ item }">
-          <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+        <template v-slot:[`item.source_server`]="{ item }">
+          <v-btn @click="getServer(item.source_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.source_server_shared ? 'Shared' : 'Personal'" :color="item.source_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+              {{ item.source_server_shared ? 'fas fa-users' : 'fas fa-user' }}
             </v-icon>
-            {{ item.server }}
+            {{ item.source_server_name }}
+          </v-btn>
+        </template>
+        <template v-slot:[`item.destination_server`]="{ item }">
+          <v-btn @click="getServer(item.destination_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.destination_server_shared ? 'Shared' : 'Personal'" :color="item.destination_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+              {{ item.destination_server_shared ? 'fas fa-users' : 'fas fa-user' }}
+            </v-icon>
+            {{ item.destination_server_name }}
           </v-btn>
         </template>
         <template v-slot:[`item.size`]="{ item }">
@@ -96,8 +104,10 @@
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Source Server" value="source_server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Source Database" value="source_database" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Destination Server" value="destination_server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Destination Database" value="destination_database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
@@ -128,10 +138,10 @@ export default {
   data: () => ({
     headers: [
       { text: 'Mode', align: 'left', value: 'mode' },
-      { text: '↑ Server', align: 'left', value: 'source_server' },
-      { text: '↑ Database', align: 'left', value: 'source_database' },
-      { text: '↓ Server', align: 'left', value: 'destination_server' },
-      { text: '↓ Database', align: 'left', value: 'destination_database' },
+      { text: 'S.Server', align: 'left', value: 'source_server' },
+      { text: 'S.Database', align: 'left', value: 'source_database' },
+      { text: 'D.Server', align: 'left', value: 'destination_server' },
+      { text: 'D.Database', align: 'left', value: 'destination_database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Started', align: 'left', value: 'started' },
@@ -146,7 +156,7 @@ export default {
     deleteDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['mode','server','database','size','status','started','ended','overall'],
+    columns: ['mode','source_server','source_database','destination_server','destination_database','size','status','started','ended','overall'],
     columnsRaw: [],
   }),
   created() {
@@ -222,7 +232,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['mode','server','database','size','status','started','ended','overall']
+      this.columnsRaw = ['mode','source_server','source_database','destination_server','destination_database','size','status','started','ended','overall']
     },
     deselectAllColumns() {
       this.columnsRaw = []

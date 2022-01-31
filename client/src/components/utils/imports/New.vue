@@ -25,7 +25,7 @@
                         </v-radio>
                         <v-radio value="url">
                           <template v-slot:label>
-                            <v-icon small color="#e47911" style="margin-left:6px; margin-right:12px">fas fa-link</v-icon>
+                            <v-icon small color="#ff9800" style="margin-left:6px; margin-right:12px">fas fa-link</v-icon>
                             URL
                           </template>
                         </v-radio>
@@ -254,7 +254,7 @@
                         </v-radio>
                         <v-radio value="url">
                           <template v-slot:label>
-                            <v-icon small color="#e47911" style="margin-left:6px; margin-right:12px">fas fa-link</v-icon>
+                            <v-icon small color="#ff9800" style="margin-left:6px; margin-right:12px">fas fa-link</v-icon>
                             URL
                           </template>
                         </v-radio>

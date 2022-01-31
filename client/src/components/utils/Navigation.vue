@@ -34,19 +34,11 @@
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px;">
-                  <v-row v-if="'group' in server" no-gutters style="margin-top:25px; margin-bottom:15px">
-                    <v-col>
-                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                    <v-col v-if="!server.shared" style="margin-left:20px">
-                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                  </v-row>
+                <v-form ref="form">
                   <v-row no-gutters>
                     <v-col cols="6" style="padding-right:10px">
                       <v-text-field readonly v-model="server.name" label="Name"></v-text-field>

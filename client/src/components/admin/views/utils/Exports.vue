@@ -19,12 +19,12 @@
             Partial
           </div>
         </template>
-        <template v-slot:[`item.server`]="{ item }">
+        <template v-slot:[`item.server_id`]="{ item }">
           <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+            <v-icon small :title="item.server_shared ? 'Shared' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+              {{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}
             </v-icon>
-            {{ item.server }}
+            {{ item.server_name }}
           </v-btn>
         </template>
         <template v-slot:[`item.size`]="{ item }">
@@ -61,7 +61,7 @@
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Server" value="server_id" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
@@ -289,7 +289,7 @@ export default {
     headers: [
       { text: 'User', align: 'left', value: 'username' },
       { text: 'Mode', align: 'left', value: 'mode' },
-      { text: 'Server', align: 'left', value: 'server' },
+      { text: 'Server', align: 'left', value: 'server_id' },
       { text: 'Database', align: 'left', value: 'database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
@@ -334,7 +334,7 @@ export default {
 
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['username','mode','server','database','status','started','ended','overall'],
+    columns: ['username','mode','server_id','database','status','started','ended','overall'],
     columnsRaw: [],
   }),
   props: ['active','search'],
@@ -443,7 +443,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['username','mode','source','size','server','database','status','started','ended','overall','deleted']
+      this.columnsRaw = ['username','mode','source','size','server_id','database','status','started','ended','overall','deleted']
     },
     deselectAllColumns() {
       this.columnsRaw = []
