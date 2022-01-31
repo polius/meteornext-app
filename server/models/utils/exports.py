@@ -26,7 +26,7 @@ class Exports:
             return self._sql.execute(query, (user_id))
 
     def post(self, user, data):
-        tables = f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}"
+        tables = f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}" if data['tables'] else None
         query = """
             INSERT INTO exports (`server_id`, `database`, `mode`, `format`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `started`, `uri`, `user_id`)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)

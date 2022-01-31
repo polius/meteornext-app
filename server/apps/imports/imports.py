@@ -133,7 +133,7 @@ class Imports:
                 'name': f"An import has finished",
                 'status': 'ERROR' if imp['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-import',
-                'data': '{{"id":"{}"}}'.format(item['uri']),
+                'data': f'{{"id":"{item["uri"]}"}}',
                 'date': self.__utcnow(),
                 'show': 1
             }

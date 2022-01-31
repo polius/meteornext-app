@@ -21,7 +21,7 @@ class Clones:
 
     def start(self, user, item, servers, regions, path, amazon_s3):
         # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, servers, regions, path,amazon_s3,))
+        t = threading.Thread(target=self.__core, args=(user, item, servers, regions, path, amazon_s3,))
         t.daemon = True
         t.start()
 
@@ -126,25 +126,35 @@ class Clones:
             self._sql.execute(query, args=(str(e), now, now, item['id']))
 
         if proceed:
-            proceed = monitor_status[0] is None
-            # Update clone status
-            status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
-            query = """
-                UPDATE `clones`
-                SET
-                    `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                    `url` = %s
-                    `ended` = %s,
-                    `updated` = %s,
-                WHERE `id` = %s
-            """
             now = self.__utcnow()
-            self._sql.execute(query, args=(url[0], now, now, item['id']))
+            # Update clone status
+            if monitor_status[0]:
+                proceed = False
+                query = """
+                    UPDATE `clones`
+                    SET
+                        `status` = IF(`status` = 'STOPPED', 'STOPPED', 'FAILED'),
+                        `url` = %s,
+                        `ended` = %s,
+                        `updated` = %s
+                    WHERE `id` = %s
+                """
+                self._sql.execute(query, args=(url, now, now, item['id']))
+            else:
+                query = """
+                    UPDATE `clones`
+                    SET
+                        `progress_export` = IF(LOCATE('%%',progress_export), CONCAT('100',SUBSTRING(progress_export,LOCATE('%%',progress_export))), progress_export),
+                        `url` = %s,
+                        `updated` = %s
+                    WHERE `id` = %s
+                """
+                self._sql.execute(query, args=(url, now, item['id']))
 
         if proceed:
             # Start Clone (Import)
             import_status = [None]
-            t = threading.Thread(target=self.__import, args=(core['destination'], item, servers['destination'], path, amazon_s3, url, import_status,))
+            t = threading.Thread(target=self.__import, args=(core['destination'], item, servers['destination'], path['destination'], amazon_s3, url, import_status,))
             t.daemon = True
             t.start()
 
@@ -152,10 +162,10 @@ class Clones:
             monitor_status = [None]
             alive = True
             while t.is_alive() and alive:
-                alive = self.__monitor_import(core, item, path, monitor_status)
+                alive = self.__monitor_import(core['destination'], item, path['destination'], monitor_status)
                 time.sleep(1)
             if alive:
-                self.__monitor_import(core, item, path, monitor_status)
+                self.__monitor_import(core['destination'], item, path['destination'], monitor_status)
 
             # Update clone status
             status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
@@ -185,7 +195,7 @@ class Clones:
                 'name': f"A clone has finished",
                 'status': 'ERROR' if clone['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-clone',
-                'data': '{{"id":"{}"}}'.format(item['uri']),
+                'data': f'{{"id":"{item["uri"]}"}}',
                 'date': self.__utcnow(),
                 'show': 1
             }
@@ -283,7 +293,7 @@ class Clones:
         error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
 
         # Get file size
-        client = boto3.client('s3', aws_access_key_id=amazon_s3['access_key'], aws_secret_access_key=amazon_s3['secret_key'])
+        client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
         size = response['ContentLength']
 
@@ -333,7 +343,7 @@ class Clones:
 
         # Update clone with progress file
         query = """
-            UPDATE `clone`
+            UPDATE `clones`
             SET
                 `progress_import` = %s,
                 `error` = %s,
