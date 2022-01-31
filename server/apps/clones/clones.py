@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 
 import models.notifications
 import apps.clones.core
+import connectors.base
 
 class Clones:
     def __init__(self, sql):
@@ -33,6 +34,7 @@ class Clones:
             }
             self.__check(core['source'])
             self.__check(core['destination'])
+            self.__create_database(item, servers['destination'], regions['destination'])
             self.__core2(start_time, core, user, item, servers, regions, paths, amazon_s3)
         except Exception as e:
             query = """
@@ -50,6 +52,19 @@ class Clones:
         finally:
             self.__clean(core['source'], regions['source'], item, paths)
             self.__clean(core['destination'], regions['destination'], item, paths)
+
+    def __create_database(self, item, server, region):
+        if not item['create_database']:
+            return
+        # Build Connector Data
+        data = {'ssh': region, 'sql': server}
+        data['ssh']['enabled'] = region['ssh_tunnel']
+        # Init Connector
+        connector = connectors.base.Base(data)
+
+        if item['drop_database']:
+            connector.execute(f"DROP DATABASE IF EXISTS `{item['destination_database']}`")
+        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['destination_database']}`")
 
     def __check(self, core):
         for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
@@ -94,10 +109,10 @@ class Clones:
         # Generated Presigned URL
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         try:
-            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"exports/{item['uri']}.sql.gz"}, ExpiresIn=86400)
+            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=86400)
         except Exception as e:
             proceed = False
-            # Update export status
+            # Update clone status
             query = """
                 UPDATE `clones`
                 SET
@@ -214,7 +229,7 @@ class Clones:
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            command = f"echo 'CLONE.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/clones/{item['uri']}.sql.gz 2> {error_aws_path}"
+            command = f"echo 'CLONE.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['source_database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/clones/{item['uri']}.sql.gz 2> {error_aws_path}"
 
         # Start Clone process
         p = core.execute(command)
@@ -274,7 +289,7 @@ class Clones:
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql -h{server['hostname']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql -h{server['hostname']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
 
         # Start Import process
         p = core.execute(command)
@@ -360,7 +375,6 @@ class Clones:
     def __slack(self, item, start_time, status, error=None):
         if not item['slack_enabled']:
             return
-        source = f"{item['bucket']}/{item['source']}" if item['mode'] == 'cloud' else item['source']
         webhook_data = {
             "attachments": [
                 {
@@ -377,18 +391,28 @@ class Clones:
                             "short": False
                         },
                         {
-                            "title": "Source",
-                            "value": f"```{source} ({self.__convert_bytes(item['size'])})```",
+                            "title": "Size",
+                            "value": f"```{self.__convert_bytes(item['size'])}```",
                             "short": False
                         },
                         {
-                            "title": "Server",
-                            "value": f"```{item['server_name']} ({item['region_name']})```",
+                            "title": "Source Server",
+                            "value": f"```{item['source_server_name']} ({item['source_region_name']})```",
                             "short": False
                         },
                         {
-                            "title": "Database",
-                            "value": f"```{item['database']}```",
+                            "title": "Source Database",
+                            "value": f"```{item['source_database']}```",
+                            "short": False
+                        },
+                        {
+                            "title": "Destination Server",
+                            "value": f"```{item['destination_server_name']} ({item['destination_region_name']})```",
+                            "short": False
+                        },
+                        {
+                            "title": "Destination Database",
+                            "value": f"```{item['destination_database']}```",
                             "short": False
                         },
                         {

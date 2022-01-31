@@ -276,6 +276,8 @@ class Exports:
         item = {
             'user_id': user['id'],
             'server_id': data['server_id'],
+            'server_name': server['name'],
+            'region_name': region['name'],
             'database': data['database'].strip(),
             'mode': data['mode'],
             'format': data['format'],

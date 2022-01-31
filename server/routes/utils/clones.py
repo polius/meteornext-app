@@ -272,7 +272,10 @@ class Clones:
             "remote": '.meteor/clones'
         }
 
-        amazon_s3 = json.loads(self._settings.get(setting_name='FILES'))['amazon_s3']
+        # Get Amazon S3 credentials
+        amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
+        if not amazon_s3['enabled']:
+            return jsonify({"message": 'To perform clones enable the Amazon S3 flag in the Admin Panel.'}), 400
 
         # Make clones folder
         if not os.path.exists(os.path.join(path['local'], uri)):
@@ -283,8 +286,14 @@ class Clones:
             'user_id': user['id'],
             'source_server': data['source_server'],
             'source_database': data['source_database'].strip(),
+            'source_server_name': servers['source']['name'],
+            'source_region_name': regions['source']['name'],
             'destination_server': data['destination_server'],
             'destination_database': data['destination_database'].strip(),
+            'destination_server_name': servers['destination']['name'],
+            'destination_region_name': regions['destination']['name'],
+            'create_database': data['create_database'],
+            'drop_database': data['drop_database'],
             'mode': data['mode'],
             'tables': data['tables'],
             'export_schema': data['export_schema'],
