@@ -337,6 +337,7 @@ class Imports:
             'mode': data['mode'],
             'details': json.dumps(details) if 'cloud' in data else None,
             'source': source,
+            'source_format': data['sourceFormat'] if data['mode'] == 'url' else None,
             'selected': None if len(selected) == 0 else selected,
             'size': size,
             'server_id': data['server'],
@@ -410,7 +411,7 @@ class Imports:
 
         # Parse progress
         progress = scan[0]['progress']
-        if progress:
+        if progress and not scan[0]['error']:
             raw = progress.split(' ')
             progress = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3]}
             progress['eta'] = raw[4][3:] if len(raw) == 5 else None

@@ -22,9 +22,19 @@ class Scan:
 
     def metadata(self, item):
         if item['mode'] == 'url':
-            p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:|Content-Disposition:' | sort -r -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if len(p.stdout) == 0:
+            # Check if url exists
+            p = subprocess.run(f"curl --output /dev/null --silent --fail -r 0-0 --location '{item['source']}' && echo 1 || echo 0", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if int(p.stdout) == 0:
                 raise Exception("This URL is not valid")
+
+            # Get url file size (method 1: inspecting the url header)
+            p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:|Content-Disposition:' | sort -r -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            if len(p.stdout) == 0:
+                # Get url file size (method 2: downloading the file)
+                p = subprocess.run(f"curl --silent --output /dev/null --location '{item['source']}' -w '%{{size_download}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return { 'size': int(p.stdout.strip()) }
+
             raw = [i for i in p.stdout.split('\n') if len(i) > 0]
             if len(raw) == 2:
                 return { 'size': int(raw[0]), 'disposition': raw[1].replace('"','') }

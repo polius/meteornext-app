@@ -36,13 +36,34 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div v-if="mode == 'file'">
-                        <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
+                      <v-card>
+                        <v-row no-gutters align="center" justify="center">
+                          <v-col cols="auto" style="display:flex; margin:15px">
+                            <v-icon size="20" color="info">fas fa-info-circle</v-icon>
+                          </v-col>
+                          <v-col>
+                            <div class="text-body-1" style="color:#e2e2e2">Accepted formats: .sql, .gz, .tar, .tar.gz</div>
+                          </v-col>
+                        </v-row>
+                      </v-card>
+                      <div v-if="mode == 'file'" style="margin-top:15px">
+                        <v-card>
+                          <v-row no-gutters align="center" justify="center">
+                            <v-col cols="auto" style="display:flex; margin:15px">
+                              <v-icon size="18" color="#ff9900" style="margin-bottom:2px">fas fa-star</v-icon>
+                            </v-col>
+                            <v-col>
+                              <div class="text-body-1" style="color:#e2e2e2">Compress your .sql files into .gz to speedup the import process.</div>
+                            </v-col>
+                          </v-row>
+                        </v-card>
+                        <v-file-input filled v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details style="margin-top:15px"></v-file-input>
                       </div>
-                      <div v-else-if="mode == 'url'">
-                        <v-text-field @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
+                      <div v-else-if="mode == 'url'" style="margin-top:15px">
+                        <v-text-field filled @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details style="margin-top:15px"></v-text-field>
+                        <v-select filled v-model="sourceFormat" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required  :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
                       </div>
-                      <div v-else-if="mode == 'cloud'">
+                      <div v-else-if="mode == 'cloud'" style="margin-top:15px">
                         <!-- CLOUD KEYS -->
                         <div v-if="cloudPath.length == 1">
                           <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEYS</div>
@@ -126,7 +147,7 @@
                         </div>
                       </div>
                       <!--  SIZE -->
-                      <div v-if="(mode == 'file' && size != null) || (mode == 'url' && scanID != null)" class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      <div v-if="(size != null) || (mode == 'url' && scanID != null)" class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
                         <div class="subtitle-1 white--text" style="margin-top:10px; margin-bottom:10px">SCAN</div>
@@ -172,7 +193,7 @@
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
-                        <v-btn @click="nextStep" :disabled="(scanID != null && scanSelected.length == 0) || (mode == 'cloud' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary">CONTINUE</v-btn>
+                        <v-btn @click="nextStep" :disabled="(mode != 'cloud' && (source == null || source.length == 0)) || (scanID != null && scanSelected.length == 0) || (mode == 'cloud' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary">{{ mode == 'url' && size == null ? 'CHECK URL' : 'CONTINUE' }}</v-btn>
                         <v-btn @click="goBack" :disabled="loading" text style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
@@ -187,7 +208,7 @@
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="destinationForm" @submit.prevent>
-                      <v-autocomplete ref="server" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px">
+                      <v-autocomplete @change="testConnection" ref="server" :loading="loading" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px">
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -205,7 +226,7 @@
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
-                        <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
+                        <v-btn :disabled="loading || server == null || database.length == 0" color="primary" @click="nextStep">CONTINUE</v-btn>
                         <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
@@ -245,7 +266,8 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="['file','url'].includes(mode)">
-                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="padding-top:15px" hide-details></v-text-field>
+                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="margin-top:15px" hide-details></v-text-field>
+                        <v-select readonly v-model="sourceFormat" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
                         <div class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'cloud'">
@@ -348,7 +370,7 @@
             <v-layout wrap>
               <v-flex xs12 style="padding:15px">
                 <div class="text-body-1">{{ progress != 100 ? 'Uploading file. Please wait...' : 'File successfully uploaded.' }}</div>
-                <v-progress-linear :color="progress != 100 ? 'info' : '#00b16a'" height="5" :value="progress" style="margin-top:10px"></v-progress-linear>
+                <v-progress-linear :color="progress != 100 ? '#ff9800' : '#00b16a'" height="5" :value="progress" style="margin-top:10px"></v-progress-linear>
                 <v-card style="margin-top:10px">
                   <v-card-text>
                     <div class="text-body-1">
@@ -381,7 +403,8 @@ export default {
       stepper: 1,
       // Source
       mode: 'file',
-      source: '',
+      source: null,
+      sourceFormat: null,
       size: null,
       fileObject: null,
       // Scan
@@ -480,16 +503,15 @@ export default {
         })
       }
     },
-    server() {
-      requestAnimationFrame(() => {
-        if (typeof this.$refs.server !== 'undefined') this.$refs.server.blur()
-        if (typeof this.$refs.database !== 'undefined') this.$refs.database.focus()
-        if (typeof this.$refs.destinationForm !== 'undefined') this.$refs.destinationForm.resetValidation()
-      })
-    },
     fileObject(val) {
-      this.source = val.name
-      this.size = val.size 
+      if (val == null) {
+        this.source = null
+        this.size = null
+      }
+      else {
+        this.source = val.name
+        this.size = val.size
+      }
     },
     source() {
       if (this.mode == 'url') this.clearScan()
@@ -557,6 +579,30 @@ export default {
           this.serverItems = response.data.servers
         })
         .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    testConnection() {
+      this.loading = true
+      // Get selected server details
+      const server = this.serverItems.find(x => x.id == this.server)
+      // Test Connection
+      const payload = {
+        region: server.region_id,
+        server: server.id,
+      }
+      axios.post('/inventory/servers/test', payload)
+        .then(() => {
+          this.$nextTick(() => {
+            this.$refs.destinationForm.resetValidation()
+            this.$refs.server.blur()
+            this.$refs.database.focus()
+          })
+        })
+        .catch((error) => {
+          this.server = null
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
@@ -648,7 +694,10 @@ export default {
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
-      if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.scanID == null) this.scanFile()
+      if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.scanID == null) {
+        if (this.mode == 'url' && this.size != null) this.stepper = this.stepper + 1
+        else this.scanFile()
+      }
       else {
         // Stop Scan (if there's an existing one) & Check Selected Files
         if (this.stepper == 1) {
@@ -748,8 +797,7 @@ export default {
           this.scanID = response.data.id
           this.getScan()
         }
-        else {
-          this.loading = false
+        else if (this.mode == 'cloud') {
           this.stepper = this.stepper + 1
         }
       })
@@ -790,7 +838,7 @@ export default {
       })
     },
     parseProgress(progress) {
-      if (progress == null) return progress
+      if (progress == null || typeof progress !== 'object') return null
       progress.value = parseInt(progress.value.slice(0, -1))
       progress.transferred = this.parseMetric(progress.transferred)
       progress.rate = this.parseMetric(progress.rate)
@@ -809,6 +857,7 @@ export default {
       const payload = {
         mode: this.mode,
         source: this.source,
+        sourceFormat: this.sourceFormat,
         selected: this.scanSelected,
         server: this.server,
         database: this.database,

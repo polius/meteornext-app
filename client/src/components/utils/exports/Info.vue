@@ -64,14 +64,7 @@
               <div v-if="progress != null && progress.elapsed != null" class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
               <div v-if="progress != null && progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
               <v-divider v-if="information_items[0].status == 'SUCCESS'" style="margin-top:10px"></v-divider>
-              <v-row v-if="information_items[0].status == 'SUCCESS'" no-gutters style="margin-top:15px">
-                <v-col cols="auto">
-                  <v-btn :href="information_items[0]['url']" target="_blank" color="primary">DOWNLOAD EXPORT</v-btn>
-                </v-col>
-                <v-col cols="auto" style="margin-left:5px">
-                  <v-btn @click="copyClipboard(information_items[0]['url'])" title="Copy link" color="primary" style="min-width:50px"><v-icon size="0.875rem">fas fa-link</v-icon></v-btn>
-                </v-col>
-              </v-row>
+              <v-btn v-if="information_items[0].status == 'SUCCESS'" :href="information_items[0]['url']" color="primary" style="margin-top:15px">DOWNLOAD EXPORT</v-btn>
             </v-card-text>
           </v-card>
           <!-- ERROR -->
@@ -299,10 +292,6 @@ export default {
       })
       .finally(() => this.loading = false)
     },
-    copyClipboard(text) {
-        navigator.clipboard.writeText(text)
-        EventBus.$emit('send-notification', 'Link copied to clipboard', '#00b16a', Number(2000))
-      },
     getProgressColor(status) {
       if (status == 'IN PROGRESS') return '#ff9800'
       if (status == 'SUCCESS') return '#4caf50'

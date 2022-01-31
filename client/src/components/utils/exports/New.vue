@@ -31,7 +31,7 @@
                       <div v-if="databaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(this.databaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
-                          <v-btn :disabled="databaseSize == null" color="primary" @click="nextStep">CONTINUE</v-btn>
+                          <v-btn :disabled="databaseSize == null || loading" color="primary" @click="nextStep">CONTINUE</v-btn>
                           <v-btn @click="goBack" text style="margin-left:5px">CANCEL</v-btn>
                         </v-col>
                         <v-col cols="auto">
@@ -301,6 +301,7 @@ export default {
         .finally(() => this.loading = false)
     },
     getDatabases() {
+      this.databaseSize = null
       if (this.server == null) this.databaseItems = []
       else {
         this.loading = true

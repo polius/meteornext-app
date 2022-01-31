@@ -37,10 +37,12 @@ class Imports:
                 SET
                     `status` = 'FAILED',
                     `error` = %s,
-                    `ended` = %s
+                    `ended` = %s,
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(str(e), now, now, item['id']))
             self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
 
@@ -107,11 +109,12 @@ class Imports:
             UPDATE `imports`
             SET
                 `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                `ended` = %s
+                `ended` = %s,
+                `updated` = %s
             WHERE `id` = %s
         """
         now = self.__utcnow()
-        self._sql.execute(query, args=(status, now, item['id']))
+        self._sql.execute(query, args=(status, now, now, item['id']))
 
         # Clean files
         self.__clean(core, region, item, paths)
@@ -155,11 +158,11 @@ class Imports:
 
         # Check compressed file
         gunzip = ''
-        if item['source'].endswith('.tar'):
+        if item['source'].endswith('.tar') or item['source_format'] == '.tar':
             gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.tar.gz'):
+        elif item['source'].endswith('.tar.gz') or item['source_format'] == '.tar.gz':
             gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.gz'):
+        elif item['source'].endswith('.gz') or item['source_format'] == '.gz':
             gunzip = f"| zcat 2> {error_gunzip_path}"
 
         if item['selected'] and item['selected'][0].endswith('.gz'):
@@ -175,7 +178,7 @@ class Imports:
             elif item['mode'] in ['url','cloud']:
                 source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
                 command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
-
+                print(command)
         # Start Import process
         p = core.execute(command)
 
@@ -202,6 +205,8 @@ class Imports:
         # Read error (sql) file
         p = core.execute(f"[ -f {error_sql_path} ] && cat < {error_sql_path}")
         error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+        print(p['stdout'])
+        print(p['stderr'])
         if not error:
             # Read error (gunzip2) file
             p = core.execute(f"[ -f {error_gunzip2_path} ] && cat < {error_gunzip2_path}")

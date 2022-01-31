@@ -263,7 +263,10 @@ class Exports:
             "remote": '.meteor/exports'
         }
 
-        amazon_s3 = json.loads(self._settings.get(setting_name='FILES'))['amazon_s3']
+        # Get Amazon S3 credentials
+        amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
+        if not amazon_s3['enabled']:
+            return jsonify({"message": 'To perform exports enable the Amazon S3 flag in the Admin Panel.'}), 400
 
         # Make exports folder
         if not os.path.exists(os.path.join(path['local'], uri)):

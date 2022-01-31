@@ -40,10 +40,12 @@ class Clones:
                 SET
                     `status` = 'FAILED',
                     `error` = %s,
-                    `ended` = %s
+                    `ended` = %s,
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(str(e), now, now, item['id']))
             self.__slack(item, start_time, 2, str(e))
         finally:
             self.__clean(core['source'], regions['source'], item, paths)
@@ -100,11 +102,13 @@ class Clones:
                 UPDATE `clones`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', 'FAILED'),
+                    `error` = %s,
                     `ended` = %s,
-                    `error` = %s
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(self.__utcnow(), str(e), item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(str(e), now, now, item['id']))
 
         if proceed:
             proceed = monitor_status[0] is None
@@ -114,11 +118,13 @@ class Clones:
                 UPDATE `clones`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                    `ended` = %s,
                     `url` = %s
+                    `ended` = %s,
+                    `updated` = %s,
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(status, self.__utcnow(), url[0], item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(url[0], now, now, item['id']))
 
         if proceed:
             # Start Clone (Import)
@@ -142,11 +148,13 @@ class Clones:
                 UPDATE `clones`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
+                    `url` = %s,
                     `ended` = %s,
-                    `url` = %s
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(status, self.__utcnow(), url[0], item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(status, url[0], now, now, item['id']))
 
         # Get clones details
         query = """
