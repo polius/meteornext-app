@@ -60,10 +60,10 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Clone in progress. Please wait...</div>
-              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Clone successfully finished.</div>
-              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while cloning the database.</div>
-              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Clone successfully stopped.</div>
+              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>{{ `[${step}/2] Clone in progress. Please wait...` }}</div>
+              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px; margin-bottom:2px">fas fa-check</v-icon>Clone successfully finished.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-times</v-icon>An error occurred while cloning the database.</div>
+              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Clone successfully stopped.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : information_items[0].status == 'SUCCESS' ? 100 : progress.value" style="margin-top:10px"></v-progress-linear>
               <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ information_items[0].status == 'SUCCESS' ? '100 %' : (progress.value + ' %') }}</span></div>
               <v-divider v-if="progress != null" style="margin-top:10px"></v-divider>
@@ -71,7 +71,6 @@
               <div v-if="progress != null && progress.rate != null" class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
               <div v-if="progress != null && progress.elapsed != null" class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
               <div v-if="progress != null && progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
-              <v-divider v-if="information_items[0].status == 'SUCCESS'" style="margin-top:10px"></v-divider>
             </v-card-text>
           </v-card>
           <!-- ERROR -->
@@ -87,7 +86,10 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SETUP</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div class="text-body-1 white--text">MODE</div>
+              <div class="text-body-1 white--text">OPTIONS</div>
+              <v-checkbox readonly v-model="information_items[0]['create_database']" label="Create database if not exists" hide-details style="margin-top:10px"></v-checkbox>
+              <v-checkbox readonly v-model="information_items[0]['drop_database']" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+              <div class="text-body-1 white--text" style="margin-top:15px">MODE</div>
               <v-radio-group readonly v-model="information_items[0]['mode']" style="margin-top:10px; margin-bottom:15px" hide-details>
                 <v-radio value="full">
                   <template v-slot:label>
@@ -188,6 +190,7 @@ export default {
       information_items: [],
       // Progress
       progress: null,
+      step: 1,
       stop: false,
       // Objects
       objectsHeaders: [
@@ -229,8 +232,15 @@ export default {
       axios.get('/utils/clones', { params: { uri: this.$route.params.uri } })
         .then((response) => {
           this.information_items = [response.data.clone].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          // Get Tables (if mode == 'partial')
           if (this.information_items[0]['mode'] == 'partial') this.objectsItems = JSON.parse(this.information_items[0]['tables'])['t']
-          if (this.information_items[0]['progress'] != null) this.parseProgress(this.information_items[0]['progress'])
+          // Calculate progress
+          if (this.information_items[0]['progress_import'] != null) {
+            this.step = 2
+            this.progress = this.parseProgress(this.information_items[0]['progress_import'])
+          }
+          else this.progress = this.parseProgress(this.information_items[0]['progress_export'])
+          // Retrieve again
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getClone, 1000)
@@ -243,13 +253,14 @@ export default {
         })
     },
     parseProgress(progress) {
-      this.progress = {
+      const data = {
         value: parseInt(progress.value.slice(0, -1)),
         transferred: this.parseMetric(progress.transferred),
         rate: this.parseMetric(progress.rate),
         elapsed: progress.elapsed,
         eta: progress.eta
       }
+      return data
     },
     parseOverall() {
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
