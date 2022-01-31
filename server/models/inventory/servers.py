@@ -11,7 +11,7 @@ class Servers:
                 SELECT 
                     s.id, s.name, s.group_id, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.`usage`, s.shared, s.owner_id, s.created_by, s.created_at,
                     t.id IS NOT NULL AS 'active',
-                    r.name AS 'region', r.shared AS 'region_shared'
+                    r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN (

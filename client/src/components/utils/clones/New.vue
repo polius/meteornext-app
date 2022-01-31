@@ -358,6 +358,13 @@ export default {
               this.$refs.sourceDatabase.focus()
             })
           }
+          else if (origin == 'destination') {
+            this.$nextTick(() => {
+              this.$refs.destinationForm.resetValidation()
+              this.$refs.destinationServer.blur()
+              this.$refs.destinationDatabase.focus()
+            })
+          }
         })
         .catch((error) => {
           if (origin == 'source') {
@@ -468,7 +475,7 @@ export default {
       const payload = {
         source_server: this.sourceServer,
         source_database: this.sourceDatabase,
-        destination_schema: this.destinationSchema,
+        destination_server: this.destinationServer,
         destination_database: this.destinationDatabase,
         create_database: this.createDatabase,
         drop_database: this.dropDatabase,

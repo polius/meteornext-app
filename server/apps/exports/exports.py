@@ -249,7 +249,6 @@ class Exports:
     def __slack(self, item, start_time, status, error=None):
         if not item['slack_enabled']:
             return
-        source = f"{item['bucket']}/{item['source']}" if item['mode'] == 'cloud' else item['source']
         webhook_data = {
             "attachments": [
                 {
@@ -266,8 +265,8 @@ class Exports:
                             "short": False
                         },
                         {
-                            "title": "Source",
-                            "value": f"```{source} ({self.__convert_bytes(item['size'])})```",
+                            "title": "Size",
+                            "value": f"```{self.__convert_bytes(item['size'])}```",
                             "short": False
                         },
                         {

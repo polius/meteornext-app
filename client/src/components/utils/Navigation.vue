@@ -38,8 +38,8 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px;">
-                  <v-row no-gutters style="margin-bottom:15px">
+                <v-form ref="form" style="margin-top:15px;">
+                  <v-row v-if="'group' in server" no-gutters style="margin-top:25px; margin-bottom:15px">
                     <v-col>
                       <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
                     </v-col>
@@ -67,44 +67,42 @@
                       <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <div style="margin-bottom:20px">
+                  <v-row v-if="'hostname' in server" no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-text-field v-if="'username' in server" readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-if="'password' in server" readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" :hide-details="!server.ssl && !server.ssh"></v-text-field>
+                  <!-- SSL -->
+                  <v-card v-if="server.ssl" style="height:52px; margin-bottom:15px">
                     <v-row no-gutters>
-                      <v-col cols="8" style="padding-right:10px">
-                        <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
                       </v-col>
-                      <v-col cols="4" style="padding-left:10px">
-                        <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
+                      <v-col>
+                        <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
                       </v-col>
                     </v-row>
-                    <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
-                    <!-- SSL -->
-                    <v-card v-if="server.ssl" style="height:52px; margin-top:15px; margin-bottom:15px">
-                      <v-row no-gutters>
-                        <v-col cols="auto" style="display:flex; margin:15px">
-                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
-                        </v-col>
-                        <v-col>
-                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                    <!-- SSH -->
-                    <v-card v-if="server.ssh" style="height:52px; margin-top:15px; margin-bottom:15px">
-                      <v-row no-gutters>
-                        <v-col cols="auto" style="display:flex; margin:15px">
-                          <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
-                        </v-col>
-                        <v-col>
-                          <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                    <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
-                  </div>
+                  </v-card>
+                  <!-- SSH -->
+                  <v-card v-if="server.ssh" style="height:52px; margin-bottom:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details :style="`${'hostname' in server || server.ssl || server.ssh ? 'margin-top:20px' : ''}`"></v-text-field>
                 </v-form>
-                <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
+                <v-divider style="margin-top:15px"></v-divider>
+                <v-row no-gutters style="margin-top:15px">
                   <v-col>
                     <v-btn :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
