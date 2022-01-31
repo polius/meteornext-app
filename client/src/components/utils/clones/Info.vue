@@ -28,12 +28,20 @@
                 Partial
               </div>
             </template>
-            <template v-slot:[`item.server`]="{ item }">
-              <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-                <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-                  {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+            <template v-slot:[`item.source_server`]="{ item }">
+              <v-btn @click="getServer(item.source_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+                <v-icon small :title="item.source_server_shared ? 'Shared' : 'Personal'" :color="item.source_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+                  {{ item.source_server_shared ? 'fas fa-users' : 'fas fa-user' }}
                 </v-icon>
-                {{ item.server }}
+                {{ item.source_server_name }}
+              </v-btn>
+            </template>
+            <template v-slot:[`item.destination_server`]="{ item }">
+              <v-btn @click="getServer(item.destination_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+                <v-icon small :title="item.destination_server_shared ? 'Shared' : 'Personal'" :color="item.destination_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+                  {{ item.destination_server_shared ? 'fas fa-users' : 'fas fa-user' }}
+                </v-icon>
+                {{ item.destination_server_name }}
               </v-btn>
             </template>
             <template v-slot:[`item.size`]="{ item }">
@@ -167,8 +175,10 @@ export default {
       // Information
       information_headers: [
         { text: 'Mode', value: 'mode', sortable: false },
-        { text: 'Server', value: 'server', sortable: false },
-        { text: 'Database', value: 'database', sortable: false },
+        { text: 'S.Server', align: 'left', value: 'source_server' },
+        { text: 'S.Database', align: 'left', value: 'source_database' },
+        { text: 'D.Server', align: 'left', value: 'destination_server' },
+        { text: 'D.Database', align: 'left', value: 'destination_database' },
         { text: 'Size', value: 'size', sortable: false },
         { text: 'Status', value: 'status', sortable: false },
         { text: 'Started', value: 'started', sortable: false },
