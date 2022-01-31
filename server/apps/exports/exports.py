@@ -27,7 +27,7 @@ class Exports:
     def __core(self, user, item, server, region, paths, amazon_s3):
         try:
             start_time = time.time()
-            core = apps.export.core.Core(region)
+            core = apps.exports.core.Core(region)
             self.__check(core)
             self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
         except Exception as e:
@@ -36,10 +36,12 @@ class Exports:
                 SET
                     `status` = 'FAILED',
                     `error` = %s,
-                    `ended` = %s
+                    `ended` = %s,
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(str(e), now, now, item['id']))
             self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
 
@@ -87,11 +89,13 @@ class Exports:
                 UPDATE `exports`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', 'FAILED'),
+                    `error` = %s,
                     `ended` = %s,
-                    `error` = %s
+                    `updated` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(self.__utcnow(), str(e), item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(str(e), now, now, item['id']))
         else:
             # Update export status
             status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
@@ -100,10 +104,12 @@ class Exports:
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
                     `ended` = %s,
+                    `updated` = %s,
                     `url` = %s
                 WHERE `id` = %s
             """
-            self._sql.execute(query, args=(status, self.__utcnow(), url, item['id']))
+            now = self.__utcnow()
+            self._sql.execute(query, args=(status, now, now, url, item['id']))
 
         # Clean files
         self.__clean(core, region, item, paths)

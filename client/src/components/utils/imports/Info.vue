@@ -58,9 +58,9 @@
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while importing the file.</div>
               <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Import successfully stopped.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
-              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
-              <v-divider v-if="progress != null" style="margin-top:10px"></v-divider>
-              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
+              <div v-if="progress != null && progress.value != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
+              <v-divider v-if="progress != null && progress.transferred != null" style="margin-top:10px"></v-divider>
+              <div v-if="progress != null && progress.transferred != null" class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
               <div v-if="progress != null && progress.rate != null" class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
               <div v-if="progress != null && progress.elapsed != null" class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
               <div v-if="progress != null && progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
@@ -79,7 +79,7 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SOURCE</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div v-if="['file','url'].includes(information_items[0]['mode'])" class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
+              <div v-if="['file','url'].includes(information_items[0]['mode'])" class="text-body-1 font-weight-regular">{{ `${information_items[0].source} ${formatBytes(information_items[0].size) == null ? '' : ('(' + formatBytes(information_items[0].size) + ')')}` }}</div>
               <div v-else>
                 <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
                 <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" item-key="id" hide-default-footer class="elevation-1" mobile-breakpoint="0">
@@ -328,7 +328,7 @@ export default {
       return date
     },
     formatBytes(size) {
-      if (size == null) return null
+      if (size == null || size === undefined) return null
       return pretty(size, {binary: true}).replace('i','')
     },
   },

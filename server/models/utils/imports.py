@@ -41,7 +41,7 @@ class Imports:
 
     def get_servers(self, user):
         query = """
-            SELECT s.id, s.name, s.shared, t.id IS NOT NULL AS 'active'
+            SELECT s.id, s.name, s.shared, s.region_id, t.id IS NOT NULL AS 'active'
             FROM servers s
             LEFT JOIN (
                 SELECT s.id
