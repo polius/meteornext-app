@@ -32,12 +32,12 @@
                 Cloud Key
               </div>
             </template>
-            <template v-slot:[`item.server`]="{ item }">
+            <template v-slot:[`item.server_id`]="{ item }">
               <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-                <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-                  {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+                <v-icon small :title="item.server_shared ? 'Shared' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
+                  {{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}
                 </v-icon>
-                {{ item.server }}
+                {{ item.server_name }}
               </v-btn>
             </template>
             <template v-slot:[`item.status`]="{ item }">
@@ -191,7 +191,7 @@ export default {
       // Information
       information_headers: [
         { text: 'Mode', value: 'mode', sortable: false },
-        { text: 'Server', value: 'server', sortable: false },
+        { text: 'Server', value: 'server_id', sortable: false },
         { text: 'Database', value: 'database', sortable: false },
         { text: 'Status', value: 'status', sortable: false },
         { text: 'Started', value: 'started', sortable: false },

@@ -156,7 +156,7 @@ export default {
     deleteDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['mode','source_server','source_database','destination_server','destination_database','size','status','started','ended','overall'],
+    columns: ['mode','source_server','source_database','destination_server','destination_database','status','started','ended','overall'],
     columnsRaw: [],
   }),
   created() {
