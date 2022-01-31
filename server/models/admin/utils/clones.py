@@ -61,10 +61,10 @@ class Clones:
             sort_order = 'DESC' if esort['desc'] else 'ASC'
 
         query = """
-            SELECT c.id, c.mode, c.source_server, c.source_database, c.destination_server, c.destination_database, c.size, c.uri, c.status, c.started, c.ended, c.deleted, s.name AS 'source_server_name', s2.name AS 'destination_server_name', CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall', u.username
+            SELECT c.id, c.mode, c.source_server, c.source_database, c.destination_server, c.destination_database, c.size, c.uri, c.status, c.started, c.ended, c.deleted, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall', u.username
             FROM clones c
             JOIN servers s ON s.id = c.source_server
-            JOIN servers s2 ON s.id = c.destination_server
+            JOIN servers s2 ON s2.id = c.destination_server
             JOIN users u ON u.id = c.user_id
             WHERE 1=1
             {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}

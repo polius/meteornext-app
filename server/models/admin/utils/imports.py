@@ -55,7 +55,7 @@ class Imports:
             sort_order = 'DESC' if rsort['desc'] else 'ASC'
 
         query = """
-                SELECT i.id, i.mode, i.source, i.size, i.server_id, s.name AS 'server', i.database, i.uri, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.user_id, u.username, i.deleted
+                SELECT i.id, i.mode, i.source, i.size, i.server_id, s.name AS 'server_name', s.shared AS 'server_shared', i.database, i.uri, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.user_id, u.username, i.deleted
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 JOIN users u ON u.id = i.user_id
