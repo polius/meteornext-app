@@ -301,43 +301,52 @@ class Imports:
 
             # Build file metadata
             source = file.filename
+            format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
             url = request.form['url']
             create_database = json.loads(data['createDatabase'])
             drop_database = json.loads(data['dropDatabase'])
+            amazon_s3 = None
 
         elif data['mode'] == 'url':
             source = data['source']
+            format = data['format']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             url = data['url']
             create_database = data['createDatabase']
             drop_database = data['dropDatabase']
+            amazon_s3 = None
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
             cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud']['id'])
             if len(cloud) == 0:
                 return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
-            data['access_key'] = cloud[0]['access_key']
-            data['secret_key'] = cloud[0]['secret_key']
+            cloud = cloud[0]
             # Init values
             source = data['source']
+            format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
-            details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
+            details = {"cloud": data['cloud'], "bucket": data['bucket'], "object": data['object']}
             url = data['url']
             create_database = data['createDatabase']
             drop_database = data['dropDatabase']
+            amazon_s3 = {
+                "aws_access_key": cloud['access_key'],
+                "aws_secret_access_key": cloud['secret_key'],
+                "bucket": data['bucket']
+            }
 
         # Build Item
         item = {
-            'user': user['username'],
+            'username': user['username'],
             'mode': data['mode'],
             'details': json.dumps(details) if 'cloud' in data else None,
             'source': source,
-            'source_format': data['sourceFormat'] if data['mode'] == 'url' else None,
+            'format': format,
             'selected': None if len(selected) == 0 else selected,
             'size': size,
             'server_id': data['server'],
@@ -346,8 +355,8 @@ class Imports:
             'database': data['database'].strip(),
             'create_database': create_database,
             'drop_database': drop_database,
-            'status': 'IN PROGRESS',
-            'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            'status': 'STARTING' if not group['utils_concurrent'] else 'QUEUED',
+            'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None,
             'slack_enabled': group['utils_slack_enabled'],
@@ -359,14 +368,9 @@ class Imports:
         # Parse selected for import process
         item['selected'] = [i['file'] for i in data['selected']] if selected else []
 
-        # Add Cloud credentials to item
-        if item['mode'] == 'cloud':
-            item['access_key'] = cloud[0]['access_key']
-            item['secret_key'] = cloud[0]['secret_key']
-            item['bucket'] = data['bucket']
-
         # Start import process
-        self._import_app.start(user, item, server, region, path)
+        if not group['utils_concurrent']:
+            self._import_app.start(user, item, server, region, path, amazon_s3)
 
         # Return tracking identifier
         return jsonify({'uri': item['uri']}), 200

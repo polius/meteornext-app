@@ -5,6 +5,7 @@ import schedule
 import threading
 
 import routes.deployments.deployments
+import routes.utils.utils
 import apps.monitoring.monitoring
 import apps.imports.scan
 
@@ -20,6 +21,7 @@ class Cron:
             self.__one_time()
             # Schedule Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
             schedule.every().day.do(self.__run_threaded, self.__check_license)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
@@ -54,6 +56,14 @@ class Cron:
         deployments.check_finished()
         deployments.check_scheduled()
         deployments.check_queued()
+
+    def __utils_queue(self):
+        if not self._license.validated:
+            return
+
+        # Check queued executions
+        utils = routes.utils.utils.Utils(self._app, self._sql, self._license)
+        utils.check_queued()
 
     def __check_license(self):
         # Check if the license is still active

@@ -28,7 +28,6 @@ class Exports:
         try:
             start_time = time.time()
             core = apps.exports.core.Core(region)
-            self.__check(core)
             self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
         except Exception as e:
             query = """
@@ -45,12 +44,6 @@ class Exports:
             self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
 
-    def __check(self, core):
-        for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
-            p = core.execute(command)
-            if len(p['stderr']) > 0:
-                raise Exception(p['stderr'])
-
     def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
         # Update export status
         query = """
@@ -61,6 +54,9 @@ class Exports:
             WHERE `id` = %s
         """
         self._sql.execute(query, args=(self.__utcnow(), item['id']))
+
+        # Check requirements
+        self.__check(core)
 
         # Define new path
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
@@ -141,6 +137,12 @@ class Exports:
             self.__slack(item, start_time, 1)
         elif export['status'] == 'FAILED':
             self.__slack(item, start_time, 2, export['error'])
+
+    def __check(self, core):
+        for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
+            p = core.execute(command)
+            if len(p['stderr']) > 0:
+                raise Exception(p['stderr'])
 
     def __export(self, core, item, server, path, amazon_s3):
         # Build paths
