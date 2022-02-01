@@ -289,8 +289,8 @@ class Exports:
             'export_routines': data['export_routines'],
             'export_events': data['export_events'],
             'size': data['size'],
-            'status': 'IN PROGRESS',
-            'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            'status': 'STARTING' if not group['utils_concurrent'] else 'QUEUED',
+            'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'slack_enabled': group['utils_slack_enabled'],
             'slack_url': group['utils_slack_url'],
@@ -299,7 +299,8 @@ class Exports:
         item['id'] = self._export.post(user, item)
 
         # Start import process
-        self._export_app.start(user, item, server, region, path, amazon_s3)
+        if not group['utils_concurrent']:
+            self._export_app.start(user, item, server, region, path, amazon_s3)
 
         # Return tracking identifier
         return jsonify({'uri': item['uri']}), 200

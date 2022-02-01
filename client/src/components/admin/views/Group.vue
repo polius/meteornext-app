@@ -43,7 +43,7 @@
                   RIGHTS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access the inventory.</span>
                     <br>
@@ -56,7 +56,7 @@
                   OWNERS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>Owners can manage <strong>Shared</strong> resources (servers, regions, environments, auxiliary connections, cloud keys)</span>
                   </v-tooltip>
@@ -95,7 +95,7 @@
                   LIMITS
                 <v-tooltip right>
                   <template v-slot:activator="{ on }">
-                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
                     <b>Coins per execution</b>: Required coins needed to perform a deployment.
@@ -116,7 +116,7 @@
                   RETENTION
                 <v-tooltip right>
                   <template v-slot:activator="{ on }">
-                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
                     <b>Expiration Days</b>: The amount of days that have to pass before deleting old deployments.
@@ -128,7 +128,7 @@
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
                       Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a deployment finishes.
@@ -169,22 +169,25 @@
                   LIMITS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
                       <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
+                      <br>
+                      <b>Concurrent Executions</b>: Maximum concurrent executions (Imports, Exports, Clones) across all users in the group.
                     </span>
                   </v-tooltip>
                 </div>
-                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']"></v-text-field>
+                <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
-                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime an import or an export finishes.
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime an import, export or clone finishes.
                     </span>
                   </v-tooltip>
                 </div>
@@ -209,7 +212,7 @@
                   LIMITS
                   <v-tooltip right>
                   <template v-slot:activator="{ on }">
-                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
                     <b>Execution Timeout Mode</b>: The type of queries that will be affected by the execution timeout.
@@ -337,6 +340,7 @@ export default {
       monitoring_interval: 10,
       utils_enabled: false,
       utils_limit: null,
+      utils_concurrent: null,
       utils_export_limit: null,
       utils_slack_enabled: false,
       utils_slack_name: '',
@@ -426,6 +430,7 @@ export default {
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       if (!this.group.utils_limit) this.group.utils_limit = null
+      if (!this.group.utils_concurrent) this.group.utils_concurrent = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Add group to the DB
       const payload = {
@@ -457,6 +462,7 @@ export default {
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       if (!this.group.utils_limit) this.group.utils_limit = null
+      if (!this.group.utils_concurrent) this.group.utils_concurrent = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Edit group to the DB
       const payload = {

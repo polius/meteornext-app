@@ -18,19 +18,17 @@ class Imports:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, server, region, path):
+    def start(self, user, item, server, region, path, amazon_s3):
         # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, server, region, path,))
+        t = threading.Thread(target=self.__core, args=(user, item, server, region, path, amazon_s3,))
         t.daemon = True
         t.start()
 
-    def __core(self, user, item, server, region, paths):
+    def __core(self, user, item, server, region, paths, amazon_s3):
         try:
             start_time = time.time()
             core = apps.imports.core.Core(self._sql, item['id'], region)
-            self.__check(core)
-            self.__create_database(item, server, region)
-            self.__core2(start_time, core, user, item, server, region, paths)
+            self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
         except Exception as e:
             query = """
                 UPDATE `imports`
@@ -44,22 +42,9 @@ class Imports:
             now = self.__utcnow()
             self._sql.execute(query, args=(str(e), now, now, item['id']))
             self.__clean(core, region, item, paths)
-            self.__slack(item, start_time, 2, str(e))
+            self.__slack(item, amazon_s3, start_time, 2, str(e))
 
-    def __create_database(self, item, server, region):
-        if not item['create_database']:
-            return
-        # Build Connector Data
-        data = {'ssh': region, 'sql': server}
-        data['ssh']['enabled'] = region['ssh_tunnel']
-        # Init Connector
-        connector = connectors.base.Base(data)
-
-        if item['drop_database']:
-            connector.execute(f"DROP DATABASE IF EXISTS `{item['database']}`")
-        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['database']}`")
-
-    def __core2(self, start_time, core, user, item, server, region, paths):
+    def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
         # Update import status
         query = """
             UPDATE `imports`
@@ -69,6 +54,12 @@ class Imports:
             WHERE `id` = %s
         """
         self._sql.execute(query, args=(self.__utcnow(), item['id']))
+
+        # Check requirements
+        self.__check(core)
+
+        # Check if a database has to be created
+        self.__create_database(item, server, region)
 
         # Check Cross Region import
         if region['ssh_tunnel']:
@@ -82,7 +73,7 @@ class Imports:
                     if not self.__alive(item):
                         core.stop()
                         self.__clean(core, region, item, paths)
-                        self.__slack(item, start_time, 1)
+                        self.__slack(item, amazon_s3, start_time, 1)
                         return
                     time.sleep(1)
 
@@ -90,7 +81,7 @@ class Imports:
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
         # Start Import
-        t = threading.Thread(target=self.__import, args=(core, item, server, path,))
+        t = threading.Thread(target=self.__import, args=(core, item, server, path, amazon_s3))
         t.daemon = True
         t.start()
 
@@ -141,13 +132,32 @@ class Imports:
 
         # Send Slack message
         if imp['status'] == 'SUCCESS':
-            self.__slack(item, start_time, 0)
+            self.__slack(item, amazon_s3, start_time, 0)
         elif imp['status'] == 'STOPPED':
-            self.__slack(item, start_time, 1)
+            self.__slack(item, amazon_s3, start_time, 1)
         elif imp['status'] == 'FAILED':
-            self.__slack(item, start_time, 2, imp['error'])
+            self.__slack(item, amazon_s3, start_time, 2, imp['error'])
 
-    def __import(self, core, item, server, path):
+    def __check(self, core):
+        for command in ['curl --version', 'pv --version', 'mysql --version']:
+            p = core.execute(command)
+            if len(p['stderr']) > 0:
+                raise Exception(p['stderr'])
+
+    def __create_database(self, item, server, region):
+        if not item['create_database']:
+            return
+        # Build Connector Data
+        data = {'ssh': region, 'sql': server}
+        data['ssh']['enabled'] = region['ssh_tunnel']
+        # Init Connector
+        connector = connectors.base.Base(data)
+
+        if item['drop_database']:
+            connector.execute(f"DROP DATABASE IF EXISTS `{item['database']}`")
+        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['database']}`")
+
+    def __import(self, core, item, server, path, amazon_s3):
         # Build paths
         error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
         error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
@@ -156,29 +166,35 @@ class Imports:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
         file_path = os.path.join(path, item['uri'], item['source'])
 
+        # Check file exists
+        if item['mode'] == 'file' and not os.path.isfile(file_path):
+            with open(error_sql_path, 'w') as fopen:
+                fopen.write('Something went wrong. The imported file no longer exists. Please try again.')
+            return
+
         # Check compressed file
         gunzip = ''
-        if item['source'].endswith('.tar') or item['source_format'] == '.tar':
+        if item['source'].endswith('.tar') or item['format'] == '.tar':
             gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.tar.gz') or item['source_format'] == '.tar.gz':
+        elif item['source'].endswith('.tar.gz') or item['format'] == '.tar.gz':
             gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.gz') or item['source_format'] == '.gz':
+        elif item['source'].endswith('.gz') or item['format'] == '.gz':
             gunzip = f"| zcat 2> {error_gunzip_path}"
 
         if item['selected'] and item['selected'][0].endswith('.gz'):
             gunzip += f" | zcat 2> {error_gunzip2_path}"
 
         if item['mode'] == 'cloud':
-            client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
+            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_access_secret_key'])
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             if item['mode'] == 'file':
                 command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
             elif item['mode'] in ['url','cloud']:
-                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
+                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
                 command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
-                print(command)
+
         # Start Import process
         p = core.execute(command)
 
@@ -205,8 +221,7 @@ class Imports:
         # Read error (sql) file
         p = core.execute(f"[ -f {error_sql_path} ] && cat < {error_sql_path}")
         error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
-        print(p['stdout'])
-        print(p['stderr'])
+
         if not error:
             # Read error (gunzip2) file
             p = core.execute(f"[ -f {error_gunzip2_path} ] && cat < {error_gunzip2_path}")
@@ -271,16 +286,10 @@ class Imports:
             core.execute(f"rm -rf {os.path.join(paths['remote'], item['uri'])}")
         shutil.rmtree(os.path.join(paths['local'], item['uri']), ignore_errors=True)
 
-    def __check(self, core):
-        for command in ['curl --version', 'pv --version', 'mysql --version']:
-            p = core.execute(command)
-            if len(p['stderr']) > 0:
-                raise Exception(p['stderr'])
-
-    def __slack(self, item, start_time, status, error=None):
+    def __slack(self, item, amazon_s3, start_time, status, error=None):
         if not item['slack_enabled']:
             return
-        source = f"{item['bucket']}/{item['source']}" if item['mode'] == 'cloud' else item['source']
+        source = f"{amazon_s3['bucket']}/{item['source']}" if item['mode'] == 'cloud' else item['source']
         webhook_data = {
             "attachments": [
                 {
@@ -288,7 +297,7 @@ class Imports:
                     "fields": [
                         {
                             "title": "User",
-                            "value": f"```{item['user']}```",
+                            "value": f"```{item['username']}```",
                             "short": False
                         },
                         {

@@ -61,7 +61,7 @@
                       </div>
                       <div v-else-if="mode == 'url'" style="margin-top:15px">
                         <v-text-field filled @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details style="margin-top:15px"></v-text-field>
-                        <v-select filled v-model="sourceFormat" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required  :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
+                        <v-select filled v-model="format" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required  :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
                       </div>
                       <div v-else-if="mode == 'cloud'" style="margin-top:15px">
                         <!-- CLOUD KEYS -->
@@ -267,7 +267,7 @@
                       </v-radio-group>
                       <div v-if="['file','url'].includes(mode)">
                         <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="margin-top:15px" hide-details></v-text-field>
-                        <v-select readonly v-model="sourceFormat" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
+                        <v-select v-if="mode == 'url'" readonly v-model="format" :items="['.sql','.gz','.tar','.tar.gz']" label="Format" required :rules="[v => !!v || '']" hide-details style="margin-top:15px"></v-select>
                         <div class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'cloud'">
@@ -404,7 +404,7 @@ export default {
       // Source
       mode: 'file',
       source: null,
-      sourceFormat: null,
+      format: null,
       size: null,
       fileObject: null,
       // Scan
@@ -857,7 +857,7 @@ export default {
       const payload = {
         mode: this.mode,
         source: this.source,
-        sourceFormat: this.sourceFormat,
+        format: this.format,
         selected: this.scanSelected,
         server: this.server,
         database: this.database,

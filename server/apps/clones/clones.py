@@ -32,9 +32,6 @@ class Clones:
                 "source": apps.clones.core.Core(regions['source']),
                 "destination": apps.clones.core.Core(regions['destination'])
             }
-            self.__check(core['source'])
-            self.__check(core['destination'])
-            self.__create_database(item, servers['destination'], regions['destination'])
             self.__core2(start_time, core, user, item, servers, regions, paths, amazon_s3)
         except Exception as e:
             query = """
@@ -53,29 +50,7 @@ class Clones:
             self.__clean(core['source'], regions['source'], item, paths)
             self.__clean(core['destination'], regions['destination'], item, paths)
 
-    def __create_database(self, item, server, region):
-        if not item['create_database']:
-            return
-        # Build Connector Data
-        data = {'ssh': region, 'sql': server}
-        data['ssh']['enabled'] = region['ssh_tunnel']
-        # Init Connector
-        connector = connectors.base.Base(data)
-
-        if item['drop_database']:
-            connector.execute(f"DROP DATABASE IF EXISTS `{item['destination_database']}`")
-        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['destination_database']}`")
-
-    def __check(self, core):
-        for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
-            p = core.execute(command)
-            if len(p['stderr']) > 0:
-                raise Exception(p['stderr'])
-
     def __core2(self, start_time, core, user, item, servers, regions, paths, amazon_s3):
-        # Flag to manage code logic
-        proceed = True
-
         # Update clone status
         query = """
             UPDATE `clones`
@@ -86,6 +61,13 @@ class Clones:
         """
         self._sql.execute(query, args=(self.__utcnow(), item['id']))
 
+        # Check requirements
+        self.__check(core['source'])
+        self.__check(core['destination'])
+
+        # Check if a database has to be created
+        self.__create_database(item, servers['destination'], regions['destination'])
+
         # Define new path
         path = {
             "source": paths['remote'] if regions['source']['ssh_tunnel'] else paths['local'],
@@ -93,6 +75,7 @@ class Clones:
         }
 
         # Start Clone (Export)
+        proceed = True
         t = threading.Thread(target=self.__export, args=(core['source'], item, servers['source'], path['source'], amazon_s3,))
         t.daemon = True
         t.start()
@@ -208,6 +191,25 @@ class Clones:
             self.__slack(item, start_time, 1)
         elif clone['status'] == 'FAILED':
             self.__slack(item, start_time, 2, clone['error'])
+
+    def __check(self, core):
+        for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
+            p = core.execute(command)
+            if len(p['stderr']) > 0:
+                raise Exception(p['stderr'])
+
+    def __create_database(self, item, server, region):
+        if not item['create_database']:
+            return
+        # Build Connector Data
+        data = {'ssh': region, 'sql': server}
+        data['ssh']['enabled'] = region['ssh_tunnel']
+        # Init Connector
+        connector = connectors.base.Base(data)
+
+        if item['drop_database']:
+            connector.execute(f"DROP DATABASE IF EXISTS `{item['destination_database']}`")
+        connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['destination_database']}`")
 
     def __export(self, core, item, server, path, amazon_s3):
         # Build paths

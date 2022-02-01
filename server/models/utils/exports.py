@@ -28,10 +28,10 @@ class Exports:
     def post(self, user, data):
         tables = f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}" if data['tables'] else None
         query = """
-            INSERT INTO exports (`server_id`, `database`, `mode`, `format`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `started`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO exports (`server_id`, `database`, `mode`, `format`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `created`, `url`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['server_id'], data['database'], data['mode'], data['format'], tables, data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['started'], data['uri'], user['id']))
+        return self._sql.execute(query, (data['server_id'], data['database'], data['mode'], data['format'], tables, data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['created'], data['url'], data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """
