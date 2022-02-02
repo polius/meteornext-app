@@ -233,6 +233,14 @@ class Clones:
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
+        # Check Coins
+        if (user['coins'] - group['utils_coins']) < 0:
+            return jsonify({'message': 'Insufficient Coins'}), 400
+
+        # Consume Coins
+        self._users.consume_coins(user, group['utils_coins'])
+        coins = user['coins'] - group['utils_coins']
+
         # Get server details (source)
         servers = {}
         servers['source'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['source_server'])
@@ -317,7 +325,7 @@ class Clones:
             self._clone_app.start(user, item, servers, regions, path, amazon_s3)
 
         # Return tracking identifier
-        return jsonify({'uri': item['uri']}), 200
+        return jsonify({'uri': item['uri'], 'coins': coins}), 200
 
     def delete(self, user, data):
         for item in data:

@@ -35,6 +35,7 @@ CREATE TABLE `groups` (
   `monitoring_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `monitoring_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `utils_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `utils_coins` INT UNSIGNED NOT NULL DEFAULT '10',
   `utils_limit` BIGINT UNSIGNED NULL,
   `utils_concurrent` INT UNSIGNED NULL,
   `utils_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
