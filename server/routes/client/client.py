@@ -504,8 +504,8 @@ class Client:
             if not self.__allowed_file(request.files['file'].filename):
                 return jsonify({"message": 'The file extension is not valid'}), 400
 
-            if request.content_length > 100 * 1024 * 1024:
-                return jsonify({"message": 'The upload file exceeds the maximum allowed size (100MB). Please use the CLIENT section to import this file.'}), 400
+            if request.content_length > 10 * 1024 * 1024:
+                return jsonify({"message": 'The upload file exceeds the maximum allowed size (10 MB). Please use the CLIENT section to import this file.'}), 400
 
             # Execute uploaded file
             try:
@@ -536,9 +536,9 @@ class Client:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Start export
             try:
                 options = json.loads(request.args['options'])
+                # Start export
                 if options['mode'] == 'csv':
                     return Response(stream_with_context(self.__export_csv(options, conn)))
                 elif options['mode'] == 'sql':
@@ -784,6 +784,12 @@ class Client:
                 yield '# Table: {}\n'.format(table)
                 yield '# ------------------------------------------------------------\n'
                 try:
+                    # Check table size
+                    info = conn.get_table_info(db=request.args['database'], table=table)
+                    if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
+                        raise Exception('To export objects larger than 10 MB use the Utils section.')
+
+                    # Export table
                     syntax = conn.get_table_syntax(request.args['database'], table)
                     if options['includeDropTable']:
                         yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
@@ -917,6 +923,10 @@ class Client:
         conn.disable_fks_checks()
         if options['object'] == 'table':
             for table in options['items']:
+                # Check table size
+                info = conn.get_table_info(db=options['origin'], table=table)
+                if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
+                    raise Exception('To export objects larger than 10 MB use the Utils section.')
                 # Drop Table if Exists
                 conn.execute(query=f"DROP TABLE IF EXISTS `{table}`", database=options['target'])
                 # Create Table
