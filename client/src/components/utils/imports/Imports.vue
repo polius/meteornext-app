@@ -9,7 +9,7 @@
           <v-btn :disabled="selected.length != 1" text @click="infoImport()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-btn :disabled="selected.length == 0" text @click="deleteImport()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="getImport" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="getImports" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -156,13 +156,13 @@ export default {
     columnsRaw: [],
   }),
   created() {
-    this.getImport()
+    this.getImports()
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   methods: {
-    getImport() {
+    getImports() {
       this.loading = true
       // Get Imports
       axios.get('/utils/imports')
@@ -195,7 +195,7 @@ export default {
         .then(() => {
           this.selected = []
           this.deleteDialog = false
-          this.getImport()
+          this.getImports()
           EventBus.$emit('send-notification', "Selected imports deleted", '#00b16a')
         })
         .catch((error) => {
