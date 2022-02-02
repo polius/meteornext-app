@@ -68,10 +68,15 @@ class MySQL:
                     pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
                     self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
                     self._tunnel.start()
+                    try:
+                        port = self._tunnel.local_bind_port
+                    except Exception:
+                        self.close()
+                        raise Exception("Can't connect to the SSH Server.")
 
                 # Start SQL Connection
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
-                port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
+                port = port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 read_timeout = self._server['sql']['read_timeout'] if 'read_timeout' in self._server['sql'] else None
                 write_timeout = self._server['sql']['write_timeout'] if 'write_timeout' in self._server['sql'] else None
@@ -86,8 +91,6 @@ class MySQL:
             finally:
                 self.__close_ssl(ssl)
         if exception:
-            if type(exception).__name__ == 'BaseSSHTunnelForwarderError':
-                raise Exception("Can't connect to the SSH Server")
             raise exception
 
     def close(self):

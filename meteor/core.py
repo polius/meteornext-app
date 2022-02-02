@@ -88,13 +88,22 @@ class core:
         except (Exception, KeyboardInterrupt) as e:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             signal.signal(signal.SIGTERM,signal.SIG_IGN)
+            # Clean regions
             self.clean()
+            # Send slack
             if self._args.deploy or self._args.test:
-                self.slack(status=2, summary=None, error=str(e))
+                if e.__class__ == Exception:
+                    self.slack(status=2, summary=None, error=str(e))
+                elif e.__class__ == KeyboardInterrupt:
+                    error = str(e) if len(str(e)) > 0 else None
+                    self.slack(status=1, summary=None, error=error)
+            # Update progress
             if e.__class__ == Exception:
                 self._progress.error(e)
-            else:
-                self._progress.end(execution_status=2)
+            elif e.__class__ == KeyboardInterrupt:
+                error = 1 if len(str(e)) > 0 else 0
+                self._progress.end(execution_status=2, error=error)
+            # Halt deployment
             sys.exit()
 
     ##########
