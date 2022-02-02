@@ -54,9 +54,9 @@ class MySQL:
         return self._connection_id
 
     def connect(self):
-        retries = 2
+        retries = 1
         exception = None
-        for _ in range(retries+1):
+        for _ in range(retries):
             # Close existing connections
             self.close()
 
@@ -64,8 +64,7 @@ class MySQL:
                 ssl = self.__get_ssl()
                 # Start SSH Tunnel
                 if self._server['ssh']['enabled']:
-                    sshtunnel.SSH_TIMEOUT = 10.0
-                    sshtunnel.TUNNEL_TIMEOUT = 10.0
+                    sshtunnel.SSH_TIMEOUT = 5.0
                     pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
                     self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
                     self._tunnel.start()
