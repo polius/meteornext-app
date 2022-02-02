@@ -86,3 +86,13 @@ class Utils_Queued:
             WHERE e.id IN ({})
         """.format(','.join(['%s'] * len(export_ids)))
         return self._sql.execute(query, (export_ids))
+
+    def get_queued_clones(self, clone_ids):
+        query = """
+            SELECT c.id, c.mode, c.create_database, c.drop_database, c.source_server, c.source_database, c.destination_server, c.destination_database, c.tables, c.export_schema, c.add_drop_table, c.export_data, c.export_triggers, c.export_routines, c.export_events, c.size, c.url, c.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', g.utils_slack_enabled AS 'slack_enabled', g.utils_slack_url AS 'slack_url'
+            FROM clones c
+            JOIN users u ON u.id = c.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE c.id IN ({})
+        """.format(','.join(['%s'] * len(clone_ids)))
+        return self._sql.execute(query, (clone_ids))

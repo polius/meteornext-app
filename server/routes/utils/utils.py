@@ -68,16 +68,21 @@ class Utils:
             executions['import'] = self._utils_queued.get_queued_imports(import_ids=execution_ids['import'])
         if len(execution_ids['export']):
             executions['export'] = self._utils_queued.get_queued_exports(export_ids=execution_ids['export'])
+        if len(execution_ids['clone']):
+            executions['clone'] = self._utils_queued.get_queued_clones(clone_ids=execution_ids['clone'])
 
-        # Process imports
-        self.__process_queued_imports(executions['import'])
-        self.__process_queued_exports(executions['export'])
-        self.__process_queued_clones(executions['clone'])
-
-    def __process_queued_imports(self, executions):
-        # Init file path
+        # Get file path
         file_path = json.loads(self._settings.get(setting_name='FILES'))['path']
 
+        # Get Amazon S3 credentials
+        amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
+
+        # Process imports
+        self.__process_queued_imports(executions['import'], file_path)
+        self.__process_queued_exports(executions['export'], file_path, amazon_s3)
+        self.__process_queued_clones(executions['clone'], file_path, amazon_s3)
+
+    def __process_queued_imports(self, executions, file_path):
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -88,6 +93,9 @@ class Utils:
                 self._imports.update_status(user, execution['id'], 'FAILED', 'This server no longer exists in your inventory.')
                 continue
             server = server[0]
+            if not server['active']:
+                self._imports.update_status(user, execution['id'], 'FAILED', 'The selected server is disabled.')
+                continue
 
             # Get region details
             region = self._regions.get(user_id=execution['user_id'], group_id=execution['group_id'], region_id=server['region_id'])
@@ -142,10 +150,7 @@ class Utils:
             self._imports.update_status(user, execution['id'], 'STARTING')
             self._import_app.start(user, item, server, region, path, amazon_s3)
 
-    def __process_queued_exports(self, executions):
-        # Init file path
-        file_path = json.loads(self._settings.get(setting_name='FILES'))['path']
-
+    def __process_queued_exports(self, executions, file_path, amazon_s3):
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -156,6 +161,9 @@ class Utils:
                 self._exports.update_status(user, execution['id'], 'FAILED', 'This server no longer exists in your inventory.')
                 continue
             server = server[0]
+            if not server['active']:
+                self._exports.update_status(user, execution['id'], 'FAILED', 'The selected server is disabled.')
+                continue
 
             # Get region details
             region = self._regions.get(user_id=execution['user_id'], group_id=execution['group_id'], region_id=server['region_id'])
@@ -171,7 +179,6 @@ class Utils:
             }
 
             # Get Amazon S3 credentials
-            amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
             if not amazon_s3['enabled']:
                 self._exports.update_status(user, execution['id'], 'FAILED', "To perform exports enable the Amazon S3 flag in the Admin Panel.")
                 continue
@@ -202,5 +209,85 @@ class Utils:
             self._exports.update_status(user, execution['id'], 'STARTING')
             self._export_app.start(user, item, server, region, path, amazon_s3)
 
-    def __process_queued_clones(self, executions):
-        pass
+    def __process_queued_clones(self, executions, file_path, amazon_s3):
+        for execution in executions:
+            # Build user
+            user = {"id": execution['user_id']}
+
+            # Get server details (source)
+            servers = {}
+            servers['source'] = self._servers.get(user_id=user['id'], group_id=execution['group_id'], server_id=execution['source_server'])
+            if len(servers['source']) == 0:
+                self._clones.update_status(user, execution['id'], 'FAILED', 'The source server no longer exists in your inventory.')
+                continue
+            servers['source'] = servers['source'][0]
+            if not servers['source']['active']:
+                self._clones.update_status(user, execution['id'], 'FAILED', 'The source server is disabled.')
+                continue
+
+            # Get server details (destination)
+            servers['destination'] = self._servers.get(user_id=user['id'], group_id=execution['group_id'], server_id=execution['destination_server'])
+            if len(servers['destination']) == 0:
+                self._clones.update_status(user, execution['id'], 'FAILED', 'The destination server no longer exists in your inventory.')
+                continue
+            servers['destination'] = servers['destination'][0]
+            if not servers['destination']['active']:
+                self._clones.update_status(user, execution['id'], 'FAILED', 'The destination server is disabled.')
+                continue
+
+            # Get region details (source)
+            regions = {}
+            regions['source'] = self._regions.get(user_id=user['id'], group_id=execution['group_id'], region_id=servers['source']['region_id'])
+            if len(regions['source']) == 0:
+                self._clones.update_status(user, execution['id'], 'FAILED', "The source servers' region no longer exists in your inventory.")
+                continue
+            regions['source'] = regions['source'][0]
+
+            # Get region details (destination)
+            regions['destination'] = self._regions.get(user_id=user['id'], group_id=execution['group_id'], region_id=servers['destination']['region_id'])
+            if len(regions['destination']) == 0:
+                self._clones.update_status(user, execution['id'], 'FAILED', "The destination servers' region no longer exists in your inventory.")
+                continue
+            regions['destination'] = regions['destination'][0]
+
+            # Init path
+            path = {
+                "local": os.path.join(file_path, 'clones'),
+                "remote": '.meteor/clones'
+            }
+
+            # Get Amazon S3 credentials
+            if not amazon_s3['enabled']:
+                self._clones.update_status(user, execution['id'], 'FAILED', "To perform clones enable the Amazon S3 flag in the Admin Panel.")
+                continue
+
+            # Build Item
+            item = {
+                "id": execution['id'],
+                "mode": execution['mode'],
+                "create_database": execution['create_database'],
+                "drop_database": execution['drop_database'],
+                "source_database": execution['source_database'],
+                "destination_database": execution['destination_database'],
+                "tables": execution['tables'],
+                "export_schema": execution['export_schema'],
+                "add_drop_table": execution['add_drop_table'],
+                "export_data": execution['export_data'],
+                "export_triggers": execution['export_triggers'],
+                "export_routines": execution['export_routines'],
+                "export_events": execution['export_events'],
+                "size": execution['size'],
+                "url": execution['url'],
+                "uri": execution['uri'],
+                "source_server_name": servers['source']['name'],
+                "source_region_name": regions['source']['name'],
+                "destination_server_name": servers['destination']['name'],
+                "destination_region_name": regions['destination']['name'],
+                "username": execution['username'],
+                "slack_enabled": execution['slack_enabled'],
+                "slack_url": execution['slack_url']
+            }
+
+            # Start clone process
+            self._clones.update_status(user, execution['id'], 'STARTING')
+            self._clone_app.start(user, item, servers, regions, path, amazon_s3)

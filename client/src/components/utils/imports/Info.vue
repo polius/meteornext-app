@@ -334,7 +334,7 @@ export default {
     },
     getProgressColor(status) {
       if (status == 'QUEUED') return '#2196f3'
-      if (status == 'STARTING') return '#ff9800'
+      if (status == 'STARTING') return '#3498db'
       if (status == 'IN PROGRESS') return '#ff9800'
       if (status == 'SUCCESS') return '#4caf50'
       if (['FAILED','STOPPED'].includes('FAILED')) return '#EF5354'
