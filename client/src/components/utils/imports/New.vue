@@ -118,32 +118,44 @@
                             </v-card-text>
                           </v-card>
                           <!-- OBJECTS -->
-                          <v-card v-else>
-                            <v-card-text style="padding:0px">
-                              <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                                <v-text-field @keyup.enter="getAWSObjects(true)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
-                              </v-toolbar>
-                              <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
-                                <template v-slot:item="{ item }">
-                                  <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
-                                    <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" :style="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus))) ? 'cursor:not-allowed' : 'cursor:pointer'">
-                                      <span v-if="header.value == 'name'">
-                                        <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
-                                        {{ item.name }}
-                                      </span>
-                                      <span v-else-if="header.value == 'type'">
-                                        {{ item['name'].endsWith('/') ? 'Folder' : item['name'].indexOf('.') == '-1' ? '-' : item['name'].substring(item['name'].lastIndexOf(".") + 1) }}
-                                      </span>
-                                      <span v-else-if="header.value == 'size'">
-                                        {{ formatBytes(item.size) }}
-                                      </span>
-                                      <span v-else>{{ item[header.value] }}</span>
-                                    </td>
-                                  </tr>
-                                </template>
-                              </v-data-table>
-                            </v-card-text>
-                          </v-card>
+                          <div v-else>
+                            <v-card style="margin-bottom:10px">
+                              <v-row no-gutters align="center" justify="center">
+                                <v-col cols="auto" style="display:flex; margin:15px">
+                                  <v-icon size="18" color="#ff9900" style="margin-bottom:2px">fas fa-star</v-icon>
+                                </v-col>
+                                <v-col>
+                                  <div class="text-body-1" style="color:#e2e2e2">If you do not find an object press enter after your search to make a new request to Amazon S3.</div>
+                                </v-col>
+                              </v-row>
+                            </v-card>
+                            <v-card>
+                              <v-card-text style="padding:0px">
+                                <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                                  <v-text-field @keyup.enter="getAWSObjects(true)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
+                                </v-toolbar>
+                                <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
+                                  <template v-slot:item="{ item }">
+                                    <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
+                                      <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" :style="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus))) ? 'cursor:not-allowed' : 'cursor:pointer'">
+                                        <span v-if="header.value == 'name'">
+                                          <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
+                                          {{ item.name }}
+                                        </span>
+                                        <span v-else-if="header.value == 'type'">
+                                          {{ item['name'].endsWith('/') ? 'Folder' : item['name'].indexOf('.') == '-1' ? '-' : item['name'].substring(item['name'].lastIndexOf(".") + 1) }}
+                                        </span>
+                                        <span v-else-if="header.value == 'size'">
+                                          {{ formatBytes(item.size) }}
+                                        </span>
+                                        <span v-else>{{ item[header.value] }}</span>
+                                      </td>
+                                    </tr>
+                                  </template>
+                                </v-data-table>
+                              </v-card-text>
+                            </v-card>
+                          </div>
                         </div>
                       </div>
                       <!--  SIZE -->
