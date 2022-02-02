@@ -66,8 +66,7 @@ class validation:
 
             # Check validation errors
             if error:
-                error_msg = "- Regions Not Passed the Environment Validation"
-                raise Exception(error_msg)
+                raise Exception("- Regions Not Passed the Environment Validation")
 
         except KeyboardInterrupt:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
@@ -77,6 +76,8 @@ class validation:
             for t in threads:
                 t.join()
             error = self.__track_regions(threads, progress)
+            if error:
+                raise KeyboardInterrupt("- Regions Not Passed the Environment Validation")
             raise
 
     def __track_regions(self, threads, progress):

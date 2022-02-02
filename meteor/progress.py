@@ -15,10 +15,10 @@ class progress:
         query = "UPDATE executions SET status = 'IN PROGRESS', logs = %s, started = %s, pid = %s WHERE id = %s".format()
         self._sql.execute(query=query, args=(logs, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id']), database=self._config['meteor_next']['database'])
 
-    def end(self, execution_status):
+    def end(self, execution_status, error=0):
         status = 'SUCCESS' if execution_status == 0 else 'WARNING' if execution_status == 1 else 'STOPPED'
-        query = "UPDATE executions SET status = %s, ended = %s, error = 0 WHERE id = %s"
-        self._sql.execute(query=query, args=(status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id']), database=self._config['meteor_next']['database'])
+        query = "UPDATE executions SET status = %s, ended = %s, error = %s WHERE id = %s"
+        self._sql.execute(query=query, args=(status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), error, self._config['params']['id']), database=self._config['meteor_next']['database'])
         self._sql.stop()
 
     def error(self, error_msg):
