@@ -172,13 +172,16 @@
                       <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
+                      <b>Coins per execution</b>: Required coins needed to perform Imports, Exports and Clones.
+                      <br>
                       <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
                       <br>
                       <b>Concurrent Executions</b>: Maximum concurrent executions (Imports, Exports, Clones) across all users in the group.
                     </span>
                   </v-tooltip>
                 </div>
-                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']"></v-text-field>
+                <v-text-field v-model="group.utils_coins" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required></v-text-field>
+                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px"></v-text-field>
                 <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
@@ -339,6 +342,7 @@ export default {
       monitoring_enabled: false,
       monitoring_interval: 10,
       utils_enabled: false,
+      utils_coins: 10,
       utils_limit: null,
       utils_concurrent: null,
       utils_export_limit: null,

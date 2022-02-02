@@ -18,6 +18,7 @@ const state = () => ({
   utils_enabled: localStorage.getItem('utils_enabled') == '1' ? true : false,
   client_enabled: localStorage.getItem('client_enabled') == '1' ? true : false,
   coins_execution: localStorage.getItem('coins_execution') || 0,
+  utils_coins: localStorage.getItem('utils_coins') || 0,
   coins_day: localStorage.getItem('coins_day') || 0,
 })
 
@@ -38,6 +39,7 @@ const getters = {
   utils_enabled: state => state.utils_enabled,
   client_enabled: state => state.client_enabled,
   coins_execution: state => state.coins_execution,
+  utils_coins: state => state.utils_coins,
   coins_day: state => state.coins_day,
 }
 
@@ -66,6 +68,7 @@ const actions = {
               utils_enabled: response.data.data.utils_enabled,
               client_enabled: response.data.data.client_enabled,
               coins_execution: response.data.data.coins_execution,
+              utils_coins: response.data.data.utils_coins,
               coins_day: response.data.data.coins_day,
             }
             // Store variables to the local storage
@@ -83,6 +86,7 @@ const actions = {
             localStorage.setItem('utils_enabled', data['utils_enabled'])
             localStorage.setItem('client_enabled', data['client_enabled'])
             localStorage.setItem('coins_execution', data['coins_execution'])
+            localStorage.setItem('utils_coins', data['utils_coins'])
             localStorage.setItem('coins_day', data['coins_day'])
 
             // Add the token to the axios lib
@@ -108,6 +112,7 @@ const actions = {
           localStorage.removeItem('utils_enabled')
           localStorage.removeItem('client_enabled')
           localStorage.removeItem('coins_execution')
+          localStorage.removeItem('utils_coins')
           localStorage.removeItem('coins_day')
           Cookies.remove('csrf_access_token')
           reject(error)
@@ -140,6 +145,7 @@ const actions = {
         localStorage.removeItem('utils_enabled')
         localStorage.removeItem('client_enabled')
         localStorage.removeItem('coins_execution')
+        localStorage.removeItem('utils_coins')
         localStorage.removeItem('coins_day')
         Cookies.remove('csrf_access_token')
 
@@ -169,6 +175,7 @@ const mutations = {
     state.utils_enabled = data.utils_enabled == 1
     state.client_enabled = data.client_enabled == 1
     state.coins_execution = data.coins_execution
+    state.utils_coins = data.utils_coins
     state.coins_day = data.coins_day
   },
   logout(state) {
@@ -186,6 +193,7 @@ const mutations = {
     state.utils_enabled = 0
     state.client_enabled = 0
     state.coins_execution = 0
+    state.utils_coins = 0
     state.coins_day = 0
   },
   coins(state, value) {

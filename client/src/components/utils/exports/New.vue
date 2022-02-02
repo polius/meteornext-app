@@ -433,6 +433,8 @@ export default {
       }
       axios.post('/utils/exports', payload)
       .then((response) => {
+        // Refresh user coins
+        this.$store.dispatch('app/coins', response.data.coins)
         this.$router.push('/utils/exports/' + response.data.uri)
       })
       .catch((error) => {

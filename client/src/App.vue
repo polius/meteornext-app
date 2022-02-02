@@ -127,8 +127,11 @@
                 <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px;">
                   <div class="text-h5 white--text" style="font-weight:400;">{{ coins + ' Coins' }}</div>
                 </v-row>
-                <v-row justify="space-around" style="margin-top:0px; margin-bottom:15px">
+                <v-row justify="space-around" style="margin-top:0px; margin-bottom:10px">
                   <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
+                </v-row>
+                <v-row justify="space-around" style="margin-top:0px; margin-bottom:15px">
+                  <div class="text-subtitle-1" style="font-weight:400">{{ "1 Import / Export / Clone = " + this.utils_coins + " Coins" }}</div>
                 </v-row>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -226,6 +229,7 @@ export default {
     utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
     client_enabled: function() { return this.$store.getters['app/client_enabled'] },
     coins_execution: function() { return this.$store.getters['app/coins_execution'] },
+    utils_coins: function() { return this.$store.getters['app/utils_coins'] },
     coins_day: function() { return this.$store.getters['app/coins_day'] },
   },
   created() {

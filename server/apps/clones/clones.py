@@ -218,7 +218,7 @@ class Clones:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
         # Build options
-        options = '--single-transaction --max_allowed_packet=1024M --default-character-set=utf8mb4'
+        options = '--single-transaction --max_allowed_packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
@@ -315,7 +315,6 @@ class Clones:
             # SIGKILL
             command = f"ps -U $USER -u $USER u | grep 'CLONE.{item['uri']}' | grep -v grep | awk '{{print $2}}' | xargs pkill -9 -P 2> /dev/null"
             core.execute(command)
-            core.stop()
             return False
 
         # Init path vars

@@ -778,6 +778,8 @@ export default {
       .then((response) => {
         if (this.progress == 100) {
           EventBus.$emit('send-notification', "File successfully uploaded.", "#00b16a")
+          // Refresh user coins
+          this.$store.dispatch('app/coins', response.data.coins)
           setTimeout(() => this.$router.push('/utils/imports/' + response.data.uri), 1000)
         }
       })
@@ -879,6 +881,8 @@ export default {
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
+        // Refresh user coins
+        this.$store.dispatch('app/coins', response.data.coins)
         this.$router.push('/utils/imports/' + response.data.uri)
       })
       .catch((error) => {
@@ -905,6 +909,8 @@ export default {
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
+        // Refresh user coins
+        this.$store.dispatch('app/coins', response.data.coins)
         this.$router.push('/utils/imports/' + response.data.uri)
       })
       .catch((error) => {

@@ -121,6 +121,7 @@ class Login:
                 'utils_enabled': user['utils_enabled'],
                 'client_enabled': user['client_enabled'],
                 'coins_execution': user['coins_execution'],
+                'utils_coins': user['utils_coins'],
                 'coins_day': user['coins_day']
             }
             resp = jsonify({'data': data})

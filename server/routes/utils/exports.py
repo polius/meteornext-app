@@ -240,6 +240,14 @@ class Exports:
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
+        # Check Coins
+        if (user['coins'] - group['utils_coins']) < 0:
+            return jsonify({'message': 'Insufficient Coins'}), 400
+
+        # Consume Coins
+        self._users.consume_coins(user, group['utils_coins'])
+        coins = user['coins'] - group['utils_coins']
+
         # Get server details
         server = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['server_id'])
         if len(server) == 0:
@@ -303,7 +311,7 @@ class Exports:
             self._export_app.start(user, item, server, region, path, amazon_s3)
 
         # Return tracking identifier
-        return jsonify({'uri': item['uri']}), 200
+        return jsonify({'uri': item['uri'], 'coins': coins}), 200
 
     def delete(self, user, data):
         for item in data:
