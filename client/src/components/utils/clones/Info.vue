@@ -6,11 +6,13 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-btn v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :disabled="stop" text title="Stop Execution" @click="stopClone" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         <v-divider v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
+        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
+        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'STARTING' && !stop" class="subtitle-1">Starting the execution...</div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && stop" class="subtitle-1">Stopping the execution...</div>
-        <v-progress-circular v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px"></v-progress-circular>
+        <v-progress-circular v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(information_items[0]['status'])" :size="22" indeterminate color="white" width="2" style="margin-left:20px"></v-progress-circular>
         <v-spacer></v-spacer>
-        <div v-if="information_items.length != 0" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(information_items[0]['updated']) }}</b></div>
+        <div v-if="information_items.length != 0 && information_items[0]['updated'] != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(information_items[0]['updated']) }}</b></div>
         <v-divider class="ml-3 mr-1" inset vertical></v-divider>
         <v-btn icon @click="goBack()"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -48,7 +50,9 @@
               {{ formatBytes(item.size) }}
             </template>
             <template v-slot:[`item.status`]="{ item }">
-              <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+              <v-icon v-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+              <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
+              <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
               <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
@@ -60,7 +64,9 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>{{ `[${step}/2] Clone in progress. Please wait...` }}</div>
+              <div v-if="information_items[0].status == 'QUEUED'" class="text-body-1"><v-icon title="Queued" small style="color: #3498db; margin-right:10px; margin-bottom:2px">fas fa-clock</v-icon>Cloning process queued. Waiting to be started...</div>
+              <div v-else-if="information_items[0].status == 'STARTING'" class="text-body-1"><v-icon title="Starting" small style="color: #3498db; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>Starting the execution...</div>
+              <div v-else-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>{{ `[${step}/2] Clone in progress. Please wait...` }}</div>
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px; margin-bottom:2px">fas fa-check</v-icon>Clone successfully finished.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-times</v-icon>An error occurred while cloning the database.</div>
               <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Clone successfully stopped.</div>
@@ -241,7 +247,7 @@ export default {
           }
           else this.progress = this.parseProgress(this.information_items[0]['progress_export'])
           // Retrieve again
-          if (this.information_items[0]['status'] == 'IN PROGRESS') {
+          if (['QUEUED','STARTING','IN PROGRESS'].includes(this.information_items[0]['status'])) {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getClone, 1000)
           }
@@ -263,6 +269,7 @@ export default {
       return data
     },
     parseOverall() {
+      if (this.information_items[0]['started'] == null) return null
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
     },
@@ -304,6 +311,8 @@ export default {
         EventBus.$emit('send-notification', 'Link copied to clipboard', '#00b16a', Number(2000))
       },
     getProgressColor(status) {
+      if (status == 'QUEUED') return '#2196f3'
+      if (status == 'STARTING') return '#ff9800'
       if (status == 'IN PROGRESS') return '#ff9800'
       if (status == 'SUCCESS') return '#4caf50'
       if (['FAILED','STOPPED'].includes('FAILED')) return '#EF5354'

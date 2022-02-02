@@ -394,7 +394,7 @@ class Clones:
                     "fields": [
                         {
                             "title": "User",
-                            "value": f"```{item['user']}```",
+                            "value": f"```{item['username']}```",
                             "short": False
                         },
                         {

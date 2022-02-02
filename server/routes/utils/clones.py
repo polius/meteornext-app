@@ -283,7 +283,7 @@ class Clones:
 
         # Build Item
         item = {
-            'user_id': user['id'],
+            'username': user['username'],
             'source_server': data['source_server'],
             'source_database': data['source_database'].strip(),
             'source_server_name': servers['source']['name'],

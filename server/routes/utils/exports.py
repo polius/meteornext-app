@@ -274,14 +274,14 @@ class Exports:
 
         # Build Item
         item = {
-            'user_id': user['id'],
+            'username': user['username'],
             'server_id': data['server_id'],
             'server_name': server['name'],
             'region_name': region['name'],
-            'database': data['database'].strip(),
             'mode': data['mode'],
+            'database': data['database'].strip(),
             'format': data['format'],
-            'tables': data['tables'],
+            'tables': f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}" if data['tables'] else None,
             'export_schema': data['export_schema'],
             'export_data': data['export_data'],
             'add_drop_table': data['add_drop_table'],

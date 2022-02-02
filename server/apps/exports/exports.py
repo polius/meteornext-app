@@ -167,7 +167,7 @@ class Exports:
                 options += ' --events'
 
         # Build tables
-        tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in item['tables']])
+        tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in json.loads(item['tables'])['t']])
 
         # Remove definers
         remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
@@ -258,7 +258,7 @@ class Exports:
                     "fields": [
                         {
                             "title": "User",
-                            "value": f"```{item['user']}```",
+                            "value": f"```{item['username']}```",
                             "short": False
                         },
                         {

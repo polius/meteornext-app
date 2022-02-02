@@ -47,9 +47,8 @@ class Utils:
     # Internal Methods #
     ####################
     def check_queued(self):
-        # Notify finished queue executions and remove it from queue
-        items = self._utils_queued.get_finished()
-        self._utils_queued.delete(items)
+        # Delete finished executions from the queue
+        self._utils_queued.delete_finished()
 
         # Populate new queued executions
         self._utils_queued.build()
@@ -67,9 +66,13 @@ class Utils:
         executions = {"import":[],"export":[],"clone":[]}
         if len(execution_ids['import']):
             executions['import'] = self._utils_queued.get_queued_imports(import_ids=execution_ids['import'])
+        if len(execution_ids['export']):
+            executions['export'] = self._utils_queued.get_queued_exports(export_ids=execution_ids['export'])
 
         # Process imports
         self.__process_queued_imports(executions['import'])
+        self.__process_queued_exports(executions['export'])
+        self.__process_queued_clones(executions['clone'])
 
     def __process_queued_imports(self, executions):
         # Init file path
@@ -134,6 +137,70 @@ class Utils:
                 "region_name": region['name'],
                 "slack_url": execution['slack_url']
             }
+
             # Start import process
             self._imports.update_status(user, execution['id'], 'STARTING')
             self._import_app.start(user, item, server, region, path, amazon_s3)
+
+    def __process_queued_exports(self, executions):
+        # Init file path
+        file_path = json.loads(self._settings.get(setting_name='FILES'))['path']
+
+        for execution in executions:
+            # Build user
+            user = {"id": execution['user_id']}
+
+            # Get server details
+            server = self._servers.get(user_id=execution['user_id'], group_id=execution['group_id'], server_id=execution['server_id'])
+            if len(server) == 0:
+                self._exports.update_status(user, execution['id'], 'FAILED', 'This server no longer exists in your inventory.')
+                continue
+            server = server[0]
+
+            # Get region details
+            region = self._regions.get(user_id=execution['user_id'], group_id=execution['group_id'], region_id=server['region_id'])
+            if len(region) == 0:
+                self._exports.update_status(user, execution['id'], 'FAILED', "This server's region no longer exists in your inventory.")
+                continue
+            region = region[0]
+
+            # Init path
+            path = {
+                "local": os.path.join(file_path, 'exports'),
+                "remote": '.meteor/exports'
+            }
+
+            # Get Amazon S3 credentials
+            amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
+            if not amazon_s3['enabled']:
+                self._exports.update_status(user, execution['id'], 'FAILED', "To perform exports enable the Amazon S3 flag in the Admin Panel.")
+                continue
+
+            # Build Item
+            item = {
+                "id": execution['id'],
+                "mode": execution['mode'],
+                "database": execution['database'],
+                "tables": execution['tables'],
+                "size": execution['size'],
+                "export_schema": execution['export_schema'],
+                "add_drop_table": execution['add_drop_table'],
+                "export_data": execution['export_data'],
+                "export_triggers": execution['export_triggers'],
+                "export_routines": execution['export_routines'],
+                "export_events": execution['export_events'],
+                "url": execution['url'],
+                "uri": execution['uri'],
+                "server_name": server['name'],
+                "region_name": region['name'],
+                "username": execution['username'],
+                "slack_enabled": execution['slack_enabled'],
+                "slack_url": execution['slack_url']
+            }
+
+            # Start export process
+            self._exports.update_status(user, execution['id'], 'STARTING')
+            self._export_app.start(user, item, server, region, path, amazon_s3)
+
+    def __process_queued_clones(self, executions):
+        pass

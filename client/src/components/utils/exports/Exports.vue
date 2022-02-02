@@ -46,7 +46,9 @@
           {{ formatBytes(item.size) }}
         </template>
         <template v-slot:[`item.status`]="{ item }">
-          <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-if="item.status == 'QUEUED'" :title="`Queued: ${item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
@@ -197,7 +199,7 @@ export default {
         .finally(() => this.loading = false)
     },
     parseOverall(item) {
-      // Calculate Overall
+      if (item['started'] == null) return null
       let diff = (item['ended'] == null) ? moment.utc().diff(moment(item['started'])) : moment(item['ended']).diff(moment(item['started']))
       return moment.utc(diff).format("HH:mm:ss")
     },
