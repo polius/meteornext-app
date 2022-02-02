@@ -246,7 +246,12 @@ class Client:
             cred['sql']['write_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] else None
 
             # Get Connection
-            conn = self._connections.connect(user['id'], client_json['connection'], cred)
+            try:
+                conn = self._connections.connect(user['id'], client_json['connection'], cred)
+            except Exception as e:
+                database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
+                result = {'query': client_json['queries'][0], 'database': database, 'error': str(e)}
+                return jsonify({"data": self.__json([result])}), 400
 
             # Execute all queries
             execution = []
