@@ -15,10 +15,20 @@
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:5px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
+                <v-card>
+                  <v-row no-gutters align="center" justify="center">
+                    <v-col cols="auto" style="display:flex; margin:15px">
+                      <v-icon size="20" color="info">fas fa-info-circle</v-icon>
+                    </v-col>
+                    <v-col>
+                      <div class="text-body-1" style="color:#e2e2e2">To export objects larger than 10 MB use the Utils section.</div>
+                    </v-col>
+                  </v-row>
+                </v-card>
                 <v-form @submit.prevent ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
                   <div style="padding-left:1px; padding-right:1px;">
                     <v-tabs v-model="tabObjectsSelected" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
@@ -39,7 +49,7 @@
                       <v-btn :disabled="loading" :loading="loading" @click="buildObjects()" title="Refresh" text style="font-size:16px; padding:0px; min-width:36px; height:36px; margin-top:6px; margin-right:8px;"><v-icon small>fas fa-redo-alt</v-icon></v-btn>
                     </v-tabs>
                   </div>
-                  <div style="height:54vh">
+                  <div style="height:50vh">
                     <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tablesCsv')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('views', $event)" @selection-changed="onSelectionChanged('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
@@ -67,10 +77,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="exportObjectsSubmit" color="#00b16a">Export</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
@@ -354,10 +364,11 @@ export default {
         return
       }
       // Limit export size
-      let table_size = this.gridApi['tables'].getSelectedRows().reduce((acc, val) => acc + val['data_length'], 0)
-      if ((table_size/1024/1024) > 10) {
-        EventBus.$emit('send-notification', 'To export objects larger than 10MB use the Utils section.', '#EF5354')
-        return
+      for (let i of this.gridApi['tables'].getSelectedRows()) {
+        if (i['data_length']/1024/1024 > 10) {
+          EventBus.$emit('send-notification', 'To export objects larger than 10 MB use the Utils section.', '#EF5354')
+          return
+        }
       }
       // Init Export
       this.loading = true

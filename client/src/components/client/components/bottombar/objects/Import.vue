@@ -133,7 +133,7 @@ export default {
       }
       // Check input file size
       if (this.file.size/1024/1024 > 10) {
-        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (10MB)', '#EF5354')
+        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (10 MB)', '#EF5354')
         return
       }
       // Init vars
