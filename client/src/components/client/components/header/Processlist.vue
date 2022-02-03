@@ -77,7 +77,7 @@
     <!----------------->
     <!-- Kill Dialog -->
     <!----------------->
-    <v-dialog v-model="killDialog" max-width="50%">
+    <v-dialog v-model="killDialog" :persistent="loading" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">KILL QUERIES</v-toolbar-title>
@@ -242,6 +242,7 @@ export default {
         this.headerTab = tab[this.headerTabSelected]
         clearTimeout(this.timer)
       }
+      else if (this.gridApi != null) this.gridApi.showLoadingOverlay()
     },
     explainDialog: function(value) {
       if (!value) return
@@ -269,6 +270,7 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+      this.gridApi.showLoadingOverlay()
     },
     onExplainGridReady(params) {
       this.explainGridApi = params.api
@@ -351,6 +353,7 @@ export default {
       axios.get('/client/processlist', { params: payload })
         .then((response) => {
           this.parseProcesslist(response.data.processlist)
+          this.gridApi.hideOverlay()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -518,6 +521,7 @@ export default {
         queries,
         executeAll: true,
       }
+      this.loading = true
       // Kill queries
       axios.post('/client/execute', payload)
         .then(() => {
@@ -527,7 +531,7 @@ export default {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
-          .finally(() => this.killDialog = false)
+          .finally(() => { this.loading = false; this.killDialog = false })
     }
   }
 }
