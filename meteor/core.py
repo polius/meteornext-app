@@ -134,20 +134,16 @@ class core:
             self._amazon_s3.upload()
             # Clean Environments
             self.clean()
-            # Slack Message
-            if error is None:
-                self.slack(status=0, summary=summary)
-            elif error.__class__ == KeyboardInterrupt:
+            # Slack Message & Track Execution Status
+            if error.__class__ == KeyboardInterrupt:
                 self.slack(status=1, summary=summary)
-            elif error.__class__ == Exception:
-                self.slack(status=2, summary=summary, error=str(error).rstrip())
-            # Track Execution Status
-            if error is None:
-                self._progress.end(execution_status=status)
-            elif error.__class__ == KeyboardInterrupt:
                 self._progress.end(execution_status=2)
             elif error.__class__ == Exception:
+                self.slack(status=2, summary=summary, error=str(error).rstrip())
                 self._progress.error(str(error).rstrip())
+            else:
+                self.slack(status=0, summary=summary)
+                self._progress.end(execution_status=status)
 
         except Exception as e:
             # Store Error in the Progress
@@ -178,10 +174,16 @@ class core:
             results = conn.execute(query=f"SELECT id FROM processlist WHERE info LIKE '{code}%'", database='information_schema')
             if connection['sql']['engine'] == 'MySQL':
                 for result in results['query_result']:
-                    conn.execute(query=f"KILL {result['id']}", retry=False)
+                    try:
+                        conn.execute(query=f"KILL {result['id']}")
+                    except Exception:
+                        pass
             elif connection['sql']['engine'] == 'Aurora MySQL':
                 for result in results['query_result']:
-                    conn.execute(query=f"CALL mysql.rds_kill({result['id']})", retry=False)
+                    try:
+                        conn.execute(query=f"CALL mysql.rds_kill({result['id']})")
+                    except Exception:
+                        pass
         finally:
             conn.stop()
 
