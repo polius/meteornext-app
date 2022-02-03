@@ -93,6 +93,7 @@ export default {
   },
   methods: {
     getInfo(refresh) {
+      this.editor.setValue(this.infoEditor.triggers, -1)
       if (!refresh && this.infoConnection == this.sidebarSelected[0]['id']) return
       this.sidebarLoadingObject = true
       const payload = {
