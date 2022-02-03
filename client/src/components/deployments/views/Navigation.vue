@@ -12,8 +12,8 @@
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn></router-link>
       </v-toolbar>
       <keep-alive>
-        <Basic v-if="mode == 'basic'"/>
-        <Pro v-else-if="mode == 'pro'"/>
+        <Basic v-if="mode == 'basic'" :fields="fields" @change="updateFields"/>
+        <Pro v-else-if="mode == 'pro'" :fields="fields" @change="updateFields"/>
       </keep-alive>
     </v-card>
   </div>
@@ -35,6 +35,7 @@ export default {
       mode: '',
       basicColor: '',
       proColor: '',
+      fields: { name: '', release: '', environment: '' },
     }
   },
   components: { Basic, Pro },
@@ -48,7 +49,10 @@ export default {
       this.mode = 'pro'
       this.basicColor = '#779ecb'
       this.proColor = 'primary'
-    }
+    },
+    updateFields(field) {
+      this.fields[field.name] = field.value
+    },
   },
   computed : {
     deployments_basic : function() { return this.$store.getters['app/deployments_basic'] },

@@ -154,11 +154,7 @@ import 'codemirror/addon/display/fullscreen.css'
 export default {
   data() {
     return {
-      // Metadata
-      name: '',
-
       // Execution
-      environment: '',
       environment_items: [],
 
       // Code
@@ -213,7 +209,6 @@ export default {
       },
 
       // Parameters
-      release: '',
       release_items: [],
       method: 'validate',
       start_execution: false,
@@ -242,13 +237,26 @@ export default {
       snackbarText: ''
     }
   },
-  components: {
-    codemirror
-  },
+  props: ['fields'],
+  components: { codemirror },
   created() {
     this.getReleases()
     this.getEnvironments()
     this.getCode()
+  },
+  computed: {
+    name: {
+      get() { return this.fields.name },
+      set(val) { this.$emit('change', {"name": "name", "value": val}) }
+    },
+    release: {
+      get() { return this.fields.release },
+      set(val) { this.$emit('change', {"name": "release", "value": val}) }
+    },
+    environment: {
+      get() { return this.fields.environment },
+      set(val) { this.$emit('change', {"name": "environment", "value": val}) }
+    },
   },
   mounted() {
     if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
