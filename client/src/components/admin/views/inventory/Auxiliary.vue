@@ -284,7 +284,7 @@ export default {
     },
     getAuxiliary() {
       this.loading = true
-      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      const payload = (this.filter.by == 'group' && this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user' && this.filter.user != null) ? { user_id: this.filter.user } : {}
       axios.get('/admin/inventory/auxiliary', { params: payload})
         .then((response) => {
           response.data.auxiliary.map(x => {
@@ -319,7 +319,7 @@ export default {
     cloneAuxiliary() {
       this.mode = 'clone'
       this.users = []
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'
@@ -327,7 +327,7 @@ export default {
     },
     editAuxiliary() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'EDIT AUXILIARY'

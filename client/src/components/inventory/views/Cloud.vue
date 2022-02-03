@@ -282,7 +282,7 @@ export default {
     },
     cloneCloud() {
       this.mode = 'clone'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
       this.bucketsSelected = []
@@ -291,7 +291,7 @@ export default {
     },
     editCloud() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
       this.bucketsSelected = []
       this.dialog_title = 'EDIT CLOUD KEY'

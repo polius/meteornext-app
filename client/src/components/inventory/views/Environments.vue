@@ -293,7 +293,7 @@ export default {
     },
     cloneEnvironment() {
       this.mode = 'clone'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.dialog_title = 'CLONE ENVIRONMENT'
       this.dialog = true
@@ -301,7 +301,7 @@ export default {
     },
     editEnvironment() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.dialog_title = 'EDIT ENVIRONMENT'
       this.dialog = true
       setTimeout(this.updateSelected, 1)

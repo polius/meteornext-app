@@ -362,7 +362,7 @@ export default {
     },
     cloneServer() {
       this.mode = 'clone'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.versions = this.engines[this.item.engine]
@@ -371,7 +371,7 @@ export default {
     },
     editServer() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'EDIT SERVER'

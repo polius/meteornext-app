@@ -217,7 +217,7 @@ export default {
     },
     getRegions() {
       this.loading = true
-      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      const payload = (this.filter.by == 'group' && this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user' && this.filter.user != null) ? { user_id: this.filter.user } : {}
       axios.get('/admin/inventory/regions', { params: payload})
         .then((response) => {
           response.data.regions.map(x => {
@@ -245,14 +245,14 @@ export default {
     cloneRegion() {
       this.mode = 'clone'
       this.users = []
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.dialog_title = 'CLONE REGION'
       this.dialog = true
     },
     editRegion() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.dialog_title = 'EDIT REGION'
       this.dialog = true

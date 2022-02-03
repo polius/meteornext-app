@@ -345,7 +345,7 @@ export default {
     },
     getServers() {
       this.loading = true
-      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      const payload = (this.filter.by == 'group' && this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user' && this.filter.user != null) ? { user_id: this.filter.user } : {}
       axios.get('/admin/inventory/servers', { params: payload})
         .then((response) => {
           response.data.servers.map(x => {
@@ -393,7 +393,7 @@ export default {
     },
     cloneServer() {
       this.mode = 'clone'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()
@@ -404,7 +404,7 @@ export default {
     },
     editServer() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()

@@ -259,7 +259,7 @@ export default {
     },
     getEnvironments() {
       this.loading = true
-      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      const payload = (this.filter.by == 'group' && this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user' && this.filter.user != null) ? { user_id: this.filter.user } : {}
       axios.get('/admin/inventory/environments', { params: payload})
         .then((response) => {
           response.data.environments.map(x => {
@@ -349,7 +349,7 @@ export default {
     cloneEnvironment() {
       this.mode = 'clone'
       this.users = []
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.getServers()
       this.dialog_title = 'CLONE ENVIRONMENT'
@@ -357,7 +357,7 @@ export default {
     },  
     editEnvironment() {
       this.mode = 'edit'
-      this.item = {...this.selected[0]}
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.getServers()
       this.dialog_title = 'EDIT ENVIRONMENT'
