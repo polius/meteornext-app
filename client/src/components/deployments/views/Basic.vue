@@ -6,7 +6,7 @@
           <v-form ref="form" style="padding:5px">
             <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:10px;"></v-text-field>
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-            
+
             <!-- EXECUTION -->
             <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;">
               <template v-slot:item="{ item }" >
@@ -197,7 +197,6 @@ import 'codemirror/addon/display/fullscreen.css'
 export default {
   data() {
     return {
-      name: '',
       databases: '',
 
       // Query
@@ -207,9 +206,7 @@ export default {
       query_mode: '', // new, edit, delete
 
       // Parameters
-      release: '',
       release_items: [],
-      environment: '',
       environment_items: [],
       method: 'validate',
       start_execution: false,
@@ -283,6 +280,7 @@ export default {
       snackbarText: ''
     }
   },
+  props: ['fields'],
   components: { codemirror },
   created() {
     this.getReleases()
@@ -291,6 +289,20 @@ export default {
   mounted() {
     if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
     requestAnimationFrame(() => this.$refs.name.focus())
+  },
+  computed: {
+    name: {
+      get() { return this.fields.name },
+      set(val) { this.$emit('change', {"name": "name", "value": val}) }
+    },
+    release: {
+      get() { return this.fields.release },
+      set(val) { this.$emit('change', {"name": "release", "value": val}) }
+    },
+    environment: {
+      get() { return this.fields.environment },
+      set(val) { this.$emit('change', {"name": "environment", "value": val}) }
+    },
   },
   methods: {
     getReleases() {
