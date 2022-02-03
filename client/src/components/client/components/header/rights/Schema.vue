@@ -14,23 +14,22 @@
     <!------------>
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="selectAllRights" text title="Select all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
-          <v-btn @click="deselectAllRights" text title="Deselect all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-divider v-if="dialogOptions.mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="dialogOptions.mode != 'delete'" @click="selectAllRights" text title="Select all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn v-if="dialogOptions.mode != 'delete'" @click="deselectAllRights" text title="Deselect all rights" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="dialogForm" style="margin-top:5px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
-                    <v-select v-model="dialogOptions.item.type" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.type" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required></v-select>
                     <v-form ref="form" @submit.prevent>
                       <v-row no-gutters>
                         <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" hint="Wildcards allowed: % _" required style="padding-top:0px;"></v-text-field></v-col>
@@ -93,10 +92,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
@@ -229,12 +228,14 @@ export default {
       this.editRights(event.data, event.rowIndex)
     },
     addRights() {
+      const rights = ['select','insert','update','delete','show_view','create_view','create_routine','alter_routine','execute','create','drop','alter','index','trigger','event','references','create_temporary_tables','lock_tables']
+      const item_rights = rights.reduce((acc, val) => { acc[val] = false; return acc }, {})
       this.dialogOptions = {
         mode: 'new',
         index: -1,
         title: 'GRANT RIGHTS',
         text: '',
-        item: { type: 'Database', database: '', table: '', column: '', rights: {} },
+        item: { type: 'Database', database: '', table: '', column: '', rights: item_rights },
         submit: 'Confirm',
         cancel: 'Cancel'
       }
@@ -267,7 +268,7 @@ export default {
     removeRights() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Revoke rights?',
+        title: 'DELETE RIGHTS',
         text: "Are you sure you want remove the selected rights? This action cannot be undone.",
         item: {},
         submit: 'Confirm',
