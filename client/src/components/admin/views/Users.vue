@@ -224,7 +224,7 @@ export default {
     },
     editUser() {
       this.mode = 'edit'
-      let item = {...this.selected[0]}
+      let item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item = item
       this.mfaUsername = item.username
       this.dialog_title = 'EDIT USER'
