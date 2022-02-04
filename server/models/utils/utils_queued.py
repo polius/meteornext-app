@@ -34,11 +34,11 @@ class Utils_Queued:
                 JOIN imports i ON i.id = q.source_id AND q.source_type = 'import' AND i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
                 UNION ALL
                 SELECT q.source_id, q.source_type
-                FROM utils_finished q
+                FROM utils_queued q
                 JOIN exports e ON e.id = q.source_id AND q.source_type = 'export' AND e.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
                 UNION ALL
                 SELECT q.source_id, q.source_type
-                FROM utils_finished q
+                FROM utils_queued q
                 JOIN clones c ON c.id = q.source_id AND q.source_type = 'clone' AND c.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             ) t ON t.source_id = q.source_id AND t.source_type = q.source_type
         """

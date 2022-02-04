@@ -119,11 +119,11 @@
                     <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Expiration Days</b>: The amount of days that have to pass before deleting old deployments.
+                    <b>Expiration Time</b>: The amount of time that have to pass before deleting old deployments.
                   </span>
                 </v-tooltip>
                 </div>
-                <v-select v-model="group.deployments_expiration_days" :items="[{id: 0, text: 'Never'}, {id: 1, text: '1 Day'}, {id: 7, text: '1 Week'}, {id: 30, text: '1 Month'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Expiration Days" style="margin-top:15px"></v-select>
+                <v-select v-model="group.deployments_expiration_days" :items="[{id: 0, text: 'Never'}, {id: 1, text: '1 Day'}, {id: 7, text: '1 Week'}, {id: 30, text: '1 Month'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Expiration Time" style="margin-top:15px"></v-select>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   SLACK
                   <v-tooltip right>
