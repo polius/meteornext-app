@@ -58,7 +58,7 @@ class Setup:
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
 
         # Init Install blueprint
-        install = routes.install.Install(self._app, self._license, self.register_blueprints)
+        install = routes.install.Install(self._app, self._license, self._conf, self.register_blueprints)
         self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
         try:

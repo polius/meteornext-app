@@ -14,9 +14,10 @@ import models.admin.users
 from cron import Cron
 
 class Install:
-    def __init__(self, app, license, register_blueprints):
+    def __init__(self, app, license, conf, register_blueprints):
         self._app = app
         self._license = license
+        self._conf = conf
         self._register_blueprints = register_blueprints
         self._available = None
         # Init files path
@@ -72,10 +73,10 @@ class Install:
             try:
                 sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': data})
                 sql.test_sql()
-                return jsonify({'message': 'Connection Successful', 'exists': True}), 200
+                return jsonify({'message': 'Connection Successful.', 'exists': True}), 200
             except Exception as e:
                 if "Unknown database " in str(e):
-                    return jsonify({'message': 'Connection Successful', 'exists': False}), 200
+                    return jsonify({'message': 'Connection Successful.', 'exists': False}), 200
                 return jsonify({'message': str(e)}), 400
 
         @install_blueprint.route('/install/amazon', methods=['POST'])
@@ -104,7 +105,7 @@ class Install:
             try:
                 client.upload_file(file.name, data['bucket'], 'test.txt')
                 client.get_object(Bucket=data['bucket'], Key='test.txt')
-                return jsonify({'message': 'Credentials validated'}), 200
+                return jsonify({'message': 'Credentials Validated.'}), 200
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
             finally:
@@ -159,7 +160,7 @@ class Install:
 
             # Create group
             groups = models.admin.groups.Groups(sql)
-            group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_limit": None, "utils_concurrent": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
+            group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_concurrent": None, "deployments_expiration_days": 30, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_limit": None, "utils_concurrent": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
             groups.post(1, group)
 
             # Create user
@@ -183,25 +184,21 @@ class Install:
             os.makedirs(self._keys_path)
 
         # Write setup to the setup file
-        self._conf = {
-            "license":
-            {
-                "access_key": data['license']['access_key'],
-                "secret_key": data['license']['secret_key']
-            },
-            "sql":
-            {
-                "engine": data['sql']['engine'],
-                "hostname": data['sql']['hostname'],
-                "port": int(data['sql']['port']),
-                "username": data['sql']['username'],
-                "password": data['sql']['password'],
-                "database": data['sql']['database'],
-                "ssl_client_key": None,
-                "ssl_client_certificate": None,
-                "ssl_ca_certificate": None,
-                "ssl_verify_ca": data['sql']['ssl_verify_ca']
-            }
+        self._conf["license"] = {
+            "access_key": data['license']['access_key'],
+            "secret_key": data['license']['secret_key']
+        }
+        self._conf["sql"] = {
+            "engine": data['sql']['engine'],
+            "hostname": data['sql']['hostname'],
+            "port": int(data['sql']['port']),
+            "username": data['sql']['username'],
+            "password": data['sql']['password'],
+            "database": data['sql']['database'],
+            "ssl_client_key": None,
+            "ssl_client_certificate": None,
+            "ssl_ca_certificate": None,
+            "ssl_verify_ca": data['sql']['ssl_verify_ca']
         }
         if data['sql']['ssl_client_key']:
             with open(self._keys_path + 'ssl_key.pem', 'w') as outfile:
@@ -230,5 +227,8 @@ class Install:
         # Init cron
         Cron(self._app, self._license, sql)
 
+        # Disable Install
+        self._available = False
+
         # Build return message
-        return jsonify({'message': 'Setup Finished'}), 200
+        return jsonify({'message': 'Welcome to Meteor Next!'}), 200

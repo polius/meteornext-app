@@ -66,10 +66,10 @@
                       </v-row>
                     </v-card>
                     <v-switch v-model="amazon.enabled" flat label="Use Amazon S3" style="margin-top:20px"></v-switch>
-                    <v-text-field v-show="amazon.enabled" autofocus filled v-model="amazon.aws_access_key" label="Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.aws_secret_access_key" label="Secret Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.region" label="Region" placeholder="us-east-1, eu-west-1, ..." style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.bucket" label="Bucket" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-if="amazon.enabled" autofocus filled v-model="amazon.aws_access_key" label="Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-if="amazon.enabled" filled v-model="amazon.aws_secret_access_key" label="Secret Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-if="amazon.enabled" filled v-model="amazon.region" label="Region" placeholder="us-east-1, eu-west-1, ..." style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-if="amazon.enabled" filled v-model="amazon.bucket" label="Bucket" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
                   </v-form>
                   <!-- ACCOUNT -->
                   <v-form ref="formAccount" v-show="installPart == 'account'">
@@ -83,7 +83,7 @@
                       <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px" @click="install">{{ buttonText }}</v-btn>
                     </v-col>
                     <v-col v-if="installPart != 'license'" cols="2" style="padding-left:5px">
-                      <v-btn x-large title="Go back" type="submit" color="info" :loading="loading" block style="margin-top:0px" @click="back"><v-icon style="font-size:1.1rem">fas fa-chevron-left</v-icon></v-btn>
+                      <v-btn x-large title="Go back" type="submit" color="info" :disabled="loading" block style="margin-top:0px" @click="back"><v-icon style="font-size:1.1rem">fas fa-chevron-left</v-icon></v-btn>
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -185,7 +185,7 @@
     },
     watch: {
       'amazon.enabled': function (val) {
-        this.buttonText = val ? 'CHECK CREDENTIALS' : 'CONTINUE'
+        this.buttonText = val ? 'CHECK CREDENTIALS' : 'SKIP'
         if (val) this.$refs.formAmazon.resetValidation()
       },
     },
@@ -203,7 +203,7 @@
       back() {
         if (this.installPart == 'sql') { this.installPart = 'license'; this.buttonText = 'VERIFY LICENSE' }
         else if (this.installPart == 'amazon') { this.installPart = 'sql'; this.buttonText = 'CHECK CONNECTION' }
-        else if (this.installPart == 'account') { this.installPart = 'amazon'; this.buttonText = 'CHECK CREDENTIALS' }
+        else if (this.installPart == 'account') { this.installPart = 'amazon'; this.buttonText = this.amazon.enabled ? 'CHECK CREDENTIALS' : 'SKIP' }
       },
       install() {
         if (this.installPart == 'license') this.installLicense()
@@ -247,7 +247,7 @@
         const payload = {...this.sql, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
         axios.post('/install/sql', payload)
           .then((response) => {
-            this.notification('Connection successful', '#00b16a')
+            this.notification(response.data.message, '#00b16a')
             if (response.data.exists) this.installDialog = true
             else this.installDialogSubmit(true)
           })
@@ -257,6 +257,11 @@
           .finally(() => this.loading = false)
       },
       installAmazon() {
+        if (!this.amazon.enabled) {
+          this.installPart = 'account'
+          this.buttonText = 'SUBMIT'
+          return
+        }
         if (!this.$refs.formAmazon.validate()) {
           this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
           return
@@ -289,7 +294,7 @@
         this.buttonText = 'CONFIRM'
         if (status) {
           this.installPart = 'amazon'
-          this.buttonText = 'CHECK CREDENTIALS'
+          this.buttonText = this.amazon.enabled ? 'CHECK CREDENTIALS' : 'SKIP'
         }
         else this.installSubmit()
       },
@@ -315,7 +320,7 @@
         axios.post('/install', payload)
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
-            setTimeout(() => this.$router.push('/login'), 1000)
+            setTimeout(() => this.$router.push('/login'), 3000)
           })
           .catch((error) => {
             this.loading = false
