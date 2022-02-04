@@ -26,8 +26,7 @@ Compress(app)
 
 # Instantiate & Register Settings Blueprint
 URL_PREFIX = "/api"
-setup = routes.setup.Setup(app, URL_PREFIX)
-app.register_blueprint(setup.blueprint(), url_prefix=URL_PREFIX)
+routes.setup.Setup(app, URL_PREFIX)
 
 # Enable CORS
 CORS(app)

@@ -32,13 +32,44 @@
                     <v-text-field filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="email"></v-text-field>
                     <v-text-field filled v-model="sql.password" name="password" label="Password" required :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install" autocomplete="new-password"></v-text-field>
                     <v-text-field filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>
-                    <!-- <v-switch v-model="sql.ssl" flat label="SSL Connection" style="margin-top:20px"></v-switch> -->
+                    <!--
+                    <v-switch v-model="sql.ssl" flat label="SSL Connection" style="margin-top:20px"></v-switch>
                     <div v-if="sql.ssl" style="margin-bottom:20px">
                       <v-file-input v-model="sql.ssl_client_key" label="Client Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
                       <v-file-input v-model="sql.ssl_client_certificate" label="Client Certificate" prepend-icon="" hide-details style="margin-top:10px"></v-file-input>
                       <v-file-input v-model="sql.ssl_ca_certificate" label="CA Certificate" prepend-icon="" hide-details style="margin-top:10px"></v-file-input>
                       <v-checkbox v-model="sql.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                     </div>
+                    -->
+                  </v-form>
+                  <!-- AMAZON S3 -->
+                  <v-form ref="formAmazon" v-show="installPart == 'amazon'">
+                    <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">AMAZON S3</div>
+                    <v-card>
+                      <v-row no-gutters align="center" justify="center">
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon size="18" color="#ff9900" style="margin-bottom:2px">fas fa-star</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1 white--text" style="text-align:left">Meteor Next works better with Amazon S3.</div>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <v-card style="margin-top:10px">
+                      <v-row no-gutters align="center" justify="center">
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon size="18" color="info">fas fa-info-circle</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteor2.io/guides/administration/settings#amazon" target="_blank">Admin Panel</a>.</div>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <v-switch v-model="amazon.enabled" flat label="Use Amazon S3" style="margin-top:20px"></v-switch>
+                    <v-text-field v-show="amazon.enabled" autofocus filled v-model="amazon.aws_access_key" label="Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.aws_secret_access_key" label="Secret Access Key" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.region" label="Region" placeholder="us-east-1, eu-west-1, ..." style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-show="amazon.enabled" filled v-model="amazon.bucket" label="Bucket" style="margin-bottom:20px" :rules="[v => !!v || '']" hide-details></v-text-field>
                   </v-form>
                   <!-- ACCOUNT -->
                   <v-form ref="formAccount" v-show="installPart == 'account'">
@@ -123,6 +154,7 @@
       // Install Form
       license: { access_key: '', secret_key: '' },
       sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteor2', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false },
+      amazon: { enabled: false, aws_access_key: '', aws_secret_access_key: '', region: '', bucket: '' },
       account: { username: '', password: '' },
       installPart: 'license',
       buttonText: 'VERIFY LICENSE',
@@ -151,11 +183,17 @@
         vm.installAvailable()
       })
     },
+    watch: {
+      'amazon.enabled': function (val) {
+        this.buttonText = val ? 'CHECK CREDENTIALS' : 'CONTINUE'
+        if (val) this.$refs.formAmazon.resetValidation()
+      },
+    },
     methods: {
       installAvailable() {
-        axios.get('/setup')
+        axios.get('/install')
           .then((response) => {
-            if (!response.data.available) this.$router.push('/login')
+            if (!response.data.setup_required) this.$router.push('/login')
             else this.available = true
           })
           .catch(() => {
@@ -164,11 +202,13 @@
       },
       back() {
         if (this.installPart == 'sql') { this.installPart = 'license'; this.buttonText = 'VERIFY LICENSE' }
-        else if (this.installPart == 'account') { this.installPart = 'sql'; this.buttonText = 'CHECK CONNECTION' }
+        else if (this.installPart == 'amazon') { this.installPart = 'sql'; this.buttonText = 'CHECK CONNECTION' }
+        else if (this.installPart == 'account') { this.installPart = 'amazon'; this.buttonText = 'CHECK CREDENTIALS' }
       },
       install() {
         if (this.installPart == 'license') this.installLicense()
         else if (this.installPart == 'sql') this.installSQL()
+        else if (this.installPart == 'amazon') this.installAmazon()
         else if (this.installPart == 'account') this.installAccount()
       },
       installLicense() {
@@ -178,7 +218,7 @@
         }
         this.loading = true
         const payload = this.license
-        axios.post('/setup/license', payload)
+        axios.post('/install/license', payload)
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
             this.installPart = 'sql'
@@ -205,11 +245,29 @@
         // Test SQL Connection
         this.loading = true
         const payload = {...this.sql, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
-        axios.post('/setup/sql', payload)
+        axios.post('/install/sql', payload)
           .then((response) => {
             this.notification('Connection successful', '#00b16a')
             if (response.data.exists) this.installDialog = true
             else this.installDialogSubmit(true)
+          })
+          .catch((error) => {
+            this.notification(error.response.data.message, '#EF5354')
+          })
+          .finally(() => this.loading = false)
+      },
+      installAmazon() {
+        if (!this.$refs.formAmazon.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
+          return
+        }
+        this.loading = true
+        const payload = this.amazon
+        axios.post('/install/amazon', payload)
+          .then((response) => {
+            this.notification(response.data.message, '#00b16a')
+            this.installPart = 'account'
+            this.buttonText = 'SUBMIT'
           })
           .catch((error) => {
             this.notification(error.response.data.message, '#EF5354')
@@ -229,7 +287,10 @@
         this.sql['recreate'] = status
         this.installDialog = false
         this.buttonText = 'CONFIRM'
-        if (status) this.installPart = 'account'
+        if (status) {
+          this.installPart = 'amazon'
+          this.buttonText = 'CHECK CREDENTIALS'
+        }
         else this.installSubmit()
       },
       installAccount() {
@@ -248,9 +309,10 @@
         const payload = {
           license: this.license,
           sql: {...this.sql, ssl_ca_certificate, ssl_client_key, ssl_client_certificate},
-          account: this.account
+          amazon: this.amazon,
+          account: this.account,
         }
-        axios.post('/setup', payload)
+        axios.post('/install', payload)
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
             setTimeout(() => this.$router.push('/login'), 1000)
