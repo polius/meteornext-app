@@ -1,17 +1,14 @@
 import os
 import sys
 import json
-import copy
 import uuid
-import bcrypt
 import hashlib
 import requests
-import traceback
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from datetime import datetime
-from flask import request, jsonify, Blueprint
 
+import routes.install
 import routes.login
 import routes.profile
 import routes.mfa
@@ -48,11 +45,7 @@ import routes.client.client
 import routes.utils.imports
 import routes.utils.exports
 import routes.utils.clones
-import connectors.base
 import connectors.pool
-import models.admin.settings
-import models.admin.groups
-import models.admin.users
 import apps.monitoring.monitoring
 from cron import Cron
 
@@ -60,208 +53,41 @@ class Setup:
     def __init__(self, app, url_prefix):
         self._app = app
         self._url_prefix = url_prefix
-        self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
-        self._keys_path = "{}/keys/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/keys/".format(os.path.dirname(sys.executable))
-        self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
-        self._files_folder = "{}/files".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/files".format(os.path.dirname(sys.executable))
-        self._blueprints = []
         self._conf = {}
-        self._license = None
-        
-        # Start Setup
+        self._license = License()
+        self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
+
+        # Init Install blueprint
+        install = routes.install.Install(self._app, self._license, self.register_blueprints)
+        self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
+
         try:
+            # Check if Meteor is initiated with all required params.
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
-        except Exception:
-            print("- Meteor initiated. No configuration detected. Install is required.")
-
-        if self._conf:
             # Set unique hardware id
             # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
             self._conf['license']['uuid'] = str(uuid.getnode())
             # Init sql pool
             sql = connectors.pool.Pool(self._conf['sql'])
             # Init license
-            self._license = License(self._conf['license'])
+            self._license.license = self._conf['license']
             self._license.validate()
             # Register blueprints
-            self.__register_blueprints(sql)
+            self.register_blueprints(sql)
             # Start monitoring
             monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
             monitoring.start()
             # Init cron
             Cron(self._app, self._license, sql)
             print("- Meteor initiated from existing configuration.")
-
-    def blueprint(self):
-        # Init blueprint
-        setup_blueprint = Blueprint('setup', __name__, template_folder='setup')
-
-        @setup_blueprint.route('/setup', methods=['GET'])
-        def setup():
-            return jsonify({'available': self.__setup_available()}), 200
-
-        @setup_blueprint.route('/setup/license', methods=['POST'])
-        def setup_license():
-            # Protect api call once is already configured
-            if not self.__setup_available():
-                return jsonify({}), 401
-
-            if not request.is_json:
-                return jsonify({"message": "Missing JSON in request"}), 400
-
-            # Get Params
-            setup_json = request.get_json()
-
-            # Set unique hardware id
-            setup_json['uuid'] = str(uuid.getnode())
-
-            # Part 1: Check License
-            self._license = License(setup_json)
-            self._license.validate()
-            return jsonify({"message": self._license.status['response']}), self._license.status['code']
-
-        @setup_blueprint.route('/setup/sql', methods=['POST'])
-        def setup_sql():
-            # Protect api call once is already configured
-            if not self.__setup_available():
-                return jsonify({}), 401
-
-            if not request.is_json:
-                return jsonify({"message": "Missing JSON in request"}), 400
-
-            # Get Params
-            setup_json = request.get_json()
-
-            # Part 2: Check SQL Credentials
-            try:
-                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': setup_json})
-                sql.test_sql()
-                return jsonify({'message': 'Connection Successful', 'exists': True}), 200
-            except Exception as e:
-                if "Unknown database " in str(e):
-                    return jsonify({'message': 'Connection Successful', 'exists': False}), 200
-                return jsonify({'message': str(e)}), 400
-
-        @setup_blueprint.route('/setup', methods=['POST'])
-        def setup_account():
-            # Protect api call once is already configured
-            if not self.__setup_available():
-                return jsonify({}), 401
-
-            if not request.is_json:
-                return jsonify({"message": "Missing JSON in request"}), 400
-
-            # Get Params
-            setup_json = request.get_json()
-
-            try:
-                # Part 3: Build Meteor & Create User Admin Account
-                if setup_json['sql']['recreate']:
-                    # Init sql connection
-                    sql_conf = copy.deepcopy(setup_json['sql'])
-                    sql_conf['database'] = None
-                    sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': sql_conf})
-
-                    # Import SQL Schema
-                    sql.execute('DROP DATABASE IF EXISTS `{}`'.format(setup_json['sql']['database']))
-                    sql.execute('CREATE DATABASE `{}`'.format(setup_json['sql']['database']))
-                    sql.use(setup_json['sql']['database'])
-                    with open(self._schema_file) as file_open:
-                        queries = file_open.read().split(';')
-                        for q in queries:
-                            if q.strip() != '':
-                                sql.execute(q)
-
-                    # Create group
-                    groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_limit": None, "utils_concurrent": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1, "client_tracking_filter": 1}
-                    groups.post(1, group)
-
-                    # Create user
-                    users = models.admin.users.Users(sql)
-                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1, "disabled": 0, "change_password": 0}
-                    user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
-                    users.post(1, user)
-
-                    # Init Files Local Path
-                    settings = models.admin.settings.Settings(sql, self._license)
-                    setting = {"name": "FILES", "value": f'{{"path":"{self._files_folder}"}}'}
-                    settings.post(1, setting)
-
-            except Exception as e:
-                traceback.print_exc()
-                return jsonify({'message': str(e)}), 500
-
-            # Create keys folder
-            if not os.path.exists(self._keys_path):
-                os.makedirs(self._keys_path)
-
-            # Write setup to the setup file
-            self._conf = {
-                "license":
-                {
-                    "access_key": setup_json['license']['access_key'],
-                    "secret_key": setup_json['license']['secret_key']
-                },
-                "sql":
-                {
-                    "engine": setup_json['sql']['engine'],
-                    "hostname": setup_json['sql']['hostname'],
-                    "port": int(setup_json['sql']['port']),
-                    "username": setup_json['sql']['username'],
-                    "password": setup_json['sql']['password'],
-                    "database": setup_json['sql']['database'],
-                    "ssl_client_key": None,
-                    "ssl_client_certificate": None,
-                    "ssl_ca_certificate": None,
-                    "ssl_verify_ca": setup_json['sql']['ssl_verify_ca']
-                }
-            }
-            if setup_json['sql']['ssl_client_key']:
-                with open(self._keys_path + 'ssl_key.pem', 'w') as outfile:
-                    outfile.write(setup_json['sql']['ssl_client_key'])
-                self._conf['sql']['ssl_client_key'] = 'ssl_key.pem'
-            if setup_json['sql']['ssl_client_certificate']:
-                with open(self._keys_path + 'ssl_cert.pem', 'w') as outfile:
-                    outfile.write(setup_json['sql']['ssl_client_certificate'])
-                self._conf['sql']['ssl_client_certificate'] = 'ssl_cert.pem'
-            if setup_json['sql']['ssl_ca_certificate']:
-                with open(self._keys_path + 'ssl_ca.pem', 'w') as outfile:
-                    outfile.write(setup_json['sql']['ssl_ca_certificate'])
-                self._conf['sql']['ssl_ca_certificate'] = 'ssl_ca.pem'
-            with open(self._setup_file, 'w') as outfile:
-                json.dump(self._conf, outfile)
-
-            # Init sql pool
-            sql = connectors.pool.Pool(self._conf['sql'])
-
-            # Init blueprints
-            self.__register_blueprints(sql)
-
-            # Set unique hardware id
-            self._conf['license']['uuid'] = str(uuid.getnode())
-
-            # Init cron
-            Cron(self._app, self._license, sql)
-
-            # Build return message
-            return jsonify({'message': 'Setup Finished'}), 200
-
-        return setup_blueprint
+        except Exception:
+            print("- Meteor initiated. No configuration detected. Install is required.")
 
     ####################
     # Internal Methods #
     ####################
-    def __setup_available(self):
-        if os.path.exists(self._setup_file):
-            with open(self._setup_file) as file_open:
-                f = json.load(file_open)
-                if f['sql']['hostname'] != '' and f['sql']['username'] != '' and f['sql']['password'] != '' and f['sql']['port'] != '' and f['sql']['database'] != '':
-                    return False
-        return True
-
-    def __register_blueprints(self, sql):
+    def register_blueprints(self, sql):
         # Init all blueprints
         login = routes.login.Login(self._app, sql, self._license)
         profile = routes.profile.Profile(self._app, sql, self._license)
@@ -300,15 +126,14 @@ class Setup:
         exports = routes.utils.exports.Exports(self._app, sql, self._license)
         clones = routes.utils.clones.Clones(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports, clones]
-
         # Register all blueprints
-        for i in self._blueprints:
+        blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports, clones]
+        for i in blueprints:
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 
 class License:
-    def __init__(self, license):
-        self._license_params = license
+    def __init__(self):
+        self._license_params = None
         self._license_status = {}
         self._last_check_date = datetime.utcnow()
 
@@ -327,6 +152,13 @@ class License:
     @property
     def last_check_date(self):
         return self._last_check_date
+
+    @property
+    def license(self): pass
+
+    @license.setter
+    def license(self, license):
+        self._license_params = license
 
     def validate(self, force=False):
         if force or not self._license_status or self._license_status['code'] != 200:
@@ -347,25 +179,30 @@ class License:
 
             # Check license
             response = requests.post("https://license.meteor2.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
-            response_code = json.loads(response.text)['statusCode']
-            response_body = json.loads(response.text)['body']
-            response_text = response_body['response']
-            date = response_body['date']
-            resources = response_body['resources'] if response_code == 200 else None
-            sentry = response_body['sentry'] if response_code == 200 else None
 
-            # Solve challenge
-            if response_code == 200:
-                response_challenge = response_body['challenge']
-                challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
-                challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
+            # Check "x-meteor2-key" header is valid
+            if response.status_code != 200:
+                self._license_status = {"code": response.status_code, "response": "The license is not valid.", "resources": None, "sentry": None}
+            else:
+                # Check license is valid
+                response_code = json.loads(response.text)['statusCode']
+                response_body = json.loads(response.text)['body']
+                response_text = response_body['response']
+                resources = response_body['resources'] if response_code == 200 else None
+                sentry = response_body['sentry'] if response_code == 200 else None
 
-                # Validate challenge
-                if response_challenge != challenge:
-                    response_text = "The license is not valid"
-                    response_code = 401
+                # Solve challenge
+                if response_code == 200:
+                    response_challenge = response_body['challenge']
+                    challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
+                    challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
 
-            self._license_status = {"code": response_code, "response": response_text, "date": date, "resources": resources, "sentry": sentry}
+                    # Validate challenge
+                    if response_challenge != challenge:
+                        response_text = "The license is not valid."
+                        response_code = 401
+
+                self._license_status = {"code": response_code, "response": response_text, "resources": resources, "sentry": sentry}
         except Exception:
             if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
                 self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}

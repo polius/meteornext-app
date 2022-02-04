@@ -232,9 +232,9 @@ export default {
       }
     },
     checkInstall() {
-      axios.get('/setup')
+      axios.get('/install')
         .then((response) => {
-          this.showInstall = response.data.available
+          this.showInstall = response.data.setup_required
           if (!this.showInstall) {
             if (this.rememberVuex) {
               this.username = this.usernameVuex

@@ -178,12 +178,12 @@ class Settings:
             # Check files path permissions
             if not self.check_files_path(value['path']):
                 return jsonify({'message': 'No write permissions in the files folder'}), 400
-        # Store Settings
-        settings = {
+        # Store Setting
+        setting = {
             'name': name,
             'value': json.dumps(value)
         }
-        self._settings.post(user_id, settings)
+        self._settings.post(user_id, setting)
         return jsonify({'message': 'Changes saved'}), 200
 
     def check_url(self, security=None):
@@ -221,7 +221,7 @@ class Settings:
     def test_amazon_credentials(self, data):
         # Generate Temp File
         file = tempfile.NamedTemporaryFile()
-        file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Files).\nIt is safe to delete it.'.encode())
+        file.write('This file has been created by Meteor Next to validate the credentials.\nIt is safe to delete it.'.encode())
         file.flush()
         # Init the boto3 client with the provided credentials
         client = boto3.client(
