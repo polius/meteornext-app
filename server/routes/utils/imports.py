@@ -334,6 +334,8 @@ class Imports:
                 return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
             cloud = cloud[0]
             # Init values
+            data['access_key'] = cloud['access_key']
+            data['secret_key'] = cloud['secret_key']
             source = data['source']
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = self._scan_app.metadata(data)['size']

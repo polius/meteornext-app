@@ -6,9 +6,9 @@ from io import StringIO
 from datetime import datetime
 
 class Core:
-    def __init__(self, sql, import_uri, region):
+    def __init__(self, sql, import_id, region):
         self._sql = sql
-        self._uri = import_uri
+        self._import_id = import_id
         self._region = region
         self._now = None
         # Properties
@@ -106,9 +106,9 @@ class Core:
                 SET
                     `upload` = %s,
                     `updated` = %s
-                WHERE `uri` = %s
+                WHERE `id` = %s
             """
-            self._sql.execute(query, args=(json.dumps(upload), self.__utcnow(), self._uri))
+            self._sql.execute(query, args=(json.dumps(upload), self.__utcnow(), self._import_id))
 
     def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

@@ -61,6 +61,10 @@ class Exports:
         # Define new path
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
+        # Make remote export directory
+        if region['ssh_tunnel']:
+            core.execute(f"mkdir -p {os.path.join(path, item['uri'])}")
+
         # Start export
         t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3,))
         t.daemon = True
@@ -177,7 +181,7 @@ class Exports:
             command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
 
         # Start Export process
-        p = core.execute(command)
+        core.execute(command)
 
     def __monitor(self, core, item, path, status):
         # Check if a stop it's been requested

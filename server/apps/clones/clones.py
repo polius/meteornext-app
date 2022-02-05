@@ -74,6 +74,13 @@ class Clones:
             "destination": paths['remote'] if regions['destination']['ssh_tunnel'] else paths['local']
         }
 
+        # Make remote import directory
+        if regions['source']['ssh_tunnel']:
+            core['source'].execute(f"mkdir -p {os.path.join(path['source'], item['uri'])}")
+
+        if regions['destination']['ssh_tunnel']:
+            core['destination'].execute(f"mkdir -p {os.path.join(path['destination'], item['uri'])}")
+
         # Start Clone (Export)
         proceed = True
         t = threading.Thread(target=self.__export, args=(core['source'], item, servers['source'], path['source'], amazon_s3,))
