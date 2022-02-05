@@ -27,7 +27,7 @@ class builder:
         # Build Docker
         subprocess.call("docker pull nginx:latest", shell=True)
         subprocess.call("cd {} ; docker buildx build -t meteor2:latest -f build/docker.dockerfile --no-cache --platform linux/amd64 --load .".format(self._pwd), shell=True)
-        subprocess.call("docker save meteor2 | gzip > {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
+        subprocess.call("docker save meteor2 | gzip -9 > {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
         self.__clean_docker()
         print("\n- Build Path: {}/dist/meteor2.tar.gz".format(self._pwd))
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
