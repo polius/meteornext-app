@@ -166,12 +166,6 @@ class Imports:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
         file_path = os.path.join(path, item['uri'], item['source'])
 
-        # Check file exists
-        if item['mode'] == 'file' and not os.path.isfile(file_path):
-            with open(error_sql_path, 'w') as fopen:
-                fopen.write('Something went wrong. The imported file no longer exists. Please try again.')
-            return
-
         # Check compressed file
         gunzip = ''
         if item['source'].endswith('.tar') or item['format'] == '.tar':
@@ -185,7 +179,7 @@ class Imports:
             gunzip += f" | zcat 2> {error_gunzip2_path}"
 
         if item['mode'] == 'cloud':
-            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_access_secret_key'])
+            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):

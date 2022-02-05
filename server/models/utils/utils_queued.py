@@ -69,7 +69,7 @@ class Utils_Queued:
 
     def get_queued_imports(self, import_ids):
         query = """
-            SELECT i.id, i.mode, i.source, i.format, i.selected, i.size, i.server_id, i.database, i.create_database, i.drop_database, i.url, i.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', g.utils_slack_enabled AS 'slack_enabled', g.utils_slack_url AS 'slack_url'
+            SELECT i.id, i.mode, i.details, i.source, i.format, i.selected, i.size, i.server_id, i.database, i.create_database, i.drop_database, i.url, i.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', g.utils_slack_enabled AS 'slack_enabled', g.utils_slack_url AS 'slack_url'
             FROM imports i
             JOIN users u ON u.id = i.user_id
             JOIN groups g ON g.id = u.group_id

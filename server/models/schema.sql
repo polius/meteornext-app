@@ -695,5 +695,6 @@ CREATE TABLE `utils_queued` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT,
   `source_id` INT UNSIGNED NOT NULL,
   `source_type` ENUM('import','export','clone') NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `source_id__source_type` (`source_id`, `source_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
