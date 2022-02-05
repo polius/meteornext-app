@@ -179,6 +179,7 @@ export default {
       else if (item == 'Truncate Table') this.truncateTable()
       else if (item == 'Delete Table') this.deleteTable()
       else if (item == 'Export') this.exportTable()
+      else if (item == 'Copy Table Name') this.copyTableNameSubmit()
       else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },
     createTable() {
@@ -361,6 +362,11 @@ export default {
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyTableNameSubmit() {
+      const name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyTableSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE TABLE `" + name + "`;"
@@ -369,7 +375,7 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Table'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+        EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

@@ -261,6 +261,7 @@ export default {
       else if (item == 'Duplicate Event') this.duplicateEvent()
       else if (item == 'Delete Event') this.deleteEvent()
       else if (item == 'Export') this.exportEvent()
+      else if (item == 'Copy Event Name') this.copyEventNameSubmit()
       else if (item == 'Copy Event Syntax') this.copyEventSyntaxSubmit()
     },
     createEvent() {
@@ -456,6 +457,11 @@ export default {
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyEventNameSubmit() {
+      const name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyEventSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE EVENT `" + name + "`;"
@@ -464,7 +470,7 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+        EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     // SCHEDULE

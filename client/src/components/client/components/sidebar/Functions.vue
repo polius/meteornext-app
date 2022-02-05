@@ -172,6 +172,7 @@ RETURN (customerLevel);
       else if (item == 'Duplicate Function') this.duplicateFunction()
       else if (item == 'Delete Function') this.deleteFunction()
       else if (item == 'Export') this.exportFunction()
+      else if (item == 'Copy Function Name') this.copyFunctionNameSubmit()
       else if (item == 'Copy Function Syntax') this.copyFunctionSyntaxSubmit()
     },
     createFunction() {
@@ -343,6 +344,11 @@ RETURN (customerLevel);
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyFunctionNameSubmit() {
+      const name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyFunctionSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE FUNCTION `" + name + "`;"
@@ -352,8 +358,8 @@ RETURN (customerLevel);
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
         if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the function syntax", '#EF5354')
         else {
-          navigator.clipboard.writeText(syntax) + ';'
-          EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+          navigator.clipboard.writeText(syntax + ';')
+          EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
         }
       }).catch(() => {}).finally(() => { this.loading = false })
     },

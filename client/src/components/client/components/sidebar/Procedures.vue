@@ -165,6 +165,7 @@ WHERE CountryCode = country;
       else if (item == 'Duplicate Procedure') this.duplicateProcedure()
       else if (item == 'Delete Procedure') this.deleteProcedure()
       else if (item == 'Export') this.exportProcedure()
+      else if (item == 'Copy Procedure Name') this.copyProcedureNameSubmit()
       else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
     },
     createProcedure() {
@@ -335,6 +336,11 @@ WHERE CountryCode = country;
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyProcedureNameSubmit() {
+      const name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyProcedureSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE PROCEDURE `" + name + "`;"
@@ -344,8 +350,8 @@ WHERE CountryCode = country;
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
         if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the procedure syntax", '#EF5354')
         else {
-          navigator.clipboard.writeText(syntax) + ';'
-          EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+          navigator.clipboard.writeText(syntax + ';')
+          EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
         }
       }).catch(() => {}).finally(() => { this.loading = false })
     },
