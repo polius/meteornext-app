@@ -88,29 +88,31 @@
     <!-------------------------->
     <v-dialog v-model="editDialog" persistent max-width="80%">
       <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">EDIT VALUE</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <div class="white--text text-body-1">{{ `Column: ${editDialogColumnName} (${editDialogColumnType})` }}</div>
+        </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-row no-gutters>
-                <v-col class="flex-grow-1 flex-shrink-1">
-                  <div class="text-h6 white--text" style="font-weight:400; font-size:1.1rem!important; margin-top:3px; margin-left:1px;">{{ editDialogTitle }}</div>
+                <v-col cols="auto">
+                  <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
                 </v-col>
-                <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:20px">
-                  <v-checkbox @change="editDialogWrapChange" v-model="editDialogWrap" label="Wrap text" hide-details style="margin-top:5px"></v-checkbox>
-                </v-col>
-                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:10px">
-                  <v-btn @click="editDialogParse" hide-details style="margin-top:2px">Parse</v-btn>
-                </v-col>
-                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
+                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" style="margin-left:10px">
                   <v-btn @click="editDialogValidate(true)" hide-details style="margin-top:2px">Validate</v-btn>
                 </v-col>
-                <v-col cols="2" class="flex-grow-0 flex-shrink-0">
-                  <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
+                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" style="margin-left:10px">
+                  <v-btn @click="editDialogParse" hide-details style="margin-top:2px">Parse</v-btn>
+                </v-col>
+                <v-col cols="auto" style="margin-left:20px">
+                  <v-checkbox @change="editDialogWrapChange" v-model="editDialogWrap" label="Wrap text" hide-details style="margin-top:5px"></v-checkbox>
                 </v-col>
               </v-row>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:15px">
-                  <div style="margin-left:auto; margin-right:auto; height:70vh; width:100%">
+                  <div style="margin-left:auto; margin-right:auto; height:65vh; width:100%">
                     <div id="editDialogEditor" style="height:100%;"></div>
                   </div>
                 </v-form>
@@ -134,12 +136,12 @@
     <!------------------->
     <!-- DIALOG: BASIC -->
     <!------------------->
-    <v-dialog v-model="dialog" persistent max-width="50%" eager>
+    <v-dialog v-model="dialog" :persistent="!(['info','export'].includes(dialogMode))" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn v-if="dialogMode != 'cellEditingError'" :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn v-if="!(['cellEditingError','cellEditingConfirm'].includes(dialogMode))" :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px">
@@ -147,7 +149,7 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px">
                   <div v-if="dialogText.length > 0" class="body-1">{{ dialogText }}</div>
-                  <div v-show="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
+                  <div v-if="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
                     <div id="dialogQueryEditorContent" style="height:256px"></div>
                   </div>
                   <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
@@ -210,7 +212,8 @@ export default {
       filterItems: ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN', 'IS NULL', 'IS NOT NULL'],
       // Dialog - Content Edit
       editDialog: false,
-      editDialogTitle: '',
+      editDialogColumnName: '',
+      editDialogColumnType: '',
       editDialogFormat: 'Text',
       editDialogFormatItems: ['Text','JSON','Python'],
       editDialogWrap: false,
@@ -222,6 +225,7 @@ export default {
       dialogIcon: '',
       dialogTitle: '',
       dialogText: '',
+      dialogCode: '',
       dialogQueryEditor: null,
       dialogSubmitText: '',
       dialogCancelText: '',
@@ -272,7 +276,6 @@ export default {
   },
   activated() {
     EventBus.$on('get-content', this.getContent)
-    this.initAceEditor()
   },
   watch: {
     currentConn() {
@@ -290,8 +293,9 @@ export default {
     headerTabSelected(newValue, oldValue) {
       if (oldValue == 'content') this.cellEditingDiscard()
     },
-    dialog: function() {
+    dialog: function(val) {
       this.dialogOpened = this.dialog || this.editDialog
+      if (val && this.dialogMode == 'cellEditingConfirm') this.initAceEditor()
     },
     editDialog: function() {
       this.dialogOpened = this.dialog || this.editDialog
@@ -299,7 +303,6 @@ export default {
   },
   methods: {
     initAceEditor() {
-      if (this.dialogQueryEditor != null) return
       this.$nextTick(() => {
         this.dialogQueryEditor = ace.edit("dialogQueryEditorContent", {
           mode: "ace/mode/mysql",
@@ -327,6 +330,7 @@ export default {
             e.preventDefault()
           }
         }, false);
+        this.dialogQueryEditor.setValue(this.dialogCode, -1)
       })
     },
     onGridReady(params) {
@@ -585,6 +589,7 @@ export default {
         'icon': 'fas fa-minus',
         'title': 'DELETE ROWs',
         'text': 'Are you sure you want to delete the selected ' + this.gridApi.content.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
+        'code': '',
         'button1': 'Confirm',
         'button2': 'Cancel'
       }
@@ -649,6 +654,7 @@ export default {
               'icon': 'fas fa-exclamation-triangle',
               'title': 'ERROR',
               'text': data.find(x => 'error' in x).error,
+              'code': '',
               'button1': 'Close',
               'button2': ''
             }
@@ -679,7 +685,7 @@ export default {
         let columnType = this.contentColumnsType[event.colDef.colId]
         if (['text','mediumtext','longtext','blob','mediumblob','longblob'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
-          else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
+          else this.editDialogOpen(event.column.colId, columnType.toUpperCase(), event.value)
         }
       })
     },
@@ -735,16 +741,16 @@ export default {
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
         // Check Secure Mode
         if (!confirm && parseInt(this.settings['secure_mode']) || false) {
+          let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
           var dialogOptions = {
             'mode': 'cellEditingConfirm',
             'icon': 'fas fa-exclamation-triangle',
             'title': 'CONFIRMATION',
             'text': 'Do you want to confirm these changes?',
+            'code': beautified,
             'button1': 'Confirm',
             'button2': 'Cancel'
           }
-          let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
-          this.dialogQueryEditor.setValue(beautified, -1)
           this.showDialog(dialogOptions)
           return
         }
@@ -784,6 +790,7 @@ export default {
                 'icon': 'fas fa-exclamation-triangle',
                 'title': 'ERROR',
                 'text': data.find(x => 'error' in x).error,
+                'code': '',
                 'button1': 'Edit row',
                 'button2': 'Discard changes'
               }
@@ -917,6 +924,7 @@ export default {
       this.dialogIcon = options.icon
       this.dialogTitle = options.title
       this.dialogText = options.text
+      this.dialogCode = options.code
       this.dialogSubmitText = options.button1
       this.dialogCancelText = options.button2
       this.dialog = true
@@ -932,8 +940,9 @@ export default {
       if (['cellEditingError','cellEditingConfirm'].includes(this.dialogMode)) this.cellEditingDiscard()
       this.dialog = false
     },
-    editDialogOpen(title, text) {
-      this.editDialogTitle = title
+    editDialogOpen(columnName, columnType, text) {
+      this.editDialogColumnName = columnName
+      this.editDialogColumnType = columnType
       this.editDialog = true
       if (this.editDialogEditor == null) {
         this.$nextTick(() => {
@@ -1015,6 +1024,7 @@ export default {
           'icon': 'fas fa-exclamation-triangle',
           'title': 'JSON NOT VALIDATED',
           'text': error.toString(),
+          'code': '',
           'button1': 'Close',
           'button2': ''
         }
@@ -1032,6 +1042,7 @@ export default {
           'icon': 'fas fa-exclamation-triangle',
           'title': 'JSON NOT VALIDATED',
           'text': error.toString(),
+          'code': '',
           'button1': 'Close',
           'button2': ''
         }
@@ -1068,6 +1079,7 @@ export default {
         'icon': 'fas fa-arrow-down',
         'title': 'EXPORT ROWs',
         'text': '',
+        'code': '',
         'button1': 'Export',
         'button2': 'Cancel'
       }
@@ -1075,13 +1087,14 @@ export default {
     },
     exportRowsSubmit() {
       this.loading = true
+      const name = this.sidebarSelected[0]['name']
       if (this.dialogSelect == 'Meteor') {
         let exportData = '{"DATA":' + JSON.stringify(this.contentItems) + ',' + '"COLUMNS":' + JSON.stringify(this.contentHeaders.map(x => x.headerName.trim())) + '}'
-        this.download('export.json', exportData)
+        this.download(name + '.json', exportData)
       }
       else if (this.dialogSelect == 'JSON') {
         let exportData = JSON.stringify(this.contentItems)
-        this.download('export.json', exportData)
+        this.download(name + '.json', exportData)
       }
       else if (this.dialogSelect == 'CSV') {
         let replacer = (key, value) => value === null ? undefined : value
@@ -1089,7 +1102,7 @@ export default {
         let exportData = this.contentItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
         exportData.unshift(header.join(','))
         exportData = exportData.join('\r\n')
-        this.download('export.csv', exportData)        
+        this.download(name + '.csv', exportData)
       }
       else if (this.dialogSelect == 'SQL') {
         var SqlString = require('sqlstring');
@@ -1103,7 +1116,7 @@ export default {
         }
         rawQuery += values.slice(0,-2) + ';'
         let exportData = SqlString.format(rawQuery, args)
-        this.download('export.sql', exportData)
+        this.download(name + '.sql', exportData)
       }
       this.loading = false
     },
