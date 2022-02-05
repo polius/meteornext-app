@@ -158,6 +158,7 @@ export default {
       else if (item == 'Duplicate View') this.duplicateView()
       else if (item == 'Delete View') this.deleteView()
       else if (item == 'Export') this.exportView()
+      else if (item == 'Copy View Name') this.copyViewNameSubmit()
       else if (item == 'Copy View Syntax') this.copyViewSyntaxSubmit()
     },
     createView() {
@@ -315,6 +316,11 @@ export default {
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyViewNameSubmit() {
+      const name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyViewSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE VIEW `" + name + "`;"
@@ -323,7 +329,7 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create View'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+        EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

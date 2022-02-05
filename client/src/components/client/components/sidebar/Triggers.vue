@@ -152,6 +152,7 @@ export default {
       else if (item == 'Duplicate Trigger') this.duplicateTrigger()
       else if (item == 'Delete Trigger') this.deleteTrigger()
       else if (item == 'Export') this.exportTrigger()
+      else if (item == 'Copy Trigger Name') this.copyTriggerNameSubmit()
       else if (item == 'Copy Trigger Syntax') this.copyTriggerSyntaxSubmit()
     },
     createTrigger() {
@@ -320,6 +321,11 @@ export default {
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
+    copyTriggerNameSubmit() {
+      let name = this.contextMenuItem.name
+      navigator.clipboard.writeText(name)
+      EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
+    },
     copyTriggerSyntaxSubmit() {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE TRIGGER `" + name + "`;"
@@ -328,7 +334,7 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('send-notification', 'Copied to clipboard ', '#00b16a', 1)
+        EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }
