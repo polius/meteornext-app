@@ -150,10 +150,8 @@ class Deployments:
             if not results['shared'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
-            # Get Files Settings
-            files = json.loads(self._settings.get(setting_name='FILES'))
-            
             # Get Execution Results File
+            files = json.loads(self._settings.get(setting_name='FILES'))
             if results['logs'] == 'local':
                 path = os.path.join(files['path'], 'deployments')
                 # Check if exists
@@ -162,25 +160,26 @@ class Deployments:
                 return send_from_directory(path, f"{uri}.json")
 
             elif results['logs'] == 'amazon_s3':
+                amazon = json.loads(self._settings.get(setting_name='AMAZON'))
                 # Check Amazon S3 credentials are setup
-                if 'aws_access_key' not in files['amazon_s3']:
-                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
+                if not amazon['enabled'] or len(amazon['aws_access_key']) == 0 or len(amazon['aws_secret_access_key']) == 0:
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
                 session = boto3.Session(
-                    aws_access_key_id=files['amazon_s3']['aws_access_key'],
-                    aws_secret_access_key=files['amazon_s3']['aws_secret_access_key'],
-                    region_name=files['amazon_s3']['region']
+                    aws_access_key_id=amazon['aws_access_key'],
+                    aws_secret_access_key=amazon['aws_secret_access_key'],
+                    region_name=amazon['region']
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='deployments/{}.json.gz'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.json.gz'.format(uri))
                     with gzip.open(obj['Body'], 'rb') as fopen:
                         return jsonify(json.load(fopen)), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
                         return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400
-                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
                 except Exception:
-                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
             return jsonify({'title': 'Unknown deployment', 'description': 'This deployment does not currently exist' }), 400
 
         @deployments_blueprint.route('/deployments/executions', methods=['GET'])
