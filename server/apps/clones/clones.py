@@ -99,7 +99,7 @@ class Clones:
         # Generated Presigned URL
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         try:
-            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=86400)
+            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=30)
         except Exception as e:
             proceed = False
             # Update clone status
@@ -225,7 +225,7 @@ class Clones:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
         # Build options
-        options = '--single-transaction --max_allowed_packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
+        options = '--single-transaction --max-allowed-packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:

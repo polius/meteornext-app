@@ -60,19 +60,6 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div class="text-body-1 white--text">FORMAT</div>
-                      <v-radio-group v-model="format" style="margin-top:10px; margin-bottom:15px" hide-details>
-                        <v-radio value="sql">
-                          <template v-slot:label>
-                            SQL
-                          </template>
-                        </v-radio>
-                        <v-radio disabled value="csv">
-                          <template v-slot:label>
-                            CSV
-                          </template>
-                        </v-radio>
-                      </v-radio-group>
                       <div class="text-body-1 white--text">SETTINGS</div>
                       <v-checkbox v-model="exportSchema" label="Export Schema (Add CREATE TABLE statements)." hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox v-model="exportData" label="Export Data (Dump table contents)." hide-details style="margin-top:10px"></v-checkbox>
@@ -156,19 +143,6 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div class="text-body-1 white--text">FORMAT</div>
-                      <v-radio-group readonly v-model="format" style="margin-top:10px; margin-bottom:15px" hide-details>
-                        <v-radio value="sql">
-                          <template v-slot:label>
-                            SQL
-                          </template>
-                        </v-radio>
-                        <v-radio disabled value="csv">
-                          <template v-slot:label>
-                            CSV
-                          </template>
-                        </v-radio>
-                      </v-radio-group>
                       <div class="text-body-1 white--text">SETTINGS</div>
                       <v-checkbox readonly v-model="exportSchema" label="Export Schema (Add CREATE TABLE statements)." hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox readonly v-model="exportData" label="Export Data (Dump table contents)." hide-details style="margin-top:10px"></v-checkbox>
@@ -239,7 +213,6 @@ export default {
       tableSize: 0,
       // Setup
       mode: 'full',
-      format: 'sql',
       exportSchema: true,
       exportData: true,
       addDropTable: true,
@@ -420,7 +393,6 @@ export default {
         server_id: this.server,
         database: this.database,
         mode: this.mode,
-        format: this.format,
         tables: this.mode == 'full' ? null : this.gridApi.getSelectedRows().map((val) => ({ n: val.name, r: val.rows, s: val.data_length })),
         export_schema: this.exportSchema,
         export_data: this.exportData,
