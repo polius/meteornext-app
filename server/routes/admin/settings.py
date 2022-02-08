@@ -188,7 +188,7 @@ class Settings:
 
     def check_url(self, security=None):
         if security is None:
-            security = self._settings.get(setting_name='security')
+            security = self._settings.get(setting_name='SECURITY')
         data = json.loads(security)
         if 'restrict_url' in data and len(data['restrict_url']) > 0:
             regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
@@ -205,7 +205,7 @@ class Settings:
     
     def check_mfa(self, security=None):
         if security is None:
-            security = self._settings.get(setting_name='security')
+            security = self._settings.get(setting_name='SECURITY')
         data = json.loads(security)
         if 'force_mfa' in data and data['force_mfa'] is True:
             return True

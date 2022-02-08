@@ -43,7 +43,7 @@ class Login:
             login_json = request.get_json()
 
             # Check Settings - Security (Administration URL + Force MFA)
-            security = self._settings.get(setting_name='security')
+            security = self._settings.get(setting_name='SECURITY')
             valid_url = self._settings_route.check_url(security)
             force_mfa = self._settings_route.check_mfa(security)
 
