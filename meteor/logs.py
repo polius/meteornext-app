@@ -15,7 +15,7 @@ class logs:
                 file['ERROR'] = str(error)
 
             # Save file
-            with open(f"{self._args.path}/../{self._args.uri}.json", 'w') as outfile:
+            with open(f"{self._args.path}/{self._args.uri}.json", 'w') as outfile:
                 json.dump(file, outfile, separators=(',', ':'))
 
             self._progress.track_logs(value={'status': 'success'})

@@ -144,20 +144,13 @@ class Region:
         retries = 6 if retry else 1
         for i in range(retries):
             try:
-                # Supress Errors Output
-                sys_stderr = sys.stderr
-                sys.stderr = open('/dev/null', 'w')
-
                 # Init Paramiko SSH Connection
                 client = paramiko.SSHClient()
                 client.load_system_host_keys()
-                client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
                 transport = client.get_transport()
                 transport.set_keepalive(30)
-
-                # Show Errors Output Again
-                sys.stderr = sys_stderr
 
                 # Paramiko Execute Command
                 stdin, stdout, stderr = client.exec_command(command, get_pty=False)
@@ -182,18 +175,11 @@ class Region:
 
     def __get(self, remote_path, local_path):
         try:
-            # Supress Errors Output
-            sys_stderr = sys.stderr
-            sys.stderr = open('/dev/null', 'w')
-
             # Init Paramiko Connection
             client = paramiko.SSHClient()
             client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.WarningPolicy())
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'])
-            
-            # Show Errors Output Again
-            sys.stderr = sys_stderr
 
             # Open sftp connection
             sftp = client.open_sftp()
@@ -217,7 +203,7 @@ class Region:
                 # Init Paramiko Connection
                 client = paramiko.SSHClient()
                 client.load_system_host_keys()
-                client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], banner_timeout=60)
 
                 # Open sftp connection

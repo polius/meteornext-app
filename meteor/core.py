@@ -345,7 +345,7 @@ class core:
         else:
             self._progress.track_tasks(value={'status': 'success'})
 
-        # Delete Uncompressed Deployment Folder
+        # Delete Deployment Folder
         if os.path.exists(self._args.path):
             if os.path.isdir(self._args.path):
                 shutil.rmtree(self._args.path)

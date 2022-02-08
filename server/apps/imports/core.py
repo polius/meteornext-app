@@ -28,7 +28,7 @@ class Core:
         # Init Paramiko Connection
         self._client = paramiko.SSHClient()
         self._client.load_system_host_keys()
-        self._client.set_missing_host_key_policy(paramiko.WarningPolicy())
+        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         password = None if self._region['password'] is None or len(self._region['password'].strip()) == 0 else self._region['password']
         pkey = None if self._region['key'] is None or len(self._region['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._region['key']), password=password)
         self._client.connect(self._region['hostname'], port=self._region['port'], username=self._region['username'], password=self._region['password'], pkey=pkey, banner_timeout=60)
@@ -57,22 +57,15 @@ class Core:
         return {'stdout': p.stdout.decode('utf-8', errors='ignore').strip(), 'stderr': p.stderr.decode('utf-8', errors='ignore').strip()}
 
     def __remote(self, command):
-        # Supress Errors Output
-        # sys_stderr = sys.stderr
-        # sys.stderr = open('/dev/null', 'w')
-
         # Init Paramiko SSH Connection
         client = paramiko.SSHClient()
         client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.WarningPolicy())
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         password = None if self._region['password'] is None or len(self._region['password'].strip()) == 0 else self._region['password']
         pkey = None if self._region['key'] is None or len(self._region['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._region['key']), password=password)
         client.connect(self._region['hostname'], port=self._region['port'], username=self._region['username'], password=self._region['password'], pkey=pkey, timeout=10)
         transport = client.get_transport()
         transport.set_keepalive(30)
-
-        # Show Errors Output Again
-        # sys.stderr = sys_stderr
 
         # Paramiko Execute Command
         stdin, stdout, stderr = client.exec_command(command, get_pty=False)
