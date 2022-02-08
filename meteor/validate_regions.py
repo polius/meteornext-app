@@ -75,7 +75,7 @@ class validate_regions:
                     break
                 client = paramiko.SSHClient()
                 client.load_system_host_keys()
-                client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
                 client.close()
                 error = None
