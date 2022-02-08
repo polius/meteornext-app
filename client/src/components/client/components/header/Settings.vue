@@ -50,7 +50,7 @@ export default {
       dialog: false,
       loading: false,
       editorFontSize: '14',
-      secureMode: false,
+      secureMode: true,
       // AG Grid
       gridApi: null,
       columnApi: null,

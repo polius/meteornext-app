@@ -35,7 +35,7 @@ var SqlHighlightRules = function() {
     this.$rules = {
         "start" : [ {
             token : "comment",
-            regex: "(?:-- |#).*$"
+            regex: "(?:--|#).*$"
         },  {
             token : "comment",
             start : "/\\*",
@@ -91,20 +91,18 @@ var Mode = function() {
 oop.inherits(Mode, TextMode);
 
 (function() {
-
     this.lineCommentStart = "--";
-
     this.$id = "ace/mode/mysql";
     this.snippetFileId = "ace/snippets/sql";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
 
-});                (function() {
-                    ace.require(["ace/mode/mysql"], function(m) {
-                        if (typeof module == "object" && typeof exports == "object" && module) {
-                            module.exports = m;
-                        }
-                    });
-                })();
-            
+});
+(function() {
+    ace.require(["ace/mode/mysql"], function(m) {
+        if (typeof module == "object" && typeof exports == "object" && module) {
+            module.exports = m;
+        }
+    });
+})();
