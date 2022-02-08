@@ -517,8 +517,23 @@ export default {
       }
 
       // Load table header
-      this.gridApi.content.setColumnDefs([])
-      this.contentHeaders = headers
+      if (data.length > 0) {
+        const currentCols = this.gridApi.content.getColumnDefs()
+        const newCols = data[0]['columns']['name']
+        let match = currentCols.length == newCols.length
+        if (match) {
+          for (let i = 0; i < currentCols.length; ++i) {
+            if (currentCols[i].colId != newCols[i]) {
+              match = false
+              break
+            }
+          }
+        }
+        if (!match) {
+          this.gridApi.content.setColumnDefs([])
+          this.contentHeaders = headers
+        }
+      }
 
       // Build Items
       this.contentItems = items
