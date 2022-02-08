@@ -755,7 +755,7 @@ export default {
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
         // Check Secure Mode
-        if (!confirm && parseInt(this.settings['secure_mode']) || false) {
+        if (!confirm && (!Object.keys(this.settings).includes('secure_mode') || parseInt(this.settings['secure_mode']))) {
           let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
           var dialogOptions = {
             'mode': 'cellEditingConfirm',

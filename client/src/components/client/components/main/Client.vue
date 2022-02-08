@@ -425,7 +425,7 @@ export default {
           let where = pks.map(x => '`' + x + '` = ' + JSON.stringify(values[x]['old']))
           let query = "UPDATE `" + this.currentQueryMetadata.database + "`.`" + this.currentQueryMetadata.table + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
           // Check Secure Mode
-          if (!confirm && parseInt(this.settings['secure_mode']) || false) {
+          if (!confirm && (!Object.keys(this.settings).includes('secure_mode') || parseInt(this.settings['secure_mode']))) {
             let beautified = sqlFormatter.format(query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
             var dialogOptions = {
               'mode': 'cellEditingConfirm',
@@ -925,7 +925,7 @@ export default {
         }
         else if (chars.length == 0 && text[i] == "#") { chars.push("#"); comments.push({begin: i-start}) }
         else if (chars.length == 0 && text[i] == '*' && text[i-1] == '/') { chars.push("/*"); comments.push({begin: i-1-start}) }
-        else if (chars.length == 0 && text[i] == ' ' && text[i-1] == '-' && text[i-2] == '-') { chars.push("--"); comments.push({begin: i-2-start}) }
+        else if (chars.length == 0 && text[i] == '-' && text[i-1] == '-') { chars.push("--"); comments.push({begin: i-1-start}) }
         else if (text[i] == '\n' && chars[chars.length-1] == '#') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
         else if (text[i] == '/' && text[i-1] == '*' && chars[chars.length-1] == '/*') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
         else if (text[i] == '\n' && chars[chars.length-1] == '--') { chars.pop(); comments[comments.length-1]['end'] = i+1-start }
