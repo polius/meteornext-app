@@ -111,7 +111,7 @@ class Servers:
             server['ssl_client_certificate'] = '<ssl_client_certificate>' if server['ssl_client_certificate'] is not None else None
             server['ssl_ca_certificate'] = '<ssl_ca_certificate>' if server['ssl_ca_certificate'] is not None else None
         # Check Inventory Secured
-        if user['inventory_secured'] and not user['owner']:
+        if not user['admin'] and user['inventory_secured'] and not user['owner']:
             servers_secured = []
             for s in servers:
                 if s['shared']:
