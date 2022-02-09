@@ -306,9 +306,12 @@ class Clones:
         response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
         size = response['ContentLength']
 
+        # Build options
+        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
+
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
+            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
 
         # Start Import process
         p = core.execute(command)
