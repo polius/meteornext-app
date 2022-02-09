@@ -174,9 +174,11 @@ class Imports:
             gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
         elif item['source'].endswith('.gz') or item['format'] == '.gz':
             gunzip = f"| zcat 2> {error_gunzip_path}"
-
         if item['selected'] and item['selected'][0].endswith('.gz'):
             gunzip += f" | zcat 2> {error_gunzip2_path}"
+
+        # Build options
+        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
 
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
@@ -184,10 +186,10 @@ class Imports:
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             if item['mode'] == 'file':
-                command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+                command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
             elif item['mode'] in ['url','cloud']:
                 source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
-                command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+                command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
 
         # Start Import process
         p = core.execute(command)
