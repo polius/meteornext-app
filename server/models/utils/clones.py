@@ -8,7 +8,7 @@ class Clones:
     def get(self, user_id=None, clone_uri=None):
         if clone_uri:
             query = """
-                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', q.queue
+                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue
                 FROM clones c
                 JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server
@@ -36,7 +36,7 @@ class Clones:
             return self._sql.execute(query, (clone_uri))
         else:
             query = """
-                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', q.queue
+                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue
                 FROM clones c
                 JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server
@@ -83,7 +83,7 @@ class Clones:
 
     def get_servers(self, user):
         query = """
-            SELECT s.id, s.name, s.shared, t.id IS NOT NULL AS 'active'
+            SELECT s.id, s.name, s.shared, s.secured, t.id IS NOT NULL AS 'active'
             FROM servers s
             LEFT JOIN (
                 SELECT s.id

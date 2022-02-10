@@ -47,17 +47,13 @@ class Client:
             if request.method == 'GET':
                 servers = self._client.get_servers(user['id'], user['group_id'])
                 folders = self._client.get_folders(user['id'])
-                if user['inventory_secured'] and not user['owner']:
-                    servers_secured = []
-                    for s in servers:
-                        if s['shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "active": s['active'], "region_shared": s['region_shared'], "ssl": s['ssl'], "ssh": s['ssh'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
-                        elif s['region_shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "ssl": s['ssl'], "ssh": s['ssh'], "shared": s['shared'], "active": s['active'], "region_shared": s['region_shared'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
-                        else:
-                            servers_secured.append(s)
-                    return jsonify({'servers': servers_secured, 'folders': folders}), 200
-                return jsonify({'servers': servers, 'folders': folders}), 200
+                servers_secured = []
+                for s in servers:
+                    if s['secured']:
+                        servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
+                    else:
+                        servers_secured.append(s)
+                return jsonify({'servers': servers_secured, 'folders': folders}), 200
             elif request.method == 'POST':
                 if 'servers' in client_json:
                     self._client.add_servers(client_json['servers'], user)
@@ -100,17 +96,13 @@ class Client:
 
             if request.method == 'GET':
                 servers = self._client.get_servers_unassigned(user['id'], user['group_id'])
-                if user['inventory_secured'] and not user['owner']:
-                    servers_secured = []
-                    for s in servers:
-                        if s['shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "active": s['active'], "region_shared": s['region_shared'], "ssl": s['ssl'], "ssh": s['ssh']})
-                        elif s['region_shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "shared": s['shared'], "active": s['active'], "region_shared": s['region_shared'], "ssl": s['ssl'], "ssh": s['ssh']})
-                        else:
-                            servers_secured.append(s)
-                    return jsonify({'servers': servers_secured}), 200
-                return jsonify({'servers': servers}), 200
+                servers_secured = []
+                for s in servers:
+                    if s['secured']:
+                        servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh']})
+                    else:
+                        servers_secured.append(s)
+                return jsonify({'servers': servers_secured}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required()

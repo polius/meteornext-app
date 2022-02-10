@@ -9,17 +9,15 @@
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.name`]="{ item }">
-        <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-bottom:2px; margin-right:6px">fas fa-exclamation-triangle</v-icon>
+        <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+        <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+        <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
         {{ item.name }}
       </template>
       <template v-slot:[`item.region`]="{ item }">
-        <v-icon v-if="item.region" small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+        <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.region_secured ? 'padding-right:8px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+        <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
         {{ item.region }}
-      </template>
-      <template v-slot:[`item.shared`]="{ item }">
-        <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-        <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
-        {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
       <template v-slot:[`item.usage`]="{ item }">
         <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#EF5354" style="margin-right:5px">fas fa-circle</v-icon>
@@ -42,20 +40,26 @@
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="personalClick" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="sharedClick"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-checkbox title="Prevent this resource to be edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
+            <template v-slot:label>
+              <div style="color:white">Secured</div>
+            </template>
+          </v-checkbox>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-if="mode!='delete'" style="margin-top:20px;">
+                <v-form ref="form" v-if="mode!='delete'" style="margin-top:15px">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
-                      <v-autocomplete ref="owner_id" v-model="item.owner_id" @change="ownerChanged" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="owner_id" v-model="item.owner_id" @change="ownerChanged" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
@@ -83,7 +87,7 @@
                       <v-select v-model="item.version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
-                  <div style="margin-bottom:20px">
+                  <div style="margin-bottom:15px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
@@ -132,7 +136,7 @@
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
+                <v-row no-gutters style="margin-top:15px;">
                   <v-col cols="auto" class="mr-auto">
                     <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
@@ -173,7 +177,6 @@
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="SSL" value="ssl" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Usage" value="usage" hide-details style="margin-top:5px"></v-checkbox>
@@ -239,7 +242,6 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'SSL', align: 'left', value: 'ssl' },
-      { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
       { text: 'Usage', align: 'left', value: 'usage' },
@@ -252,7 +254,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: null, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: true, usage: [] },
+    item: { group_id: null, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [], secured: false },
     mode: '',
     loading: true,
     engines: {
@@ -386,7 +388,7 @@ export default {
       this.users = []
       this.regions = []
       this.usage = []
-      this.item = { group_id: this.filter.group, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: true, usage: [...this.usage] }
+      this.item = { group_id: this.filter.group, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, secured: false, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); this.buildUsage(); }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true

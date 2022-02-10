@@ -8,7 +8,7 @@ class Client:
     def get_queries(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
@@ -57,7 +57,7 @@ class Client:
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
@@ -88,9 +88,9 @@ class Client:
     def get_servers(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
@@ -139,9 +139,9 @@ class Client:
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id

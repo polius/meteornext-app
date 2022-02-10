@@ -6,9 +6,11 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newCloud()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneCloud()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="editCloud()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editCloud()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneCloud()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteCloud()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="testCloud" :disabled="selected.length != 1" title="Test an auxiliary connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -27,14 +29,14 @@
             @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
+        <template v-slot:[`item.name`]="{ item }">
+          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+          {{ item.name }}
+        </template>
         <template v-slot:[`item.type`]="{ item }">
           <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
           <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
-        </template>
-        <template v-slot:[`item.shared`]="{ item }">
-          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px">fas fa-user</v-icon>
-          <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px">fas fa-users</v-icon>
-          {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
       </v-data-table>
     </v-card>
@@ -46,19 +48,19 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the cloud key only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the cloud key for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px;">
-                  <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :readonly="readOnly" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px">
+                <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px">
+                  <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
+                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :readonly="readonly" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px">
                     <template v-slot:[`selection`]="{ item }">
                       <v-icon v-if="item.id == 'aws'" size="22" color="#e47911" style="margin-right:8px">fab fa-aws</v-icon>
                       <v-icon v-else-if="item.id == 'google'" size="20" color="#4285F4" style="margin-right:8px">fab fa-google</v-icon>
@@ -70,9 +72,9 @@
                       {{ item.id == 'aws' ? 'Amazon Web Services' : 'Google Cloud' }}
                     </template>
                   </v-select>
-                  <div v-if="!(readOnly && inventory_secured)">
-                    <v-text-field v-model="item.access_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px" hide-details></v-text-field>
-                    <v-text-field v-if="item.secret_key == null || (typeof item.secret_key !== 'object')" v-model="item.secret_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="margin-top:15px; margin-bottom:20px" hide-details></v-text-field>
+                  <div>
+                    <v-text-field v-model="item.access_key" :readonly="readonly" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px" hide-details></v-text-field>
+                    <v-text-field v-if="item.secret_key == null || (typeof item.secret_key !== 'object')" v-model="item.secret_key" :readonly="readonly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="margin-top:15px; margin-bottom:20px" hide-details></v-text-field>
                     <v-card v-else style="height:52px; margin-top:15px">
                       <v-row no-gutters>
                         <v-col cols="auto" style="display:flex; margin:15px">
@@ -82,7 +84,7 @@
                           <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Secret Key</div>
                         </v-col>
                         <v-col cols="auto" class="text-right">
-                          <v-btn v-if="!readOnly" @click="item.secret_key = null" icon title="Remove Secret Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                          <v-btn v-if="!readonly" @click="item.secret_key = null" icon title="Remove Secret Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
                         </v-col>
                       </v-row>
                     </v-card>
@@ -115,16 +117,11 @@
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
-                    <div v-if="readOnly">
-                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
-                    </div>
-                    <div v-else>
-                      <v-btn :loading="loading" color="#00b16a" @click="submitCloud()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
-                    </div>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitCloud()">CONFIRM</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testCloud()">Test Cloud Key</v-btn>
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Cloud Key</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -182,7 +179,6 @@
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Type" value="type" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Access Key" value="access_key" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -215,7 +211,6 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Type', align: 'left', value: 'type' },
       { text: 'Access Key', align: 'left', value: 'access_key'},
-      { text: 'Scope', align: 'left', value: 'shared' },
     ],
     cloud: [],
     items: [],
@@ -250,8 +245,7 @@ export default {
   }),
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    readonly: function() { return this.item.shared == 1 && !this.owner },
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   created() {
@@ -301,6 +295,10 @@ export default {
       this.mode = 'delete'
       this.dialog_title = 'DELETE CLOUD'
       this.dialog = true
+    },
+    testCloud() {
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.testConnection()
     },
     submitCloud() {
       if (['new','clone'].includes(this.mode)) this.newCloudSubmit()
@@ -369,7 +367,7 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testCloud() {
+    testConnection() {
       // Test Connection
       this.loading = true
       let payload = {}
@@ -465,7 +463,7 @@ export default {
       this.showSecret = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.field !== 'undefined' && !this.readonly) this.$refs.field.focus()
       })
     },
     bucketsDialog (val) {

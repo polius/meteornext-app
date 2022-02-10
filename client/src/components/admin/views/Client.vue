@@ -31,17 +31,17 @@
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px;">
+                <v-form ref="form" style="margin-top:15px">
                   <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
+                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px; margin-top:0px"></v-text-field>
                     </v-col>
                     <v-col v-if="!server.shared" style="margin-left:20px">
-                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
+                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px; margin-top:0px"></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
@@ -51,7 +51,8 @@
                     <v-col cols="6" style="padding-left:10px">
                       <v-text-field readonly v-model="server.region" label="Region">
                         <template v-slot:prepend-inner>
-                          <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon small :title="server.region_shared ? server.region_secured ? 'Shared (Secured)' : 'Shared' : server.region_secured ? 'Personal (Secured)' : 'Personal'" :color="server.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-top:4px; margin-bottom:2px; ${!server.region_secured ? 'padding-right:6px' : ''}`">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon v-if="server.region_secured" :title="server.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="server.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:6px; padding-right:6px">fas fa-lock</v-icon>
                         </template>
                       </v-text-field>
                     </v-col>
@@ -64,7 +65,7 @@
                       <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <div style="margin-bottom:20px">
+                  <div style="margin-bottom:15px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -79,7 +80,7 @@
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
+                <v-row no-gutters style="margin-top:15px">
                   <v-col>
                     <v-btn :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>

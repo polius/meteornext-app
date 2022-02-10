@@ -11,33 +11,31 @@
         <v-flex ref="item" v-show="item.length != 0">
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Server details</div>
           <v-card>
-            <v-card-text style="padding:25px 20px 5px 20px; margin-bottom:20px;">
+            <v-card-text style="padding:15px 15px 20px 15px; margin-bottom:20px">
               <v-row no-gutters>
                 <v-col cols="6" style="padding-right:10px">
-                  <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                  <v-text-field v-model="item.name" readonly label="Name" required style="margin-top:0px; font-size:1rem;" hide-details></v-text-field>
                 </v-col>
                 <v-col cols="6" style="padding-left:10px">
-                  <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:8px">
-                      <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:13px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                    </v-col>
-                    <v-col>
-                      <v-text-field v-model="item.region" readonly label="Region" r equired style="padding-top:0px; font-size:1rem;"></v-text-field>
-                    </v-col>
-                  </v-row>
+                  <v-text-field v-model="item.region" readonly label="Region" required style="margin-top:0px; font-size:1rem;" hide-details>
+                    <template v-slot:prepend-inner>
+                      <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-top:4px; ${!item.region_secured ? 'padding-right:6px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-top:7px; padding-left:2px; padding-right:6px">fas fa-lock</v-icon>
+                    </template>
+                  </v-text-field>
                 </v-col>
               </v-row>
               <!-- SQL -->
-              <v-row no-gutters>
-                <v-col cols="8" style="padding-right:10px">
-                  <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                </v-col>
-                <v-col cols="4" style="padding-left:10px">
-                  <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                </v-col>
-              </v-row>
-              <div v-if="!(inventory_secured && !owner && item.shared)">
-                <v-row no-gutters style="margin-top:10px;">
+              <div v-if="!item.secured" style="margin-top:20px">
+                <v-row no-gutters>
+                  <v-col cols="8" style="padding-right:10px">
+                    <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                  </v-col>
+                  <v-col cols="4" style="padding-left:10px">
+                    <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters>
                   <v-col cols="8" style="padding-right:10px">
                     <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                   </v-col>
@@ -46,10 +44,10 @@
                   </v-col>
                 </v-row>
                 <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
+                <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;" hide-details></v-text-field>
               </div>
               <!-- SSL -->
-              <v-card v-if="item.ssl" style="height:52px; margin-bottom:15px">
+              <v-card v-if="item.ssl" style="height:52px; margin-top:15px">
                 <v-row no-gutters>
                   <v-col cols="auto" style="display:flex; margin:15px">
                     <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
@@ -60,7 +58,7 @@
                 </v-row>
               </v-card>
               <!-- SSH -->
-              <v-card v-if="item.ssh" style="height:52px; margin-bottom:15px">
+              <v-card v-if="item.ssh" style="height:52px; margin-top:15px">
                 <v-row no-gutters>
                   <v-col cols="auto" style="display:flex; margin:15px">
                     <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>

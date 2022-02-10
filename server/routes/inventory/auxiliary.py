@@ -107,15 +107,13 @@ class Auxiliary:
             aux['ssl_client_certificate'] = '<ssl_client_certificate>' if aux['ssl_client_certificate'] is not None else None
             aux['ssl_ca_certificate'] = '<ssl_ca_certificate>' if aux['ssl_ca_certificate'] is not None else None
         # Check Inventory Secured
-        if user['inventory_secured'] and not user['owner']:
-            auxiliary_secured = []
-            for a in auxiliary:
-                if a['shared']:
-                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "engine": a['engine'], "version": a['version'], "shared": a['shared']})
-                else:
-                    auxiliary_secured.append(a)
-            return jsonify({'data': auxiliary_secured}), 200
-        return jsonify({'data': auxiliary}), 200
+        auxiliary_secured = []
+        for a in auxiliary:
+            if a['secured']:
+                auxiliary_secured.append({"id": a['id'], "name": a['name'], "shared": a['shared'], "secured": a['secured'],})
+            else:
+                auxiliary_secured.append(a)
+        return jsonify({'data': auxiliary_secured}), 200
 
     def post(self, user, auxiliary):
         # Check privileges
@@ -138,8 +136,12 @@ class Auxiliary:
         return jsonify({'message': 'Auxiliary connection added'}), 200
 
     def put(self, user, auxiliary):
+        # Check auxiliary
+        check = self._auxiliary.get(user['id'], user['group_id'], auxiliary['id'])
+        if len(check) == 0:
+            return jsonify({'message': "The auxiliary connection does not exist"}), 400
         # Check privileges
-        if auxiliary['shared'] and not user['owner']:
+        if check[0]['secured'] or (auxiliary['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check auxiliary exists
         if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
@@ -153,7 +155,7 @@ class Auxiliary:
         # Check privileges
         for auxiliary in data:
             auxiliary = self._auxiliary.get(user['id'], user['group_id'], auxiliary)
-            if len(auxiliary) > 0 and auxiliary[0]['shared'] and not user['owner']:
+            if len(auxiliary) > 0 and auxiliary[0]['secured'] or (auxiliary[0]['shared'] and not user['owner']):
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete auxiliary
         for auxiliary in data:

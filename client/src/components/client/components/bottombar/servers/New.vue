@@ -69,29 +69,27 @@
                                   <v-card-text style="padding:15px">
                                     <v-row no-gutters>
                                       <v-col cols="6" style="padding-right:10px">
-                                        <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:8px"></v-text-field>
+                                        <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:8px" hide-details></v-text-field>
                                       </v-col>
                                       <v-col cols="6" style="padding-left:10px">
-                                        <v-row no-gutters>
-                                          <v-col cols="auto" style="margin-right:8px">
-                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:20px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                                          </v-col>
-                                          <v-col>
-                                            <v-text-field v-model="item.region" readonly label="Region" required style="padding-top:8px"></v-text-field>
-                                          </v-col>
-                                        </v-row>
+                                        <v-text-field v-model="item.region" readonly label="Region" required style="padding-top:8px" hide-details>
+                                          <template v-slot:prepend-inner>
+                                            <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-top:4px; ${!item.region_secured ? 'padding-right:6px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                                            <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-top:7px; padding-left:2px; padding-right:6px">fas fa-lock</v-icon>
+                                          </template>
+                                        </v-text-field>
                                       </v-col>
                                     </v-row>
                                     <!-- SQL -->
-                                    <v-row no-gutters style="margin-bottom:5px">
-                                      <v-col cols="8" style="padding-right:10px">
-                                        <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px" hide-details></v-text-field>
-                                      </v-col>
-                                      <v-col cols="4" style="padding-left:10px">
-                                        <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px" hide-details></v-text-field>
-                                      </v-col>
-                                    </v-row>
-                                    <div v-if="!(inventory_secured && !owner && item.shared)" style="margin-top:25px; margin-bottom:10px">
+                                    <div v-if="!item.secured" style="margin-top:20px">
+                                      <v-row no-gutters>
+                                        <v-col cols="8" style="padding-right:10px">
+                                          <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="4" style="padding-left:10px">
+                                          <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px"></v-text-field>
+                                        </v-col>
+                                      </v-row>
                                       <v-row no-gutters>
                                         <v-col cols="8" style="padding-right:10px">
                                           <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px"></v-text-field>

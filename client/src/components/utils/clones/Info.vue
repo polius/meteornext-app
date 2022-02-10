@@ -32,17 +32,15 @@
             </template>
             <template v-slot:[`item.source_server`]="{ item }">
               <v-btn @click="getServer(item.source_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-                <v-icon small :title="item.source_server_shared ? 'Shared' : 'Personal'" :color="item.source_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
-                  {{ item.source_server_shared ? 'fas fa-users' : 'fas fa-user' }}
-                </v-icon>
+                <v-icon small :title="item.source_server_shared ? item.source_server_secured ? 'Shared (Secured)' : 'Shared' : item.source_server_secured ? 'Personal (Secured)' : 'Personal'" :color="item.source_server_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.source_server_secured ? 'padding-right:8px' : ''}`">{{ item.source_server_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                <v-icon v-if="item.source_server_secured" :title="item.source_server_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.source_server_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
                 {{ item.source_server_name }}
               </v-btn>
             </template>
             <template v-slot:[`item.destination_server`]="{ item }">
               <v-btn @click="getServer(item.destination_server)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-                <v-icon small :title="item.destination_server_shared ? 'Shared' : 'Personal'" :color="item.destination_server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
-                  {{ item.destination_server_shared ? 'fas fa-users' : 'fas fa-user' }}
-                </v-icon>
+                <v-icon small :title="item.destination_server_shared ? item.destination_server_secured ? 'Shared (Secured)' : 'Shared' : item.destination_server_secured ? 'Personal (Secured)' : 'Personal'" :color="item.destination_server_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.destination_server_secured ? 'padding-right:8px' : ''}`">{{ item.destination_server_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                <v-icon v-if="item.destination_server_secured" :title="item.destination_server_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.destination_server_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
                 {{ item.destination_server_name }}
               </v-btn>
             </template>

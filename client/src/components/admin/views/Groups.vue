@@ -10,8 +10,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newGroup()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="cloneGroup()"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length != 1" text @click="editGroup()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="cloneGroup()"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length == 0" text @click="deleteGroup()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="getGroups" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>

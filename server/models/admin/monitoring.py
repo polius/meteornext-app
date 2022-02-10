@@ -8,9 +8,9 @@ class Monitoring:
     def get_servers(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, m.server_id IS NOT NULL AS 'attached', m.date
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, m.server_id IS NOT NULL AS 'attached', m.date
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
@@ -60,9 +60,9 @@ class Monitoring:
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, m.server_id IS NOT NULL AS 'attached', m.date
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, m.server_id IS NOT NULL AS 'attached', m.date
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id

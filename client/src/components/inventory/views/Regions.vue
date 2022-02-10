@@ -6,9 +6,11 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newRegion()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneRegion()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="editRegion()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editRegion()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneRegion()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteRegion()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="testRegion" :disabled="selected.length != 1 || !selected[0].ssh_tunnel" title="Test a region connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -27,6 +29,11 @@
             @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
+        <template v-slot:[`item.name`]="{ item }">
+          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+          {{ item.name }}
+        </template>
         <template v-slot:[`item.ssh_tunnel`]="{ item }">
           <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
@@ -34,11 +41,6 @@
         <template v-slot:[`item.key`]="{ item }">
           <v-icon v-if="item.key" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
-        </template>
-        <template v-slot:[`item.shared`]="{ item }">
-          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-          <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
-          {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
       </v-data-table>
     </v-card>
@@ -48,30 +50,30 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
+                <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required hide-details></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px;"></v-switch>
-                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:20px">
+                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readonly" label="Name" required hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
+                  <v-switch @click="sshtunnelClick" v-model="item.ssh_tunnel" :readonly="readonly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px"></v-switch>
+                  <div v-if="item.ssh_tunnel" style="margin-top:25px">
                     <v-row no-gutters>
                       <v-col cols="9" style="padding-right:10px">
-                        <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field ref="hostname" v-model="item.hostname" :readonly="readonly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px; margin-top:0px"></v-text-field>
                       </v-col>
                       <v-col cols="3" style="padding-left:10px">
-                        <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.port" :readonly="readonly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px; margin-top:0px"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" autocomplete="username"  style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px;">
+                    <v-text-field v-model="item.username" :readonly="readonly" :rules="[v => !!v || '']" label="Username" autocomplete="username"  style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readonly" label="Password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px;">
                       <template v-slot:[`append`]>
                         <v-btn title="Generate password" @click="generatePassword" icon><v-icon>mdi-key</v-icon></v-btn>
                         <v-btn :title="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword" icon><v-icon>{{ showPassword ? 'mdi-eye' : 'mdi-eye-off' }}</v-icon></v-btn>
@@ -87,7 +89,7 @@
                           <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Private Key</div>
                         </v-col>
                         <v-col cols="auto" class="text-right">
-                          <v-btn v-if="!readOnly" @click="item.key = null" icon title="Remove Private Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                          <v-btn @click="item.key = null" icon title="Remove Private Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
                         </v-col>
                       </v-row>
                     </v-card>
@@ -97,13 +99,8 @@
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
-                    <div v-if="readOnly">
-                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
-                    </div>
-                    <div v-else>
-                      <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
-                    </div>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
                     <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
@@ -140,7 +137,6 @@
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Private Key" value="key" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -176,7 +172,6 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Private Key', align: 'left', value: 'key'},
-      { text: 'Scope', align: 'left', value: 'shared' },
     ],
     regions: [],
     items: [],
@@ -201,8 +196,7 @@ export default {
   }),
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    readonly: function() { return this.item.shared == 1 && !this.owner },
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   created() {
@@ -210,6 +204,7 @@ export default {
   },
   methods: {
     getRegions() {
+      this.loading = true
       axios.get('/inventory/regions')
         .then((response) => {
           this.regions = response.data.data
@@ -245,6 +240,10 @@ export default {
       this.mode = 'delete'
       this.dialog_title = 'DELETE REGION'
       this.dialog = true
+    },
+    testRegion() {
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.testConnection()
     },
     submitRegion() {
       if (['new','clone'].includes(this.mode)) this.newRegionSubmit()
@@ -319,7 +318,7 @@ export default {
     },
     async testConnection() {
       // Check if all fields are filled
-      if (!this.$refs.form.validate()) {
+      if (!this.item.secured && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
@@ -327,7 +326,7 @@ export default {
       let key = await this.readFileAsync(this.item.key)
       // Test Connection
       this.loading = true
-      const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : {...this.item, key}
+      const payload = this.item.secured ? { region: this.item.id } : {...this.item, key}
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -383,6 +382,11 @@ export default {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
     },
+    sshtunnelClick(val) {
+      requestAnimationFrame(() => {
+        if (val && typeof this.$refs.hostname !== 'undefined' && !this.readonly) this.$refs.hostname.focus()
+      })
+    },
     notification(message, color, timeout=3) {
       this.snackbar = false
       setTimeout(() => {
@@ -399,7 +403,7 @@ export default {
       this.showPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.field !== 'undefined' && !this.readonly) this.$refs.field.focus()
       })
     },
   }
