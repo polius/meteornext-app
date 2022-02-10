@@ -5,14 +5,14 @@
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
             <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="padding-right:10px">fas fa-exclamation-triangle</v-icon>
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
           </div>
         </template>
         <template v-slot:[`item`]="{ item }">
           <div class="body-2">
             <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="padding-right:10px">fas fa-exclamation-triangle</v-icon>
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
             <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
           </div>
@@ -35,7 +35,7 @@
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'fas fa-folder-open' : 'fas fa-folder' }}</v-icon>
               <div v-else-if="sidebarMode == 'servers'">
                 <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers.">fas fa-exclamation-triangle</v-icon>
-                <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="padding:10px">fas fa-server</v-icon>
+                <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="padding:10px">fas fa-server</v-icon>
               </div>
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
               {{ item.name }}
@@ -420,7 +420,7 @@ export default {
       this.servers = JSON.parse(JSON.stringify(servers))
       this.sidebarItems = JSON.parse(JSON.stringify(servers))
       // Parse Servers List
-      this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name, active: x.active }))
+      this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, secured: x.secured, folder: x.folder_name, active: x.active }))
     },
     getDatabases(server, resolve=null, reject=null) {
       this.serverSearch = server

@@ -8,14 +8,14 @@
           @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
         </v-simple-checkbox>
       </template>
+      <template v-slot:[`item.name`]="{ item }">
+        <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+        <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+        {{ item.name }}
+      </template>
       <template v-slot:[`item.type`]="{ item }">
-          <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
-          <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
-        </template>
-      <template v-slot:[`item.shared`]="{ item }">
-        <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-        <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
-        {{ !item.shared ? 'Personal' : 'Shared' }}
+        <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
+        <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
       </template>
     </v-data-table>
     <!------------>
@@ -28,20 +28,26 @@
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the cloud key only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the cloud key for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-checkbox title="Prevent this resource to be edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
+            <template v-slot:label>
+              <div style="color:white">Secured</div>
+            </template>
+          </v-checkbox>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
-                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -162,7 +168,6 @@
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Type" value="type" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Access Key" value="access_key" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
@@ -196,7 +201,6 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Type', align: 'left', value: 'type'},
       { text: 'Access Key', align: 'left', value: 'access_key'},
-      { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
       { text: 'Created By', align: 'left', value: 'created_by' },
@@ -208,7 +212,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: true },
+    item: { group_id: '', owner_id: '', name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: false, secured: false },
     mode: '',
     users: [],
     showSecret: false,
@@ -284,7 +288,7 @@ export default {
     newCloud() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: true }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: false, secured: false }
       this.bucketsItems = []
       this.bucketsSelected = []
       if (this.filter.group != null) this.getUsers()

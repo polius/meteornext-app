@@ -39,26 +39,15 @@
                 <v-toolbar-title class="white--text subtitle-1">INVENTORY</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:20px;">
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
-                  RIGHTS
-                  <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
-                    </template>
-                    <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access the inventory.</span>
-                    <br>
-                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (servers, regions, auxiliary connections) for non owners are shown without sensible data (hostname, username, password, ...).</span>
-                  </v-tooltip>
-                </div>
-                <v-switch :disabled="loading" v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
-                <v-switch :disabled="loading" v-model="group.inventory_secured" label="Secure Inventory" color="#fa8231" hide-details style="margin-top:20px; padding-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
+                <v-switch :disabled="loading" v-model="group.inventory_enabled" label="Access Inventory" color="info" style="margin-top:0px" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:15px; margin-top:15px">
                   OWNERS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
                       <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
-                    <span>Owners can manage <strong>Shared</strong> resources (servers, regions, environments, auxiliary connections, cloud keys)</span>
+                    <span>Owners can manage <strong>Shared</strong> resources (Servers, Regions, Environments, Auxiliary Connections, Cloud Keys).</span>
                   </v-tooltip>
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
@@ -86,7 +75,7 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
-              <v-card-text style="padding-bottom:0px;">
+              <v-card-text>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.deployments_enabled" label="Access Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enabled" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
@@ -135,11 +124,11 @@
                     </span>
                   </v-tooltip>
                 </div>
-                <v-switch v-model="group.deployments_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.deployments_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px" hide-details></v-switch>
                 <div v-if="group.deployments_slack_enabled">
-                  <v-text-field v-model="group.deployments_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="group.deployments_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="margin-top:15px"></v-text-field>
                   <v-text-field v-model="group.deployments_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
-                  <v-btn :loading="loading" @click="testSlack('deployments')" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                  <v-btn :loading="loading" @click="testSlack('deployments')" color="info">Test Slack</v-btn>
                 </div>
               </v-card-text>
             </v-card>
@@ -149,11 +138,11 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
               </v-toolbar>
-              <v-card-text style="padding-bottom:0px;">
+              <v-card-text>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.monitoring_enabled" label="Access Monitoring" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
-                <v-text-field v-model="group.monitoring_interval" :rules="[v => v == parseInt(v) && v > 9 || '']" label="Data Collection Interval (seconds)" required></v-text-field>
+                <v-text-field v-model="group.monitoring_interval" :rules="[v => v == parseInt(v) && v > 9 || '']" label="Data Collection Interval (seconds)" required hide-details></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -162,7 +151,7 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">UTILS</v-toolbar-title>
               </v-toolbar>
-              <v-card-text style="padding-bottom:0px;">
+              <v-card-text>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
@@ -180,9 +169,9 @@
                     </span>
                   </v-tooltip>
                 </div>
-                <v-text-field v-model="group.utils_coins" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required></v-text-field>
-                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px"></v-text-field>
-                <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
+                <v-text-field v-model="group.utils_coins" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:10px" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:10px" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:10px" hide-details></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
@@ -194,11 +183,11 @@
                     </span>
                   </v-tooltip>
                 </div>
-                <v-switch v-model="group.utils_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.utils_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;" hide-details></v-switch>
                 <div v-if="group.utils_slack_enabled">
-                  <v-text-field v-model="group.utils_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="group.utils_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
-                  <v-btn :loading="loading" @click="testSlack('utils')" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                  <v-text-field v-model="group.utils_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-text-field>
+                  <v-text-field v-model="group.utils_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="margin-top:10px"></v-text-field>
+                  <v-btn :loading="loading" @click="testSlack('utils')" color="info">Test Slack</v-btn>
                 </div>
               </v-card-text>
             </v-card>
@@ -208,9 +197,9 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">CLIENT</v-toolbar-title>
               </v-toolbar>
-              <v-card-text style="padding-bottom:0px;">
+              <v-card-text>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">
                   LIMITS
                   <v-tooltip right>
@@ -224,14 +213,14 @@
                   </span>
                 </v-tooltip>
                 </div>
-                <v-switch v-model="group.client_limits" label="Apply Limits" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
-                <v-select v-if="group.client_limits" v-model="group.client_limits_timeout_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Only SELECTs'}]" item-value="id" item-text="name" label="Execution Timeout Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
-                <v-text-field v-if="group.client_limits" v-model="group.client_limits_timeout_value" label="Execution Timeout Value" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px;"></v-text-field>
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">TRACKING</div>
-                <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
-                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
-                <v-select v-if="group.client_tracking" v-model="group.client_tracking_filter" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Succeeded'}, {id: 3, name: 'Failed'}]" item-value="id" item-text="name" label="Tracking Filter" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
-                <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Tracking Retention Days" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-text-field>
+                <v-switch v-model="group.client_limits" label="Apply Limits" color="#fa8231" style="margin-top:0px" hide-details></v-switch>
+                <v-select v-if="group.client_limits" v-model="group.client_limits_timeout_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Only SELECTs'}]" item-value="id" item-text="name" label="Execution Timeout Mode" required :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-select>
+                <v-text-field v-if="group.client_limits" v-model="group.client_limits_timeout_value" label="Execution Timeout Value" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">TRACKING</div>
+                <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px" hide-details></v-switch>
+                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-select>
+                <v-select v-if="group.client_tracking" v-model="group.client_tracking_filter" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Succeeded'}, {id: 3, name: 'Failed'}]" item-value="id" item-text="name" label="Tracking Filter" required :rules="[v => !!v || '']" style="margin-top:10px" hide-details></v-select>
+                <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Tracking Retention Days" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -327,7 +316,6 @@ export default {
     // +--------+
     group: {
       inventory_enabled: false,
-      inventory_secured: false,
       deployments_enabled: false,
       deployments_basic: false,
       deployments_pro: false,

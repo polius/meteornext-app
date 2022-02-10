@@ -79,15 +79,13 @@ class Cloud:
         for c in cloud:
             c['secret_key'] = {} if c['secret_key'] else None
         # Check Inventory Secured
-        if user['inventory_secured'] and not user['owner']:
-            cloud_secured = []
-            for c in cloud:
-                if c['shared']:
-                    cloud_secured.append({"id": c['id'], "type": c['type'], "shared": c['shared']})
-                else:
-                    cloud_secured.append(c)
-            return jsonify({'data': cloud_secured}), 200
-        return jsonify({'data': cloud}), 200
+        cloud_secured = []
+        for c in cloud:
+            if c['secured']:
+                cloud_secured.append({"id": c['id'], "name": c['name'], "type": c['type'], "shared": c['shared'], "secured": c['secured'],})
+            else:
+                cloud_secured.append(c)
+        return jsonify({'data': cloud_secured}), 200
 
     def post(self, user, cloud):
         # Check privileges
@@ -107,8 +105,12 @@ class Cloud:
         return jsonify({'message': 'Cloud key added'}), 200
 
     def put(self, user, cloud):
+        # Check cloud
+        check = self._cloud.get(user['id'], user['group_id'], cloud['id'])
+        if len(check) == 0:
+            return jsonify({'message': "The cloud key does not exist"}), 400
         # Check privileges
-        if cloud['shared'] and not user['owner']:
+        if check[0]['secured'] or (cloud['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check cloud key exists
         if self._cloud.exist(user['id'], user['group_id'], cloud):
@@ -126,7 +128,7 @@ class Cloud:
         # Check privileges
         for cloud in data:
             cloud = self._cloud.get(user['id'], user['group_id'], cloud)
-            if len(cloud) > 0 and cloud[0]['shared'] and not user['owner']:
+            if len(cloud) > 0 and cloud[0]['secured'] or (cloud[0]['shared'] and not user['owner']):
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete cloud keys
         for cloud in data:

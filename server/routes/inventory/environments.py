@@ -89,8 +89,12 @@ class Environments:
         return jsonify({'message': 'Environment added'}), 200
 
     def put(self, user, environment):
+        # Check environment
+        check = self._environments.get(user['id'], user['group_id'], environment['id'])
+        if len(check) == 0:
+            return jsonify({'message': "The environment does not exist"}), 400
         # Check privileges
-        if environment['shared'] and not user['owner']:
+        if check[0]['secured'] or (environment['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check environment exists
         if self._environments.exist(user['id'], user['group_id'], environment):
@@ -107,7 +111,7 @@ class Environments:
         # Check privileges
         for environment in environments:
             environment = self._environments.get(user['id'], user['group_id'], environment)
-            if len(environment) > 0 and environment[0]['shared'] and not user['owner']:
+            if len(environment) > 0 and environment[0]['secured'] or (environment[0]['shared'] and not user['owner']):
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete environments
         for environment in environments:

@@ -113,7 +113,6 @@ class Login:
                 'admin': 1 if user['admin'] and valid_url else 0,
                 'owner': user['owner'],
                 'inventory_enabled': user['inventory_enabled'],
-                'inventory_secured': user['inventory_secured'],
                 'deployments_enabled': user['deployments_enabled'],
                 'deployments_basic': user['deployments_basic'],
                 'deployments_pro': user['deployments_pro'],

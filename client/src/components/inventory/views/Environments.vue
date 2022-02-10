@@ -6,8 +6,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newEnvironment()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneEnvironment()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="editEnvironment()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editEnvironment()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneEnvironment()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteEnvironment()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
@@ -25,15 +25,19 @@
             @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
+        <template v-slot:[`item.name`]="{ item }">
+          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+          {{ item.name }}
+        </template>
         <template v-slot:[`item.servers`]="{ item }">
           <div v-for="server in item.servers" :key="server.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
-            <v-chip outlined label :color="server.color" style="margin-left:0px;"><span v-if="!server.active" class="font-weight-bold" style="padding-right:4px">DISABLED</span><span class="font-weight-medium" style="padding-right:4px;">{{ (server.active ? '' : '| ') + server.server }}</span> - {{ server.region }}</v-chip>
+            <v-chip outlined label :color="server.color" style="margin-left:0px;">
+              <v-icon v-if="!server.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+              <span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span>
+              - {{ server.region }}
+            </v-chip>
           </div>
-        </template>
-        <template v-slot:[`item.shared`]="{ item }">
-          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-          <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
-          {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
         <template v-slot:[`footer.prepend`]>
           <div v-if="disabledResources" class="text-body-2 font-weight-regular" style="margin:10px"><v-icon small color="warning" style="margin-right:10px; margin-bottom:2px">fas fa-exclamation-triangle</v-icon>Some environments contain servers that are disabled. Consider the possibility of upgrading your license.</div>
@@ -46,18 +50,18 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the environment only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the environment for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
+                <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field v-if="mode!='delete'" :readonly="readOnly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field v-if="mode!='delete'" :readonly="readonly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
@@ -66,7 +70,7 @@
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center;">No servers to be selected</div>
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readonly" transition>
                         <template v-slot:label="{ item }">
                           <v-icon v-if="item.children" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="item.shared ? 'margin-right:10px; margin-bottom:2px' : 'margin-left:2px; margin-right:16px; margin-bottom:2px'">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                           {{ item.name }}
@@ -85,13 +89,8 @@
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <div v-if="readOnly">
-                    <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
-                  </div>
-                  <div v-else>
-                    <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
-                    <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
-                  </div>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -124,10 +123,8 @@ export default {
     disabledResources: false,
     filter: 'all',
     headers: [
-      { text: 'Id', align: ' d-none', value: 'id' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Servers', align: 'left', value: 'servers' },
-      { text: 'Scope', align: 'left', value: 'shared', width: "10%" }
     ],
     environments: [],
     items: [],
@@ -153,8 +150,7 @@ export default {
   }),
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    readonly: function() { return this.item.shared == 1 && !this.owner },
     treeviewFiltered: function() {
       if (this.item.shared && this.treeviewItems.length > 0) {
         var items = JSON.parse(JSON.stringify(this.treeviewItems))
@@ -176,6 +172,7 @@ export default {
   },
   methods: {
     getEnvironments() {
+      this.loading = true
       axios.get('/inventory/environments')
         .then((response) => {
           this.treeviewItems = this.parseTreeView(response.data.servers)
@@ -183,12 +180,12 @@ export default {
           this.environments = this.parseEnvironments(response.data.environments)
           this.items = this.environments.slice(0)
           this.filterBy(this.filter)
-          this.loading = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.loading = false)
     },
     parseTreeView(servers) {
       var treeview = []
@@ -237,7 +234,7 @@ export default {
       
       // Parse Environments
       for (let i = 0; i < environments.length; ++i) {
-        let row = { id: environments[i]['id'], name: environments[i]['name'], shared: environments[i]['shared'], servers: []}
+        let row = { id: environments[i]['id'], name: environments[i]['name'], shared: environments[i]['shared'], secured: environments[i]['secured'], servers: []}
         if (environments[i]['id'] in this.environment_servers) {
           for (let j = 0; j < this.environment_servers[environments[i]['id']].length; ++j) {
             for (let k = 0; k < this.environment_servers[environments[i]['id']][j]['children'].length; ++k) {
@@ -421,7 +418,7 @@ export default {
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.field !== 'undefined' && !this.readonly) this.$refs.field.focus()
       })
     },
     treeviewFiltered() {

@@ -7,7 +7,7 @@ class Cloud:
     def get(self, user_id, group_id, cloud_id=None):
         if cloud_id is None:
             query = """
-                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, secured, created_by, created_at
                 FROM cloud
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
@@ -16,7 +16,7 @@ class Cloud:
             return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
-                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, secured, created_by, created_at
                 FROM cloud
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)

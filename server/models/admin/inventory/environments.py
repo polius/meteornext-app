@@ -7,7 +7,7 @@ class Environments:
     def get(self, group_id=None, user_id=None):
         if user_id is not None:
             query = """
-                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, e.secured, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 JOIN users u0 ON u0.id = %(user_id)s
                 JOIN groups g ON g.id = e.group_id AND g.id = u0.group_id
@@ -22,7 +22,7 @@ class Environments:
             return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
             query = """
-                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, e.secured, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
@@ -36,7 +36,7 @@ class Environments:
             return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, e.secured, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
@@ -50,10 +50,10 @@ class Environments:
 
     def post(self, user, environment):
         query = """
-            INSERT INTO environments (name, group_id, shared, owner_id, created_by, created_at) 
-            SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
+            INSERT INTO environments (name, group_id, shared, owner_id, secured, created_by, created_at) 
+            SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s, %s
         """
-        environment_id = self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        environment_id = self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['shared'], environment['owner_id'], environment['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
@@ -127,7 +127,7 @@ class Environments:
     def get_servers(self, group_id, owner_id=None):
         if owner_id is not None:
             query = """
-                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', s.secured AS 'server_secured', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 WHERE r.group_id = %s
@@ -136,7 +136,7 @@ class Environments:
             return self._sql.execute(query, (group_id, owner_id))
         else:
             query = """
-                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', s.secured AS 'server_secured', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 WHERE r.group_id = %s

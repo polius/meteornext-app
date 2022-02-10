@@ -21,9 +21,8 @@
         </template>
         <template v-slot:[`item.server_id`]="{ item }">
           <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-            <v-icon small :title="item.server_shared ? 'Shared' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="margin-right:8px">
-              {{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}
-            </v-icon>
+            <v-icon small :title="item.server_shared ? item.server_secured ? 'Shared (Secured)' : 'Shared' : item.server_secured ? 'Personal (Secured)' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.server_secured ? 'padding-right:8px' : ''}`">{{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+            <v-icon v-if="item.server_secured" :title="item.server_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
             {{ item.server_name }}
           </v-btn>
         </template>

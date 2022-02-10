@@ -66,7 +66,7 @@ class MySQL:
                 if self._server['ssh']['enabled']:
                     sshtunnel.SSH_TIMEOUT = 5.0
                     pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=sshtunnel.create_logger(loglevel="ERROR"))
                     self._tunnel.start()
                     try:
                         port = self._tunnel.local_bind_port
@@ -201,16 +201,6 @@ class MySQL:
 
     def explain(self, query, database=None):
         return self.execute('EXPLAIN {}'.format(query), database=database)['data']
-
-    def __logger(self):
-        # Create a Logger to suppress sshtunnel warnings
-        log = logging.getLogger('sshtunnel')
-        log.setLevel(level=logging.CRITICAL)
-        if not log.hasHandlers():
-            sh = logging.StreamHandler()
-            sh.setLevel(level=logging.CRITICAL)
-            log.addHandler(sh)
-        return log
 
     def __get_ssl(self):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}

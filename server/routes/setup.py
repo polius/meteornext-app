@@ -42,6 +42,7 @@ import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
 import routes.client.client
+import routes.utils.utils
 import routes.utils.imports
 import routes.utils.exports
 import routes.utils.clones
@@ -122,12 +123,13 @@ class Setup:
         monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
+        utils = routes.utils.utils.Utils(self._app, sql, self._license)
         imports = routes.utils.imports.Imports(self._app, sql, self._license)
         exports = routes.utils.exports.Exports(self._app, sql, self._license)
         clones = routes.utils.clones.Clones(self._app, sql, self._license)
 
         # Register all blueprints
-        blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, imports, exports, clones]
+        blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, utils, client, imports, exports, clones]
         for i in blueprints:
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 

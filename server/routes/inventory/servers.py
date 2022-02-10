@@ -111,15 +111,13 @@ class Servers:
             server['ssl_client_certificate'] = '<ssl_client_certificate>' if server['ssl_client_certificate'] is not None else None
             server['ssl_ca_certificate'] = '<ssl_ca_certificate>' if server['ssl_ca_certificate'] is not None else None
         # Check Inventory Secured
-        if not user['admin'] and user['inventory_secured'] and not user['owner']:
-            servers_secured = []
-            for s in servers:
-                if s['shared']:
-                    servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "usage": s['usage'], "active": s['active'], "ssh": s['ssh'], "ssl": s['ssl']})
-                else:
-                    servers_secured.append(s)
-            return jsonify({'data': servers_secured}), 200
-        return jsonify({'data': servers}), 200
+        servers_secured = []
+        for s in servers:
+            if s['secured']:
+                servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "usage": s['usage'], "active": s['active'], "ssh": s['ssh'], "ssl": s['ssl']})
+            else:
+                servers_secured.append(s)
+        return jsonify({'data': servers_secured}), 200
 
     def post(self, user, server):
         # Check privileges
@@ -145,8 +143,12 @@ class Servers:
         return jsonify({'message': 'Server added'}), 200
 
     def put(self, user, server):
+        # Check server
+        check = self._servers.get(user['id'], user['group_id'], server['id'])
+        if len(check) == 0:
+            return jsonify({'message': "The server does not exist"}), 400
         # Check privileges
-        if server['shared'] and not user['owner']:
+        if check[0]['secured'] or (server['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
@@ -170,7 +172,7 @@ class Servers:
         # Check privileges
         for server in servers:
             server = self._servers.get(user['id'], user['group_id'], server)
-            if len(server) > 0 and server[0]['shared'] and not user['owner']:
+            if len(server) > 0 and server[0]['secured'] or (server[0]['shared'] and not user['owner']):
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Check inconsistencies
         if 'check' in request.args and json.loads(request.args['check']) is True:

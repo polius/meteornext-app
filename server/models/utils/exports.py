@@ -8,7 +8,7 @@ class Exports:
     def get(self, user_id=None, export_uri=None):
         if export_uri:
             query = """
-                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', q.queue
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 LEFT JOIN
@@ -35,7 +35,7 @@ class Exports:
             return self._sql.execute(query, (export_uri))
         else:
             query = """
-                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', q.queue
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 LEFT JOIN
@@ -81,7 +81,7 @@ class Exports:
 
     def get_servers(self, user):
         query = """
-            SELECT s.id, s.name, s.shared, t.id IS NOT NULL AS 'active'
+            SELECT s.id, s.name, s.shared, s.secured, t.id IS NOT NULL AS 'active'
             FROM servers s
             LEFT JOIN (
                 SELECT s.id

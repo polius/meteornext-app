@@ -8,7 +8,7 @@ class Imports:
     def get(self, user_id=None, import_uri=None):
         if import_uri:
             query = """
-                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', q.queue
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 LEFT JOIN
@@ -35,7 +35,7 @@ class Imports:
             return self._sql.execute(query, (import_uri))
         else:
             query = """
-                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', q.queue
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 LEFT JOIN
@@ -81,7 +81,7 @@ class Imports:
 
     def get_servers(self, user):
         query = """
-            SELECT s.id, s.name, s.shared, s.region_id, t.id IS NOT NULL AS 'active'
+            SELECT s.id, s.name, s.shared, s.secured, s.region_id, t.id IS NOT NULL AS 'active'
             FROM servers s
             LEFT JOIN (
                 SELECT s.id

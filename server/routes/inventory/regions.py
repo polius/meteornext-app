@@ -94,15 +94,13 @@ class Regions:
         for region in regions:
             region['key'] = '<ssh_key>' if region['key'] is not None else None
         # Check Inventory Secured
-        if user['inventory_secured'] and not user['owner']:
-            regions_secured = []
-            for r in regions:
-                if r['shared']:
-                    regions_secured.append({"id": r['id'], "name": r['name'], "ssh_tunnel": r['ssh_tunnel'], "key": r['key'], "shared": r['shared']})
-                else:
-                    regions_secured.append(r)
-            return jsonify({'data': regions_secured}), 200
-        return jsonify({'data': regions}), 200
+        regions_secured = []
+        for r in regions:
+            if r['secured']:
+                regions_secured.append({"id": r['id'], "name": r['name'], "ssh_tunnel": r['ssh_tunnel'], "key": r['key'], "shared": r['shared'], "secured": r['secured'],})
+            else:
+                regions_secured.append(r)
+        return jsonify({'data': regions_secured}), 200
 
     def post(self, user, region):
         # Check privileges
@@ -120,8 +118,12 @@ class Regions:
         return jsonify({'message': 'Region added'}), 200
 
     def put(self, user, region):
+        # Check region
+        check = self._regions.get(user['id'], user['group_id'], region['id'])
+        if len(check) == 0:
+            return jsonify({'message': "The region does not exist"}), 400
         # Check privileges
-        if region['shared'] and not user['owner']:
+        if check[0]['secured'] or (region['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check region exists
         if self._regions.exist(user['id'], user['group_id'], region):
@@ -139,7 +141,7 @@ class Regions:
         # Check privileges
         for region in regions:
             region = self._regions.get(user['id'], user['group_id'], region)
-            if len(region) > 0 and region[0]['shared'] and not user['owner']:
+            if len(region) > 0 and region[0]['secured'] or (region[0]['shared'] and not user['owner']):
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete regions
         for region in regions:

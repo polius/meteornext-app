@@ -6,9 +6,11 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
           <v-btn text @click="newServer()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneServer()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="editServer()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteServer()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editServer()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneServer()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+          <v-btn :disabled="selected.length == 0 || selected.some(x => x.secured) || (!owner && selected.some(x => x.shared))" text @click="deleteServer()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="testServer" :disabled="selected.length != 1" title="Test a server connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -28,17 +30,15 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.name`]="{ item }">
-          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-bottom:2px; margin-right:6px">fas fa-exclamation-triangle</v-icon>
+          <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
           {{ item.name }}
         </template>
         <template v-slot:[`item.region`]="{ item }">
-          <v-icon v-if="item.region" small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.region_secured ? 'padding-right:6px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:6px">fas fa-lock</v-icon>
           {{ item.region }}
-        </template>
-        <template v-slot:[`item.shared`]="{ item }">
-          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-          <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
-          {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
         <template v-slot:[`item.usage`]="{ item }">
           <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#EF5354" style="margin-right:5px">fas fa-circle</v-icon>
@@ -60,29 +60,31 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:25px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
+                <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px">
                   <v-row no-gutters style="margin-top:15px">
                     <v-col cols="6" style="padding-right:10px">
-                      <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                      <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px; margin-top:0px"></v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:10px">
-                      <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;">
+                      <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readonly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px; margin-top:0px">
                         <template v-slot:[`selection`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
                           {{ item.name }}
                         </template>
                         <template v-slot:[`item`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
@@ -90,23 +92,23 @@
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.engine" :readonly="readOnly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.engine" :readonly="readonly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.version" :readonly="readonly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
-                  <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
+                  <div style="margin-bottom:15px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.hostname" :readonly="readonly" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.port" :readonly="readonly" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required autocomplete="username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px;" hide-details>
+                    <v-text-field v-model="item.username" :readonly="readonly" :rules="[v => !!v || '']" label="Username" required autocomplete="username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readonly" label="Password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px;" hide-details>
                       <template v-slot:[`append`]>
                         <v-btn title="Generate password" @click="generatePassword" icon><v-icon>mdi-key</v-icon></v-btn>
                         <v-btn :title="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword" icon><v-icon>{{ showPassword ? 'mdi-eye' : 'mdi-eye-off' }}</v-icon></v-btn>
@@ -114,7 +116,7 @@
                     </v-text-field>
                     <!-- SSL -->
                     <div v-if="(item.ssl_client_key == null || typeof item.ssl_client_key === 'object') && (item.ssl_client_certificate == null || typeof item.ssl_client_certificate === 'object') && (item.ssl_ca_certificate == null || typeof item.ssl_ca_certificate === 'object')">
-                      <v-switch v-model="item.ssl" :readonly="readOnly" flat label="SSL Connection" hide-details style="margin-top:20px"></v-switch>
+                      <v-switch v-model="item.ssl" :readonly="readonly" flat label="SSL Connection" hide-details style="margin-top:20px"></v-switch>
                       <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
                         <v-col style="padding-right:10px;">
                           <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
@@ -136,25 +138,20 @@
                           <div class="text-body-1" style="color:#00b16a; margin-top:15px">{{ 'Using a SSL connection (' + ssl_active + ')' }}</div>
                         </v-col>
                         <v-col cols="auto" class="text-right">
-                          <v-btn v-if="!readOnly" @click="removeSSL" icon title="Remove SSL connection" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                          <v-btn v-if="!readonly" @click="removeSSL" icon title="Remove SSL connection" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
                         </v-col>
                       </v-row>
                     </v-card>
-                    <v-checkbox v-if="item.ssl" :readonly="readOnly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
-                    <v-select outlined v-model="item.usage" :items="usage" :readonly="readOnly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
+                    <v-checkbox v-if="item.ssl" :readonly="readonly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
+                    <v-select outlined v-model="item.usage" :items="usage" :readonly="readonly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
+                <v-row no-gutters style="margin-top:15px;">
                   <v-col cols="auto" class="mr-auto">
-                    <div v-if="readOnly">
-                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
-                    </div>
-                    <div v-else>
-                      <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
-                    </div>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
@@ -192,7 +189,6 @@
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="SSL" value="ssl" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Usage" value="usage" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
@@ -220,7 +216,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert dense color="#EF5354" style="margin-top:15px">This server is being used in some sections.</v-alert>
+                <v-alert dense color="#EF5354">This server is being used in some sections.</v-alert>
                 <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
@@ -260,7 +256,6 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'SSL', align: 'left', value: 'ssl'},
-      { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Usage', align: 'left', value: 'usage' },
     ],
     servers: [],
@@ -297,8 +292,7 @@ export default {
   }),
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    readonly: function() { return this.item.shared == 1 && !this.owner },
     deployments_enabled: function() { return this.$store.getters['app/deployments_enabled'] },
     monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
     utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
@@ -325,6 +319,7 @@ export default {
       if (this.client_enabled) this.usage.push('Client')
     },
     getServers() {
+      this.loading = true
       axios.get('/inventory/servers')
         .then((response) => {
           this.servers = response.data.data
@@ -340,7 +335,7 @@ export default {
     getRegions() {
       axios.get('/inventory/regions')
         .then((response) => {
-          this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
+          this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared, secured: x.secured }))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -381,6 +376,10 @@ export default {
       this.mode = 'delete'
       this.dialog_title = 'DELETE SERVER'
       this.dialog = true
+    },
+    testServer() {
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.testConnection()
     },
     submitServer(check=true) {
       this.confirm_dialog = false
@@ -483,7 +482,7 @@ export default {
     },
     async testConnection() {
       // Check if all fields are filled
-      if (!this.$refs.form.validate()) {
+      if (!this.item.secured && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
@@ -491,7 +490,7 @@ export default {
       let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
       let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
       let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
-      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+      if (!this.item.secured && this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
@@ -499,7 +498,7 @@ export default {
       this.loading = true
       const payload = {
         region: this.item.region_id,
-        server: (this.readOnly && this.inventory_secured) ? this.item.id : { id: this.item.id, engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password, ssl: this.item.ssl, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
+        server: this.item.secured ? this.item.id : { id: this.item.id, engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password, ssl: this.item.ssl, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
@@ -596,7 +595,7 @@ export default {
       this.showPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.field !== 'undefined' && !this.readonly) this.$refs.field.focus()
       })
     }
   }

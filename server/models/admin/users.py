@@ -28,7 +28,7 @@ class Users:
                     u.*,
                     g.name AS `group`,
                     go.user_id IS NOT NULL AS 'owner',
-                    g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.utils_coins, g.coins_day,
+                    g.inventory_enabled, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.utils_coins, g.coins_day,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_pub_key IS NOT NULL THEN 'webauthn'

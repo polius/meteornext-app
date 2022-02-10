@@ -46,7 +46,8 @@
                     <v-col cols="6" style="padding-left:10px">
                       <v-text-field readonly v-model="server.region" label="Region">
                         <template v-slot:prepend-inner>
-                          <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon small :title="server.region_shared ? server.region_secured ? 'Shared (Secured)' : 'Shared' : server.region_secured ? 'Personal (Secured)' : 'Personal'" :color="server.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!server.region_secured ? 'padding-right:6px' : ''}`">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon v-if="server.region_secured" :title="server.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="server.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:6px">fas fa-lock</v-icon>
                         </template>
                       </v-text-field>
                     </v-col>
@@ -145,7 +146,7 @@ export default {
       this.showPassword = false
       this.serverDialog = true
       const payload = { server_id: server_id }
-      axios.get('/inventory/servers', { params: payload })
+      axios.get('/utils/servers', { params: payload })
         .then((response) => {
           // Build usage
           let usage = []
