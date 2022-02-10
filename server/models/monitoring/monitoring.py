@@ -7,7 +7,7 @@ class Monitoring:
 
     def get(self, user, server_id):
         query = """
-            SELECT ms.*, s.name, s.hostname, t.id IS NOT NULL AS 'active', r.name AS 'region'
+            SELECT ms.*, s.name, s.hostname, t.id IS NOT NULL AS 'active', r.name AS 'region', r.shared AS 'region_shared'
             FROM monitoring_servers ms
             JOIN servers s ON s.id = ms.server_id AND s.id = %(server_id)s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
@@ -28,7 +28,7 @@ class Monitoring:
 
     def get_monitoring(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled IS NOT NULL AND m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared', s.hostname, (m.monitor_enabled IS NOT NULL AND m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN (

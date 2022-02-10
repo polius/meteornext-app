@@ -100,11 +100,11 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+                <v-form ref="form" style="margin-bottom:15px">
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -112,9 +112,13 @@
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
                       <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                        <template v-slot:label="{ item }">
+                          <v-icon v-if="item.children" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="item.shared ? 'margin-right:10px; margin-bottom:2px' : 'margin-left:2px; margin-right:16px; margin-bottom:2px'">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children && !item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
-                          <v-icon v-if="!item.children" small>fas fa-database</v-icon>
+                          <v-icon v-if="!item.children" small>fas fa-server</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
                           <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
@@ -124,7 +128,7 @@
                   </v-card>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
+                <div style="margin-top:15px">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="#EF5354" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
@@ -557,16 +561,11 @@ export default {
       if (servers.length == 0) return data
 
       // Parse Servers
-      var current_region = null
       for (let i = 0; i < servers.length; ++i) {
-        if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
-          current_region = 'r' + servers[i]['region_id']
-        } else {
-          let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] })
-          data.push(row)
-        }
+        let index = data.findIndex(x => x.id == 'r' + servers[i]['region_id'])
+        if (index == -1) data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], shared: servers[i]['region_shared'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active'] }] })
+        else data[index]['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'], active: servers[i]['server_active']})
+
         // Check selected
         if (servers[i]['selected']) {
           selected.push(servers[i]['server_id'])
