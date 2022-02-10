@@ -8,12 +8,13 @@ class Monitoring:
     def get_servers(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, m.server_id IS NOT NULL AS 'attached', m.date
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, available.region_shared, m.server_id IS NOT NULL AS 'attached', m.date
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, r.shared AS 'region_shared'
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
+                    LEFT JOIN regions r ON r.id = s.region_id
                     WHERE (s.shared = 1 OR u.id IS NOT NULL)
                     AND s.usage LIKE '%%M%%'
                 ) available
@@ -60,12 +61,13 @@ class Monitoring:
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, m.server_id IS NOT NULL AS 'attached', m.date
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, available.region_shared, m.server_id IS NOT NULL AS 'attached', m.date
                 FROM (
-                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, r.shared AS 'region_shared'
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
+                    LEFT JOIN regions r ON r.id = s.region_id
                     WHERE (s.shared = 1 OR u.id IS NOT NULL)
                     AND s.usage LIKE '%%M%%'
                     {} {}
