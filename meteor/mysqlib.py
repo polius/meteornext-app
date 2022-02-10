@@ -22,12 +22,9 @@ class MySQL:
         # Close existing connections
         self.stop()
 
-        # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open(os.devnull, 'w')
-
+        # Start new connection
         error = None
-        for _ in range(3):
+        for _ in range(2):
             # Check if thread is alive
             if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
                 self.stop()
@@ -39,13 +36,13 @@ class MySQL:
                 # Start SSH Tunnel
                 if 'ssh' in self._server and self._server['ssh']['enabled']:
                     sshtunnel.SSH_TIMEOUT = 5.0
+                    logger = sshtunnel.create_logger(loglevel='CRITICAL')
                     pkey = paramiko.RSAKey.from_private_key_file(self._server['ssh']['key'], password=self._server['ssh']['password'])
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']), logger=logger)
                     self._tunnel.start()
                     try:
                         port = self._tunnel.local_bind_port
                     except Exception:
-                        self.stop()
                         raise Exception("Can't connect to the SSH Server.")
 
                 # Start SQL Connection
@@ -53,24 +50,21 @@ class MySQL:
                 port = port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 timeout = None if 'timeout' not in self._server['sql'] else self._server['sql']['timeout']
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=self._server['sql'].get('autocommit', False), read_timeout=timeout, write_timeout=timeout, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=self._server['sql'].get('autocommit', False), read_timeout=timeout, write_timeout=timeout, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 return
 
             except Exception as e:
-                self.stop()
                 error = e
                 time.sleep(1)
 
             finally:
+                # Close Connections
+                self.stop()
                 # Close SSL
                 self.__close_ssl(ssl)
-                # Show Errors Output Again
-                sys.stderr = sys_stderr
 
-        # Check errors
-        if error is not None:
-            self.stop()
-            raise error
+        # Raise error
+        raise error
 
     def stop(self):
         self.rollback()
@@ -85,22 +79,11 @@ class MySQL:
             pass
 
     def execute(self, query, args=None, database=None):
-        # Select the database
-        if database:
-            self._sql.select_db(database)
-
-        # Prepare the cursor
-        with self._sql.cursor(OrderedDictCursor) as cursor:
-            # Execute the SQL query
-            start_time = time.time()
-            cursor.execute(query, args)
-
-            # Get the query results
-            query_result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
-
-        # Return query info
-        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time), "query_rows_affected": cursor.rowcount}
-        return query_data
+        try:
+            return self.__execute_query(query, args, database)
+        except Exception:
+            self.start()
+            return self.__execute_query(query, args, database)
 
     def mogrify(self, query, args=None):
         with self._sql.cursor(OrderedDictCursor) as cursor:
@@ -117,6 +100,24 @@ class MySQL:
             self._sql.rollback()
         except Exception:
             pass
+
+    def __execute_query(self, query, args=None, database=None):
+        # Select the database
+        if database:
+            self._sql.select_db(database)
+
+        # Prepare the cursor
+        with self._sql.cursor(OrderedDictCursor) as cursor:
+            # Execute the SQL query
+            start_time = time.time()
+            cursor.execute(query, args)
+
+            # Get the query results
+            query_result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+
+        # Return query info
+        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time), "query_rows_affected": cursor.rowcount}
+        return query_data
 
     def __get_ssl(self):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}

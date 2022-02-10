@@ -107,42 +107,47 @@ class validate_regions:
                        finished = self._progress.check_region_update(self._region['id'])
 
     def __validate_sql(self, server):
-        # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open('/dev/null', 'w')
-
         current_thread = threading.current_thread()
         error = None
-        attempts = 3
-
+        attempts = 2
         for _ in range(attempts):
             try:
                 # Get SSL
                 ssl = self.__get_ssl(server)
                 if self._region['ssh']['enabled']:
-                    ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
+                    # Start SSH Connection
                     sshtunnel.SSH_TIMEOUT = 5.0
-                    with sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
-                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-                        conn.close()
-                else:
-                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-                    conn.close()
-                current_thread.progress = {"id": server['id'], "name": server['name'], "shared": server['shared'], "success": True}
-                error = None
-                break
+                    logger = sshtunnel.create_logger(loglevel='CRITICAL')
+                    ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
+                    tunnel = sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port'])), logger=logger)
+                    tunnel.start()
+                    try:
+                        port = tunnel.local_bind_port
+                    except Exception:
+                        raise Exception("Can't connect to the SSH Server.")
+                # Start SQL Connection
+                host = '127.0.0.1' if self._region['ssh']['enabled'] else server['hostname']
+                port = port if self._region['ssh']['enabled'] else server['port']
+                conn = pymysql.connect(host=host, port=int(port), user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                return
             except Exception as e:
                 error = e
-                time.sleep(2)
+                time.sleep(1)
             finally:
+                # Close Connections
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                try:
+                    tunnel.close()
+                except Exception:
+                    pass
                 # Close SSL
                 self.__close_ssl(ssl)
 
-        # Show Errors Output Again
-        sys.stderr = sys_stderr
-
-        if error:
-            current_thread.progress = {"id": server['id'], "name": server['name'], "shared": server['shared'], "success": False, "error": str(error).replace('\n','')}
+        # Track error
+        current_thread.progress = {"id": server['id'], "name": server['name'], "shared": server['shared'], "success": False, "error": str(error).replace('\n','')}
 
     def __get_ssl(self, server):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
