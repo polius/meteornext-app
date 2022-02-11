@@ -94,11 +94,12 @@ class Regions:
     ####################
     def get(self):
         # Get args
+        region_id = request.args['id'] if 'id' in request.args else None
         group_id = request.args['group_id'] if 'group_id' in request.args else None
         owner_id = request.args['owner_id'] if 'owner_id' in request.args else None
         user_id = request.args['user_id'] if 'user_id' in request.args else None
         # Get regions
-        regions = self._regions.get(group_id=group_id, owner_id=owner_id, user_id=user_id)
+        regions = self._regions.get(group_id=group_id, owner_id=owner_id, region_id=region_id, user_id=user_id)
         # Protect SSH Private Key
         for region in regions:
             region['key'] = '<ssh_key>' if region['key'] is not None else None

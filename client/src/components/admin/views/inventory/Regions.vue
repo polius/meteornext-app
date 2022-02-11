@@ -46,7 +46,7 @@
                 <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px">
                   <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
@@ -127,7 +127,6 @@
                   <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Private Key" value="key" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
@@ -164,7 +163,6 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Key', align: 'left', value: 'key'},
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
       { text: 'Created By', align: 'left', value: 'created_by' },
@@ -390,7 +388,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','key','shared','group','owner','created_by','created_at','updated_by','updated_at','servers']
+      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','shared','group','owner','created_by','created_at','updated_by','updated_at','servers']
     },
     deselectAllColumns() {
       this.columnsRaw = []
