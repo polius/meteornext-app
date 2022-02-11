@@ -105,7 +105,7 @@ let router = new VueRouter({
           meta: { requiresDeployments: true }
         },
         {
-          path: 'new',
+          path: 'new/:mode/:uri?',
           name: 'deployments.new',
           component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresDeployments: true }

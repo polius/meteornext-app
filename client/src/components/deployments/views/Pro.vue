@@ -157,9 +157,6 @@ export default {
       // Execution
       environment_items: [],
 
-      // Code
-      code: '',
-
       // Init Code Parameters
       cmOptions: {
         readOnly: true,
@@ -226,7 +223,7 @@ export default {
       queryDialogTitle: '',
       
       // Loading Fields
-      loading_code: true,
+      loading_code: false,
       loading_env: true,
       loading_rel: true,
 
@@ -242,7 +239,7 @@ export default {
   created() {
     this.getReleases()
     this.getEnvironments()
-    this.getCode()
+    if (this.$route.params.uri == undefined) this.getCode()
   },
   computed: {
     name: {
@@ -256,6 +253,10 @@ export default {
     environment: {
       get() { return this.fields.environment },
       set(val) { this.$emit('change', {"name": "environment", "value": val}) }
+    },
+    code: {
+      get() { return this.fields.code },
+      set(val) { this.$emit('change', {"name": "code", "value": val}) }
     },
   },
   mounted() {

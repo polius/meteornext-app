@@ -197,11 +197,9 @@ import 'codemirror/addon/display/fullscreen.css'
 export default {
   data() {
     return {
-      databases: '',
-
       // Query
       query_headers: [{ text: 'Query', value: 'query' }],
-      query_items: [],
+      // query_items: [],
       query_selected: [],
       query_mode: '', // new, edit, delete
 
@@ -302,6 +300,14 @@ export default {
     environment: {
       get() { return this.fields.environment },
       set(val) { this.$emit('change', {"name": "environment", "value": val}) }
+    },
+    databases: {
+      get() { return this.fields.databases },
+      set(val) { this.$emit('change', {"name": "databases", "value": val}) }
+    },
+    query_items: {
+      get() { return this.fields.queries },
+      set(val) { this.$emit('change', {"name": "queries", "value": val}) }
     },
   },
   methods: {
@@ -482,7 +488,7 @@ export default {
         release: this.release,
         environment: this.environment,
         databases: this.databases,
-        queries: JSON.stringify(this.query_items),
+        queries: JSON.stringify(this.query_items.map(x => ({q: x.query}))),
         method: this.method.toUpperCase(),
         scheduled: null,
         start_execution: false,

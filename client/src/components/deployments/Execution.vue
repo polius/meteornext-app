@@ -48,7 +48,7 @@
       <v-card-text v-else>
         <!-- INFORMATION -->
         <v-card>
-          <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
+          <v-data-table :loading="loading" :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.environment`]="{ item }">
               {{ item.environment.name }}
             </template>
@@ -810,7 +810,7 @@
         }
       },
       // Loading
-      loading: false,
+      loading: true,
       timer: null,
 
       // Snackbar
@@ -875,6 +875,7 @@
               }
               else this.start_execution = false
             }
+            this.loading = false
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -917,7 +918,7 @@
         this.deployment['release'] = data['release']
         this.deployment['environment'] = { id: data['environment_id'], name: data['environment_name'] }
         this.deployment['query_headers'] = [{text: 'Query', value: 'query'}]
-        this.deployment['queries'] = this.deployment['mode'] == 'BASIC' ? JSON.parse(data['queries']) : []
+        this.deployment['queries'] = []
         this.deployment['databases'] = this.deployment['mode'] == 'BASIC' ? data['databases'] : ''
         this.deployment['code'] = this.deployment['mode'] == 'PRO' ? data['code'] : ''
         this.deployment['method'] = data['method'].toLowerCase()
@@ -936,6 +937,12 @@
         this.deployment['shared'] = data['shared']
         this.deployment['overall'] = data['overall']
         this.deployment['owner'] = data['owner']
+
+        // Parse Queries
+        if (this.deployment['mode'] == 'BASIC') {
+          let items = JSON.parse(data['queries'])
+          for (let i = 0; i < items.length; ++i) this.deployment['queries'].push({id: i+1, query: items[i]['q']})
+        }
 
         // Parse Shared
         this.shareDeploymentUrl = window.location.href

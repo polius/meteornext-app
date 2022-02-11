@@ -5,8 +5,9 @@
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items>
-          <v-btn text title="Create a new deployment" @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn :disabled="!deploymentsBasic && !deploymentsPro" text title="Create a new deployment" @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn title="Show a deployment's details" :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+          <v-btn title="Create a deployment with the same config as the selected one" :disabled="selected.length != 1" @click="cloneDeploy()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn @click="pinDeployments()" :disabled="selected.length == 0" :title="`${pinMode.charAt(0).toUpperCase() + pinMode.slice(1)} a deployment`" text><v-icon small style="padding-right:10px">fas fa-thumbtack</v-icon>{{ pinMode.toUpperCase() }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
@@ -330,6 +331,8 @@ export default {
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     pinMode() { return this.selected.length == 0 || this.selected.find(x => !x.is_pinned) ? 'pin' : 'unpin' },
+    deploymentsBasic : function() { return this.$store.getters['app/deployments_basic'] },
+    deploymentsPro : function() { return this.$store.getters['app/deployments_pro'] },
   },
   methods: {
     getDeployments() {
@@ -436,10 +439,14 @@ export default {
       return date
     },
     newDeploy() {
-      this.$router.push({ name:'deployments.new' })
+      if (this.deploymentsBasic) this.$router.push('/deployments/new/basic')
+      else if (this.deploymentsPro) this.$router.push('/deployments/new/pro')
     },
     infoDeploy() {
       this.$router.push({ name:'deployments.execution', params: { uri: this.selected[0]['uri'] }})
+    },
+    cloneDeploy() {
+      this.$router.push({ name: 'deployments.new', params: { mode: this.selected[0]['mode'].toLowerCase(), uri: this.selected[0]['uri'] }})
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
