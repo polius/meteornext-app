@@ -50,7 +50,7 @@ class Monitoring_Queries:
             sort_order = 'DESC' if msort['desc'] else 'ASC'
 
         query = """
-            SELECT q.id, s.id AS 'server_id', s.name AS 'server', s.shared, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
+            SELECT q.id, s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
             FROM monitoring_queries q
             JOIN monitoring m ON m.server_id = q.server_id AND m.queries_enabled = 1 AND m.user_id = {0}
             JOIN servers s ON s.id = q.server_id

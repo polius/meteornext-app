@@ -52,29 +52,31 @@
                       </v-text-field>
                     </v-col>
                   </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row v-if="'hostname' in server" no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-text-field v-if="'username' in server" readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-if="'password' in server" readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" :hide-details="!server.ssl && !server.ssh"></v-text-field>
+                  <div v-if="'hostname' in server">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" :hide-details="!server.ssl && !server.ssh"></v-text-field>
+                  </div>
                   <!-- SSL -->
                   <v-card v-if="server.ssl" style="height:52px; margin-bottom:15px">
                     <v-row no-gutters>
                       <v-col cols="auto" style="display:flex; margin:15px">
-                        <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        <v-icon color="#00b16a" style="font-size:17px; margin-top:3px">fas fa-key</v-icon>
                       </v-col>
                       <v-col>
                         <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
@@ -85,10 +87,21 @@
                   <v-card v-if="server.ssh" style="height:52px; margin-bottom:15px">
                     <v-row no-gutters>
                       <v-col cols="auto" style="display:flex; margin:15px">
-                        <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
+                        <v-icon color="#2196f3" style="font-size:16px; margin-top:4px">fas fa-terminal</v-icon>
                       </v-col>
                       <v-col>
                         <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <!-- SECURED -->
+                  <v-card v-if="server.secured" style="height:52px; margin-top:15px; margin-bottom:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#EF5354" style="font-size:16px; margin-top:4px">fas fa-lock</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#EF5354; margin-top:15px">This server is secured</div>
                       </v-col>
                     </v-row>
                   </v-card>

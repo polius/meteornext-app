@@ -70,7 +70,7 @@ class Utils:
     def get(self, user):
         # Get servers
         servers = self._servers_admin.get(server_id=request.args['server_id']) if user['admin'] else self._servers.get(user['id'], user['group_id'], request.args['server_id'])
-      
+
         # Protect SSL Keys
         for server in servers:
             server['ssl_client_key'] = '<ssl_client_key>' if server['ssl_client_key'] is not None else None
@@ -82,7 +82,7 @@ class Utils:
             servers_secured = []
             for s in servers:
                 if s['secured']:
-                    servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "usage": s['usage'], "active": s['active'], "ssh": s['ssh'], "ssl": s['ssl']})
+                    servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "usage": s['usage'], "ssh": s['ssh'], "ssl": s['ssl']})
                 else:
                     servers_secured.append(s)
             return jsonify({'data': servers_secured}), 200
