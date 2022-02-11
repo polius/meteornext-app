@@ -28,8 +28,8 @@
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the cloud key only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the cloud key for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-checkbox title="Prevent this resource to be edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-checkbox v-if="mode != 'delete'" title="Prevent this resource from being edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
             <template v-slot:label>
               <div style="color:white">Secured</div>
             </template>
@@ -41,8 +41,8 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px">
-                  <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
+                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px">
+                  <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
                       <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
@@ -102,7 +102,7 @@
                     </v-data-table>
                   </v-card>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected cloud keys?</div>
+                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected cloud keys?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
@@ -219,7 +219,6 @@ export default {
     // Dialog
     dialog: false,
     dialog_title: '',
-    dialog_valid: false,
     bucketsHeaders: [
       { text: 'Name', align: 'left', value: 'name' },
     ],
@@ -277,7 +276,7 @@ export default {
           })
           this.cloud = response.data.cloud
           this.items = response.data.cloud
-          this.filterBy(this.filter.scope)
+          this.filterBy()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -404,10 +403,16 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    filterBy(val) {
-      if (val == 'all') this.items = this.cloud.slice(0)
-      else if (val == 'personal') this.items = this.cloud.filter(x => !x.shared)
-      else if (val == 'shared') this.items = this.cloud.filter(x => x.shared)
+    filterBy() {
+      let cloud = JSON.parse(JSON.stringify(this.cloud))
+      // Filter by scope
+      if (this.filter.scope == 'personal') cloud = cloud.filter(x => !x.shared)
+      else if (this.filter.scope == 'shared') cloud = cloud.filter(x => x.shared)
+      // Filter by secured
+      if (this.filter.secured == 'secured') cloud = cloud.filter(x => x.secured)
+      else if (this.filter.secured == 'not_secured') cloud = cloud.filter(x => !x.secured)
+      // Assign filter
+      this.items = cloud
     },
     newBucket() {
       this.bucketsDialogMode = 'new'

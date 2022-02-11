@@ -8,7 +8,7 @@
           <v-btn text @click="newCloud()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editCloud()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneCloud()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteCloud()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn :disabled="selected.length == 0 || selected.some(x => x.secured) || (!owner && selected.some(x => x.shared))" text @click="deleteCloud()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="testCloud" :disabled="selected.length != 1" title="Test an auxiliary connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -58,7 +58,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px">
+                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px">
                   <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
                   <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :readonly="readonly" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px">
                     <template v-slot:[`selection`]="{ item }">
@@ -113,7 +113,7 @@
                     </v-card>
                   </div>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected cloud keys?</div>
+                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected cloud keys?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
@@ -222,7 +222,6 @@ export default {
     // Dialog
     dialog: false,
     dialog_title: '',
-    dialog_valid: false,
     bucketsHeaders: [
       { text: 'Name', align: 'left', value: 'name' },
     ],
