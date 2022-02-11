@@ -1,5 +1,3 @@
-import os
-import sys
 import time
 import pymysql
 import tempfile
@@ -54,12 +52,12 @@ class MySQL:
                 return
 
             except Exception as e:
+                # Close Connections
+                self.stop()
                 error = e
                 time.sleep(1)
 
             finally:
-                # Close Connections
-                self.stop()
                 # Close SSL
                 self.__close_ssl(ssl)
 
@@ -74,7 +72,7 @@ class MySQL:
             pass
 
         try:
-            self._tunnel.stop()
+            self._tunnel.stop(force=True)
         except Exception:
             pass
 
