@@ -10,7 +10,7 @@
     <v-card v-if="sql.ssl_client_key != null || sql.ssl_client_certificate != null || sql.ssl_ca_certificate != null" style="height:52px; margin-top:15px">
       <v-row no-gutters>
       <v-col cols="auto" style="display:flex; margin:15px">
-        <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+        <v-icon color="#00b16a" style="font-size:17px; margin-top:2px">fas fa-key</v-icon>
       </v-col>
       <v-col>
         <div class="text-body-1" style="color:#00b16a; margin-top:15px">{{ 'Using a SSL connection (' + ssl_active + ')' }}</div>

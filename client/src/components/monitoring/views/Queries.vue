@@ -28,9 +28,8 @@
         </template>
         <template v-slot:[`item.server`]="{ item }">
           <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
-            </v-icon>
+            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+            <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
             {{ item.server }}
           </v-btn>
         </template>
@@ -294,40 +293,32 @@
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-progress-linear v-show="serverLoading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px;">
-                  <v-row no-gutters style="margin-bottom:15px">
-                    <v-col>
-                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                    <v-col v-if="!server.shared" style="margin-left:20px">
-                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                  </v-row>
+                <v-form ref="form" style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="6" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.name" label="Name"></v-text-field>
+                      <v-text-field readonly v-model="server.name" label="Name" style="margin-top:0px; padding-top:0px" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.region" label="Region">
+                      <v-text-field readonly v-model="server.region" label="Region" style="margin-top:0px; padding-top:0px" hide-details>
                         <template v-slot:prepend-inner>
                           <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                         </template>
                       </v-text-field>
                     </v-col>
                   </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <div style="margin-bottom:20px">
+                  <div v-if="!server.secured" style="margin-top:25px">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px"></v-text-field>
+                      </v-col>
+                    </v-row>
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -338,33 +329,44 @@
                     </v-row>
                     <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
-                    <!-- SSL -->
-                    <v-card v-if="server.ssl" style="height:52px; margin-top:15px; margin-bottom:15px">
-                      <v-row no-gutters>
-                        <v-col cols="auto" style="display:flex; margin:15px">
-                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
-                        </v-col>
-                        <v-col>
-                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                    <!-- SSH -->
-                    <v-card v-if="server.ssh" style="height:52px; margin-top:15px; margin-bottom:15px">
-                      <v-row no-gutters>
-                        <v-col cols="auto" style="display:flex; margin:15px">
-                          <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
-                        </v-col>
-                        <v-col>
-                          <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                    <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
                   </div>
+                  <!-- SSL -->
+                  <v-card v-if="server.ssl" style="height:52px; margin-top:15px; margin-bottom:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#00b16a" style="font-size:17px; margin-top:3px">fas fa-key</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <!-- SSH -->
+                  <v-card v-if="server.ssh" style="height:52px; margin-top:15px; margin-bottom:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#2196f3" style="font-size:16px; margin-top:4px">fas fa-terminal</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <!-- SECURED -->
+                  <v-card v-if="server.secured" style="height:52px; margin-top:15px; margin-bottom:15px">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="display:flex; margin:15px">
+                      <v-icon color="#EF5354" style="font-size:16px; margin-top:4px">fas fa-lock</v-icon>
+                    </v-col>
+                    <v-col>
+                      <div class="text-body-1" style="color:#EF5354; margin-top:15px">This server is secured</div>
+                    </v-col>
+                  </v-row>
+                </v-card>
+                <v-text-field readonly outlined v-model="server.usage" label="Usage" style="margin-top:20px; margin-bottom:15px" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:20px;">
+                <v-row no-gutters style="margin-top:15px">
                   <v-col>
                     <v-btn :loading="serverLoading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
