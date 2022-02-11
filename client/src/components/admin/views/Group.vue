@@ -240,18 +240,17 @@
     <!---------------------->
     <v-dialog v-model="ownersDialog" max-width="50%">
       <v-card>
-        <v-toolbar dense v-if="ownersDialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-plus</v-icon>{{ ownersDialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ ownersDialogOptions.icon }}</v-icon>{{ ownersDialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="ownersDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <div v-if="ownersDialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ ownersDialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-bottom:15px;">
-                  <div v-if="ownersDialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important; margin-top:15px;">{{ ownersDialogOptions.text }}</div>
+                <v-form ref="form" style="margin-bottom:15px">
+                  <div v-if="ownersDialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important">{{ ownersDialogOptions.text }}</div>
                   <v-card v-if="ownersDialogOptions.mode == 'new'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text subtitle-1">USERS</v-toolbar-title>
@@ -279,10 +278,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col cols="auto" style="margin-right:5px">
                       <v-btn :disabled="ownersDialogOptions.mode == 'new' && this.ownersDialogSelected.length == 0" :loading="loading" @click="ownersDialogSubmit" color="#00b16a">{{ ownersDialogOptions.button1 }}</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn :disabled="loading" @click="ownersDialog = false" color="#EF5354">{{ ownersDialogOptions.button2 }}</v-btn>
                     </v-col>
                   </v-row>
@@ -478,6 +477,7 @@ export default {
       var ownersDialogOptions = {
       'mode': 'new',
         'title': 'NEW OWNERS',
+        'icon': 'fas fa-plus',
         'text': '',
         'button1': 'Confirm',
         'button2': 'Cancel'
@@ -487,9 +487,10 @@ export default {
     removeOwners() {
       var ownersDialogOptions = {
         'mode': 'delete',
-        'title': 'Remove owners',
+        'title': 'REMOVE OWNERS',
+        'icon': 'fas fa-minus',
         'text': 'Are you sure you want to remove the selected owners?',
-        'button1': 'Remove',
+        'button1': 'Confirm',
         'button2': 'Cancel'
       }
       this.showDialog(ownersDialogOptions)
