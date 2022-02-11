@@ -69,18 +69,13 @@ class validate_regions:
                 if not current_thread.alive:
                     break
                 # Start SSH Connection
-                sshtunnel.SSH_TIMEOUT = 5.0
-                logger = sshtunnel.create_logger(loglevel='CRITICAL')
-                ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
-                ssh_tunnel = sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=('127.0.0.1', 3306), logger=logger)
-                with ssh_tunnel as tunnel:
-                    try:
-                        tunnel.start()
-                        tunnel.local_bind_port
-                        error = None
-                        break
-                    except Exception:
-                        raise Exception("Can't connect to the SSH Server.")
+                pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
+                client = paramiko.SSHClient()
+                client.load_system_host_keys()
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], pkey=pkey, timeout=5)
+                client.close()
+                error = None
             except Exception as e:
                 error = e
 
