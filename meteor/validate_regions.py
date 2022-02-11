@@ -1,4 +1,3 @@
-import sys
 import time
 import pymysql
 import tempfile
@@ -36,7 +35,7 @@ class validate_regions:
         for server in self._region['sql']:
             t = threading.Thread(target=self.__validate_sql, args=(server,))
             threads.append(t)
-            t.progress = {}
+            t.progress = {"success": True}
             t.alive = current_thread.alive
             t.start()
 
@@ -63,28 +62,27 @@ class validate_regions:
         # Get current thread 
         current_thread = threading.current_thread()
 
-        # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open('/dev/null', 'w')
-
         # Validate SSH Connection
         error = None
-        for _ in range(3):
+        for _ in range(2):
             try:
                 if not current_thread.alive:
                     break
-                client = paramiko.SSHClient()
-                client.load_system_host_keys()
-                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
-                client.close()
-                error = None
-                break
+                # Start SSH Connection
+                sshtunnel.SSH_TIMEOUT = 5.0
+                logger = sshtunnel.create_logger(loglevel='CRITICAL')
+                ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
+                ssh_tunnel = sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=('127.0.0.1', 3306), logger=logger)
+                with ssh_tunnel as tunnel:
+                    try:
+                        tunnel.start()
+                        tunnel.local_bind_port
+                        error = None
+                        break
+                    except Exception:
+                        raise Exception("Can't connect to the SSH Server.")
             except Exception as e:
                 error = e
-
-        # Show Errors Output Again
-        sys.stderr = sys_stderr
 
         # Raise Exception if validation failed
         if error:

@@ -15,7 +15,8 @@ class logs:
                 file['ERROR'] = str(error)
 
             # Save file
-            with open(f"{self._args.path}/{self._args.uri}.json", 'w') as outfile:
+            file_path = f"{self._args.path}/{self._args.uri}.json" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.uri}.json"
+            with open(file_path, 'w') as outfile:
                 json.dump(file, outfile, separators=(',', ':'))
 
             self._progress.track_logs(value={'status': 'success'})

@@ -72,7 +72,6 @@ class MySQL:
                     try:
                         port = self._tunnel.local_bind_port
                     except Exception:
-                        self.close()
                         raise Exception("Can't connect to the SSH Server.")
 
                 # Start SQL Connection
@@ -83,16 +82,18 @@ class MySQL:
                 write_timeout = self._server['sql']['write_timeout'] if 'write_timeout' in self._server['sql'] else None
                 self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, read_timeout=read_timeout, write_timeout=write_timeout, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
+                return
 
             except Exception as e:
+                # Close Connections
+                self.close()
                 exception = e
                 time.sleep(1)
-            else:
-                exception = None
             finally:
                 self.__close_ssl(ssl)
-        if exception:
-            raise exception
+
+        # Raise Exception
+        raise exception
 
     def close(self):
         try:
