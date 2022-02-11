@@ -105,7 +105,7 @@
                                     <v-card v-if="item.ssl" style="height:52px; margin-top:15px">
                                       <v-row no-gutters>
                                         <v-col cols="auto" style="display:flex; margin:15px">
-                                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                                          <v-icon color="#00b16a" style="font-size:16px; margin-top:3px">fas fa-key</v-icon>
                                         </v-col>
                                         <v-col>
                                           <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
@@ -116,10 +116,21 @@
                                     <v-card v-if="item.ssh" style="height:52px; margin-top:15px">
                                       <v-row no-gutters>
                                         <v-col cols="auto" style="display:flex; margin:15px">
-                                          <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
+                                          <v-icon color="#2196f3" style="font-size:16px; margin-top:4px">fas fa-terminal</v-icon>
                                         </v-col>
                                         <v-col>
                                           <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                                        </v-col>
+                                      </v-row>
+                                    </v-card>
+                                    <!-- SECURED -->
+                                    <v-card v-if="item.secured" style="height:52px; margin-top:15px">
+                                      <v-row no-gutters>
+                                        <v-col cols="auto" style="display:flex; margin:15px">
+                                          <v-icon color="#EF5354" style="font-size:16px; margin-top:4px">fas fa-lock</v-icon>
+                                        </v-col>
+                                        <v-col>
+                                          <div class="text-body-1" style="color:#EF5354; margin-top:15px">This server is secured</div>
                                         </v-col>
                                       </v-row>
                                     </v-card>

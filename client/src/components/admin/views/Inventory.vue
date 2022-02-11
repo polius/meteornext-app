@@ -76,6 +76,12 @@
                     <v-radio label="Personal" value="personal" color="#fb8c00"></v-radio>
                     <v-radio label="Shared" value="shared" color="#eb5f5d"></v-radio>
                   </v-radio-group>
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">SECURED</div>
+                  <v-radio-group v-model="filter.secured" hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                    <v-radio label="All" value="all"></v-radio>
+                    <v-radio label="Secured" value="secured"></v-radio>
+                    <v-radio label="Not Secured" value="not_secured"></v-radio>
+                  </v-radio-group>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="filterInventory()">Confirm</v-btn>
@@ -120,7 +126,7 @@ export default {
       loading: false,
       groups: [],
       users: [],
-      filter: { by: 'user', search: '', group: null, user: null, scope: 'all'},
+      filter: { by: 'user', search: '', group: null, user: null, scope: 'all', secured: 'all' },
       filterApplied: false,
       // Snackbar
       snackbar: false,
@@ -238,7 +244,7 @@ export default {
       this.dialog = false
     },
     clearFilter() {
-      this.filter = { by: 'user', search: '', group: null, user: null, scope: 'all' }
+      this.filter = { by: 'user', search: '', group: null, user: null, scope: 'all', secured: 'all' }
       this.$nextTick(() => {
         if (this.tab == 0) EventBus.$emit('filter-servers')
         else if (this.tab == 1) EventBus.$emit('filter-regions')
@@ -265,7 +271,7 @@ export default {
     },
     dialog (val) {
       if (!val) return
-      if (!this.filterApplied) this.filter = { by: 'user', search: '', group: null, scope: 'all' }
+      if (!this.filterApplied) this.filter = { by: 'user', search: '', group: null, scope: 'all', secured: 'all' }
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.filter_user !== 'undefined' && this.filter.by == 'user') this.$refs.filter_user.focus()

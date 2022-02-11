@@ -8,7 +8,7 @@
           <v-btn text @click="newEnvironment()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" text @click="editEnvironment()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneEnvironment()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteEnvironment()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn :disabled="selected.length == 0 || selected.some(x => x.secured) || (!owner && selected.some(x => x.shared))" text @click="deleteEnvironment()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -60,9 +60,9 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field v-if="mode!='delete'" :readonly="readonly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
-                  <v-card v-if="mode!='delete'">
+                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px;">
+                  <v-text-field :readonly="readonly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
+                  <v-card>
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
@@ -85,8 +85,8 @@
                       </v-treeview>
                     </v-card-text>
                   </v-card>
-                  <div v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                 </v-form>
+                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected environments?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>

@@ -40,8 +40,8 @@
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="personalClick" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="sharedClick"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-checkbox title="Prevent this resource to be edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-checkbox v-if="mode != 'delete'" title="Prevent this resource from being edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
             <template v-slot:label>
               <div style="color:white">Secured</div>
             </template>
@@ -53,8 +53,8 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-if="mode!='delete'" style="margin-top:15px">
-                  <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
+                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px">
+                  <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
                       <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
@@ -134,7 +134,7 @@
                     <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
-                <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
+                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:15px;">
                   <v-col cols="auto" class="mr-auto">
@@ -356,7 +356,7 @@ export default {
           })
           this.servers = response.data.servers
           this.items = response.data.servers
-          this.filterBy(this.filter.scope)
+          this.filterBy()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -558,11 +558,18 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
-    filterBy(val) {
-      if (val == 'all') this.items = this.servers.slice(0)
-      else if (val == 'personal') this.items = this.servers.filter(x => !x.shared)
-      else if (val == 'shared') this.items = this.servers.filter(x => x.shared)
+    filterBy() {
+      let servers = JSON.parse(JSON.stringify(this.servers))
+      // Filter by scope
+      if (this.filter.scope == 'personal') servers = servers.filter(x => !x.shared)
+      else if (this.filter.scope == 'shared') servers = servers.filter(x => x.shared)
+      // Filter by secured
+      if (this.filter.secured == 'secured') servers = servers.filter(x => x.secured)
+      else if (this.filter.secured == 'not_secured') servers = servers.filter(x => !x.secured)
+      // Init disabled resources
       this.disabledResources = this.items.some(x => !x.active)
+      // Assign filter
+      this.items = servers
     },
     parseUsage(val) {
       if (typeof val == 'string') {

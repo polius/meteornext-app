@@ -70,7 +70,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px">
+                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px">
                   <v-row no-gutters style="margin-top:15px">
                     <v-col cols="6" style="padding-right:10px">
                       <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px; margin-top:0px"></v-text-field>
@@ -146,7 +146,7 @@
                     <v-select outlined v-model="item.usage" :items="usage" :readonly="readonly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
-                <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
+                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:15px;">
                   <v-col cols="auto" class="mr-auto">
@@ -275,7 +275,6 @@ export default {
     // Dialog: Item
     dialog: false,
     dialog_title: '',
-    dialog_valid: false,
     // Regions
     regions: [],
     // Filter Columns Dialog
