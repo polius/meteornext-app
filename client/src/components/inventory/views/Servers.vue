@@ -36,9 +36,11 @@
           {{ item.name }}
         </template>
         <template v-slot:[`item.region`]="{ item }">
-          <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.region_secured ? 'padding-right:6px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-          <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:6px">fas fa-lock</v-icon>
-          {{ item.region }}
+          <v-btn @click="openRegion(item.region_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.region_secured ? 'padding-right:8px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+            <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+            {{ item.region }}
+          </v-btn>
         </template>
         <template v-slot:[`item.usage`]="{ item }">
           <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#EF5354" style="margin-right:5px">fas fa-circle</v-icon>
@@ -54,7 +56,9 @@
         </template>
       </v-data-table>
     </v-card>
-
+    <!------------------->
+    <!-- SERVER DIALOG -->
+    <!------------------->
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -155,6 +159,77 @@
                   </v-col>
                   <v-col cols="auto">
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------------->
+    <!-- REGION DIALOG -->
+    <!------------------->
+    <v-dialog v-model="regionDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">REGION</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn readonly title="Create the region only for you" :color="!regionDialogItem.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn readonly title="Create the region for all users in your group" :color="regionDialogItem.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="regionDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px">
+                  <v-text-field ref="field" v-model="regionDialogItem.name" :rules="[v => !!v || '']" readonly label="Name" required hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
+                  <v-switch v-model="regionDialogItem.ssh_tunnel" readonly label="SSH Tunnel" color="info" hide-details style="margin-top:15px"></v-switch>
+                  <div v-if="!regionDialogItem.secured && regionDialogItem.ssh_tunnel" style="margin-top:25px">
+                    <v-row no-gutters>
+                      <v-col cols="9" style="padding-right:10px">
+                        <v-text-field ref="hostname" v-model="regionDialogItem.hostname" readonly :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px; margin-top:0px"></v-text-field>
+                      </v-col>
+                      <v-col cols="3" style="padding-left:10px">
+                        <v-text-field v-model="regionDialogItem.port" readonly :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px; margin-top:0px"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field v-model="regionDialogItem.username" readonly :rules="[v => !!v || '']" label="Username" autocomplete="username"  style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="regionDialogItem.password" readonly label="Password" :type="showRegionPassword ? 'text' : 'password'" autocomplete="new-password" style="padding-top:0px" hide-details>
+                      <template v-slot:[`append`]>
+                        <v-btn :title="showRegionPassword ? 'Hide password' : 'Show password'" @click="showRegionPassword = !showRegionPassword" icon><v-icon>{{ showRegionPassword ? 'mdi-eye' : 'mdi-eye-off' }}</v-icon></v-btn>
+                      </template>
+                    </v-text-field>
+                  </div>
+                  <!-- PKEY -->
+                  <v-card v-if="!regionDialogItem.secured && regionDialogItem.key" style="height:52px; margin-top:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#00b16a" style="font-size:17px; margin-top:2px">fas fa-key</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Private Key</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <!-- SECURED -->
+                  <v-card v-if="regionDialogItem.secured" style="height:52px; margin-top:15px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#EF5354" style="font-size:16px; margin-top:4px">fas fa-lock</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#EF5354; margin-top:15px">This region is secured</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-form>
+                <v-divider v-if="regionDialogItem['ssh_tunnel']" style="margin-top:15px"></v-divider>
+                <v-row v-if="regionDialogItem['ssh_tunnel']" no-gutters style="margin-top:15px">
+                  <v-col>
+                    <v-btn :loading="loading" color="info" @click="testRegionConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -283,6 +358,10 @@ export default {
     columnsRaw: [],
     // Dialog: Confirm
     confirm_dialog: false,
+    // Region Dialog
+    regionDialog: false,
+    regionDialogItem: {},
+    showRegionPassword: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -334,12 +413,16 @@ export default {
     getRegions() {
       axios.get('/inventory/regions')
         .then((response) => {
-          this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared, secured: x.secured }))
+          this.regions = response.data.data
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+    },
+    openRegion(region_id) {
+      this.regionDialogItem = this.regions.find(x => x.id == region_id)
+      this.regionDialog = true
     },
     selectEngine(value) {
       if (this.item.port == '') {
@@ -509,6 +592,19 @@ export default {
         })
         .finally(() => this.loading = false)
     },
+    testRegionConnection() {
+      this.loading = true
+      const payload = { region: this.regionDialogItem.id }
+      axios.post('/inventory/regions/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
     generatePassword() {
       axios.get('/inventory/genpass')
         .then((response) => {
@@ -596,7 +692,10 @@ export default {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined' && !this.readonly) this.$refs.field.focus()
       })
-    }
+    },
+    regionDialog (val) {
+      if (val) this.showRegionPassword = false
+    },
   }
 }
 </script> 

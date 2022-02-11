@@ -23,8 +23,8 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the auxiliary only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the auxiliary for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the auxiliary connection only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the auxiliary connection for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-checkbox v-if="mode != 'delete'" title="Prevent this resource from being edited and hide sensible data" v-model="item.secured" flat color="white" hide-details>
             <template v-slot:label>
@@ -41,7 +41,7 @@
                 <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px">
                   <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>

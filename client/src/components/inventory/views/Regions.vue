@@ -38,10 +38,6 @@
           <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
-        <template v-slot:[`item.key`]="{ item }">
-          <v-icon v-if="item.key" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
-          <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -50,8 +46,8 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 1 && !owner)" @click="item.shared = false" title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="(item.shared == 0 && !owner)" @click="item.shared = true" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -136,7 +132,6 @@
                   <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Private Key" value="key" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -171,7 +166,6 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Private Key', align: 'left', value: 'key'},
     ],
     regions: [],
     items: [],
@@ -372,7 +366,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','key','shared']
+      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','shared']
     },
     deselectAllColumns() {
       this.columnsRaw = []
