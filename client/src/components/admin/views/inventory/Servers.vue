@@ -15,7 +15,8 @@
         {{ item.name }}
       </template>
       <template v-slot:[`item.region`]="{ item }">
-        <v-btn @click="openRegion(item.region_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+        <v-icon v-if="item.region == null" small color="warning" title="This server does not have a region. Please edit it and add a region to this server.">fas fa-exclamation-triangle</v-icon>
+        <v-btn v-else @click="openRegion(item.region_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
           <v-icon small :title="item.region_shared ? item.region_secured ? 'Shared (Secured)' : 'Shared' : item.region_secured ? 'Personal (Secured)' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.region_secured ? 'padding-right:8px' : ''}`">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
           <v-icon v-if="item.region_secured" :title="item.region_shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
           {{ item.region }}
