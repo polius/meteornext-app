@@ -68,8 +68,7 @@ class Servers:
             region = self._regions.get(user['id'], user['group_id'], server_json['region'])
             if len(region) == 0:
                 return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
-            else:
-                region = region[0]
+            region = region[0]
 
             # Get Server
             if type(server_json['server']) is dict:
