@@ -436,7 +436,7 @@ export default {
     },
     async testConnection() {
       // Check if all fields are filled
-      if (!this.$refs.testForm.validate()) {
+      if (this.$refs.testForm !== undefined && !this.$refs.testForm.validate()) {
         this.notification('Please select a region', '#EF5354')
         return
       }
@@ -444,7 +444,7 @@ export default {
       let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
       let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
       let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
-      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+      if (!this.item.secured && this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }

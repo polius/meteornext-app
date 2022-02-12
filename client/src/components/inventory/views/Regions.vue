@@ -10,7 +10,7 @@
           <v-btn :disabled="selected.length != 1 || selected[0].secured == 1" @click="cloneRegion()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn :disabled="selected.length == 0 || selected.some(x => x.secured) || (!owner && selected.some(x => x.shared))" text @click="deleteRegion()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="testRegion" :disabled="selected.length != 1 || !selected[0].ssh_tunnel" title="Test a region connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
+          <v-btn @click="testRegion" :disabled="selected.length != 1" title="Test a region connection" text><v-icon small style="margin-right:10px">fas fa-server</v-icon>TEST</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -235,6 +235,10 @@ export default {
       this.dialog = true
     },
     testRegion() {
+      if (!this.selected[0]['ssh_tunnel']) {
+        this.notification('This region cannot be tested. SSH Tunnel is not enabled.', 'warning')
+        return
+      }
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.testConnection()
     },
@@ -311,7 +315,7 @@ export default {
     },
     async testConnection() {
       // Check if all fields are filled
-      if (!this.item.secured && !this.$refs.form.validate()) {
+      if (this.$refs.form !== undefined && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
