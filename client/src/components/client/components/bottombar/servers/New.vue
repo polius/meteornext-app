@@ -200,8 +200,6 @@ export default {
     ...mapFields([
       'sidebarSelected'
     ], { path: 'client/connection' }),
-    owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
   },
   activated() {
     EventBus.$on('show-bottombar-servers-new', this.newServer)

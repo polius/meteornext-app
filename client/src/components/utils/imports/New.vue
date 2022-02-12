@@ -483,7 +483,6 @@ export default {
   },
   computed: {
     owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
     readOnly: function() { return !this.owner && (Object.keys(this.serverItem).length == 0 || this.serverItem.shared == 1) },
   },
   beforeRouteEnter(to, from, next) {

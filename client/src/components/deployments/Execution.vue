@@ -118,10 +118,10 @@
             </template>
             <template v-slot:item="">
               <tr>
-                <td v-for="item in Object.keys(validation_items[0])" :key="item">
-                  <span v-if="validation_items[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_items[0][item] }}</b></span>
-                  <span v-else-if="validation_items[0][item] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_items[0][item] }}</b></span>
-                  <span v-else-if="validation_items[0][item] == 'FAILED'" class="error--text"><v-icon small color="#EF5354" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_items[0][item] }}</b></span>
+                <td v-for="item in validation_headers" :key="item.value">
+                  <span v-if="validation_items[0][item.value] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_items[0][item.value] }}</b></span>
+                  <span v-else-if="validation_items[0][item.value] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_items[0][item.value] }}</b></span>
+                  <span v-else-if="validation_items[0][item.value] == 'FAILED'" class="error--text"><v-icon small color="#EF5354" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_items[0][item.value] }}</b></span>
                 </td>
               </tr>
             </template>
