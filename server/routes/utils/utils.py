@@ -13,9 +13,11 @@ import models.utils.exports
 import models.utils.clones
 import models.utils.utils_queued
 import models.admin.inventory.servers
+import models.admin.inventory.regions
 import apps.imports.imports
 import apps.exports.exports
 import apps.clones.clones
+import connectors.base
 
 class Utils:
     def __init__(self, app, sql, license):
@@ -32,6 +34,7 @@ class Utils:
         self._clones = models.utils.clones.Clones(sql, license)
         self._utils_queued = models.utils.utils_queued.Utils_Queued(sql, license)
         self._servers_admin = models.admin.inventory.servers.Servers(sql, license)
+        self._regions_admin = models.admin.inventory.regions.Regions(sql)
         # Init cores
         self._import_app = apps.imports.imports.Imports(sql)
         self._export_app = apps.exports.exports.Exports(sql)
@@ -52,7 +55,7 @@ class Utils:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
+            if user['disabled'] or (not user['admin'] and not user['utils_enabled']):
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check args
@@ -61,6 +64,30 @@ class Utils:
 
             # Return server
             return self.get(user)
+
+        @utils_blueprint.route('/utils/servers/test', methods=['POST'])
+        @jwt_required()
+        def utils_servers_test_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or (not user['admin'] and not user['inventory_enabled']):
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            data = request.get_json()
+
+            # Check args
+            if 'server' not in data or 'region' not in data:
+                return jsonify({'message': 'Invalid Parameters'}), 400
+
+            # Return test result
+            return self.test(user, data)
 
         return utils_blueprint
 
@@ -87,6 +114,30 @@ class Utils:
                     servers_secured.append(s)
             return jsonify({'data': servers_secured}), 200
         return jsonify({'data': servers}), 200
+
+    def test(self, user, data):
+        # Get Region
+        region = self._regions.get(user['id'], user['group_id'], data['region']) if not user['admin'] else self._regions_admin.get(region_id=data['region'])
+        if len(region) == 0:
+            return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
+        region = region[0]
+
+        # Get Server
+        server_origin = self._servers.get(user['id'], user['group_id'], data['server']) if not user['admin'] else self._servers_admin.get(server_id=data['server'])
+        if len(server_origin) == 0:
+            return jsonify({'message': "Can't test the connection. Invalid server provided."}), 400
+        server = server_origin[0]
+
+        # Check SQL Connection
+        try:
+            conf = {}
+            conf['ssh'] = {'enabled': region['ssh_tunnel'], 'hostname': region['hostname'], 'port': region['port'], 'username': region['username'], 'password': region['password'], 'key': region['key']}
+            conf['sql'] = {'engine': server['engine'], 'hostname': server['hostname'], 'port': server['port'], 'username': server['username'], 'password': server['password'], 'ssl': server['ssl'], 'ssl_client_key': server['ssl_client_key'], 'ssl_client_certificate': server['ssl_client_certificate'], 'ssl_ca_certificate': server['ssl_ca_certificate'], 'ssl_verify_ca': server['ssl_verify_ca']}
+            sql = connectors.base.Base(conf)
+            sql.test_sql()
+            return jsonify({'message': 'Connection Successful'}), 200
+        except Exception as e:
+            return jsonify({'message': str(e)}), 400
 
     def check_queued(self):
         # Delete finished executions from the queue
