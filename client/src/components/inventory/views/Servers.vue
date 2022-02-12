@@ -564,7 +564,7 @@ export default {
     },
     async testConnection() {
       // Check if all fields are filled
-      if (!this.item.secured && !this.$refs.form.validate()) {
+      if (this.$refs.form !== undefined && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
