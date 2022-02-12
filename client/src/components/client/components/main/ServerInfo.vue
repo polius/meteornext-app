@@ -109,8 +109,6 @@ export default {
       if (this.sidebarSelected.length == 0 || 'children' in this.sidebarSelected[this.sidebarSelected.length - 1]) return []
       else return this.sidebarSelected[this.sidebarSelected.length - 1]
     },
-    owner: function() { return this.$store.getters['app/owner'] },
-    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
   },
   watch: {
     sidebarSelected (val) {
