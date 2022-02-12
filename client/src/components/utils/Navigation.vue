@@ -184,7 +184,7 @@ export default {
         region: this.server.region_id,
         server: this.server.id,
       }
-      axios.post('/inventory/servers/test', payload)
+      axios.post('/utils/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
