@@ -255,6 +255,7 @@ export default {
       'sidebarSelected',
       'server',
       'database',
+      'databasePrev',
       'contentSearchFilter',
       'contentSearchFilterText',
       'contentSearchFilterText2',
@@ -456,7 +457,9 @@ export default {
       navigator.clipboard.writeText(json)
     },
     getContent(force) {
-      if (!force && this.contentConnection == this.sidebarSelected[0]['id']) return
+      // console.log(this.database + ' | ' + this.databasePrev)
+      // console.log(this.contentConnection + ' | ' + this.sidebarSelected[0]['id'])
+      // if (!force && this.contentConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
       if (force) this.contentSearchColumn = ''
       this.sidebarLoadingObject = true
       this.contentSortState = []

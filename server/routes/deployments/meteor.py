@@ -210,7 +210,7 @@ class Meteor:
     def __compile_blueprint_basic(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
-            queries[str(i+1)] = q['query']
+            queries[str(i+1)] = q['q']
         databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
         return """import fnmatch
 class blueprint:
