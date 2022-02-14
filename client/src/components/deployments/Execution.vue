@@ -1279,7 +1279,7 @@
         // Build different modes
         if (this.information_dialog_execution_mode == 'BASIC') {
           payload['databases'] = this.information_dialog_data.databases
-          payload['queries'] = JSON.stringify(this.information_dialog_data.queries)
+          payload['queries'] = JSON.stringify(this.information_dialog_data.queries.map(x => ({q: x.query})))
         }
         else if (this.information_dialog_execution_mode == 'PRO') {
           payload['code'] = this.information_dialog_data.code
