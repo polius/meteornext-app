@@ -182,6 +182,7 @@ export default {
       'index',
       'id',
       'databaseItems',
+      'databasePrev',
       'tableItems',
       'sidebarItems',
       'sidebarOrigin',
@@ -204,6 +205,9 @@ export default {
       get() { return this.$store.getters['client/connection']['database'] },
       set(val) { this.$store.commit('client/connection', { k: 'database', v: val || '' }) }
     },
+    currentDatabase() {
+      return `${this.currentConn}|${this.database}`
+    }
   },
   created() {
     new Promise((resolve, reject) => this.getServers(resolve, reject))
@@ -238,6 +242,11 @@ export default {
         const element = this.$refs.server
         if (element !== undefined) element.focus()
       })
+    },
+    currentDatabase(newVal, oldVal) {
+      const [oldConn, oldDB] = oldVal.split('|')
+      const [newConn, newDB] = newVal.split('|')
+      if (oldConn == newConn) this.databasePrev = (oldDB.length == 0) ? newDB : oldDB
     },
   },
   methods: {

@@ -457,9 +457,7 @@ export default {
       navigator.clipboard.writeText(json)
     },
     getContent(force) {
-      // console.log(this.database + ' | ' + this.databasePrev)
-      // console.log(this.contentConnection + ' | ' + this.sidebarSelected[0]['id'])
-      // if (!force && this.contentConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
+      if (!force && this.contentConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
       if (force) this.contentSearchColumn = ''
       this.sidebarLoadingObject = true
       this.contentSortState = []

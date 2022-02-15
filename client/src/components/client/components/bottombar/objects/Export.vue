@@ -333,9 +333,6 @@ export default {
       .then(() => {
         this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
       })
-      .finally(() => {
-        this.databasePrev = this.database
-      })
     },
     includeChanged() {
       if (this.include == 'Content') {

@@ -5,7 +5,7 @@
     <!--------------->
     <div style="height:calc(100% - 46px)">
       <div style="width:100%; height:100%">
-        <v-data-table :headers="infoHeaders.functions" :items="infoItems.functions" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);" mobile-breakpoint="0"></v-data-table>
+        <v-data-table :loading="sidebarLoadingObject" :headers="infoHeaders.functions" :items="infoItems.functions" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);" mobile-breakpoint="0"></v-data-table>
         <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">FUNCTION DEFINITION</div>
         <div style="height:calc(100% - 143px)">
           <div id="infoFunctionsEditor" style="float:left"></div>
@@ -51,6 +51,7 @@ export default {
       'infoConnection',
       'server',
       'database',
+      'databasePrev',
       'sidebarSelected',
       'sidebarLoadingObject',
     ], { path: 'client/connection' }),
@@ -94,7 +95,7 @@ export default {
   methods: {
     getInfo(refresh) {
       this.editor.setValue(this.infoEditor.functions, -1)
-      if (!refresh && this.infoConnection == this.sidebarSelected[0]['id']) return
+      if (!refresh && this.infoConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
       this.sidebarLoadingObject = true
       const payload = {
         connection: this.id + '-shared',

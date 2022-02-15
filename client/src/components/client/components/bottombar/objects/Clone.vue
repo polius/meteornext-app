@@ -285,7 +285,6 @@ export default {
         this.loading = true
         EventBus.$emit('get-objects', true, resolve, reject)
       })
-      .finally(() => this.databasePrev = this.database)
     },
     cloneObjectsSubmit() {
       // Check if all fields are filled
