@@ -1,4 +1,3 @@
-from re import split
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from werkzeug.utils import secure_filename
@@ -86,23 +85,6 @@ class Imports:
 
             # Return if there's free space left to upload a file
             return jsonify({'check': shutil.disk_usage("/").free >= int(request.args['size'])}), 200
-
-        @imports_blueprint.route('/utils/imports/servers', methods=['GET'])
-        @jwt_required()
-        def imports_servers_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Servers List
-            return jsonify({'servers': self._imports.get_servers(user)}), 200
 
         @imports_blueprint.route('/utils/imports/stop', methods=['POST'])
         @jwt_required()

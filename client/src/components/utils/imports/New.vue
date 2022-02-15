@@ -220,7 +220,7 @@
                 <v-card style="margin:5px">
                   <v-card-text>
                     <v-form ref="destinationForm" @submit.prevent>
-                      <v-autocomplete @change="testConnection" ref="server" :loading="loading" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px">
+                      <v-autocomplete @change="getDatabases" ref="server" :loading="loading" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" auto-select-first :rules="[v => !!v || '']" style="padding-top:8px">
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
                           <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -234,7 +234,17 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-text-field ref="database" @keyup.enter="nextStep" v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
+                      <v-combobox ref="database" @keyup.enter="databaseKeyEnter" :disabled="server == null" v-model="database" label="Database" :rules="[v => !!v || '']" :items="databaseItems" :search-input.sync="databaseSearch" style="padding-top:6px" hide-details>
+                        <template v-slot:no-data>
+                          <v-list-item>
+                            <v-list-item-content>
+                              <v-list-item-title>
+                                No results matching "<strong>{{ databaseSearch }}</strong>". Press <kbd>Enter</kbd> to create a new database.
+                              </v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </template>
+                      </v-combobox>
                       <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
                       <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
                     </v-form>
@@ -469,7 +479,9 @@ export default {
       // Destination
       serverItems: [],
       server: null,
+      databaseItems: [],
       database: '',
+      databaseSearch: null,
       createDatabase: false,
       dropDatabase: false,
       // Dialog
@@ -589,7 +601,7 @@ export default {
     },
     getServers() {
       this.loading = true
-      axios.get('/utils/imports/servers')
+      axios.get('/utils/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -599,29 +611,28 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testConnection() {
-      this.loading = true
-      // Get selected server details
-      const server = this.serverItems.find(x => x.id == this.server)
-      // Test Connection
-      const payload = {
-        region: server.region_id,
-        server: server.id,
-      }
-      axios.post('/inventory/servers/test', payload)
-        .then(() => {
-          this.$nextTick(() => {
-            this.$refs.destinationForm.resetValidation()
-            this.$refs.server.blur()
-            this.$refs.database.focus()
+    getDatabases() {
+      if (this.server == null) this.databaseItems = []
+      else {
+        this.loading = true
+        const payload = { server_id: this.server }
+        axios.get('/utils/databases', { params: payload })
+          .then((response) => {
+            this.databaseItems = response.data.databases.map(x => x.name)
+            this.$nextTick(() => {
+              this.$refs.destinationForm.resetValidation()
+              this.$refs.server.blur()
+              this.$refs.database.focus()
+            })
           })
-        })
-        .catch((error) => {
-          this.server = null
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
+          .catch((error) => {
+            this.databaseItems = []
+            this.database = null
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+          .finally(() => this.loading = false)
+      }
     },
     getCloud() {
       this.loading = true
@@ -951,6 +962,9 @@ export default {
         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
         '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
       return !!pattern.test(str);
+    },
+    databaseKeyEnter() {
+      this.$refs.database.blur()
     },
   }
 }

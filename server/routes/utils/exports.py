@@ -11,7 +11,6 @@ import models.admin.settings
 import models.inventory.servers
 import models.inventory.regions
 import models.utils.exports
-import connectors.base
 import apps.exports.exports
 
 class Exports:
@@ -55,131 +54,6 @@ class Exports:
                 return self.post(user, data)
             elif request.method == 'DELETE':
                 return self.delete(user, data)
-
-        @exports_blueprint.route('/utils/exports/servers', methods=['GET'])
-        @jwt_required()
-        def exports_servers_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Servers List
-            return jsonify({'servers': self._export.get_servers(user)}), 200
-
-        @exports_blueprint.route('/utils/exports/databases', methods=['GET'])
-        @jwt_required()
-        def exports_databases_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Check args
-            if 'server_id' not in request.args:
-                return jsonify({'message': "Invalid parameters."}), 400
-
-            # Get credentials
-            cred = self._export.get_credentials(user['id'], user['group_id'], request.args['server_id'])
-            if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
-
-            # Connect to the server
-            conn = connectors.base.Base(cred)
-            try:
-                conn.connect()
-            except Exception as e:
-                return jsonify({"message": str(e)}), 400
-            
-            # Get databases
-            try:
-                return jsonify({'databases': conn.get_databases()}), 200
-            finally:
-                conn.stop()
-
-        @exports_blueprint.route('/utils/exports/databases/size', methods=['GET'])
-        @jwt_required()
-        def exports_database_size_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Check args
-            if 'server_id' not in request.args or 'database' not in request.args:
-                return jsonify({'message': "Invalid parameters."}), 400
-
-            # Get credentials
-            cred = self._export.get_credentials(user['id'], user['group_id'], request.args['server_id'])
-            if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
-
-            # Connect to the server
-            conn = connectors.base.Base(cred)
-            try:
-                conn.connect()
-            except Exception as e:
-                return jsonify({"message": str(e)}), 400
-            
-            # Get database size
-            try:
-                return jsonify({'size': conn.get_database_size(request.args['database'])}), 200
-            finally:
-                conn.stop()
-
-        @exports_blueprint.route('/utils/exports/tables', methods=['GET'])
-        @jwt_required()
-        def exports_tables_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['utils_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Check args
-            if 'server_id' not in request.args or 'database' not in request.args:
-                return jsonify({'message': "Invalid parameters."}), 400
-
-            # Get credentials
-            cred = self._export.get_credentials(user['id'], user['group_id'], request.args['server_id'])
-            if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
-
-            # Connect to the server
-            conn = connectors.base.Base(cred)
-            try:
-                conn.connect()
-            except Exception as e:
-                return jsonify({"message": str(e)}), 400
-            
-            # Get tables
-            try:
-                return jsonify({'tables': conn.get_tables_detailed(request.args['database'])}), 200
-            finally:
-                conn.stop()
 
         @exports_blueprint.route('/utils/exports/stop', methods=['POST'])
         @jwt_required()

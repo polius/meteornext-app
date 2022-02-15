@@ -29,7 +29,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="sourceServer == null" v-model="sourceDatabase" :items="sourceDatabaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="sourceServer == null" v-model="sourceDatabase" :items="sourceDatabaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
                       <div v-if="sourceDatabaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(sourceDatabaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
@@ -63,7 +63,17 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-text-field :disabled="destinationServer == null" ref="destinationDatabase" v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-text-field>
+                      <v-combobox @keyup.enter="destinationDatabaseKeyEnter" :disabled="destinationServer == null" ref="destinationDatabase" v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" :items="destinationDatabaseItems" :search-input.sync="destinationDatabaseSearch" style="margin-top:20px" hide-details>
+                        <template v-slot:no-data>
+                          <v-list-item>
+                            <v-list-item-content>
+                              <v-list-item-title>
+                                No results matching "<strong>{{ destinationDatabaseSearch }}</strong>". Press <kbd>Enter</kbd> to create a new database.
+                              </v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </template>
+                      </v-combobox>
                       <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
                       <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
                       <v-row no-gutters style="margin-top:20px;">
@@ -279,6 +289,8 @@ export default {
       sourceDatabaseSize: null,
       // Destination
       destinationServer: null,
+      destinationDatabaseItems: null,
+      destinationDatabaseSearch: null,
       destinationDatabase: null,
       createDatabase: false,
       dropDatabase: false,
@@ -334,7 +346,7 @@ export default {
   methods: {
     getServers() {
       this.loading = true
-      axios.get('/utils/clones/servers')
+      axios.get('/utils/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -352,14 +364,15 @@ export default {
         payload = { server_id: this.sourceServer }
       }
       else if (origin == 'destination') {
+        this.destinationDatabaseItems = []
         if (this.destinationServer == null) return
         payload = { server_id: this.destinationServer }
       }
       this.loading = true
-      axios.get('/utils/clones/databases', { params: payload })
+      axios.get('/utils/databases', { params: payload })
         .then((response) => {
           if (origin == 'source') {
-            this.sourceDatabaseItems = response.data.databases
+            this.sourceDatabaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.sourceForm.resetValidation()
               this.$refs.sourceServer.blur()
@@ -367,6 +380,7 @@ export default {
             })
           }
           else if (origin == 'destination') {
+            this.destinationDatabaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.destinationForm.resetValidation()
               this.$refs.destinationServer.blur()
@@ -382,6 +396,8 @@ export default {
           }
           else if (origin == 'destination') {
             this.destinationServer = null
+            this.destinationDatabaseItems = []
+            this.destinationDatabase = null
           }
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
@@ -393,7 +409,7 @@ export default {
       if (this.sourceDatabase == null) return
       const payload = { server_id: this.sourceServer, database: this.sourceDatabase }
       this.loading = true
-      axios.get('/utils/clones/databases/size', { params: payload })
+      axios.get('/utils/databases/size', { params: payload })
         .then((response) => {
           this.sourceDatabaseSize = response.data.size
         })
@@ -411,7 +427,7 @@ export default {
       this.loading = true
       this.gridApi.showLoadingOverlay()
       const payload = { server_id: this.sourceServer, database: this.sourceDatabase }
-      axios.get('/utils/clones/tables', { params: payload })
+      axios.get('/utils/tables', { params: payload })
         .then((response) => {
           this.parseTables(response.data.tables)
           this.resizeTable()
@@ -535,6 +551,9 @@ export default {
         this.stepper += 1
         this.resizeTable2()
       }
+    },
+    destinationDatabaseKeyEnter() {
+      this.$refs.destinationDatabase.blur()
     },
     onSearch(value) {
       this.gridApi.setQuickFilter(value)

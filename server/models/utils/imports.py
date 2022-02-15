@@ -77,26 +77,6 @@ class Imports:
         """
         self._sql.execute(query, (item, user['id']))
 
-    def get_servers(self, user):
-        query = """
-            SELECT s.id, s.name, s.shared, s.secured, s.region_id, t.id IS NOT NULL AS 'active'
-            FROM servers s
-            LEFT JOIN (
-                SELECT s.id
-                FROM servers s
-                JOIN (SELECT @cnt := 0) t
-                WHERE s.group_id = %(group_id)s
-                AND (s.shared = 1 OR s.owner_id = %(user_id)s)
-                AND (%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s)
-                ORDER BY s.id
-            ) t ON t.id = s.id
-            WHERE s.group_id = %(group_id)s
-            AND (s.shared = 1 OR s.owner_id = %(user_id)s)
-            AND s.usage LIKE '%%U%%'
-            ORDER BY s.name
-        """
-        return self._sql.execute(query, {"user_id": user['id'], "group_id": user['group_id'], "license": self._license.resources})
-
     def stop(self, user, import_uri):
         query = """
             UPDATE imports
