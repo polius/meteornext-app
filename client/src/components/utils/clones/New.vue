@@ -30,7 +30,7 @@
                         </template>
                       </v-autocomplete>
                       <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="sourceServer == null" v-model="sourceDatabase" :items="sourceDatabaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
-                      <div v-if="sourceDatabaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(this.sourceDatabaseSize) }}</span></div>
+                      <div v-if="sourceDatabaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(sourceDatabaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
                           <v-btn :disabled="sourceServer == null || sourceDatabaseSize == null" color="primary" @click="nextStep">CONTINUE</v-btn>
@@ -124,7 +124,7 @@
                       <div style="height:50vh; margin-left:-17px; margin-right:-17px">
                         <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady" @selection-changed="onSelectionChanged" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="tablesHeaders" :defaultColDef="defaultColDef" :rowData="tablesItems"></ag-grid-vue>
                       </div>
-                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.sourceDatabaseSize)}` }}</span></div>
+                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(tableSize)} / ${formatBytes(sourceDatabaseSize)}` }}</span></div>
                       <div class="text-body-1 white--text" style="margin-top:15px">OPTIONS</div>
                       <v-checkbox v-model="exportTriggers" label="Export Triggers" hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox v-model="exportRoutines" label="Export Routines (Functions and Procedures)" hide-details style="margin-top:10px"></v-checkbox>
@@ -160,6 +160,7 @@
                         </template>
                       </v-autocomplete>
                       <v-autocomplete readonly :loading="loading" v-model="sourceDatabase" :items="sourceDatabaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <div class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(sourceDatabaseSize) }}</span></div>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -230,7 +231,7 @@
                       <div style="height:50vh">
                         <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady2" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="tablesHeaders" :defaultColDef="defaultColDef2" :rowData="tablesSelected"></ag-grid-vue>
                       </div>
-                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(this.tableSize)} / ${formatBytes(this.sourceDatabaseSize)}` }}</span></div>
+                      <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(tableSize)} / ${formatBytes(sourceDatabaseSize)}` }}</span></div>
                       <div class="text-body-1 white--text" style="margin-top:15px">OPTIONS</div>
                       <v-checkbox readonly v-model="exportTriggers" label="Export Triggers" hide-details style="margin-top:10px"></v-checkbox>
                       <v-checkbox readonly v-model="exportRoutines" label="Export Routines (Functions and Procedures)" hide-details style="margin-top:10px"></v-checkbox>
