@@ -225,7 +225,7 @@ class Clones:
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
         # Build options
-        options = '--single-transaction --max-allowed-packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
+        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
