@@ -79,7 +79,6 @@ export default {
       axios.get('/client/objects', { params: payload })
         .then((response) => {
           for (let [key, value] of Object.entries(response.data)) this.parseObjects(key, value)
-          this.databasePrev = this.database
           resolve()
         })
         .catch((error) => {

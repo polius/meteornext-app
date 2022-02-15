@@ -99,6 +99,7 @@ export default {
       'sidebarLoadingObject',
       'server',
       'database',
+      'databasePrev',
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -133,7 +134,7 @@ export default {
       this.tabStructureSelected = 'triggers'
     },
     getStructure(refresh) {
-      if (!refresh && this.structureConnection == this.sidebarSelected[0]['id']) return
+      if (!refresh && this.structureConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
       this.sidebarLoadingObject = true
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }

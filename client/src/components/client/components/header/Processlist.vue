@@ -5,7 +5,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>PROCESSLIST</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <div class="body-1">{{ server.name }}</div>
+          <div class="body-1" :title="server.shared ? server.secured ? 'Shared (Secured)' : 'Shared' : server.secured ? 'Personal (Secured)' : 'Personal'">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="settingsProcesslist" style="height:100%"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
           <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>

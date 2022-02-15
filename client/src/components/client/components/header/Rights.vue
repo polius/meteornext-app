@@ -5,7 +5,7 @@
         <v-toolbar flat dense color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>USER RIGHTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <div class="subtitle-1">{{ server.name }}</div>
+          <div :title="server.shared ? server.secured ? 'Shared (Secured)' : 'Shared' : server.secured ? 'Personal (Secured)' : 'Personal'" class="subtitle-1">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!saveEnabled" @click="saveClick" color="#00b16a"><v-icon small style="margin-right:10px">fas fa-save</v-icon>Save</v-btn>
           <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" color="#fa8231" style="margin-left:10px; margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
