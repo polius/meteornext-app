@@ -29,7 +29,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete @change="getDatabaseSize" ref="database" :loading="loading" :disabled="server == null" v-model="database" :items="databaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete @change="getDatabaseSize" ref="database" :loading="loading" :disabled="server == null" v-model="database" :items="databaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
                       <div v-if="databaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(databaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
@@ -124,7 +124,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete readonly :loading="loading" v-model="database" :items="databaseItems" item-value="id" item-text="name" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete readonly :loading="loading" v-model="database" :items="databaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
                       <div class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(databaseSize) }}</span></div>
                     </v-card-text>
                   </v-card>
@@ -267,7 +267,7 @@ export default {
   methods: {
     getServers() {
       this.loading = true
-      axios.get('/utils/exports/servers')
+      axios.get('/utils/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -283,9 +283,9 @@ export default {
       else {
         this.loading = true
         const payload = { server_id: this.server }
-        axios.get('/utils/exports/databases', { params: payload })
+        axios.get('/utils/databases', { params: payload })
           .then((response) => {
-            this.databaseItems = response.data.databases
+            this.databaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.sourceForm.resetValidation()
               this.$refs.server.blur()
@@ -306,7 +306,7 @@ export default {
       if (this.database == null) return
       this.loading = true
       const payload = { server_id: this.server, database: this.database }
-      axios.get('/utils/exports/databases/size', { params: payload })
+      axios.get('/utils/databases/size', { params: payload })
         .then((response) => {
           this.databaseSize = response.data.size
         })
@@ -324,7 +324,7 @@ export default {
       this.loading = true
       this.gridApi.showLoadingOverlay()
       const payload = { server_id: this.server, database: this.database }
-      axios.get('/utils/exports/tables', { params: payload })
+      axios.get('/utils/tables', { params: payload })
         .then((response) => {
           this.parseTables(response.data.tables)
           this.resizeTable()

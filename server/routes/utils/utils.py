@@ -8,6 +8,7 @@ import models.admin.settings
 import models.inventory.servers
 import models.inventory.regions
 import models.inventory.cloud
+import models.utils.utils
 import models.utils.imports
 import models.utils.exports
 import models.utils.clones
@@ -29,6 +30,7 @@ class Utils:
         self._servers = models.inventory.servers.Servers(sql, license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
+        self._utils = models.utils.utils.Utils(sql, license)
         self._imports = models.utils.imports.Imports(sql, license)
         self._exports = models.utils.exports.Exports(sql, license)
         self._clones = models.utils.clones.Clones(sql, license)
@@ -51,19 +53,17 @@ class Utils:
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
-            # Get User
+            # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
             if user['disabled'] or (not user['admin'] and not user['utils_enabled']):
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Check args
-            if 'server_id' not in request.args:
-                return jsonify({'message': 'Invalid Parameter'}), 400
-
-            # Return server
-            return self.get(user)
+            if 'server_id' in request.args:
+                return self.get(user)
+            else:
+                return jsonify({'servers': self._utils.get_servers(user)}), 200
 
         @utils_blueprint.route('/utils/servers/test', methods=['POST'])
         @jwt_required()
@@ -88,6 +88,114 @@ class Utils:
 
             # Return test result
             return self.test(user, data)
+
+        @utils_blueprint.route('/utils/databases', methods=['GET'])
+        @jwt_required()
+        def utils_databases_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or (not user['admin'] and not user['utils_enabled']):
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Check args
+            if 'server_id' not in request.args:
+                return jsonify({'message': "Invalid parameters."}), 400
+
+            # Get credentials
+            cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+
+            # Connect to the server
+            conn = connectors.base.Base(cred)
+            try:
+                conn.connect()
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
+
+            # Get databases
+            try:
+                return jsonify({'databases': conn.get_databases()}), 200
+            finally:
+                conn.stop()
+
+        @utils_blueprint.route('/utils/databases/size', methods=['GET'])
+        @jwt_required()
+        def utils_database_size_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or (not user['admin'] and not user['utils_enabled']):
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Check args
+            if 'server_id' not in request.args or 'database' not in request.args:
+                return jsonify({'message': "Invalid parameters."}), 400
+
+            # Get credentials
+            cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+
+            # Connect to the server
+            conn = connectors.base.Base(cred)
+            try:
+                conn.connect()
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
+
+            # Get database size
+            try:
+                return jsonify({'size': conn.get_database_size(request.args['database'])}), 200
+            finally:
+                conn.stop()
+
+        @utils_blueprint.route('/utils/tables', methods=['GET'])
+        @jwt_required()
+        def utils_tables_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or (not user['admin'] and not user['utils_enabled']):
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Check args
+            if 'server_id' not in request.args or 'database' not in request.args:
+                return jsonify({'message': "Invalid parameters."}), 400
+
+            # Get credentials
+            cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+
+            # Connect to the server
+            conn = connectors.base.Base(cred)
+            try:
+                conn.connect()
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
+
+            # Get tables
+            try:
+                return jsonify({'tables': conn.get_tables_detailed(request.args['database'])}), 200
+            finally:
+                conn.stop()
 
         return utils_blueprint
 
