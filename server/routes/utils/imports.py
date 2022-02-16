@@ -296,7 +296,7 @@ class Imports:
             selected = ''
             url = request.form['url']
             create_database = json.loads(data['createDatabase'])
-            drop_database = json.loads(data['dropDatabase'])
+            recreate_database = json.loads(data['recreateDatabase'])
             amazon_s3 = None
 
         elif data['mode'] == 'url':
@@ -306,7 +306,7 @@ class Imports:
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             url = data['url']
             create_database = data['createDatabase']
-            drop_database = data['dropDatabase']
+            recreate_database = data['recreateDatabase']
             amazon_s3 = None
 
         elif data['mode'] == 'cloud':
@@ -325,7 +325,7 @@ class Imports:
             details = {"cloud": data['cloud'], "bucket": data['bucket'], "object": data['object']}
             url = data['url']
             create_database = data['createDatabase']
-            drop_database = data['dropDatabase']
+            recreate_database = data['recreateDatabase']
             amazon_s3 = {
                 "aws_access_key": cloud['access_key'],
                 "aws_secret_access_key": cloud['secret_key'],
@@ -346,7 +346,7 @@ class Imports:
             'region_name': region['name'],
             'database': data['database'].strip(),
             'create_database': create_database,
-            'drop_database': drop_database,
+            'recreate_database': recreate_database,
             'status': 'STARTING' if not group['utils_concurrent'] else 'QUEUED',
             'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,

@@ -129,7 +129,7 @@
                 <div style="margin-top:15px">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px">
-                      <v-btn @click="editDialogSubmit" color="#00b16a">Save</v-btn>
+                      <v-btn @click="editDialogSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col>
                       <v-btn @click="editDialogCancel" color="#EF5354">Cancel</v-btn>
@@ -158,6 +158,7 @@
 </style>
 
 <script>
+var JSON2 = require('json-bigint')
 import axios from 'axios'
 
 import { Splitpanes, Pane } from 'splitpanes'
@@ -544,10 +545,10 @@ export default {
     editDialogDetectFormat() {
       // Detect JSON and parse it
       try {
-        let parsed = JSON.parse(this.editDialogEditor.getValue())
+        let parsed = JSON2.parse(this.editDialogEditor.getValue())
         this.editDialogEditor.session.setMode("ace/mode/json")
         this.editDialogEditor.session.setTabSize(2)
-        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+        this.editDialogEditor.setValue(JSON2.stringify(parsed, null, '\t'), 1)
         this.editDialogFormat = 'JSON'
       } catch { 
         this.editDialogFormat = 'Text'
@@ -559,16 +560,16 @@ export default {
       this.editDialogEditor.session.setMode("ace/mode/" + val.toLowerCase())
       if (val == 'JSON') {
         try {
-          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          let parsed = JSON2.parse(this.editDialogEditor.getValue())
           this.editDialogEditor.session.setTabSize(2)
-          this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+          this.editDialogEditor.setValue(JSON2.stringify(parsed, null, '\t'), 1)
         } catch { 1==1 }
       }
       else {
         try {
-          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          let parsed = JSON2.parse(this.editDialogEditor.getValue())
           this.editDialogEditor.session.setTabSize(4)
-          this.editDialogEditor.setValue(JSON.stringify(parsed), 1)
+          this.editDialogEditor.setValue(JSON2.stringify(parsed), 1)
         } catch { 1==1 }
       }
     },
@@ -593,8 +594,8 @@ export default {
     },
     editDialogParse() {
       try {
-        let parsed = JSON.parse(this.editDialogEditor.getValue())
-        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+        let parsed = JSON2.parse(this.editDialogEditor.getValue())
+        this.editDialogEditor.setValue(JSON2.stringify(parsed, null, '\t'), 1)
       } catch (error) {
         var dialogOptions = {
           'mode': 'info',
@@ -611,7 +612,7 @@ export default {
     editDialogSubmit() {
       if (this.editDialogFormat == 'JSON' && !this.editDialogValidate(false)) return
       let value = this.editDialogEditor.getValue()
-      try { value = JSON.stringify(JSON.parse(value)) } catch { 1==1 }
+      try { value = JSON2.stringify(JSON2.parse(value)) } catch { 1==1 }
       this.editDialog = false
       let nodes = this.gridApi.client.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)

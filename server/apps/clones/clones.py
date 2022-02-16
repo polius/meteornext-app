@@ -206,15 +206,13 @@ class Clones:
                 raise Exception(p['stderr'])
 
     def __create_database(self, item, server, region):
-        if not item['create_database']:
-            return
         # Build Connector Data
         data = {'ssh': region, 'sql': server}
         data['ssh']['enabled'] = region['ssh_tunnel']
         # Init Connector
         connector = connectors.base.Base(data)
-
-        if item['drop_database']:
+        # Create / Recreate database
+        if item['recreate_database']:
             connector.execute(f"DROP DATABASE IF EXISTS `{item['destination_database']}`")
         connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['destination_database']}`")
 

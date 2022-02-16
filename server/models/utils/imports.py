@@ -63,10 +63,10 @@ class Imports:
 
     def post(self, user, data):
         query = """
-            INSERT INTO imports (`mode`, `details`, `source`, `format`, `selected`, `size`, `server_id`, `database`, `create_database`, `drop_database`, `status`, `created`, `url`, `uri`, `upload`, `user_id`)
+            INSERT INTO imports (`mode`, `details`, `source`, `format`, `selected`, `size`, `server_id`, `database`, `create_database`,  `recreate_database`, `status`, `created`, `url`, `uri`, `upload`, `user_id`)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['mode'], data['details'], data['source'], data['format'], data['selected'], data['size'], data['server_id'], data['database'], data['create_database'], data['drop_database'], data['status'], data['created'], data['url'], data['uri'], data['upload'], user['id']))
+        return self._sql.execute(query, (data['mode'], data['details'], data['source'], data['format'], data['selected'], data['size'], data['server_id'], data['database'], data['create_database'], data['recreate_database'], data['status'], data['created'], data['url'], data['uri'], data['upload'], user['id']))
 
     def delete(self, user, item):
         query = """

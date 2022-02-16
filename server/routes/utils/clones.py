@@ -175,7 +175,7 @@ class Clones:
             'destination_server_name': servers['destination']['name'],
             'destination_region_name': regions['destination']['name'],
             'create_database': data['create_database'],
-            'drop_database': data['drop_database'],
+            'recreate_database': data['recreate_database'],
             'mode': data['mode'],
             'tables': f"{{\"t\":{json.dumps(data['tables'], separators=(',', ':'))}}}" if data['tables'] else None,
             'export_schema': data['export_schema'],
