@@ -245,12 +245,12 @@
                           </v-list-item>
                         </template>
                       </v-combobox>
-                      <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
-                      <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+                      <v-checkbox v-if="databaseSearch != null && !databaseItems.includes(databaseSearch)" readonly v-model="createDatabase" label="Create database" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox v-else v-model="recreateDatabase" :disabled="server == null" label="Recreate database" hide-details style="margin-top:20px"></v-checkbox>
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
-                        <v-btn :disabled="loading || server == null || database.length == 0" color="primary" @click="nextStep">CONTINUE</v-btn>
+                        <v-btn :disabled="loading || server == null || database == null" color="primary" @click="nextStep">CONTINUE</v-btn>
                         <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
@@ -368,8 +368,8 @@
                         </template>
                       </v-autocomplete>
                       <v-text-field readonly v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
-                      <v-checkbox readonly v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
-                      <v-checkbox readonly v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+                      <v-checkbox v-if="databaseSearch != null && !databaseItems.includes(databaseSearch)" readonly v-model="createDatabase" label="Create database" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox v-else v-model="recreateDatabase" readonly label="Recreate database" hide-details style="margin-top:20px"></v-checkbox>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -480,10 +480,10 @@ export default {
       serverItems: [],
       server: null,
       databaseItems: [],
-      database: '',
+      database: null,
       databaseSearch: null,
-      createDatabase: false,
-      dropDatabase: false,
+      createDatabase: true,
+      recreateDatabase: false,
       // Dialog
       dialog: false,
       progress: 0,
@@ -542,9 +542,6 @@ export default {
     },
     source() {
       if (this.mode == 'url') this.clearScan()
-    },
-    createDatabase(val) {
-      if (!val) this.dropDatabase = false
     },
   },
   methods: {
@@ -772,7 +769,8 @@ export default {
       data.append('size', this.fileObject.size)
       data.append('server', this.server)
       data.append('database', this.database)
-      data.append('createDatabase', this.createDatabase)
+      data.append('createDatabase', !this.databaseItems.includes(this.databaseSearch))
+      data.append('recreateDatabase', this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false)
       data.append('dropDatabase', this.dropDatabase)
       data.append('url', window.location.protocol + '//' + window.location.host)
       // Build request options
@@ -889,7 +887,8 @@ export default {
         selected: this.scanSelected,
         server: this.server,
         database: this.database,
-        createDatabase: this.createDatabase,
+        createDatabase: !this.databaseItems.includes(this.databaseSearch),
+        recreateDatabase: this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false,
         dropDatabase: this.dropDatabase,
         url: window.location.protocol + '//' + window.location.host
       }
@@ -917,7 +916,8 @@ export default {
         selected: this.scanSelected,
         server: this.server,
         database: this.database,
-        createDatabase: this.createDatabase,
+        createDatabase: !this.databaseItems.includes(this.databaseSearch),
+        recreateDatabase: this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false,
         dropDatabase: this.dropDatabase,
         url: window.location.protocol + '//' + window.location.host
       }

@@ -143,11 +143,11 @@
               </div>
             </v-card-text>
           </v-card>
-          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">OPTIONS</div>
+          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SETUP</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <v-checkbox readonly v-model="information_items[0]['create_database']" label="Create database if not exists" hide-details style="margin:0px; padding:0px"></v-checkbox>
-              <v-checkbox readonly v-model="information_items[0]['drop_database']" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+              <v-checkbox v-if="information_items[0]['create_database']" readonly v-model="nformation_items[0]['create_database']" label="Create database" hide-details style="margin:0px; padding:0px"></v-checkbox>
+              <v-checkbox v-else readonly v-model="information_items[0]['recreate_database']" label="Recreate database" hide-details style="margin:0px; padding:0px"></v-checkbox>
             </v-card-text>
           </v-card>
         </div>

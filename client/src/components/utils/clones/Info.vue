@@ -90,10 +90,7 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SETUP</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div class="text-body-1 white--text">OPTIONS</div>
-              <v-checkbox readonly v-model="information_items[0]['create_database']" label="Create database if not exists" hide-details style="margin-top:10px"></v-checkbox>
-              <v-checkbox readonly v-model="information_items[0]['drop_database']" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
-              <div class="text-body-1 white--text" style="margin-top:15px">MODE</div>
+              <div class="text-body-1 white--text">MODE</div>
               <v-radio-group readonly v-model="information_items[0]['mode']" style="margin-top:10px; margin-bottom:15px" hide-details>
                 <v-radio value="full">
                   <template v-slot:label>
@@ -107,6 +104,8 @@
                 </v-radio>
               </v-radio-group>
               <div class="text-body-1 white--text">SETTINGS</div>
+              <v-checkbox v-if="information_items[0]['create_database']" readonly v-model="information_items[0]['create_database']" label="Create database" hide-details style="margin-top:10px"></v-checkbox>
+              <v-checkbox v-else readonly v-model="information_items[0]['recreate_database']" label="Recreate database" hide-details style="margin-top:10px"></v-checkbox>
               <v-checkbox readonly v-model="information_items[0]['export_schema']" label="Export Schema (Add CREATE TABLE statements)." hide-details style="margin-top:10px"></v-checkbox>
               <v-checkbox readonly v-model="information_items[0]['export_data']" label="Export Data (Dump table contents)." hide-details style="margin-top:10px"></v-checkbox>
               <v-checkbox readonly :disabled="!information_items[0]['export_schema']" v-model="information_items[0]['add_drop_table']" label="Add Drop Table (Add DROP TABLE statement before each CREATE TABLE statement)." hide-details style="margin-top:10px"></v-checkbox>

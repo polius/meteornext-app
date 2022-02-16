@@ -74,8 +74,8 @@
                           </v-list-item>
                         </template>
                       </v-combobox>
-                      <v-checkbox v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
-                      <v-checkbox :disabled="!createDatabase" v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+                      <v-checkbox v-if="destinationDatabaseSearch != null && !destinationDatabaseItems.includes(destinationDatabaseSearch)" readonly v-model="createDatabase" label="Create database" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox v-else v-model="recreateDatabase" :disabled="destinationServer == null" label="Recreate database" hide-details style="margin-top:20px"></v-checkbox>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
                           <v-btn :disabled="destinationServer == null || destinationDatabase == null" color="primary" @click="nextStep">CONTINUE</v-btn>
@@ -195,8 +195,8 @@
                         </template>
                       </v-autocomplete>
                       <v-text-field readonly v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-text-field>
-                      <v-checkbox readonly v-model="createDatabase" label="Create database if not exists" hide-details style="margin-top:20px"></v-checkbox>
-                      <v-checkbox readonly v-model="dropDatabase" label="Drop database if exists" hide-details style="margin-top:10px"></v-checkbox>
+                      <v-checkbox v-if="destinationDatabaseSearch != null && !destinationDatabaseItems.includes(destinationDatabaseSearch)" readonly v-model="createDatabase" label="Create database" hide-details style="margin-top:20px"></v-checkbox>
+                      <v-checkbox v-else v-model="recreateDatabase" readonly label="Recreate database" hide-details style="margin-top:20px"></v-checkbox>
                     </v-card-text>
                   </v-card>
                 </div>
@@ -292,8 +292,8 @@ export default {
       destinationDatabaseItems: null,
       destinationDatabaseSearch: null,
       destinationDatabase: null,
-      createDatabase: false,
-      dropDatabase: false,
+      createDatabase: true,
+      recreateDatabase: false,
       // Setup
       mode: 'full',
       exportSchema: true,
@@ -501,8 +501,8 @@ export default {
         source_database: this.sourceDatabase,
         destination_server: this.destinationServer,
         destination_database: this.destinationDatabase,
-        create_database: this.createDatabase,
-        drop_database: this.dropDatabase,
+        create_database: !this.destinationDatabaseItems.includes(this.destinationDatabaseSearch),
+        recreate_database: this.destinationDatabaseItems.includes(this.destinationDatabaseSearch) ? this.recreateDatabase : false,
         mode: this.mode,
         tables: this.mode == 'full' ? null : this.gridApi.getSelectedRows().map((val) => ({ n: val.name, r: val.rows, s: val.data_length })),
         export_schema: this.exportSchema,
