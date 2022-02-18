@@ -55,9 +55,9 @@ export default {
       'tabObjectsSelected',
       'server',
       'database',
-      'databasePrev',
       'objectsHeaders',
       'objectsItems',
+      'objectsState',
       'bottomBar',
     ], { path: 'client/connection' }),
   },
@@ -69,7 +69,7 @@ export default {
       this.tabObjectsSelected = object
     },
     getObjects(force, resolve, reject) {
-      if (this.database == this.databasePrev && !force) { resolve(); return; }
+      if (!force && this.objectsState == this.database) { resolve(); return; }
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -79,6 +79,7 @@ export default {
       axios.get('/client/objects', { params: payload })
         .then((response) => {
           for (let [key, value] of Object.entries(response.data)) this.parseObjects(key, value)
+          this.objectsState = this.database
           resolve()
         })
         .catch((error) => {

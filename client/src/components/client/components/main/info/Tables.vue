@@ -48,10 +48,9 @@ export default {
       'infoHeaders',
       'infoItems',
       'infoEditor',
-      'infoConnection',
+      'infoState',
       'server',
       'database',
-      'databasePrev',
       'sidebarSelected',
       'sidebarLoadingObject',
     ], { path: 'client/connection' }),
@@ -95,7 +94,7 @@ export default {
   methods: {
     getInfo(refresh) {
       this.editor.setValue(this.infoEditor.tables, -1)
-      if (!refresh && this.infoConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
+      if (!refresh && this.infoState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
       this.sidebarLoadingObject = true
       const payload = {
         connection: this.id + '-shared',
@@ -149,8 +148,8 @@ export default {
       this.infoEditor.tables = syntax
       this.editor.setValue(syntax, -1)
       this.editor.focus()
-      // Store the current connection
-      this.infoConnection = this.sidebarSelected[0]['id']
+      // Store the current info state
+      this.infoState = this.database + '|' + this.sidebarSelected[0]['id']
     },
     refresh() {
       this.getInfo(true)

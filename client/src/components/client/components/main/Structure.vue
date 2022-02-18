@@ -94,12 +94,11 @@ export default {
       'bottomBar',
       'structureHeaders',
       'structureItems',
-      'structureConnection',
+      'structureState',
       'sidebarSelected',
       'sidebarLoadingObject',
       'server',
       'database',
-      'databasePrev',
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -134,7 +133,7 @@ export default {
       this.tabStructureSelected = 'triggers'
     },
     getStructure(refresh) {
-      if (!refresh && this.structureConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
+      if (!refresh && this.structureState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
       this.sidebarLoadingObject = true
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
@@ -218,8 +217,8 @@ export default {
       if (triggers_items.length == 0) this.gridApi.structure.triggers.showNoRowsOverlay()
       else this.gridApi.structure.triggers.hideOverlay()
 
-      // Store the current connection
-      this.structureConnection = this.sidebarSelected[0]['id']
+      // Store the current structure state
+      this.structureState = this.database + '|' + this.sidebarSelected[0]['id']
     },
     execute(queries, showLoading, resolve, reject) {
       if (showLoading) {
