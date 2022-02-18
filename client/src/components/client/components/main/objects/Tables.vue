@@ -138,6 +138,9 @@ export default {
       this.dialogOpened = val
     },
   },
+  activated() {
+    EventBus.$on('get-objects-tables', this.refresh);
+  },
   methods: {
    onGridReady(params) {
       this.gridApi.objects.tables = params.api

@@ -50,8 +50,8 @@
                     </v-tabs>
                   </div>
                   <div style="height:50vh">
-                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tablesCsv')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tablesCsv', $event)" @selection-changed="onSelectionChanged('tablesCsv')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tables', $event)" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('views', $event)" @selection-changed="onSelectionChanged('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('triggers', $event)" @selection-changed="onSelectionChanged('triggers')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('functions', $event)" @selection-changed="onSelectionChanged('functions')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
@@ -203,7 +203,6 @@ export default {
       progressTotal: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
-      selected: undefined,
       // Axios Cancel Token
       cancelToken: null,
       // Export Data
@@ -221,7 +220,6 @@ export default {
       'id',
       'server',
       'database',
-      'databasePrev',
       'objectsHeaders',
       'objectsItems',
     ], { path: 'client/connection' }),
@@ -231,42 +229,34 @@ export default {
   },
   watch: {
     tabObjectsSelected: function(val) {
-      if (this.tab == 'csv') this.resizeTable('tablesCsv', false)
-      else if (this.tab == 'sql') this.resizeTable(this.objects[val], false)
+      if (this.tab == 'csv') this.resizeTable('tablesCsv')
+      else if (this.tab == 'sql') this.resizeTable(this.objects[val])
     },
     dialog: function(val) {
       this.dialogOpened = val
-      if (this.database != this.databasePrev) this.buildObjects()
+      this.buildObjects()
     },
   },
   methods: {
-    showDialog(selected) {
+    showDialog() {
       this.include = 'Structure + Content'
       this.rows = '1000'
       this.includeFields = true
-      this.selected = selected
       this.dialog = true
       this.tabClick('sql')
       setTimeout(() => {
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
-        if (selected === undefined) this.tabObjectsSelected = 0
-        else this.selectRow()
+        this.tabObjectsSelected = 0
       },0)
     },
     onGridReady(object, params) {
       setTimeout(() => {
         this.gridApi[object] = params.api
         this.columnApi[object] = params.columnApi
-        if (this.databasePrev != this.database) this.gridApi[object].showLoadingOverlay()
-        else this.resizeTable(object, true)
+        this.gridApi[object].showLoadingOverlay()
       },0)
-    },
-    onNewColumnsLoaded(object) {
-      if (this.gridApi[object] != null) {
-        this.resizeTable(object, true)
-      }
     },
     onSelectionChanged(object) {
       if (object == 'tablesCsv') this.objectsSelected['tables'] = this.gridApi[object].getSelectedRows().length
@@ -280,29 +270,14 @@ export default {
       const objects = (this.tab == 'sql') ? ['tables','views','triggers','functions','procedures','events'] : ['tablesCsv']
       for (let obj of objects) try { this.gridApi[obj].deselectAll() } catch {} // eslint-disable-line
     },
-    selectRow() {
-      if (this.selected === undefined || this.gridApi[this.selected['object']] == null) return
-      this.$nextTick(() => { 
-        this.tabObjectsSelected = this.objects.indexOf(this.selected['object'])
-        this.gridApi[this.selected['object']].forEachNode((node) => {
-          if (this.selected['items'].includes(node.data.name)) node.setSelected(true)
-        })
-      })
-    },
-    resizeTable(object, selectRow) {
+    resizeTable(object) {
       setTimeout(() => {
-        var allColumnIds = [];
+        var allColumnIds = []
         this.columnApi[object].getAllColumns().forEach(function(column) {
-          allColumnIds.push(column.colId);
+          allColumnIds.push(column.colId)
         })
-        this.columnApi[object].autoSizeColumns(allColumnIds);
-      },0)
-      setTimeout(() => {
-        let obj = (object == 'tablesCsv') ? 'tables' : object
-        if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
-        else this.gridApi[obj].showNoRowsOverlay()
-        if (selectRow) this.selectRow()
-        this.loading = false
+        this.columnApi[object].autoSizeColumns(allColumnIds)
+        this.gridApi[object].hideOverlay()
       },0)
     },
     tabClick(object) {
@@ -313,7 +288,7 @@ export default {
       else if (object == 'csv') {
         this.sqlColor = '#779ecb'
         this.csvColor = 'primary'
-        this.resizeTable('tablesCsv', false)
+        this.resizeTable('tablesCsv')
       }
       // Deselect all rows
       const objects = ['tables','tablesCsv','views','triggers','functions','procedures','events']
@@ -332,7 +307,9 @@ export default {
       })
       .then(() => {
         this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
+        for (let obj of this.objects) this.resizeTable(obj)
       })
+      .finally(() => this.loading = false)
     },
     includeChanged() {
       if (this.include == 'Content') {

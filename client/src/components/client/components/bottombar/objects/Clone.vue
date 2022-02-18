@@ -47,7 +47,7 @@
                     </v-tabs>
                   </div>
                   <div style="height:50vh">
-                    <ag-grid-vue v-show="tabObjectsSelected == 0" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('tables', $event)" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('views', $event)" @selection-changed="onSelectionChanged('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('triggers', $event)" @selection-changed="onSelectionChanged('triggers')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady('functions', $event)" @selection-changed="onSelectionChanged('functions')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
@@ -183,7 +183,6 @@ export default {
       progressValue: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
-      selected: undefined,
       // Axios Cancel Token
       cancelToken: null,
       // Clone Errors
@@ -200,7 +199,6 @@ export default {
       'id',
       'server',
       'database',
-      'databasePrev',
       'databaseItems',
       'objectsHeaders',
       'objectsItems',
@@ -214,11 +212,13 @@ export default {
       this.dialogOpened = val
       if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
     },
+    tabObjectsSelected: function(val) {
+      this.resizeTable(this.objects[val])
+    },
   },
   methods: {
-    showDialog(selected) {
+    showDialog() {
       this.buildObjects()
-      this.selected = selected
       this.targetDatabase = ''
       this.search = ''
       this.onSearch('')
@@ -227,20 +227,14 @@ export default {
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
-        if (selected === undefined) this.tabObjectsSelected = 0
-        else this.selectRow()
       },0)
     },
     onGridReady(object, params) {
       setTimeout(() => {
         this.gridApi[object] = params.api
         this.columnApi[object] = params.columnApi
-        if (this.databasePrev != this.database) this.gridApi[object].showLoadingOverlay()
-        else this.resizeTable(object, true)
+        this.gridApi[object].showLoadingOverlay()
       },0)
-    },
-    onNewColumnsLoaded(object) {
-      if (this.gridApi[object] != null) this.resizeTable(object, true)
     },
     onSelectionChanged(object) {
       this.objectsSelected[object] = this.gridApi[object].getSelectedRows().length
@@ -253,29 +247,15 @@ export default {
       const objects = ['tables','views','triggers','functions','procedures','events']
       for (let obj of objects) try { this.gridApi[obj].deselectAll() } catch {} // eslint-disable-line
     },
-    selectRow() {
-      if (this.selected === undefined || this.gridApi[this.selected['object']] == null) return
-      this.$nextTick(() => { 
-        this.tabObjectsSelected = this.objects.indexOf(this.selected['object'])
-        this.gridApi[this.selected['object']].forEachNode((node) => {
-          if (this.selected['items'].includes(node.data.name)) node.setSelected(true)
-        })
-      })
-    },
-    resizeTable(object, selectRow) {
+    resizeTable(object) {
       setTimeout(() => {
-        var allColumnIds = [];
+        var allColumnIds = []
         this.columnApi[object].getAllColumns().forEach(function(column) {
-          allColumnIds.push(column.colId);
+          allColumnIds.push(column.colId)
         })
-        this.columnApi[object].autoSizeColumns(allColumnIds);
-      },0)
-      setTimeout(() => {
-        if (this.objectsItems[object].length > 0) this.gridApi[object].hideOverlay()
-        else this.gridApi[object].showNoRowsOverlay()
-        if (selectRow) this.selectRow()
-        this.loading = false
-      },0)
+        this.columnApi[object].autoSizeColumns(allColumnIds)
+        this.gridApi[object].hideOverlay()
+      }, 0)
     },
     buildObjects() {
       for (let obj of this.objects) {
@@ -285,6 +265,11 @@ export default {
         this.loading = true
         EventBus.$emit('get-objects', true, resolve, reject)
       })
+      .then(() => {
+        this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
+        for (let obj of this.objects) this.resizeTable(obj)
+      })
+      .finally(() => this.loading = false)
     },
     cloneObjectsSubmit() {
       // Check if all fields are filled

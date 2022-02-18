@@ -256,7 +256,6 @@ export default {
       'sidebarSelected',
       'server',
       'database',
-      'databasePrev',
       'contentSearchFilter',
       'contentSearchFilterText',
       'contentSearchFilterText2',
@@ -266,7 +265,7 @@ export default {
       'contentColumnsType',
       'contentColumnsExtra',
       'contentPks',
-      'contentConnection',
+      'contentState',
       'contentSortState',
       'bottomBar',
       'sidebarLoadingObject'
@@ -458,7 +457,7 @@ export default {
       navigator.clipboard.writeText(json)
     },
     getContent(force) {
-      if (!force && this.contentConnection == this.sidebarSelected[0]['id'] && this.database == this.databasePrev) return
+      if (!force && this.contentState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
       if (force) this.contentSearchColumn = ''
       this.sidebarLoadingObject = true
       this.contentSortState = []
@@ -544,8 +543,8 @@ export default {
       // Build BottomBar
       this.parseContentBottomBar(data)
 
-      // Store the current connection
-      this.contentConnection = this.sidebarSelected[0]['id']
+      // Store the content state
+      this.contentState = (this.database + '|' + this.sidebarSelected[0]['id'])
     },
     resizeTable() {
       let allColumnIds = this.columnApi.content.getAllColumns().map(v => v.colId)

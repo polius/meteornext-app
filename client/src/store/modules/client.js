@@ -18,7 +18,6 @@ const connection = () => {
 
     // Database Selector
     database: '',
-    databasePrev: '',
     databaseItems: [],
     table: '',
     tableItems: [],
@@ -48,7 +47,7 @@ const connection = () => {
     tabStructureSelected: 'columns',
     structureHeaders: { columns: [], indexes: [], fks: [], triggers: [] },
     structureItems: { columns: [], indexes: [], fks: [], triggers: [] },
-    structureConnection: null,
+    structureState: null,
 
     // Content
     contentColumnsName: [],
@@ -63,18 +62,19 @@ const connection = () => {
     contentHeaders: [],
     contentItems: [],
     contentSortState: [],
-    contentConnection: null,
+    contentState: null,
 
     // Info
     infoHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
     infoItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
     infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
-    infoConnection: null,
+    infoState: null,
 
     // Objects
     tabObjectsSelected: 'tables',
     objectsHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
     objectsItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+    objectsState: null,
 
     // Rights
     rights: { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' },
