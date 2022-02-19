@@ -234,7 +234,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-combobox ref="database" @keyup.enter="databaseKeyEnter" :disabled="server == null" v-model="database" label="Database" :rules="[v => !!v || '']" :items="databaseItems" :search-input.sync="databaseSearch" style="padding-top:6px" hide-details>
+                      <v-combobox ref="database" @keyup.enter="databaseKeyEnter" :disabled="!serverValidated" v-model="database" label="Database" :rules="[v => !!v || '']" :items="databaseItems" :search-input.sync="databaseSearch" style="padding-top:6px" hide-details>
                         <template v-slot:no-data>
                           <v-list-item>
                             <v-list-item-content>
@@ -479,6 +479,7 @@ export default {
       // Destination
       serverItems: [],
       server: null,
+      serverValidated: false,
       databaseItems: [],
       database: null,
       databaseSearch: null,
@@ -615,6 +616,7 @@ export default {
         const payload = { server_id: this.server }
         axios.get('/utils/databases', { params: payload })
           .then((response) => {
+            this.serverValidated = true
             this.databaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.destinationForm.resetValidation()
@@ -623,6 +625,7 @@ export default {
             })
           })
           .catch((error) => {
+            this.serverValidated = false
             this.databaseItems = []
             this.database = null
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

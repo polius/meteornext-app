@@ -29,7 +29,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete @change="getDatabaseSize" ref="database" :loading="loading" :disabled="server == null" v-model="database" :items="databaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete @change="getDatabaseSize" ref="database" :loading="loading" :disabled="!serverValidated" v-model="database" :items="databaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
                       <div v-if="databaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(databaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
@@ -212,6 +212,7 @@ export default {
       // Source
       serverItems: [],
       server: null,
+      serverValidated: false,
       databaseItems: [],
       database: null,
       databaseSize: null,
@@ -285,6 +286,7 @@ export default {
         const payload = { server_id: this.server }
         axios.get('/utils/databases', { params: payload })
           .then((response) => {
+            this.serverValidated = true
             this.databaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.sourceForm.resetValidation()
@@ -293,6 +295,7 @@ export default {
             })
           })
           .catch((error) => {
+            this.serverValidated = false
             this.databaseItems = []
             this.database = null
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

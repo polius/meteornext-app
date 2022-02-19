@@ -29,7 +29,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="sourceServer == null" v-model="sourceDatabase" :items="sourceDatabaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
+                      <v-autocomplete @change="getDatabaseSize('source')" ref="sourceDatabase" :disabled="!sourceServerValidated" v-model="sourceDatabase" :items="sourceDatabaseItems" label="Database" auto-select-first :rules="[v => !!v || '']" style="margin-top:20px" hide-details></v-autocomplete>
                       <div v-if="sourceDatabaseSize != null" class="text-body-1" style="margin-top:20px">Size: <span class="white--text" style="font-weight:500">{{ formatBytes(sourceDatabaseSize) }}</span></div>
                       <v-row no-gutters style="margin-top:20px;">
                         <v-col cols="auto" class="mr-auto">
@@ -63,7 +63,7 @@
                           {{ item.name }}
                         </template>
                       </v-autocomplete>
-                      <v-combobox @keyup.enter="destinationDatabaseKeyEnter" :disabled="destinationServer == null" ref="destinationDatabase" v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" :items="destinationDatabaseItems" :search-input.sync="destinationDatabaseSearch" style="margin-top:20px" hide-details>
+                      <v-combobox @keyup.enter="destinationDatabaseKeyEnter" :disabled="!destinationServerValidated" ref="destinationDatabase" v-model="destinationDatabase" label="Database" :rules="[v => !!v || '']" :items="destinationDatabaseItems" :search-input.sync="destinationDatabaseSearch" style="margin-top:20px" hide-details>
                         <template v-slot:no-data>
                           <v-list-item>
                             <v-list-item-content>
@@ -284,11 +284,13 @@ export default {
       serverItems: [],
       // Source
       sourceServer: null,
+      sourceServerValidated: false,
       sourceDatabaseItems: [],
       sourceDatabase: null,
       sourceDatabaseSize: null,
       // Destination
       destinationServer: null,
+      destinationServerValidated: false,
       destinationDatabaseItems: null,
       destinationDatabaseSearch: null,
       destinationDatabase: null,
@@ -372,6 +374,7 @@ export default {
       axios.get('/utils/databases', { params: payload })
         .then((response) => {
           if (origin == 'source') {
+            this.sourceServerValidated = true
             this.sourceDatabaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.sourceForm.resetValidation()
@@ -380,6 +383,7 @@ export default {
             })
           }
           else if (origin == 'destination') {
+            this.destinationServerValidated = true
             this.destinationDatabaseItems = response.data.databases.map(x => x.name)
             this.$nextTick(() => {
               this.$refs.destinationForm.resetValidation()
@@ -391,11 +395,13 @@ export default {
         .catch((error) => {
           if (origin == 'source') {
             this.sourceServer = null
+            this.sourceServerValidated = false
             this.sourceDatabaseItems = []
             this.sourceDatabase = null
           }
           else if (origin == 'destination') {
             this.destinationServer = null
+            this.destinationServerValidated = false
             this.destinationDatabaseItems = []
             this.destinationDatabase = null
           }
