@@ -108,7 +108,7 @@
           <div v-if="information_items[0]['mode'] == 'partial'" class="title font-weight-regular" style="margin-top:15px; margin-left:1px">OBJECTS</div>
           <v-card v-if="information_items[0]['mode'] == 'partial'" style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <v-data-table :headers="objectsHeaders" :items="objectsItems" hide-default-footer class="elevation-1" mobile-breakpoint="0">
+              <v-data-table :headers="objectsHeaders" :items="objectsItems" class="elevation-1" mobile-breakpoint="0">
                 <template v-slot:[`item.s`]="{ item }">
                   {{ formatBytes(item.s) }}
                 </template>
