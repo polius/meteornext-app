@@ -231,8 +231,8 @@ export default {
     mode: '',
     loading: true,
     engines: {
-      'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
-      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
+      'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.0'],
+      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7', 'Aurora MySQL 8.0']
     },
     versions: [],
     dialog: false,
