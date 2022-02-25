@@ -127,22 +127,23 @@ class Client:
             if not cred['active']:
                 return jsonify({"message": 'This server is disabled'}), 400
 
-            # Open a server connection
             try:
+                # Open a server connection
                 conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Get Databases
+                databases = conn.get_all_databases()
+                version = conn.get_version()
+                engines = conn.get_engines()
+                encodings = conn.get_encodings()
+                defaults = {
+                    "encoding": conn.get_default_encoding(),
+                    "collation": conn.get_default_collation()
+                }
+                return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
+
             except Exception as e:
                 return jsonify({"message": str(e)}), 500
-
-            # Get Databases
-            databases = conn.get_all_databases()
-            version = conn.get_version()
-            engines = conn.get_engines()
-            encodings = conn.get_encodings()
-            defaults = {
-                "encoding": conn.get_default_encoding(),
-                "collation": conn.get_default_collation()
-            }
-            return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required()
