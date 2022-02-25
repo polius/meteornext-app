@@ -155,72 +155,85 @@ class Monitoring:
             """
             self._sql.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
         else:
-            # Get current timestamp in utc
-            utcnow = self.__utcnow()
+            try:
+                # Get current timestamp in utc
+                utcnow = self.__utcnow()
 
-            # Build Parameters
-            params = {}
-            if server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']:
-                params = { p['Variable_name']: p['Value'] for p in conn.get_variables() }
-                status = { s['Variable_name']: s['Value'] for s in conn.get_status() }
+                # Build Parameters
+                params = {}
+                if server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']:
+                    params = { p['Variable_name']: p['Value'] for p in conn.get_variables() }
+                    status = { s['Variable_name']: s['Value'] for s in conn.get_status() }
 
-            # Build Processlist
-            processlist = []
-            if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled']:
-                processlist = conn.get_processlist()
+                # Build Processlist
+                processlist = []
+                if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled']:
+                    processlist = conn.get_processlist()
 
-            # Build Summary
-            summary = {}
-            if server['monitor']['monitor_enabled']:
-                summary['info'] = {'version': params.get('version'), 'raw_uptime': status['Uptime'], 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
-                summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
-                summary['connections'] = {'current': status.get('Threads_connected'), 'max_connections_allowed': params.get('max_connections'), 'max_connections_reached': "{:.2f}%".format((int(status.get('Max_used_connections')) / int(params.get('max_connections'))) * 100), 'max_allowed_packet': params.get('max_allowed_packet'), 'transaction_isolation': params.get('tx_isolation'), 'bytes_received': status.get('Bytes_received'), 'bytes_sent': status.get('Bytes_sent')}
-                summary['statements'] = {'all': status.get('Questions'), 'select': int(status.get('Com_select')) + int(status.get('Qcache_hits')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
-                summary['index'] = {'percent': "{:.2f}%".format((int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd'])) / (int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd']) + int(status['Handler_read_first']) + int(status['Handler_read_next']) + int(status['Handler_read_key']) + int(status['Handler_read_prev']))), 'selects': status['Select_scan']}
+                # Build Summary
+                summary = {}
+                if server['monitor']['monitor_enabled']:
+                    summary['info'] = {'version': params.get('version'), 'raw_uptime': status['Uptime'], 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
+                    summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
+                    summary['connections'] = {'current': status.get('Threads_connected'), 'max_connections_allowed': params.get('max_connections'), 'max_connections_reached': "{:.2f}%".format((int(status.get('Max_used_connections')) / int(params.get('max_connections'))) * 100), 'max_allowed_packet': params.get('max_allowed_packet'), 'transaction_isolation': params.get('tx_isolation'), 'bytes_received': status.get('Bytes_received'), 'bytes_sent': status.get('Bytes_sent')}
+                    summary['statements'] = {'all': status.get('Questions'), 'select': int(status.get('Com_select')) + int(status.get('Qcache_hits')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
+                    summary['index'] = {'percent': "{:.2f}%".format((int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd'])) / (int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd']) + int(status['Handler_read_first']) + int(status['Handler_read_next']) + int(status['Handler_read_key']) + int(status['Handler_read_prev']))), 'selects': status['Select_scan']}
 
-            # Store Queries
-            if server['monitor']['queries_enabled']:
-                for i in processlist:
-                    if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
-                        db = '' if i['DB'] is None else i['DB']
-                        query = """
-                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
-                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ON DUPLICATE KEY UPDATE
-                                user = VALUES(user),
-                                host = VALUES(host),
-                                bavg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), bavg_execution_time, avg_execution_time)),
-                                max_execution_time = GREATEST(max_execution_time, VALUES(last_execution_time)),
-                                avg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), (bavg_execution_time*(count-1) + VALUES(last_execution_time)) / count, (bavg_execution_time*count + VALUES(last_execution_time)) / (count+1))),
-                                last_execution_time = VALUES(last_execution_time),
-                                last_seen = %s,
-                                count = IF(query_id = VALUES(query_id), count, count+1),
-                                query_id = VALUES(query_id);
-                        """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
+                # Store Queries
+                if server['monitor']['queries_enabled']:
+                    for i in processlist:
+                        if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
+                            db = '' if i['DB'] is None else i['DB']
+                            query = """
+                                INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
+                                VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                ON DUPLICATE KEY UPDATE
+                                    user = VALUES(user),
+                                    host = VALUES(host),
+                                    bavg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), bavg_execution_time, avg_execution_time)),
+                                    max_execution_time = GREATEST(max_execution_time, VALUES(last_execution_time)),
+                                    avg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), (bavg_execution_time*(count-1) + VALUES(last_execution_time)) / count, (bavg_execution_time*count + VALUES(last_execution_time)) / (count+1))),
+                                    last_execution_time = VALUES(last_execution_time),
+                                    last_seen = %s,
+                                    count = IF(query_id = VALUES(query_id), count, count+1),
+                                    query_id = VALUES(query_id);
+                            """
+                            self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
-            # Monitoring Alarms
-            if server['monitor']['monitor_enabled'] == 1:
-                self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
+                # Monitoring Alarms
+                if server['monitor']['monitor_enabled'] == 1:
+                    self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
 
-            # Parse Variables
-            summary = self.__dict2str(summary) if bool(summary) else ''
-            params = self.__dict2str(params) if bool(params) else ''
-            processlist = self.__dict2str(processlist) if len(processlist) > 0 else ''
+                # Parse Variables
+                summary = self.__dict2str(summary) if bool(summary) else ''
+                params = self.__dict2str(params) if bool(params) else ''
+                processlist = self.__dict2str(processlist) if len(processlist) > 0 else ''
 
-            # Store Variables
-            if summary != '' or params != '' or processlist != '':
+                # Store Variables
+                if summary != '' or params != '' or processlist != '':
+                    query = """
+                        INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
+                        SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s
+                        ON DUPLICATE KEY UPDATE
+                            available = 1,
+                            summary = COALESCE(VALUES(summary), summary),
+                            parameters = COALESCE(VALUES(parameters), parameters),
+                            processlist = COALESCE(VALUES(processlist), processlist),
+                            updated = VALUES(updated)
+                    """
+                    self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
+
+            except Exception as e:
+                # Set server unavailable with error
                 query = """
-                    INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
-                    SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s
+                    INSERT INTO monitoring_servers (server_id, available, error, updated)
+                    VALUES (%s, 0, %s, %s)
                     ON DUPLICATE KEY UPDATE
-                        available = 1,
-                        summary = COALESCE(VALUES(summary), summary),
-                        parameters = COALESCE(VALUES(parameters), parameters),
-                        processlist = COALESCE(VALUES(processlist), processlist),
+                        available = VALUES(available),
+                        error = VALUES(error),
                         updated = VALUES(updated)
                 """
-                self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
+                self._sql.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
         finally:
             # Stop Connection
             try:
