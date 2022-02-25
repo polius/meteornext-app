@@ -61,7 +61,7 @@
                           <v-icon size="18" color="info">fas fa-info-circle</v-icon>
                         </v-col>
                         <v-col>
-                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteor2.io/guides/administration/settings#amazon" target="_blank">Admin Panel</a>.</div>
+                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteor2.io/guides/administration/settings#amazon-s3" target="_blank">Admin Panel</a>.</div>
                         </v-col>
                       </v-row>
                     </v-card>
