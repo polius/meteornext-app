@@ -125,7 +125,7 @@ class Exports:
         # Send notification
         if export['status'] in ['SUCCESS','FAILED']:
             notification = {
-                'name': f"An export has finished",
+                'name': "An Export has finished.",
                 'status': 'ERROR' if export['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-export',
                 'data': f'{{"id":"{item["uri"]}"}}',

@@ -121,7 +121,7 @@ class Imports:
         # Send notification
         if imp['status'] in ['SUCCESS','FAILED']:
             notification = {
-                'name': f"An import has finished",
+                'name': "An Import has finished.",
                 'status': 'ERROR' if imp['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-import',
                 'data': f'{{"id":"{item["uri"]}"}}',
