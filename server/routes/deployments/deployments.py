@@ -287,7 +287,7 @@ class Deployments:
         for f in finished:
             # Create notifications
             notification = {'category': 'deployment'}
-            notification['name'] = f"Deployment '{f['name']}' has finished."
+            notification['name'] = f"{f['name']} has finished."
             notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
             notification['data'] = '{{"id": "{}"}}'.format(f['uri'])
             self._notifications.post(f['user_id'], notification)

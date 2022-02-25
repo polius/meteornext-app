@@ -182,7 +182,7 @@ class Clones:
         # Send notification
         if clone['status'] in ['SUCCESS','FAILED']:
             notification = {
-                'name': "A Clone has finished.",
+                'name': "A clone has finished.",
                 'status': 'ERROR' if clone['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-clone',
                 'data': f'{{"id":"{item["uri"]}"}}',
