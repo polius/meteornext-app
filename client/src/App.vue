@@ -90,7 +90,7 @@
         <v-subheader v-else>New notifications</v-subheader>
         <div v-for="notification in notifications" :key="notification['id']">
           <v-list-item :title="notification['name']" @click="openNotification(notification)" style="padding-left:0px">
-            <div :style="`margin-right:20px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
+            <div :style="`margin-right:15px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
             <v-list-item-content>
               <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#EF5354" style="margin-right:8px; margin-bottom:2px">fas fa-meteor</v-icon>{{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="margin-right:8px; margin-bottom:2px">fas fa-desktop</v-icon>{{ notification['name'] }}</v-list-item-title>
