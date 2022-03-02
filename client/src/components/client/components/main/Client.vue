@@ -873,7 +873,7 @@ export default {
       var queryRange = { start: this.editor.session.doc.indexToPosition(currentQuery.start), end: this.editor.session.doc.indexToPosition(currentQuery.end)}
 
       // Store Current Query (+ range)
-      this.clientQuery = { query: this.removeQueryComments(currentQuery.query, currentQuery.comments), range: queryRange }
+      this.clientQuery = { fullQuery: currentQuery.query, query: this.removeQueryComments(currentQuery.query, currentQuery.comments), range: queryRange }
 
       // Remove Previous Markers
       for (let item of Object.values(this.editor.session.getMarkers())) {
@@ -987,7 +987,7 @@ export default {
       const selectedText = this.editor.getSelectedText()
       // Get editor query (+ range)
       if (selectedText.length == 0) {
-        query = sqlFormatter.format(this.clientQuery['query'], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+        query = sqlFormatter.format(this.clientQuery['fullQuery'], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
         range = this.clientQuery['range']
       }
       else {
@@ -1008,7 +1008,7 @@ export default {
       const selectedText = this.editor.getSelectedText()
       // Get editor query (+ range)
       if (selectedText.length == 0) {
-        query = minify(this.clientQuery['query'])
+        query = minify(this.clientQuery['fullQuery'])
         range = this.clientQuery['range']
       }
       else {
@@ -1111,7 +1111,7 @@ export default {
       const selectedText = this.editor.getSelectedText()
       var queries = []
       if (selectedText.length == 0) queries = [this.clientQuery.query]
-      else queries = this.analyzeQueries(selectedText).map(x => selectedText.substring(x.begin, x.end))
+      else queries = this.analyzeQueries(selectedText).map(x => this.removeQueryComments(selectedText.substring(x.begin, x.end), x.comments))
       return queries
     },
     async parseExecution(payload, data, current) {
