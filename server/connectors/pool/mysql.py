@@ -51,7 +51,7 @@ class MySQL:
                         result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
                     connection.commit()
                 return result
-            except Exception as e: # (pymysql.err.OperationalError, pymysql.err.InterfaceError, UnicodeDecodeError) as e:
+            except Exception as e:
                 exception = e
                 time.sleep(1)
         raise exception
@@ -61,3 +61,10 @@ class MySQL:
             with connection.cursor(OrderedDictCursor) as cursor:
                 result = cursor.mogrify(query, args)
         return result
+
+    def raw(self, transaction=True):
+        connection = self._pool.dedicated_connection()
+        if transaction:
+            connection.begin()
+        cursor = connection.cursor(OrderedDictCursor)
+        return [connection, cursor]

@@ -10,3 +10,6 @@ class Pool:
 
     def mogrify(self, query, args=None):
         return self._sql.mogrify(query, args)
+
+    def raw(self, transaction=True):
+        return self._sql.raw(transaction)
