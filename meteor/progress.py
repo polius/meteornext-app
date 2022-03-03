@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from connector import connector
 
 class progress:
@@ -69,11 +69,17 @@ class progress:
     def start_region_update(self, region_id):
         sql = self.__connector()
         sql.start()
+        # Free all regions taking more than 5 minutes (hard limit)
+        started = (datetime.utcnow() - timedelta(minutes = 5)).strftime("%Y-%m-%d %H:%M:%S")
+        query = "DELETE FROM `regions_update` WHERE `started` < %s"
+        sql.execute(query=query, args=(started), database=self._config['meteor_next']['database'])
+        # Check if a region is currently being updated
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query = """
-            INSERT INTO regions_update (execution_id, region_id)
+            INSERT INTO regions_update (execution_id, region_id, started)
             SELECT *
             FROM (
-                SELECT %(execution_id)s, %(region_id)s
+                SELECT %(execution_id)s, %(region_id)s, %(started)s
             ) t
             WHERE NOT EXISTS (
                 SELECT *
@@ -87,7 +93,7 @@ class progress:
                 )
             )
         """
-        args = {'execution_id': self._config['params']['id'], 'region_id': region_id}
+        args = {'execution_id': self._config['params']['id'], 'region_id': region_id, 'started': now}
         result = sql.execute(query=query, args=args, database=self._config['meteor_next']['database'])
         sql.stop()
         return result['query_result'] > 0

@@ -53,13 +53,13 @@
               </v-data-table>
             </v-card>
 
-            <!-- PARAMETERS -->
+            <!-- METHOD -->
             <div>
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
                   <span v-on="on" class="subtitle-1 font-weight-regular white--text">
                     METHOD
-                    <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </span>
                 </template>
                 <span>
@@ -71,8 +71,7 @@
                 </span>
               </v-tooltip>
             </div>
-
-            <v-radio-group v-model="method" style="margin-top:10px;">
+            <v-radio-group v-model="method" style="margin-top:10px; margin-bottom:15px" hide-details>
               <v-radio value="validate" color="#00b16a">
                 <template v-slot:label>
                   <div style="color:#00b16a;">VALIDATE</div>
@@ -90,12 +89,125 @@
               </v-radio>
             </v-radio-group>
 
-            <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
-            <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
-
-            <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
+            <!-- SCHEDULE -->
+            <span class="subtitle-1 font-weight-regular white--text">SCHEDULE</span>
+            <v-switch :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:10px; margin-bottom:15px"></v-switch>
+            <div v-show="schedule_enabled">
+              <span class="body-1 font-weight-light">Select the schedule type.</span>
+              <v-radio-group row v-model="schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
+                <v-radio value="one_time">
+                  <template v-slot:label>
+                    <div class="white--text">One time</div>
+                  </template>
+                </v-radio>
+                <v-radio value="daily">
+                  <template v-slot:label>
+                    <div class="white--text">Daily</div>
+                  </template>
+                </v-radio>
+                <v-radio value="weekly">
+                  <template v-slot:label>
+                    <div class="white--text">Weekly</div>
+                  </template>
+                </v-radio>
+                <v-radio value="monthly">
+                  <template v-slot:label>
+                    <div class="white--text">Monthly</div>
+                  </template>
+                </v-radio>
+              </v-radio-group>
+              <span class="body-1 font-weight-light">Select the execution time.</span>
+              <div @click="schedule_change">
+                <v-text-field ref="schedule_datetime" filled readonly v-model="schedule_datetime" label="Execution time" hide-details style="margin-top:15px; margin-bottom:15px"></v-text-field>
+              </div>
+              <div v-show="schedule_type == 'weekly'">
+                <span class="body-1 font-weight-light">Select what days of the week the schedule should execute.</span>
+                <v-row no-gutters>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Monday" value="monday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Tuesday" value="tuesday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Wednesday" value="wednesday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Thursday" value="thursday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Friday" value="friday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Saturday" value="saturday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters style="margin-bottom:15px">
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_week" label="Sunday" value="sunday" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+              </div>
+              <div v-show="schedule_type == 'monthly'">
+                <span class="body-1 font-weight-light">Select what months the schedule should execute.</span>
+                <v-row no-gutters>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="January" value="january" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="February" value="february" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="March" value="march" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="April" value="april" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="May" value="may" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="June" value="june" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="July" value="july" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="August" value="august" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters style="margin-bottom:15px">
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="September" value="september" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="October" value="october" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="November" value="november" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                  <v-col cols="auto" style="width:150px">
+                    <v-checkbox v-model="schedule_month" label="December" value="december" hide-details style="padding-top:0px"></v-checkbox>
+                  </v-col>
+                </v-row>
+                <span class="body-1 font-weight-light">Select the day to be executed.</span>
+                <v-select filled v-model="schedule_month_day" label="Day" :items="[{id: 'first', val: 'First day of the month'}, {id: 'last', val: 'Last day of the month'}]" item-value="id" item-text="val" hide-details style="margin-top:10px; margin-bottom:15px"></v-select>
+              </div>
+              <div v-show="nextExecution != null" style="margin-bottom:10px">
+                <div class="body-1 font-weight-light">The execution will start at:</div>
+                <v-text-field solo readonly v-model="nextExecution" hide-details style="margin-top:5px; margin-bottom:15px"></v-text-field>
+              </div>
+            </div>
+            <!-- START EXECUTION -->
+            <div v-show="!schedule_enabled">
+              <span class="subtitle-1 font-weight-regular white--text">START</span>
+              <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:10px; margin-bottom:20px;"></v-checkbox>
+            </div>
             <v-divider></v-divider>
-
             <div style="margin-top:20px;">
               <v-btn :loading="loading" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
               <router-link to="/deployments"><v-btn :disabled="loading" color="#EF5354" style="margin-left:5px">CANCEL</v-btn></router-link>
@@ -107,16 +219,16 @@
 
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
-        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="info" @click="schedule_now">Now</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit">Confirm</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
-        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="info" @click="schedule_now">Now</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit">Confirm</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -212,9 +324,15 @@ export default {
       // Schedule
       scheduleDialog: false,
       schedule_enabled: false,
+      schedule_type: 'one_time',
+      schedule_week: [],
+      schedule_month: [],
+      schedule_month_day: 'first',
       schedule_mode: 'date',
       schedule_date: '',
       schedule_time: '',
+      schedule_date2: '',
+      schedule_time2: '',
       schedule_datetime: '',
 
       // Query Dialog
@@ -309,6 +427,43 @@ export default {
       get() { return this.fields.queries },
       set(val) { this.$emit('change', {"name": "queries", "value": val}) }
     },
+    nextExecution() {
+      if (this.schedule_time2.length == 0) return null
+      const date = moment(this.schedule_date + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+      if (this.schedule_type == 'one_time') {
+        if (this.schedule_date2.length == 0) return null
+        return date.format("YYYY-MM-DD HH:mm Z (dddd)")
+      }
+      else if (this.schedule_type == 'daily') {
+        if (date > moment().seconds(0).milliseconds(0)) return date.format("YYYY-MM-DD HH:mm Z")
+        else return date.add(1, 'days').format("YYYY-MM-DD HH:mm Z (dddd)")
+      }
+      else if (this.schedule_type == 'weekly') {
+        if (this.schedule_week.length == 0) return null
+        const correlation = {'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7}
+        const dayINeed = Math.min(...this.schedule_week.map(x => correlation[x]))
+        const today = date.isoWeekday()
+        // if we haven't yet passed the day of the week that I need
+        if (today <= dayINeed && date.isoWeekday(dayINeed).seconds(0).milliseconds(0) > moment().seconds(0).milliseconds(0)) {
+          return moment().isoWeekday(dayINeed).format("YYYY-MM-DD HH:mm Z (dddd)")
+        } else {
+          // otherwise, give me *next week's* instance of that same day
+          return moment().add(1, 'weeks').isoWeekday(dayINeed).format("YYYY-MM-DD HH:mm Z (dddd)")
+        }
+      }
+      else if (this.schedule_type == 'monthly') {
+        if (this.schedule_month.length == 0) return null
+        const correlation = {'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6, 'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12}
+        const month = ('0' + Math.min(...this.schedule_month.map(x => correlation[x])).toString()).slice(-2)
+        let newDate = moment(date.year() + '-' + month + '-' + '01 ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+        if (this.schedule_month_day == 'last') {
+          const lastDay = newDate.endOf('month').format("DD")
+          newDate = moment(date.year() + '-' + month + '-' + lastDay + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+        }
+        return newDate.format("YYYY-MM-DD HH:mm Z (dddd)")
+      }
+      return null
+    }
   },
   methods: {
     getReleases() {
@@ -335,8 +490,6 @@ export default {
     },
     schedule_close() {
       this.scheduleDialog = false
-      this.schedule_enabled = this.schedule_datetime != ''
-      this.schedule_mode = 'date'
     },
     schedule_now() {
       const date = moment()
@@ -344,23 +497,25 @@ export default {
       else if (this.schedule_mode == 'time') this.schedule_time = date.format("HH:mm")
     },
     schedule_change() {
-      if (this.schedule_enabled) {
-        if (this.schedule_datetime == '') {
-          const date = moment()
-          this.schedule_date = date.format("YYYY-MM-DD")
-          this.schedule_time = date.format("HH:mm")
-        }
-        this.scheduleDialog = true
+      const date = moment()
+      if (this.schedule_datetime.length == 0) {
+        this.schedule_date = date.format("YYYY-MM-DD")
+        this.schedule_time = date.format("HH:mm")
       }
-      else this.scheduleDialog = false
+      this.schedule_mode = (this.schedule_type == 'one_time') ? 'date' : 'time'
+      this.scheduleDialog = true
     },
     schedule_submit() {
       if (this.schedule_mode == 'date') {
         this.schedule_mode = 'time'
       }
       else if (this.schedule_mode == 'time') {
-        this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
-        this.schedule_mode = 'date'
+        this.schedule_time2 = this.schedule_time
+        if (this.schedule_type == 'one_time') {
+          this.schedule_date2 = this.schedule_date
+          this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
+        }
+        else this.schedule_datetime = this.schedule_time
         this.scheduleDialog = false
       }
     },
@@ -542,10 +697,14 @@ export default {
       this.snackbarText = message
       this.snackbarColor = color 
       this.snackbar = true
-    }
+    },
   },
   watch: {
-    queryDialog (val) {
+    schedule_type(val) {
+      if (val == 'one_time') this.schedule_datetime = (this.schedule_date2.length == 0) ? '' : (this.schedule_date2 + ' ' + this.schedule_time2).trim()
+      else this.schedule_datetime = this.schedule_time2
+    },
+    queryDialog(val) {
       if (!val) return
       this.cmOptions.readOnly = true
       this.$nextTick(() => {

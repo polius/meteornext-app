@@ -148,9 +148,10 @@ CREATE TABLE `regions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `regions_update` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `execution_id` INT UNSIGNED NOT NULL,
   `region_id` INT UNSIGNED NOT NULL,
+  `started` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `region_id` (`region_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -699,4 +700,12 @@ CREATE TABLE `utils_queued` (
   `source_type` ENUM('import','export','clone') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `source_id__source_type` (`source_id`, `source_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `nodes` (
+  `id` VARCHAR(191) NOT NULL,
+  `type` ENUM('master','worker') NOT NULL,
+  `healthcheck` DATETIME NOT NULL,
+  INDEX `type` (`type`),
+  PRIMARY KEY(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
