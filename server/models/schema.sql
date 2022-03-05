@@ -282,6 +282,28 @@ CREATE TABLE `deployments` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `deployments_pinned` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `deployment_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`user_id`,`deployment_id`),
+  INDEX `deployment_id` (`deployment_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `deployments_shared` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `deployment_id` INT UNSIGNED NOT NULL,
+  `is_pinned` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
+  `created` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `user_id__deployment_id` (`user_id`,`deployment_id`),
+  INDEX `deployment_id` (`deployment_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `executions` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED NOT NULL,
@@ -322,7 +344,16 @@ CREATE TABLE `executions` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_queued` (
+CREATE TABLE `executions_scheduled` (
+  `execution_id` INT UNSIGNED NOT NULL,
+  `schedule_type` ENUM('daily','weekly','monthly') NOT NULL,
+  `schedule_rules` VARCHAR(191) NULL COMMENT 'Applies when schedule_type=<weekly|monthly>',
+  PRIMARY KEY (`execution_id`),
+  INDEX `schedule_type` (`schedule_type`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `executions_queued` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT,
   `execution_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
@@ -330,32 +361,10 @@ CREATE TABLE `deployments_queued` (
   FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_finished` (
+CREATE TABLE `executions_finished` (
   `execution_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`execution_id`),
   FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `deployments_pinned` (
-  `user_id` INT UNSIGNED NOT NULL,
-  `deployment_id` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`user_id`,`deployment_id`),
-  INDEX `deployment_id` (`deployment_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `deployments_shared` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `deployment_id` INT UNSIGNED NOT NULL,
-  `is_pinned` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
-  `created` DATETIME NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `user_id__deployment_id` (`user_id`,`deployment_id`),
-  INDEX `deployment_id` (`deployment_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `notifications` (

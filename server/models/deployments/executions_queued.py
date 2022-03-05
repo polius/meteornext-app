@@ -1,10 +1,10 @@
-class Deployments_Queued:
+class Executions_Queued:
     def __init__(self, sql):
         self._sql = sql
 
     def build(self):
         query = """
-            INSERT IGNORE INTO deployments_queued (execution_id)
+            INSERT IGNORE INTO executions_queued (execution_id)
             SELECT id
             FROM executions
             WHERE status = 'QUEUED'
@@ -16,7 +16,7 @@ class Deployments_Queued:
         query = """
             SELECT q.id, e.id AS 'execution_id', e.scheduled IS NOT NULL AS 'scheduled'
             FROM executions e
-            JOIN deployments_queued q ON q.execution_id = e.id
+            JOIN executions_queued q ON q.execution_id = e.id
             WHERE e.status IN('SUCCESS','WARNING','FAILED','STOPPED')
         """
         return self._sql.execute(query)
@@ -25,7 +25,7 @@ class Deployments_Queued:
         query = """
             SELECT e.id, e.status, g.id AS 'group', COALESCE(g.deployments_execution_concurrent,100) AS 'concurrent'
             FROM executions e
-            JOIN deployments_queued q ON q.execution_id = e.id
+            JOIN executions_queued q ON q.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
@@ -35,5 +35,5 @@ class Deployments_Queued:
         return self._sql.execute(query)
 
     def delete(self, elements):
-        query = "DELETE FROM deployments_queued WHERE id IN({})".format(elements)
+        query = "DELETE FROM executions_queued WHERE id IN({})".format(elements)
         self._sql.execute(query)

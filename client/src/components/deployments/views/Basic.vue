@@ -124,29 +124,29 @@
                 <span class="body-1 font-weight-light">Select what days of the week the schedule should execute.</span>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Monday" value="monday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Monday" value="1" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Tuesday" value="tuesday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Tuesday" value="2" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Wednesday" value="wednesday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Wednesday" value="3" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Thursday" value="thursday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Thursday" value="4" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Friday" value="friday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Friday" value="5" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Saturday" value="saturday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Saturday" value="6" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
                 <v-row no-gutters style="margin-bottom:15px">
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_week" label="Sunday" value="sunday" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_week" label="Sunday" value="7" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
               </div>
@@ -154,44 +154,44 @@
                 <span class="body-1 font-weight-light">Select what months the schedule should execute.</span>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="January" value="january" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="January" value="1" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="February" value="february" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="February" value="2" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="March" value="march" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="March" value="3" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="April" value="april" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="April" value="4" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="May" value="may" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="May" value="5" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="June" value="june" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="June" value="6" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="July" value="july" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="July" value="7" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="August" value="august" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="August" value="8" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
                 <v-row no-gutters style="margin-bottom:15px">
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="September" value="september" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="September" value="9" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="October" value="october" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="October" value="10" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="November" value="november" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="November" value="11" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                   <v-col cols="auto" style="width:150px">
-                    <v-checkbox v-model="schedule_month" label="December" value="december" hide-details style="padding-top:0px"></v-checkbox>
+                    <v-checkbox v-model="schedule_month" label="December" value="12" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
                 <span class="body-1 font-weight-light">Select the day to be executed.</span>
@@ -429,38 +429,33 @@ export default {
     },
     nextExecution() {
       if (this.schedule_time2.length == 0) return null
-      const date = moment(this.schedule_date + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+      const schedule = moment(this.schedule_date + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+      const now = moment().seconds(0).milliseconds(0)
       if (this.schedule_type == 'one_time') {
         if (this.schedule_date2.length == 0) return null
-        return date.format("YYYY-MM-DD HH:mm Z (dddd)")
+        return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
       }
       else if (this.schedule_type == 'daily') {
-        if (date > moment().seconds(0).milliseconds(0)) return date.format("YYYY-MM-DD HH:mm Z")
-        else return date.add(1, 'days').format("YYYY-MM-DD HH:mm Z (dddd)")
+        if (schedule >= now) return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
+        else return schedule.add(1, 'days').format("YYYY-MM-DD HH:mm Z (dddd)")
       }
       else if (this.schedule_type == 'weekly') {
         if (this.schedule_week.length == 0) return null
-        const correlation = {'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7}
-        const dayINeed = Math.min(...this.schedule_week.map(x => correlation[x]))
-        const today = date.isoWeekday()
-        // if we haven't yet passed the day of the week that I need
-        if (today <= dayINeed && date.isoWeekday(dayINeed).seconds(0).milliseconds(0) > moment().seconds(0).milliseconds(0)) {
-          return moment().isoWeekday(dayINeed).format("YYYY-MM-DD HH:mm Z (dddd)")
-        } else {
-          // otherwise, give me *next week's* instance of that same day
-          return moment().add(1, 'weeks').isoWeekday(dayINeed).format("YYYY-MM-DD HH:mm Z (dddd)")
-        }
+        const startDays = this.schedule_week.map(x => moment(schedule.isoWeekday(Number(x)))).sort((a,b) => moment(a).diff(b))
+        const startDay = startDays.find(x => x >= now)
+        if (startDay === undefined) return startDays[0].add(1, 'weeks').format("YYYY-MM-DD HH:mm Z (dddd)")
+        else return startDay.format("YYYY-MM-DD HH:mm Z (dddd)")
       }
       else if (this.schedule_type == 'monthly') {
         if (this.schedule_month.length == 0) return null
-        const correlation = {'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6, 'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12}
-        const month = ('0' + Math.min(...this.schedule_month.map(x => correlation[x])).toString()).slice(-2)
-        let newDate = moment(date.year() + '-' + month + '-' + '01 ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
-        if (this.schedule_month_day == 'last') {
-          const lastDay = newDate.endOf('month').format("DD")
-          newDate = moment(date.year() + '-' + month + '-' + lastDay + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
-        }
-        return newDate.format("YYYY-MM-DD HH:mm Z (dddd)")
+        const startDays = this.schedule_month.map(x => {
+          let date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-01', "YYYY-MM-DD")
+          if (this.schedule_month_day == 'last') date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-' + date.endOf('month').format("DD"), "YYYY-MM-DD")
+          return date
+        }).sort((a,b) => moment(a).diff(b))
+        const startDay = startDays.find(x => x >= now)
+        if (startDay === undefined) return startDays[0].add(1, 'year').format("YYYY-MM-DD HH:mm Z (dddd)")
+        else return startDay.format("YYYY-MM-DD HH:mm Z (dddd)")
       }
       return null
     }
@@ -627,14 +622,14 @@ export default {
     },
     submitDeploy() {
       // Check if all fields are filled
-      if (!this.$refs.form.validate()) {
-        this.notification('Please fill the required fields', '#EF5354')
-        return
-      }
-      if (this.query_items.length == 0) {
-        this.notification('Please enter a query to deploy', '#EF5354')
-        return
-      }
+      // if (!this.$refs.form.validate()) {
+      //   this.notification('Please fill the required fields', '#EF5354')
+      //   return
+      // }
+      // if (this.query_items.length == 0) {
+      //   this.notification('Please enter a query to deploy', '#EF5354')
+      //   return
+      // }
       this.loading = true
       // Build parameters
       var payload = {
@@ -643,23 +638,39 @@ export default {
         release: this.release,
         environment: this.environment,
         databases: this.databases,
-        queries: JSON.stringify(this.query_items.map(x => ({q: x.query}))),
+        queries: this.query_items.map(x => ({q: x.query})),
         method: this.method.toUpperCase(),
-        scheduled: null,
-        start_execution: false,
         url: window.location.protocol + '//' + window.location.host
       }
-      if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
+      if (this.schedule_enabled) {
+        payload['schedule_type'] = this.schedule_type
+        if (this.schedule_type == 'one_time') {
+          payload['schedule'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+        }
+        else if (this.schedule_type == 'daily') {
+          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+        }
+        else if (this.schedule_type == 'weekly') {
+          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          payload['schedule_week'] = this.schedule_week.map(Number).sort((a, b) => a - b)
+        }
+        else if (this.schedule_type == 'monthly') {
+          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          payload['schedule_month'] = this.schedule_month.map(Number).sort((a, b) => a - b)
+          payload['schedule_month_day'] = this.schedule_month_day
+        }
+      }
       else payload['start_execution'] = this.start_execution
 
       // Add deployment to the DB
       axios.post('/deployments', payload)
-        .then((response) => {
-          const data = response.data.data
+        .then(() => {
+        //.then((response) => {
+          // const data = response.data.data
           // Refresh user coins
-          this.$store.dispatch('app/coins', data['coins'])
+          // this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
-          this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
+          // this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
