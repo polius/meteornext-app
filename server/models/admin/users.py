@@ -63,8 +63,9 @@ class Users:
     def delete(self, users):
         for user in users:
             self._sql.execute("UPDATE users SET disabled = 1 WHERE username = %s", (user))
-            self._sql.execute("DELETE dq FROM executions_queued eq JOIN executions e ON e.id = eq.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE eq FROM executions_queued eq JOIN executions e ON e.id = eq.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE ef FROM executions_finished ef JOIN executions e ON e.id = ef.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE es FROM executions_scheduled ef JOIN executions e ON e.id = es.execution_id JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE dp FROM deployments_pinned dp JOIN users u ON u.id = dp.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE ds FROM deployments_shared ds JOIN users u ON u.id = ds.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE e FROM executions e JOIN deployments d ON d.id = e.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
@@ -82,9 +83,10 @@ class Users:
             self._sql.execute("DELETE cf FROM client_folders cf JOIN users u ON u.id = cf.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cq FROM client_queries cq JOIN users u ON u.id = cq.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 0 JOIN users u ON u.id = s.owner_id AND u.username = %s", (user))
+            self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.shared = 0 JOIN users u ON u.id = e.owner_id AND u.username = %s", (user))
             self._sql.execute("DELETE s FROM servers s JOIN users u ON u.id = s.owner_id AND u.username = %s WHERE s.shared = 0", (user))
             self._sql.execute("DELETE a FROM auxiliary a JOIN users u ON u.id = a.owner_id AND u.username = %s WHERE a.shared = 0", (user))
-            self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.shared = 0 JOIN users u ON u.id = e.owner_id AND u.username = %s", (user))
+            self._sql.execute("DELETE r FROM regions r JOIN users u ON u.id = r.owner_id AND u.username = %s WHERE r.shared = 0", (user))
             self._sql.execute("DELETE e FROM environments e JOIN users u ON u.id = e.owner_id AND u.username = %s WHERE e.shared = 0", (user))
             self._sql.execute("DELETE c FROM cloud c JOIN users u ON u.id = c.owner_id AND u.username = %s WHERE c.shared = 0", (user))
             self._sql.execute("DELETE i FROM `imports` i JOIN users u ON u.id = i.user_id AND u.username = %s", (user))

@@ -6,8 +6,6 @@
           <v-form ref="form" style="padding:5px">
             <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:10px;"></v-text-field>
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-
-            <!-- EXECUTION -->
             <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;">
               <template v-slot:item="{ item }" >
                 <v-row align="center" no-gutters>
@@ -21,7 +19,7 @@
               </template>
             </v-autocomplete>
             <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-
+            <!-- QUERIES -->
             <v-card style="margin-bottom:20px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
@@ -52,7 +50,6 @@
                 </template>
               </v-data-table>
             </v-card>
-
             <!-- METHOD -->
             <div>
               <v-tooltip right>
@@ -71,7 +68,7 @@
                 </span>
               </v-tooltip>
             </div>
-            <v-radio-group v-model="method" style="margin-top:10px; margin-bottom:15px" hide-details>
+            <v-radio-group v-model="method" style="margin-top:10px" hide-details>
               <v-radio value="validate" color="#00b16a">
                 <template v-slot:label>
                   <div style="color:#00b16a;">VALIDATE</div>
@@ -88,12 +85,10 @@
                 </template>
               </v-radio>
             </v-radio-group>
-
             <!-- SCHEDULE -->
-            <span class="subtitle-1 font-weight-regular white--text">SCHEDULE</span>
-            <v-switch :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:10px; margin-bottom:15px"></v-switch>
+            <v-switch v-model="schedule_enabled" label="Scheduled" color="info" hide-details style="margin-top:15px; margin-bottom:15px"></v-switch>
             <div v-show="schedule_enabled">
-              <span class="body-1 font-weight-light">Select the schedule type.</span>
+              <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
               <v-radio-group row v-model="schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
                 <v-radio value="one_time">
                   <template v-slot:label>
@@ -116,12 +111,12 @@
                   </template>
                 </v-radio>
               </v-radio-group>
-              <span class="body-1 font-weight-light">Select the execution time.</span>
+              <span class="body-1 font-weight-light white--text">Select the execution time.</span>
               <div @click="schedule_change">
                 <v-text-field ref="schedule_datetime" filled readonly v-model="schedule_datetime" label="Execution time" hide-details style="margin-top:15px; margin-bottom:15px"></v-text-field>
               </div>
               <div v-show="schedule_type == 'weekly'">
-                <span class="body-1 font-weight-light">Select what days of the week the schedule should execute.</span>
+                <span class="body-1 font-weight-light white--text">Select what days of the week the schedule should execute.</span>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
                     <v-checkbox v-model="schedule_week" label="Monday" value="1" hide-details style="padding-top:0px"></v-checkbox>
@@ -151,7 +146,7 @@
                 </v-row>
               </div>
               <div v-show="schedule_type == 'monthly'">
-                <span class="body-1 font-weight-light">Select what months the schedule should execute.</span>
+                <span class="body-1 font-weight-light white--text">Select what months the schedule should execute.</span>
                 <v-row no-gutters>
                   <v-col cols="auto" style="width:150px">
                     <v-checkbox v-model="schedule_month" label="January" value="1" hide-details style="padding-top:0px"></v-checkbox>
@@ -194,19 +189,16 @@
                     <v-checkbox v-model="schedule_month" label="December" value="12" hide-details style="padding-top:0px"></v-checkbox>
                   </v-col>
                 </v-row>
-                <span class="body-1 font-weight-light">Select the day to be executed.</span>
+                <span class="body-1 font-weight-light white--text">Select the day to be executed.</span>
                 <v-select filled v-model="schedule_month_day" label="Day" :items="[{id: 'first', val: 'First day of the month'}, {id: 'last', val: 'Last day of the month'}]" item-value="id" item-text="val" hide-details style="margin-top:10px; margin-bottom:15px"></v-select>
               </div>
               <div v-show="nextExecution != null" style="margin-bottom:10px">
-                <div class="body-1 font-weight-light">The execution will start at:</div>
+                <div class="body-1 font-weight-light white--text">The execution will start at:</div>
                 <v-text-field solo readonly v-model="nextExecution" hide-details style="margin-top:5px; margin-bottom:15px"></v-text-field>
               </div>
             </div>
             <!-- START EXECUTION -->
-            <div v-show="!schedule_enabled">
-              <span class="subtitle-1 font-weight-regular white--text">START</span>
-              <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:10px; margin-bottom:20px;"></v-checkbox>
-            </div>
+            <v-checkbox v-show="!schedule_enabled" v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:10px; margin-bottom:20px;"></v-checkbox>
             <v-divider></v-divider>
             <div style="margin-top:20px;">
               <v-btn :loading="loading" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
@@ -622,14 +614,26 @@ export default {
     },
     submitDeploy() {
       // Check if all fields are filled
-      // if (!this.$refs.form.validate()) {
-      //   this.notification('Please fill the required fields', '#EF5354')
-      //   return
-      // }
-      // if (this.query_items.length == 0) {
-      //   this.notification('Please enter a query to deploy', '#EF5354')
-      //   return
-      // }
+      if (!this.$refs.form.validate()) {
+        this.notification('Please fill the required fields', '#EF5354')
+        return
+      }
+      if (this.query_items.length == 0) {
+        this.notification('Please enter a query to deploy', '#EF5354')
+        return
+      }
+      if (this.schedule_enabled && this.schedule_datetime.length == 0) {
+        this.notification('Please enter a schedule time', '#EF5354')
+        return
+      }
+      if (this.schedule_enabled && this.schedule_type == 'weekly' && this.schedule_week.length == 0) {
+        this.notification('Please select at least one day of week', '#EF5354')
+        return
+      }
+      if (this.schedule_enabled && this.schedule_type == 'monthly' && this.schedule_month.length == 0) {
+        this.notification('Please select at least one month', '#EF5354')
+        return
+      }
       this.loading = true
       // Build parameters
       var payload = {
@@ -638,41 +642,40 @@ export default {
         release: this.release,
         environment: this.environment,
         databases: this.databases,
-        queries: this.query_items.map(x => ({q: x.query})),
+        queries: this.query_items.map(x => x.query),
         method: this.method.toUpperCase(),
         url: window.location.protocol + '//' + window.location.host
       }
       if (this.schedule_enabled) {
         payload['schedule_type'] = this.schedule_type
         if (this.schedule_type == 'one_time') {
-          payload['schedule'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+          payload['schedule_value'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
         }
         else if (this.schedule_type == 'daily') {
-          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
         }
         else if (this.schedule_type == 'weekly') {
-          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
-          payload['schedule_week'] = this.schedule_week.map(Number).sort((a, b) => a - b)
+          payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          payload['schedule_rules'] = {"rules": this.schedule_week.map(Number).sort((a, b) => a - b)}
         }
         else if (this.schedule_type == 'monthly') {
-          payload['schedule'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
-          payload['schedule_month'] = this.schedule_month.map(Number).sort((a, b) => a - b)
-          payload['schedule_month_day'] = this.schedule_month_day
+          payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          payload['schedule_rules'] = {"rules": this.schedule_month.map(Number).sort((a, b) => a - b), "day": this.schedule_month_day}
         }
       }
       else payload['start_execution'] = this.start_execution
 
       // Add deployment to the DB
       axios.post('/deployments', payload)
-        .then(() => {
-        //.then((response) => {
-          // const data = response.data.data
+        .then((response) => {
+          const data = response.data.data
           // Refresh user coins
-          // this.$store.dispatch('app/coins', data['coins'])
+          this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
-          // this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
+          this.$router.push({ name: 'deployments.execution', params: { uri: data['uri'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
+          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })

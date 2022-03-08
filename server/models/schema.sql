@@ -347,6 +347,7 @@ CREATE TABLE `executions` (
 CREATE TABLE `executions_scheduled` (
   `execution_id` INT UNSIGNED NOT NULL,
   `schedule_type` ENUM('daily','weekly','monthly') NOT NULL,
+  `schedule_value` VARCHAR(191) NOT NULL,
   `schedule_rules` VARCHAR(191) NULL COMMENT 'Applies when schedule_type=<weekly|monthly>',
   PRIMARY KEY (`execution_id`),
   INDEX `schedule_type` (`schedule_type`),
