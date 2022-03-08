@@ -24,6 +24,7 @@ import models.deployments.executions_finished
 import models.deployments.executions_scheduled
 import models.admin.settings
 import models.inventory.environments
+import models.inventory.servers
 import models.notifications
 import routes.deployments.meteor
 
@@ -42,6 +43,7 @@ class Deployments:
         self._executions_scheduled = models.deployments.executions_scheduled.Executions_Scheduled(sql)
         self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
+        self._servers = models.inventory.servers.Servers(sql, license)
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
@@ -454,11 +456,16 @@ class Deployments:
         if (user['coins'] - group['coins_execution']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
-        # Check environment
+        # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
         if len(environment) == 0:
-            return jsonify({'message': 'The environment does not exist'}), 400
+            return jsonify({'message': 'The selected environment does not exist'}), 400
         environment = environment[0]
+
+        # Check environment contains at least one server
+        servers = self._servers.get_by_environment(user['id'], user['group_id'], execution['environment_id'])
+        if len(servers) == 0:
+            return jsonify({'message': 'The selected environment does not contain servers'}), 400
 
         # Check files path permissions
         if not self.__check_files_path():
@@ -590,11 +597,16 @@ class Deployments:
         # Get deployment group
         group = self._groups.get(group_id=user['group_id'])[0]
 
-        # Check environment
+        # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=data['environment'])
         if len(environment) == 0:
-            return jsonify({'message': 'The environment does not exist'}), 400
+            return jsonify({'message': 'The selected environment does not exist'}), 400
         environment = environment[0]
+
+        # Check environment contains at least one server
+        servers = self._servers.get_by_environment(user['id'], user['group_id'], data['environment'])
+        if len(servers) == 0:
+            return jsonify({'message': 'The selected environment does not contain servers'}), 400
 
         # Check files path permissions
         if not self.__check_files_path():
@@ -731,12 +743,22 @@ class Deployments:
         if execution['status'] not in ['CREATED','SCHEDULED']:
             return jsonify({'message': 'This deployment cannot be started.'}), 400
 
+        # Check environment exists
+        environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=execution['environment_id'])
+        if len(environment) == 0:
+            return jsonify({'message': 'The selected environment does not exist'}), 400
+
+        # Check environment contains at least one server
+        servers = self._servers.get_by_environment(authority['id'], authority['group_id'], execution['environment_id'])
+        if len(servers) == 0:
+            return jsonify({'message': 'The selected environment does not contain servers'}), 400
+
         # Check if selected environment contains any disabled servers
-        if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
+        if self._environments.is_disabled(authority['id'], authority['group_id'], execution['environment_id']):
             return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Get Group
-        group = self._groups.get(group_id=user['group_id'])[0]
+        group = self._groups.get(group_id=authority['group_id'])[0]
 
         # Get Deployment
         deployment = self._deployments.get(user_id=authority['id'], deployment_id=execution['deployment_id'])[0]
