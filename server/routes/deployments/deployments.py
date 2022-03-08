@@ -17,10 +17,11 @@ import models.admin.users
 import models.admin.groups
 import models.deployments.releases
 import models.deployments.deployments
+import models.deployments.deployments_pinned
 import models.deployments.executions
 import models.deployments.executions_queued
 import models.deployments.executions_finished
-import models.deployments.deployments_pinned
+import models.deployments.executions_scheduled
 import models.admin.settings
 import models.inventory.environments
 import models.notifications
@@ -34,10 +35,11 @@ class Deployments:
         self._groups = models.admin.groups.Groups(sql)
         self._releases = models.deployments.releases.Releases(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
+        self._deployments_pinned = models.deployments.deployments_pinned.Deployments_Pinned(sql)
         self._executions = models.deployments.executions.Executions(sql)
         self._executions_queued = models.deployments.executions_queued.Executions_Queued(sql)
         self._executions_finished = models.deployments.executions_finished.Executions_Finished(sql)
-        self._deployments_pinned = models.deployments.deployments_pinned.Deployments_Pinned(sql)
+        self._executions_scheduled = models.deployments.executions_scheduled.Executions_Scheduled(sql)
         self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
         self._notifications = models.notifications.Notifications(sql)
@@ -296,6 +298,55 @@ class Deployments:
             # Clean finished executions
             self._executions_finished.delete(f['id'])
 
+    def check_recurring(self):
+        # Get all finished executions that have an entry to the 'executions_scheduled' table and create a new scheduled.
+        executions = self._executions_scheduled.get()
+        for execution in executions:
+            # Check environment
+            environment = self._environments.get(user_id=execution['user_id'], group_id=execution['group_id'], environment_id=execution['environment_id'])
+            if len(environment) == 0:
+                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. The environment does not exist.'}
+                self._notifications.post(execution['user_id'], notification)
+                self._executions_scheduled.delete(execution['execution_id'])
+                continue
+
+            # Check files path permissions
+            if not self.__check_files_path():
+                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. No write permissions in the files folder.'}
+                self._notifications.post(execution['user_id'], notification)
+                self._executions_scheduled.delete(execution['execution_id'])
+                continue
+
+            # Check if selected environment contains any disabled servers
+            if self._environments.is_disabled(execution['user_id'], execution['group_id'], execution['environment_id']):
+                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. The selected environment contains disabled servers.'}
+                self._notifications.post(execution['user_id'], notification)
+                self._executions_scheduled.delete(execution['execution_id'])
+                continue
+
+            # Check coins
+            if (execution['user_coins'] - execution['coins_execution']) < 0:
+                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. Insufficient Coins.'}
+                self._notifications.post(execution['user_id'], notification)
+                self._executions_scheduled.delete(execution['execution_id'])
+                continue
+
+            # Calculate schedule
+            schedule_rules = json.loads(execution['schedule_rules']) if execution['schedule_rules'] else None
+            execution['scheduled'] = self.__get_next_schedule(execution['schedule_type'], execution['schedule_value'], schedule_rules)['value']
+            execution['status'] = 'SCHEDULED'
+
+            # Consume coins
+            self._users.consume_coins({"username": execution['username']}, execution['coins_execution'])
+
+            # Create a new scheduled execution
+            execution['uri'] = str(uuid.uuid4())
+            execution_id = self._executions.post(execution['user_id'], execution)
+
+            # Update 'executions_scheduled' table
+            self._executions_scheduled.delete(execution['execution_id'])
+            self._executions_scheduled.post(execution_id, execution['schedule_type'], execution['schedule_value'], execution['schedule_rules'])
+
     def check_scheduled(self):
         # Get all basic scheduled executions
         scheduled = self._executions.getScheduled()
@@ -390,11 +441,13 @@ class Deployments:
             'queries': data.get('queries'),
             'code': data.get('code'),
             'method': data['method'],
-            # 'scheduled': data['scheduled'],
-            'url': data['url'],
+            'url': data['url'] if 'url' in data else None,
             'uri': str(uuid.uuid4()),
-            # 'start_execution': data['start_execution'],
         }
+
+        # Parse queries
+        if execution['queries'] is not None:
+            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']])
 
         # Check Coins
         group = self._groups.get(group_id=user['group_id'])[0]
@@ -419,62 +472,42 @@ class Deployments:
             except Exception as e:
                 return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
-        # Calculate scheduled
+        # Calculate schedule
         if 'schedule_type' in data:
-            now = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d %H:%M"), '%Y-%m-%d %H:%M')
-            if data['schedule_type'] == 'one_time':
-                scheduled = datetime.strptime(data['schedule'], '%Y-%m-%d %H:%M')
-                if scheduled < now:
-                    return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
-                data['scheduled'] = data['schedule']
-
-            elif data['schedule_type'] == 'daily':
-                scheduled = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + data['schedule'], '%Y-%m-%d %H:%M')
-                execution['scheduled'] = scheduled.strftime("%Y-%m-%d %H:%M:%S") if scheduled >= datetime.utcnow() else scheduled + timedelta(days=1)
-                execution['schedule_type'] = 'daily'
-
-            elif data['schedule_type'] == 'weekly':
-                if len(data['schedule_week']) == 0:
-                    return jsonify({'message': 'Enter at least one day of the week'}), 400
-                scheduled = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + data['schedule'], '%Y-%m-%d %H:%M')
-                schedule_week = sorted([int(i) for i in data['schedule_week']])
-                start_days = [scheduled + timedelta(days=i - scheduled.isoweekday()) for i in schedule_week]
-                start_days = [i if i >= now else i + timedelta(weeks=1) for i in start_days]
-                execution['scheduled'] = sorted(start_days)[0].strftime("%Y-%m-%d %H:%M:%S")
-                execution['schedule_type'] = 'weekly'
-                execution['schedule_rules'] = ' '.join([str(i) for i in schedule_week])
-
-            elif data['schedule_type'] == 'monthly':
-                if len(data['schedule_month']) == 0:
-                    return jsonify({'message': 'Enter at least one month'}), 400
-                scheduled = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + data['schedule'], '%Y-%m-%d %H:%M')
-                schedule_month = sorted([int(i) for i in data['schedule_month']])
-                start_days = [datetime.strptime(f"{scheduled.year}-{('0'+str(i))[-2:]}-01", "%Y-%m-%d") for i in schedule_month]
-                start_days = [i if data['schedule_month_day'] == 'first' else i.replace(day=calendar.monthrange(i.year, i.month)[1]) for i in start_days]
-                start_days = [i if i >= now else i.replace(year=i.year + 1) for i in start_days]
-                start_days = [i if data['schedule_month_day'] == 'first' else i.replace(day=calendar.monthrange(i.year, i.month)[1]) for i in start_days]
-                execution['scheduled'] = sorted(start_days)[0].strftime("%Y-%m-%d %H:%M:%S")
-                execution['schedule_type'] = 'monthly'
-                execution['schedule_rules'] = ' '.join([str(i) for i in schedule_month])
-
-        return jsonify({'message': 'Breakpoint'}), 400
+            schedule = self.__get_next_schedule(data['schedule_type'], data['schedule_value'], data.get('schedule_rules'))
+            execution['scheduled'] = schedule['value']
+            if schedule['error']:
+                return jsonify({'message': schedule['error']}), 400
 
         # Check if selected environment contains any disabled servers
         if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
             return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
-        # Set Deployment Status
-        if execution['scheduled'] is not None:
+        # Set Execution Status
+        if 'scheduled' in execution:
             execution['status'] = 'SCHEDULED'
             execution['start_execution'] = False
-        elif execution['start_execution']:
-            execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
         else:
-            execution['status'] = 'CREATED'
+            execution['scheduled'] = None
+            execution['start_execution'] = data['start_execution']
+            if execution['start_execution']:
+                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+            else:
+                execution['status'] = 'CREATED'
 
         # Create deployment to the DB
         execution['deployment_id'] = self._deployments.post(user['id'], deployment)
         execution_id = self._executions.post(user['id'], execution)
+
+        # Add Schedule to the current execution
+        if execution['scheduled'] and data['schedule_type'] in ['daily','weekly','monthly']:
+            schedule_rules = None
+            if data['schedule_type'] in ['weekly','monthly']:
+                rules = sorted([int(i) for i in data['schedule_rules']['rules']])
+                schedule_rules = json.dumps({"rules": rules, "day": data['schedule_rules']['day']}) if data['schedule_type'] == 'monthly' else json.dumps({"rules": rules})
+            self._executions_scheduled.post(execution_id, data['schedule_type'], data['schedule_value'], schedule_rules)
+        else:
+            self._executions_scheduled.delete(execution_id)
 
         # Consume Coins
         self._users.consume_coins(user, group['coins_execution'])
@@ -509,7 +542,7 @@ class Deployments:
 
             # Start Meteor Execution
             self._meteor.execute(meteor)
-            return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+            return jsonify({'message': 'Deployment launched', 'data': response}), 200
 
         return jsonify({'message': 'Deployment created', 'data': response}), 200
 
@@ -530,11 +563,13 @@ class Deployments:
             'queries': data.get('queries'),
             'code': data.get('code'),
             'method': data['method'],
-            'scheduled': data['scheduled'],
-            'url': data['url'],
+            'url': data['url'] if 'url' in data else None,
             'uri': data['uri'],
-            'start_execution': data['start_execution'],
         }
+
+        # Parse queries
+        if execution['queries'] is not None:
+            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']])
 
         # Get Current Deployment
         current_execution = self._executions.get(execution['uri'])
@@ -573,32 +608,38 @@ class Deployments:
             except Exception as e:
                 return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
-        # Check scheduled date
-        if execution['scheduled'] is not None:
-            execution['start_execution'] = False
-            if datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.now():
-                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+        # Check if the current deployment contains another scheduled execution
+        if self._executions_scheduled.exists(current_execution['id']):
+            return jsonify({'message': 'The current deployment contains an already scheduled execution.'}), 400
+
+        # Calculate schedule
+        if 'schedule_type' in data:
+            schedule = self.__get_next_schedule(data['schedule_type'], data['schedule_value'], data.get('schedule_rules'))
+            execution['scheduled'] = schedule['value']
+            if schedule['error']:
+                return jsonify({'message': schedule['error']}), 400
 
         # Check if selected environment contains any disabled servers
         if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
             return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Set Execution Status
-        if execution['scheduled'] is not None:
+        if 'scheduled' in execution:
             execution['status'] = 'SCHEDULED'
-        elif execution['start_execution']:
-            execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+            execution['start_execution'] = False
         else:
-            execution['status'] = 'CREATED'
+            execution['scheduled'] = None
+            execution['start_execution'] = data['start_execution']
+            if execution['start_execution']:
+                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+            else:
+                execution['status'] = 'CREATED'
 
         # Edit the execution
         if current_execution['status'] in ['CREATED','SCHEDULED']:
             self._executions.put(user['id'], execution)
             execution_id = current_execution['id']
             coins = user['coins']
-            if not execution['start_execution']:
-                return jsonify({'message': 'Deployment edited', 'data': {'uri': execution['uri']}}), 200
-
         # Create a new execution
         else:
             # Check Coins
@@ -613,6 +654,19 @@ class Deployments:
             # Consume Coins
             self._users.consume_coins(user, group['coins_execution'])
             coins = user['coins'] - group['coins_execution']
+
+        # Add Schedule to the current execution
+        if execution['scheduled'] and data['schedule_type'] in ['daily','weekly','monthly']:
+            schedule_rules = None
+            if data['schedule_type'] in ['weekly','monthly']:
+                rules = sorted([int(i) for i in data['schedule_rules']['rules']])
+                schedule_rules = json.dumps({"rules": rules, "day": data['schedule_rules']['day']}) if data['schedule_type'] == 'monthly' else json.dumps({"rules": rules})
+            self._executions_scheduled.post(execution_id, data['schedule_type'], data['schedule_value'], schedule_rules)
+        else:
+            self._executions_scheduled.delete(execution_id)
+
+        if current_execution['status'] in ['CREATED','SCHEDULED'] and not execution['start_execution']:
+            return jsonify({'message': 'Deployment edited', 'data': {'uri': execution['uri']}}), 200
 
         # Build Response Data
         response = { 'uri': execution['uri'], 'coins': coins }
@@ -644,7 +698,7 @@ class Deployments:
 
             # Start Meteor Execution
             self._meteor.execute(meteor)
-            return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+            return jsonify({'message': 'Deployment launched', 'data': response}), 200
 
         return jsonify({'message': 'Deployment created', 'data': response}), 200
 
@@ -717,7 +771,7 @@ class Deployments:
             self._meteor.execute(meteor)
 
         # Return Successful Message
-        return jsonify({'message': 'Deployment Launched'}), 200
+        return jsonify({'message': 'Deployment launched'}), 200
 
     def __stop(self, user, data):
         # Check params
@@ -794,6 +848,41 @@ class Deployments:
     ####################
     # Internal Methods #
     ####################
+    def __get_next_schedule(self, schedule_type, schedule_value, schedule_rules=None):
+        schedule = {"value": None, "error": None}
+        now = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d %H:%M"), '%Y-%m-%d %H:%M')
+        if schedule_type == 'one_time':
+            schedule_formatted = datetime.strptime(schedule_value, '%Y-%m-%d %H:%M')
+            if schedule_formatted < now:
+                schedule['error'] = 'The scheduled date cannot be in the past'
+            else:
+                schedule['value'] = schedule_value
+        elif schedule_type == 'daily':
+            now_formatted = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d %H:%M"), "%Y-%m-%d %H:%M")
+            schedule_formatted = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + schedule_value, '%Y-%m-%d %H:%M')
+            schedule['value'] = schedule_formatted.strftime("%Y-%m-%d %H:%M:%S") if schedule_formatted >= now_formatted else schedule_formatted + timedelta(days=1)
+        elif schedule_type == 'weekly':
+            if len(schedule_rules['rules']) == 0:
+                schedule['error'] = 'Enter at least one day of the week'
+            else:
+                schedule_formatted = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + schedule_value, '%Y-%m-%d %H:%M')
+                schedule_rules = sorted([int(i) for i in schedule_rules['rules']])
+                start_days = [schedule_formatted + timedelta(days=i - schedule_formatted.isoweekday()) for i in schedule_rules]
+                start_days = [i if i >= now else i + timedelta(weeks=1) for i in start_days]
+                schedule['value'] = sorted(start_days)[0].strftime("%Y-%m-%d %H:%M:%S")
+        elif schedule_type == 'monthly':
+            if len(schedule_rules['rules']) == 0:
+                schedule['error'] = 'Enter at least one month'
+            else:
+                schedule_formatted = datetime.strptime(datetime.utcnow().strftime("%Y-%m-%d") + ' ' + schedule_value, '%Y-%m-%d %H:%M')
+                schedule_rules = {"rules": sorted([int(i) for i in schedule_rules['rules']]), "day": schedule_rules['day']}
+                start_days = [datetime.strptime(f"{schedule_formatted.year}-{('0'+str(i))[-2:]}-01", "%Y-%m-%d") for i in schedule_rules['rules']]
+                start_days = [i if schedule_rules['day'] == 'first' else i.replace(day=calendar.monthrange(i.year, i.month)[1]) for i in start_days]
+                start_days = [i if i >= now else i.replace(year=i.year + 1) for i in start_days]
+                start_days = [i if schedule_rules['day'] == 'first' else i.replace(day=calendar.monthrange(i.year, i.month)[1]) for i in start_days]
+                schedule['value'] = sorted(start_days)[0].strftime("%Y-%m-%d %H:%M:%S")
+        return schedule
+
     def __check_files_path(self):
         path = json.loads(self._settings.get(setting_name='FILES'))['path']
         return self.__check_local_path(path)

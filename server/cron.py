@@ -87,6 +87,7 @@ class Cron:
         # Check new scheduled & queued executions
         deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
         deployments.check_finished()
+        deployments.check_recurring()
         deployments.check_scheduled()
         deployments.check_queued()
 

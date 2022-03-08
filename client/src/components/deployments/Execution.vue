@@ -60,7 +60,7 @@
             </template>
             <template v-slot:[`item.status`]="{ item }">
               <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
+              <v-icon v-else-if="item.status == 'SCHEDULED'" :title="parseSchedule(deployment['schedule_type'], dateFormat(deployment['scheduled']))" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
               <v-icon v-else-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
               <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -357,7 +357,7 @@
                       </span>
                     </v-tooltip>
                   </div>
-                  <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
+                  <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px">
                     <v-radio value="validate" color="#00b16a">
                       <template v-slot:label>
                         <div style="color:#00b16a;">VALIDATE</div>
@@ -374,11 +374,122 @@
                       </template>
                     </v-radio>
                   </v-radio-group>
-                  <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
-                  <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px"></v-text-field>
-                  <v-checkbox v-else-if="information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
-                  <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
-                  <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
+                  <!-- SCHEDULE -->
+                  <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Scheduled" color="info" hide-details style="margin-top:15px"></v-switch>
+                  <div v-show="schedule_enabled" style="margin-top:15px">
+                    <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
+                    <v-radio-group :readonly="information_dialog_mode == 'parameters'" row v-model="information_dialog_data.schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
+                      <v-radio value="one_time">
+                        <template v-slot:label>
+                          <div class="white--text">One time</div>
+                        </template>
+                      </v-radio>
+                      <v-radio value="daily">
+                        <template v-slot:label>
+                          <div class="white--text">Daily</div>
+                        </template>
+                      </v-radio>
+                      <v-radio value="weekly">
+                        <template v-slot:label>
+                          <div class="white--text">Weekly</div>
+                        </template>
+                      </v-radio>
+                      <v-radio value="monthly">
+                        <template v-slot:label>
+                          <div class="white--text">Monthly</div>
+                        </template>
+                      </v-radio>
+                    </v-radio-group>
+                    <span class="body-1 font-weight-light white--text">Select the execution time.</span>
+                    <div @click="schedule_change">
+                      <v-text-field :readonly="information_dialog_mode == 'parameters'" ref="schedule_datetime" filled v-model="schedule_datetime" label="Execution time" hide-details style="margin-top:15px; margin-bottom:5px"></v-text-field>
+                    </div>
+                    <div v-show="information_dialog_data.schedule_type == 'weekly'" style="margin-top:15px">
+                      <span class="body-1 font-weight-light white--text">Select what days of the week the schedule should execute.</span>
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Monday" value="1" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Tuesday" value="2" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Wednesday" value="3" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Thursday" value="4" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Friday" value="5" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Saturday" value="6" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                      <v-row no-gutters style="margin-bottom:5px">
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_week" label="Sunday" value="7" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                    </div>
+                    <div v-show="information_dialog_data.schedule_type == 'monthly'" style="margin-top:15px">
+                      <span class="body-1 font-weight-light white--text">Select what months the schedule should execute.</span>
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="January" value="1" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="February" value="2" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="March" value="3" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="April" value="4" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="May" value="5" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="June" value="6" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="July" value="7" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="August" value="8" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                      <v-row no-gutters style="margin-bottom:15px">
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="September" value="9" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="October" value="10" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="November" value="11" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                        <v-col cols="auto" style="width:150px">
+                          <v-checkbox :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schedule_month" label="December" value="12" hide-details style="padding-top:0px"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                      <span class="body-1 font-weight-light white--text">Select the day to be executed.</span>
+                      <v-select :readonly="information_dialog_mode == 'parameters'" filled v-model="information_dialog_data.schedule_month_day" label="Day" :items="[{id: 'first', val: 'First day of the month'}, {id: 'last', val: 'Last day of the month'}]" item-value="id" item-text="val" :rules="[v => !!v || '']" required hide-details style="margin-top:10px; margin-bottom:15px"></v-select>
+                    </div>
+                    <div v-show="nextExecution != null" style="margin-top:15px; margin-bottom:5px">
+                      <div class="body-1 font-weight-light white--text">The execution will start at:</div>
+                      <v-text-field solo readonly v-model="nextExecution" hide-details style="margin-top:10px"></v-text-field>
+                    </div>
+                  </div>
+                  <!-- START EXECUTION -->
+                  <v-checkbox v-show="!schedule_enabled && information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
+                  <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px"></v-divider>
+                  <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px">
                     <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode == 'edit' ? 'CONFIRM' : 'RE-DEPLOY' }}</v-btn>
                     <v-btn :disabled="loading" color="#EF5354" @click="information_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </div>
@@ -392,16 +503,16 @@
 
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
-        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="info" @click="schedule_now">Now</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit">Confirm</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
-        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="info" @click="schedule_now">Now</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit">Confirm</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -461,7 +572,7 @@
                         <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())">{{ props.item.method.toUpperCase() }}</span></td>
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-                          <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
+                          <v-icon v-else-if="props.item.status == 'SCHEDULED'" :title="parseSchedule(props.item['schedule_type'], dateFormat(props.item['scheduled']))" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
                           <v-icon v-else-if="props.item.status == 'QUEUED'" :title="`${'Queued: ' + props.item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
                           <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
                           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -702,6 +813,8 @@
       schedule_mode: 'date',
       schedule_date: '',
       schedule_time: '',
+      schedule_date2: '',
+      schedule_time2: '',
       schedule_datetime: '',
 
       // Share Deployment Dialog
@@ -831,6 +944,40 @@
     created() {
       this.init()
     },
+    computed: {
+      nextExecution() {
+        if (this.schedule_time2.length == 0) return null
+        const schedule = moment(this.schedule_date + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
+        const now = moment().seconds(0).milliseconds(0)
+        if (this.information_dialog_data.schedule_type == 'one_time') {
+          if (this.schedule_date2.length == 0) return null
+          return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
+        }
+        else if (this.information_dialog_data.schedule_type == 'daily') {
+          if (schedule >= now) return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
+          else return schedule.add(1, 'days').format("YYYY-MM-DD HH:mm Z (dddd)")
+        }
+        else if (this.information_dialog_data.schedule_type == 'weekly') {
+          if (this.information_dialog_data.schedule_week.length == 0) return null
+          const startDays = this.information_dialog_data.schedule_week.map(x => moment(schedule.isoWeekday(Number(x)))).sort((a,b) => moment(a).diff(b))
+          const startDay = startDays.find(x => x >= now)
+          if (startDay === undefined) return startDays[0].add(1, 'weeks').format("YYYY-MM-DD HH:mm Z (dddd)")
+          else return startDay.format("YYYY-MM-DD HH:mm Z (dddd)")
+        }
+        else if (this.information_dialog_data.schedule_type == 'monthly') {
+          if (this.information_dialog_data.schedule_month.length == 0) return null
+          const startDays = this.information_dialog_data.schedule_month.map(x => {
+            let date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-01', "YYYY-MM-DD")
+            if (this.information_dialog_data.schedule_month_day == 'last') date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-' + date.endOf('month').format("DD"), "YYYY-MM-DD")
+            return date
+          }).sort((a,b) => moment(a).diff(b))
+          const startDay = startDays.find(x => x >= now)
+          if (startDay === undefined) return startDays[0].add(1, 'year').format("YYYY-MM-DD HH:mm Z (dddd)")
+          else return startDay.format("YYYY-MM-DD HH:mm Z (dddd)")
+        }
+        return null
+      }
+    },
     mounted() {
       // Check Notification
       setTimeout(this.checkNotifications, 300)
@@ -949,15 +1096,38 @@
         this.shareDeploymentResultsUrl = window.location.protocol + '//' + window.location.host + `/results/` + this.deployment['uri']
 
         // Parse Scheduled
+        this.deployment['schedule_type'] = 'one_time'
+        this.deployment['schedule_value'] = ''
+        this.deployment['schedule_week'] = this.deployment['schedule_month'] = []
+        this.deployment['schedule_month_day'] = 'first'
+        this.schedule_date = this.schedule_date2 = this.schedule_time = this.schedule_time2 = ''
+        if (this.deployment['scheduled'] && this.deployment['status'] == 'SCHEDULED') {
+          if (data['schedule_type'] == null) { // 'one_time'
+            this.deployment['schedule_value'] = moment(data['scheduled']).format("YYYY-MM-DD HH:mm")
+            this.schedule_date = moment(data['scheduled']).format("YYYY-MM-DD")
+            this.schedule_date2 = this.schedule_date
+            this.schedule_time = moment(data['scheduled']).format("HH:mm")
+            this.schedule_time2 = this.schedule_time
+          }
+          else {
+            this.schedule_date = moment().format("YYYY-MM-DD")
+            this.schedule_time2 = moment.utc(this.schedule_date + ' ' + data['schedule_value']).local().format("HH:mm")
+            this.deployment['schedule_type'] = data['schedule_type']
+            this.deployment['schedule_value'] = this.schedule_time2
+          }
+          if (this.deployment['schedule_type'] == 'weekly') {
+            this.deployment['schedule_week'] = JSON.parse(data['schedule_rules'])['rules'].map(x => x.toString())
+          }
+          else if (this.deployment['schedule_type'] == 'monthly') {
+            this.deployment['schedule_month'] = JSON.parse(data['schedule_rules'])['rules'].map(x => x.toString())
+            this.deployment['schedule_month_day'] = JSON.parse(data['schedule_rules'])['day']
+          }
+        }
+
+        // Add new 'Scheduled' column if not exist
         if (this.deployment['scheduled']) {
-          const date = moment(this.deployment['scheduled'])
-          this.schedule_date = date.format("YYYY-MM-DD")
-          this.schedule_time = date.format("HH:mm")
-          this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
-          this.schedule_enabled = true
-          // Add new 'Scheduled' column if not exist
-          var found = false
-          for (var h = 0; h < this.information_headers.length; ++h) {
+          let found = false
+          for (let h = 0; h < this.information_headers.length; ++h) {
             if (this.information_headers[h]['text'] == 'Scheduled') { found = true; break; }
           }
           if (!found) this.information_headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
@@ -1092,6 +1262,10 @@
           rollback: this.deployment['progress']['queries']['rollback']['t'] + ' (' + this.deployment['progress']['queries']['rollback']['p'] + '%)'
         })
       },
+      parseSchedule(type, value) {
+        if (type == null) return 'Scheduled (One time): ' + value.slice(0,-3)
+        return 'Scheduled (' + type.replace('_',' ').charAt(0).toUpperCase() + type.replace('_',' ').slice(1) + '): ' + value.slice(0,-3)
+      },
       showResults() {
         // Show Results View
         this.show_results = true
@@ -1128,6 +1302,7 @@
         this.cmOptions.readOnly = true
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
+        this.schedule_datetime = this.deployment['schedule_value']
         this.information_dialog = true
       },
       edit() {
@@ -1139,6 +1314,8 @@
           this.schedule_time = ''
           this.schedule_datetime = ''
         }
+        else this.schedule_enabled = this.deployment['scheduled'] !== null
+        this.schedule_datetime = this.deployment['schedule_value']
         this.information_dialog_execution_mode = this.deployment['mode']
         this.information_dialog_query_selected = []
         this.cmOptions.readOnly = false
@@ -1207,8 +1384,6 @@
       // ------------------------
       schedule_close() {
         this.scheduleDialog = false
-        this.schedule_enabled = this.schedule_datetime != ''
-        this.schedule_mode = 'date'
       },
       schedule_now() {
         const date = moment()
@@ -1217,23 +1392,35 @@
       },
       schedule_change() {
         if (this.information_dialog_mode == 'parameters') return
-        if (this.schedule_enabled) {
-          if (this.schedule_datetime == '') {
-            const date = moment()
-            this.schedule_date = date.format("YYYY-MM-DD")
-            this.schedule_time = date.format("HH:mm")
-          }
-          this.scheduleDialog = true
+        const date = moment()
+        if (this.schedule_datetime.length == 0) {
+          this.schedule_date = date.format("YYYY-MM-DD")
+          this.schedule_time = date.format("HH:mm")
         }
-        else this.scheduleDialog = false
+        else if (this.information_dialog_data['schedule_type'] == 'one_time') {
+          this.schedule_date = moment(this.schedule_datetime, "YYYY-MM-DD HH:mm:ss").format('YYYY-MM-DD')
+          this.schedule_date2 = this.schedule_date
+          this.schedule_time = moment(this.schedule_datetime, "YYYY-MM-DD HH:mm:ss").format('HH:mm')
+          this.schedule_time2 = this.schedule_time
+        }
+        else {
+          this.schedule_time = this.schedule_datetime
+          this.schedule_time2 = this.schedule_time
+        }
+        this.schedule_mode = (this.information_dialog_data.schedule_type == 'one_time') ? 'date' : 'time'
+        this.scheduleDialog = true
       },
       schedule_submit() {
         if (this.schedule_mode == 'date') {
           this.schedule_mode = 'time'
         }
         else if (this.schedule_mode == 'time') {
-          this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
-          this.schedule_mode = 'date'
+          this.schedule_time2 = this.schedule_time
+          if (this.information_dialog_data.schedule_type == 'one_time') {
+            this.schedule_date2 = this.schedule_date
+            this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
+          }
+          else this.schedule_datetime = this.schedule_time
           this.scheduleDialog = false
         }
       },
@@ -1264,6 +1451,22 @@
           this.notification('Please fill the required fields', '#EF5354')
           return
         }
+        if (this.information_dialog_execution_mode == 'BASIC' && this.information_dialog_data.queries.length == 0) {
+          this.notification('Please enter a query to deploy', '#EF5354')
+          return
+        }
+        if (this.schedule_enabled && this.schedule_datetime.length == 0) {
+          this.notification('Please enter a schedule time', '#EF5354')
+          return
+        }
+        if (this.schedule_enabled && this.information_dialog_data.schedule_type == 'weekly' && this.information_dialog_data.schedule_week.length == 0) {
+          this.notification('Please select at least one day of week', '#EF5354')
+          return
+        }
+        if (this.schedule_enabled && this.information_dialog_data.schedule_type == 'monthly' && this.information_dialog_data.schedule_month.length == 0) {
+          this.notification('Please select at least one month', '#EF5354')
+          return
+        }
         // Hide Results View
         this.show_results = false
         // Build parameters
@@ -1272,18 +1475,35 @@
           mode: this.information_dialog_execution_mode,
           environment: this.information_dialog_data.environment.id,
           method: this.information_dialog_data.method.toUpperCase(),
-          scheduled: this.schedule_enabled ? moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00' : null,
-          start_execution: this.information_dialog_data.start_execution === undefined ? false : this.information_dialog_data.start_execution,
           url: window.location.protocol + '//' + window.location.host
         }
         // Build different modes
         if (this.information_dialog_execution_mode == 'BASIC') {
           payload['databases'] = this.information_dialog_data.databases
-          payload['queries'] = JSON.stringify(this.information_dialog_data.queries.map(x => ({q: x.query})))
+          payload['queries'] = this.information_dialog_data.queries.map(x => x.query)
         }
         else if (this.information_dialog_execution_mode == 'PRO') {
           payload['code'] = this.information_dialog_data.code
         }
+        // Build scheduled & start_execution
+        if (this.schedule_enabled) {
+          payload['schedule_type'] = this.information_dialog_data.schedule_type
+          if (this.information_dialog_data.schedule_type == 'one_time') {
+            payload['schedule_value'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+          }
+          else if (this.information_dialog_data.schedule_type == 'daily') {
+            payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+          }
+          else if (this.information_dialog_data.schedule_type == 'weekly') {
+            payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+            payload['schedule_rules'] = {"rules": this.information_dialog_data.schedule_week.map(Number).sort((a, b) => a - b)}
+          }
+          else if (this.information_dialog_data.schedule_type == 'monthly') {
+            payload['schedule_value'] = moment(this.schedule_datetime, "HH:mm").utc().format("HH:mm")
+            payload['schedule_rules'] = {"rules": this.information_dialog_data.schedule_month.map(Number).sort((a, b) => a - b), "day": this.information_dialog_data.schedule_month_day}
+          }
+        }
+        else payload['start_execution'] = this.information_dialog_data.start_execution === undefined ? false : this.information_dialog_data.start_execution
         // Add deployment to the DB
         this.loading = true
         axios.put('/deployments', payload)
@@ -1524,6 +1744,10 @@
       }
     },
     watch: {
+      'information_dialog_data.schedule_type'(val) {
+        if (val == 'one_time') this.schedule_datetime = (this.schedule_date2.length == 0) ? '' : (this.schedule_date2 + ' ' + this.schedule_time2).trim()
+        else this.schedule_datetime = this.schedule_time2
+      },
       query_dialog (val) {
         if (!val) return
         this.$nextTick(() => {

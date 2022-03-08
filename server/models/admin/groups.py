@@ -127,6 +127,7 @@ class Groups:
     def delete(self, group):
         self._sql.execute("UPDATE executions JOIN environments e ON e.id = executions.environment_id AND e.group_id = %s SET executions.environment_id = NULL", (group))
         self._sql.execute("DELETE m FROM monitoring m JOIN servers s ON s.id = m.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE me FROM monitoring_events me JOIN servers s ON s.id = me.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE ms FROM monitoring_servers ms JOIN servers s ON s.id = ms.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE mq FROM monitoring_queries mq JOIN servers s ON s.id = mq.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE me FROM monitoring_events me JOIN servers s ON s.id = me.server_id AND s.group_id = %s", (group))
