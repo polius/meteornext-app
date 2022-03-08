@@ -290,7 +290,7 @@ export default {
           const data = JSON.parse(notification.data)
           if (notification.category == 'deployment') {
             if (this.$router.history.current.name != 'deployment' || this.$router.history.current.params.uri != data.id) {
-              this.$router.push({ name: 'deployment', params: { uri: data.id }})
+              this.$router.push({ name: 'deployments.execution', params: { uri: data.id }})
             }
           }
           else if (notification.category == 'monitoring') {
