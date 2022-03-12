@@ -2,7 +2,7 @@ from connectors.pool.mysql import MySQL
 
 class Pool:
     def __init__(self, config):
-        if config['engine'] in ['MySQL','Aurora MySQL']:
+        if config['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(config)
 
     def execute(self, query, args=None, database=None):

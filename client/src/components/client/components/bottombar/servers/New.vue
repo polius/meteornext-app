@@ -80,16 +80,16 @@
                                         </v-text-field>
                                       </v-col>
                                     </v-row>
+                                    <v-row no-gutters style="margin-top:20px">
+                                      <v-col cols="8" style="padding-right:10px">
+                                        <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px" hide-details></v-text-field>
+                                      </v-col>
+                                      <v-col cols="4" style="padding-left:10px">
+                                        <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px" hide-details></v-text-field>
+                                      </v-col>
+                                    </v-row>
                                     <!-- SQL -->
                                     <div v-if="!item.secured" style="margin-top:20px">
-                                      <v-row no-gutters>
-                                        <v-col cols="8" style="padding-right:10px">
-                                          <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px"></v-text-field>
-                                        </v-col>
-                                        <v-col cols="4" style="padding-left:10px">
-                                          <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px"></v-text-field>
-                                        </v-col>
-                                      </v-row>
                                       <v-row no-gutters>
                                         <v-col cols="8" style="padding-right:10px">
                                           <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px"></v-text-field>

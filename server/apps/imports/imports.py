@@ -181,8 +181,8 @@ class Imports:
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
 
-        # MySQL & Aurora MySQL engines
-        if server['engine'] in ('MySQL', 'Aurora MySQL'):
+        # MySQL & Amazon Aurora (MySQL) engines
+        if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
             if item['mode'] == 'file':
                 command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
             elif item['mode'] in ['url','cloud']:

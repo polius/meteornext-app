@@ -195,7 +195,7 @@ class MySQL:
             return cursor.mogrify(query, args)
     
     def kill(self, connection_id):
-        if self._server['sql']['engine'] == 'Aurora MySQL':
+        if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
             self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
         elif self._server['sql']['engine'] == 'MySQL':
             self.execute('KILL QUERY {}'.format(connection_id))

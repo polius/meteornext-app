@@ -467,7 +467,7 @@ export default {
       })
 
       // Get Column Types + Collations
-      if (['MySQL','Aurora MySQL'].includes(server.engine)) {
+      if (['MySQL','Amazon Aurora (MySQL)'].includes(server.engine)) {
         current.server.version = data.version
         current.server.engines = data.engines
         current.server.encodings = data.encodings

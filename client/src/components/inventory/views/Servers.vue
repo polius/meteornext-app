@@ -343,7 +343,7 @@ export default {
     loading: true,
     engines: {
       'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.0'],
-      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7', 'Aurora MySQL 8.0']
+      'Amazon Aurora (MySQL)': ['Aurora MySQL 1 (5.6)', 'Aurora MySQL 2 (5.7)', 'Aurora MySQL 3 (8.0)']
     },
     versions: [],
     usage: [],
@@ -427,7 +427,7 @@ export default {
     },
     selectEngine(value) {
       if (this.item.port == '') {
-        if (['MySQL','Aurora MySQL'].includes(value)) this.item.port = '3306'
+        if (['MySQL','Amazon Aurora (MySQL)'].includes(value)) this.item.port = '3306'
         else if (value == 'PostgreSQL') this.item.port = '5432'
       }
       this.versions = this.engines[value]
