@@ -267,7 +267,6 @@ class Client:
                         # Get table column names & column type
                         result['columns'] = columns
                         result['pks'] = pks
-                    conn.commit()
                     execution.append(result)
                     # Track query
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
@@ -275,7 +274,6 @@ class Client:
                             self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
-                    conn.rollback()
                     # Track query
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,3]:
@@ -508,10 +506,8 @@ class Client:
             # Execute uploaded file
             try:
                 conn.execute(request.files['file'].read().decode("utf-8"), database=request.form['database'], import_file=True)
-                conn.commit()
                 return jsonify({'message': 'File uploaded'}), 200
             except Exception as e:
-                conn.rollback()
                 return jsonify({'message': str(e)}), 400
 
         @client_blueprint.route('/client/export', methods=['GET'])
@@ -965,4 +961,3 @@ class Client:
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                 conn.execute(query=f"DROP EVENT IF EXISTS `{event}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
-        conn.commit()

@@ -18,7 +18,7 @@ class MySQL:
             "charset": "utf8mb4",
             "use_unicode": True,
             "cursorclass": OrderedDictCursor,
-            "autocommit": False,
+            "autocommit": True,
             "ssl_ca":  'keys/' + config['ssl_ca_certificate'] if 'ssl_ca_certificate' in config and config['ssl_ca_certificate'] else None,
             "ssl_cert": 'keys/' + config['ssl_client_certificate'] if 'ssl_client_certificate' in config and config['ssl_client_certificate'] else None,
             "ssl_key": 'keys/' + config['ssl_client_key'] if 'ssl_client_key' in config and config['ssl_client_key'] else None,
@@ -49,7 +49,6 @@ class MySQL:
                     with connection.cursor(OrderedDictCursor) as cursor:
                         cursor.execute(query, args)
                         result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
-                    connection.commit()
                 return result
             except Exception as e:
                 exception = e
