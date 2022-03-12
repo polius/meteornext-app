@@ -110,7 +110,7 @@ class Auxiliary:
         auxiliary_secured = []
         for a in auxiliary:
             if a['secured']:
-                auxiliary_secured.append({"id": a['id'], "name": a['name'], "shared": a['shared'], "secured": a['secured'],})
+                auxiliary_secured.append({"id": a['id'], "name": a['name'], "version": a['version'], "shared": a['shared'], "secured": a['secured']})
             else:
                 auxiliary_secured.append(a)
         return jsonify({'data': auxiliary_secured}), 200

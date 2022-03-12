@@ -50,7 +50,7 @@ class Client:
                 servers_secured = []
                 for s in servers:
                     if s['secured']:
-                        servers_secured.append({"id": s['id'], "name": s['name'], "engine": s['engine'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
+                        servers_secured.append({"id": s['id'], "name": s['name'], "engine": s['engine'], "version": s['version'], "region_id": s['region_id'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
                     else:
                         servers_secured.append(s)
                 return jsonify({'servers': servers_secured, 'folders': folders}), 200
@@ -99,7 +99,7 @@ class Client:
                 servers_secured = []
                 for s in servers:
                     if s['secured']:
-                        servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh']})
+                        servers_secured.append({"id": s['id'], "name": s['name'], "engine": s['engine'], "version": s['version'], "region": s['region'], "shared": s['shared'], "secured": s['secured'], "active": s['active'], "region_shared": s['region_shared'], "region_secured": s['region_secured'], "ssl": s['ssl'], "ssh": s['ssh']})
                     else:
                         servers_secured.append(s)
                 return jsonify({'servers': servers_secured}), 200
@@ -841,7 +841,7 @@ class Client:
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
-                    if options['engine'] in ['MySQL','Aurora MySQL']:
+                    if options['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
                         if options['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
@@ -863,7 +863,7 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
-                        if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
+                        if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -885,7 +885,7 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
-                        if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
+                        if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -906,7 +906,7 @@ class Client:
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
-                    if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
+                    if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
                         yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                     else:
                         yield '{};\n\n'.format(syntax)

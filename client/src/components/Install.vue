@@ -22,7 +22,7 @@
                     <div class="text-h5" style="color:rgba(255,255,255,.9); font-size:1.2rem!important; margin-top:15px; margin-bottom:15px">SERVER</div>
                     <v-row no-gutters style="margin-bottom:20px">
                       <v-col style="margin-right:5px">
-                        <v-select filled v-model="sql.engine" :items="['MySQL','Aurora MySQL']" @change="sql.port == '' ? sql.port = '3306' : ''" name="engine" label="Engine" required  :rules="[v => !!v || '']" hide-details></v-select>
+                        <v-select filled v-model="sql.engine" :items="['MySQL','Amazon Aurora (MySQL)']" @change="sql.port == '' ? sql.port = '3306' : ''" name="engine" label="Engine" required  :rules="[v => !!v || '']" hide-details></v-select>
                       </v-col>
                       <v-col style="margin-left:5px">
                         <v-text-field filled v-model="sql.port" name="port" label="Port" required :rules="[v => !!v || '']" hide-details v-on:keyup.enter="install"></v-text-field>

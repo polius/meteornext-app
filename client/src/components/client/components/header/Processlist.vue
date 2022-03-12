@@ -505,7 +505,7 @@ export default {
     killQuerySubmit() {
       // Build queries
       let queries = this.selected.map(x => x.Id)
-      if (this.server.engine == 'Aurora MySQL') {
+      if (this.server.engine == 'Amazon Aurora (MySQL)') {
         if (this.killDialogCheckbox) queries = queries.map(x => 'CALL mysql.rds_kill(' + x + ')')
         else queries = queries.map(x => 'CALL mysql.rds_kill_query(' + x + ')')
       }

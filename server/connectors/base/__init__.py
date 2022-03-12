@@ -2,7 +2,7 @@ from connectors.base.mysql import MySQL
 
 class Base:
     def __init__(self, config):
-        if config['sql']['engine'] in ['MySQL','Aurora MySQL']:
+        if config['sql']['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(config)
 
     def connect(self):
