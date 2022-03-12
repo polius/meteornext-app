@@ -324,7 +324,7 @@ class MySQL:
             SELECT DISTINCT column_name AS 'name', column_type AS 'type'
             FROM information_schema.columns
             WHERE table_schema = %s
-            ORDER BY column_name
+            ORDER BY 'name'
         """
         return self.execute(query, args=(db))['data']
 

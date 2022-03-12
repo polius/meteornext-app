@@ -197,7 +197,7 @@ export default {
           found = (servers[i]['region_id'] == regions[j]['id'])
           if (found) break
         }
-        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'], shared: servers[i]['region_shared'] })
+        if (!found && servers[i]['region_id'] != null) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'], shared: servers[i]['region_shared'] })
       }
       // Sort regions ASC by name
       regions.sort(function(a,b) { 
