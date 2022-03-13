@@ -349,11 +349,11 @@
                         </span>
                       </template>
                       <span>
-                        <b style="color:#00b16a">VALIDATE</b> Tests all server connections
+                        <b style="color:#00b16a">VALIDATE</b> Tests all server connections.
                         <br>
-                        <b class="orange--text">TEST</b> A simulation is performed (only SELECTs & SHOWs are executed)
+                        <b class="orange--text">TEST</b> A simulation is performed (only SELECTs & SHOWs are executed).
                         <br>
-                        <b style="color:#EF5354">DEPLOY</b> Executes ALL queries
+                        <b style="color:#EF5354">DEPLOY</b> Executes ALL queries.
                       </span>
                     </v-tooltip>
                   </div>
@@ -375,7 +375,18 @@
                     </v-radio>
                   </v-radio-group>
                   <!-- SCHEDULE -->
-                  <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Scheduled" color="info" hide-details style="margin-top:15px"></v-switch>
+                  <div style="margin-top:15px">
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          SCHEDULE
+                          <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
+                        </span>
+                      </template>
+                      <span>Enable this option to decide when the deployment should be executed.</span>
+                    </v-tooltip>
+                  </div>
+                  <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:15px; margin-bottom:15px; padding:0px"></v-switch>
                   <div v-show="schedule_enabled" style="margin-top:15px">
                     <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
                     <v-radio-group :readonly="information_dialog_mode == 'parameters'" row v-model="information_dialog_data.schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
@@ -487,7 +498,18 @@
                     </div>
                   </div>
                   <!-- START EXECUTION -->
-                  <v-checkbox v-show="!schedule_enabled && information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
+                  <div v-show="!schedule_enabled && information_dialog_mode != 'parameters'" style="margin-top:15px">
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          START
+                          <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
+                        </span>
+                      </template>
+                      <span>Enable this option to start the execution right away after being created.</span>
+                    </v-tooltip>
+                  </div>
+                  <v-checkbox v-show="!schedule_enabled && information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px; padding:0px"></v-checkbox>
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px">
                     <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode == 'edit' ? 'CONFIRM' : 'RE-DEPLOY' }}</v-btn>
