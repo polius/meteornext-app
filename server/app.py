@@ -31,6 +31,14 @@ routes.setup.Setup(app, URL_PREFIX)
 # Enable CORS
 CORS(app)
 
+# Route to be deleted
+@app.route("/api/debug")
+def debug():
+    import socket
+    import uuid
+    from flask import jsonify
+    return jsonify({'uuid': uuid.getnode(), 'ip': socket.gethostbyname(socket.gethostname())}), 200
+
 # Run with python
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port='5000', debug=False)
