@@ -386,7 +386,7 @@
                       <span>Enable this option to decide when the deployment should be executed.</span>
                     </v-tooltip>
                   </div>
-                  <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:15px; margin-bottom:15px; padding:0px"></v-switch>
+                  <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:15px; padding:0px"></v-switch>
                   <div v-show="schedule_enabled" style="margin-top:15px">
                     <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
                     <v-radio-group :readonly="information_dialog_mode == 'parameters'" row v-model="information_dialog_data.schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
