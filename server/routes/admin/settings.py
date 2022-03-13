@@ -152,11 +152,6 @@ class Settings:
         settings['license']['resources'] = self._license.status['resources']
         settings['license']['last_check_date'] = self._license.last_check_date
 
-        # - To Delete -
-        import socket
-        settings['license']['uuid'] = self._settings_conf['license']['uuid']
-        settings['license']['private_ip'] = socket.gethostbyname(socket.gethostname())
-
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
 
