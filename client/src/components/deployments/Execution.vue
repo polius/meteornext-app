@@ -946,19 +946,21 @@
     },
     computed: {
       nextExecution() {
-        if (this.schedule_time2.length == 0) return null
-        const schedule = moment(this.schedule_date + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
         const now = moment().seconds(0).milliseconds(0)
+        if (this.schedule_time2.length == 0) return null
         if (this.information_dialog_data.schedule_type == 'one_time') {
+          const schedule = moment(this.schedule_date2 + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
           if (this.schedule_date2.length == 0) return null
           return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
         }
         else if (this.information_dialog_data.schedule_type == 'daily') {
+          const schedule = moment(now.format("YYYY-MM-DD") + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
           if (schedule >= now) return schedule.format("YYYY-MM-DD HH:mm Z (dddd)")
           else return schedule.add(1, 'days').format("YYYY-MM-DD HH:mm Z (dddd)")
         }
         else if (this.information_dialog_data.schedule_type == 'weekly') {
           if (this.information_dialog_data.schedule_week.length == 0) return null
+          const schedule = moment(now.format("YYYY-MM-DD") + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
           const startDays = this.information_dialog_data.schedule_week.map(x => moment(schedule.isoWeekday(Number(x)))).sort((a,b) => moment(a).diff(b))
           const startDay = startDays.find(x => x >= now)
           if (startDay === undefined) return startDays[0].add(1, 'weeks').format("YYYY-MM-DD HH:mm Z (dddd)")
@@ -966,6 +968,7 @@
         }
         else if (this.information_dialog_data.schedule_type == 'monthly') {
           if (this.information_dialog_data.schedule_month.length == 0) return null
+          const schedule = moment(now.format("YYYY-MM-DD") + ' ' + this.schedule_time2, "YYYY-MM-DD HH:mm")
           const startDays = this.information_dialog_data.schedule_month.map(x => {
             let date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-01', "YYYY-MM-DD")
             if (this.information_dialog_data.schedule_month_day == 'last') date = moment(schedule.year() + '-' + ('0' + x).slice(-2) + '-' + date.endOf('month').format("DD"), "YYYY-MM-DD")
