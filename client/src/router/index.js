@@ -15,11 +15,6 @@ let router = new VueRouter({
       meta: { requiresAuth: true }  
     },
     {
-      path: '/debug',
-      name: 'debug',
-      component: () => import('../components/Debug')
-    },
-    {
       path: '/install',
       name: 'install',
       props: true,
