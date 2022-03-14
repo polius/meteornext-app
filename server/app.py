@@ -31,6 +31,11 @@ routes.setup.Setup(app, URL_PREFIX)
 # Enable CORS
 CORS(app)
 
+# Health endpoint
+@app.route("/api/health")
+def health():
+    return ''
+
 # Route to be deleted
 @app.route("/api/debug")
 def debug():
