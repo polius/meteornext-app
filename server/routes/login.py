@@ -4,7 +4,7 @@ import bcrypt
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import (get_jwt_identity, create_access_token, jwt_required, set_access_cookies, unset_access_cookies)
+from flask_jwt_extended import (create_access_token, set_access_cookies, unset_access_cookies)
 
 import models.admin.users
 import models.admin.user_mfa
@@ -126,11 +126,6 @@ class Login:
             resp = jsonify({'data': data})
             set_access_cookies(resp, access_token, 12*60*60)
             return resp, 200
-
-        @login_blueprint.route('/login/check', methods=['GET'])
-        @jwt_required()
-        def login_check():
-            return jsonify({'message': 'OK'}), 200
 
         @login_blueprint.route('/logout', methods=['POST'])
         def logout_check():

@@ -1,11 +1,14 @@
 import os
-import datetime
 import secrets
-from flask import Flask
+import datetime
+from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 from flask_compress import Compress
+from flask_jwt_extended import (JWTManager, jwt_required)
 import routes.setup
+
+# App Version
+version = '1.00-beta.0'
 
 # Instantiate Flask App
 app = Flask(__name__)
@@ -33,12 +36,18 @@ CORS(app)
 
 # Health endpoint
 @app.route("/api/health")
-def health():
+def health_method():
     return ''
 
-# Route to be deleted
+# Version endpoint
+@app.route('/api/version', methods=['GET'])
+@jwt_required()
+def version_method():
+    return jsonify({'version': version}), 200
+
+# Debug endpoint (to be deleted)
 @app.route("/api/debug")
-def debug():
+def debug_method():
     import socket
     import uuid
     from flask import jsonify
