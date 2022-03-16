@@ -21,8 +21,12 @@
       <router-link v-if="client_enabled" class="nav-link" to="/client">
         <v-btn color="#8e44ad"><v-icon small style="margin-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       </router-link>
-      <v-spacer></v-spacer>
+      <!-- VAULT -->
+      <!-- <router-link class="nav-link" to="/vault" style="margin-left:10px;">
+        <v-btn color="#1b72f5"><v-icon small style="margin-right:10px">fas fa-dice-d6</v-icon>Vault</v-btn>
+      </router-link> -->
       <!-- COINS -->
+      <v-spacer></v-spacer>
       <v-chip @click="getCoins()" class="subtitle-1 font-weight-medium" style="margin-right:5px;">
         {{ coins }} Coins
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -87,7 +91,7 @@
       <v-progress-linear v-if="loading" indeterminate></v-progress-linear>
       <v-list :disabled="loading" subheader dense>
         <v-subheader v-if="notifications.length == 0" class="justify-center">No Notifications</v-subheader>
-        <v-subheader v-else>New notifications</v-subheader>
+        <v-subheader v-else>{{ `New notifications (${notifications.length})` }}</v-subheader>
         <div v-for="notification in notifications" :key="notification['id']">
           <v-list-item :title="notification['name']" @click="openNotification(notification)" style="padding-left:0px">
             <div :style="`margin-right:15px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
