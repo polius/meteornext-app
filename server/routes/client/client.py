@@ -698,7 +698,7 @@ class Client:
                 syntax = conn.get_rights_syntax(request.args['user'], request.args['host'])
                 return jsonify({'server': self.__json(server), 'database': self.__json(database), 'table': self.__json(table), 'column': self.__json(column), 'proc': self.__json(proc), 'syntax': self.__json(syntax)}), 200
 
-        @client_blueprint.route('/client/close', methods=['GET'])
+        @client_blueprint.route('/client/close', methods=['POST'])
         @jwt_required()
         def client_close_connection_method():
             # Check license
@@ -712,8 +712,11 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
+            # Get Request Json
+            data = request.get_json()
+
             # Close Connection
-            self._connections.close(user['id'], request.args['connection'])
+            self._connections.close(user['id'], data['connection'])
             return jsonify({'message': 'Connection closed'}), 200
 
         @client_blueprint.route('/client/pks', methods=['GET'])

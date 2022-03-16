@@ -64,6 +64,8 @@ class Users:
     # Internal Methods #
     ####################
     def get(self):
+        if 'username' in request.args:
+            return jsonify({'data': self._users.get(request.args['username'])})
         return jsonify({'data': {'users': self._users.get(), 'groups': self._groups.get()}}), 200
 
     def post(self, user_id, data):
