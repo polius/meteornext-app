@@ -178,7 +178,7 @@ class core:
                         conn.execute(query=f"KILL {result['id']}")
                     except Exception:
                         pass
-            elif connection['sql']['engine'] == 'Aurora MySQL':
+            elif connection['sql']['engine'] == 'Amazon Aurora (MySQL)':
                 for result in results['query_result']:
                     try:
                         conn.execute(query=f"CALL mysql.rds_kill({result['id']})")
