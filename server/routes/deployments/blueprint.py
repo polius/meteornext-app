@@ -1,6 +1,6 @@
-#########################################################
-# Usage: https://docs.meteor2.io/guides/deployments#pro #
-#########################################################
+##############################################################
+# Usage: https://docs.meteor2.io/guides/deployments.html#pro #
+##############################################################
 import json
 from collections import OrderedDict
 

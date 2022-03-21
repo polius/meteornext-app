@@ -338,10 +338,12 @@ export default {
         return
       }
       // Limit export size
-      for (let i of this.gridApi['tables'].getSelectedRows()) {
-        if (i['data_length']/1024/1024 > 10) {
-          EventBus.$emit('send-notification', 'To export objects larger than 10 MB use the Utils section.', '#EF5354')
-          return
+      if (['Structure + Content','Content'].includes(this.include)) {
+        for (let i of this.gridApi['tables'].getSelectedRows()) {
+          if (i['data_length']/1024/1024 > 10) {
+            EventBus.$emit('send-notification', 'To export objects larger than 10 MB use the Utils section.', '#EF5354')
+            return
+          }
         }
       }
       // Init Export

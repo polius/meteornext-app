@@ -782,9 +782,10 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     # Check table size
-                    info = conn.get_table_info(db=request.args['database'], table=table)
-                    if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
-                        raise Exception('To export objects larger than 10 MB use the Utils section.')
+                    if options['include'] in ['Structure + Content','Content']:
+                        info = conn.get_table_info(db=request.args['database'], table=table)
+                        if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
+                            raise Exception('To export objects larger than 10 MB use the Utils section.')
 
                     # Export table
                     syntax = conn.get_table_syntax(request.args['database'], table)
