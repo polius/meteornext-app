@@ -80,7 +80,7 @@
               </v-tooltip>
             </div>
             <v-switch v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:15px; margin-bottom:15px; padding:0px"></v-switch>
-            <div v-show="schedule_enabled">
+            <div v-if="schedule_enabled">
               <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
               <v-radio-group row v-model="schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
                 <v-radio value="one_time">
