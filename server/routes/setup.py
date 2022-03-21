@@ -51,11 +51,11 @@ import apps.monitoring.monitoring
 from cron import Cron
 
 class Setup:
-    def __init__(self, app, url_prefix):
+    def __init__(self, app, version, url_prefix):
         self._app = app
         self._url_prefix = url_prefix
         self._conf = {}
-        self._license = License()
+        self._license = License(version)
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
 
         # Init Install blueprint
@@ -134,7 +134,8 @@ class Setup:
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 
 class License:
-    def __init__(self):
+    def __init__(self, version):
+        self._version = version
         self._license_params = None
         self._license_status = {}
         self._last_check_date = datetime.utcnow()
@@ -176,6 +177,9 @@ class License:
 
     def __check(self):
         try:
+            # Add version
+            self._license_params['version'] = self._version
+
             # Generate challenge
             self._license_params['challenge'] = str(uuid.uuid4())
 

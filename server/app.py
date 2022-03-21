@@ -8,7 +8,7 @@ from flask_jwt_extended import (JWTManager, jwt_required)
 import routes.setup
 
 # App Version
-version = '1.00-beta.0'
+version = '1.00-beta.1'
 
 # Instantiate Flask App
 app = Flask(__name__)
@@ -29,7 +29,7 @@ Compress(app)
 
 # Instantiate & Register Settings Blueprint
 URL_PREFIX = "/api"
-routes.setup.Setup(app, URL_PREFIX)
+routes.setup.Setup(app, version, URL_PREFIX)
 
 # Enable CORS
 CORS(app)
