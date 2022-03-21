@@ -387,7 +387,7 @@
                     </v-tooltip>
                   </div>
                   <v-switch :readonly="information_dialog_mode == 'parameters'" :disabled="loading" v-model="schedule_enabled" label="Schedule execution" color="info" hide-details style="margin-top:15px; padding:0px"></v-switch>
-                  <div v-show="schedule_enabled" style="margin-top:15px">
+                  <div v-if="schedule_enabled" style="margin-top:15px">
                     <span class="body-1 font-weight-light white--text">Select the schedule type.</span>
                     <v-radio-group :readonly="information_dialog_mode == 'parameters'" row v-model="information_dialog_data.schedule_type" style="margin-top:10px; margin-bottom:15px" hide-details>
                       <v-radio value="one_time">
@@ -413,7 +413,7 @@
                     </v-radio-group>
                     <span class="body-1 font-weight-light white--text">Select the execution time.</span>
                     <div @click="schedule_change">
-                      <v-text-field :readonly="information_dialog_mode == 'parameters'" ref="schedule_datetime" filled v-model="schedule_datetime" label="Execution time" hide-details style="margin-top:15px; margin-bottom:5px"></v-text-field>
+                      <v-text-field :readonly="information_dialog_mode == 'parameters'" ref="schedule_datetime" filled v-model="schedule_datetime" label="Execution time" :rules="[v => !!v || '']" required hide-details style="margin-top:15px; margin-bottom:5px"></v-text-field>
                     </div>
                     <div v-show="information_dialog_data.schedule_type == 'weekly'" style="margin-top:15px">
                       <span class="body-1 font-weight-light white--text">Select what days of the week the schedule should execute.</span>
