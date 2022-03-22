@@ -110,7 +110,7 @@ class Utils:
             # Get credentials
             cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Connect to the server
             conn = connectors.base.Base(cred)
@@ -146,7 +146,7 @@ class Utils:
             # Get credentials
             cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Connect to the server
             conn = connectors.base.Base(cred)
@@ -182,7 +182,7 @@ class Utils:
             # Get credentials
             cred = self._utils.get_credentials(user['id'], user['group_id'], request.args['server_id'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Connect to the server
             conn = connectors.base.Base(cred)

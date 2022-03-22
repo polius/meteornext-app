@@ -108,7 +108,7 @@ class Cloud:
         # Check cloud
         check = self._cloud.get(user['id'], user['group_id'], cloud['id'])
         if len(check) == 0:
-            return jsonify({'message': "The cloud key does not exist"}), 400
+            return jsonify({'message': "The cloud key does not exist in your inventory"}), 400
         # Check privileges
         if check[0]['secured'] or (cloud['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401

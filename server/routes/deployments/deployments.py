@@ -307,7 +307,7 @@ class Deployments:
             # Check environment
             environment = self._environments.get(user_id=execution['user_id'], group_id=execution['group_id'], environment_id=execution['environment_id'])
             if len(environment) == 0:
-                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. The environment does not exist.'}
+                notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. The environment does not exist in your inventory.'}
                 self._notifications.post(execution['user_id'], notification)
                 self._executions_scheduled.delete(execution['execution_id'])
                 continue
@@ -459,7 +459,7 @@ class Deployments:
         # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
         if len(environment) == 0:
-            return jsonify({'message': 'The selected environment does not exist'}), 400
+            return jsonify({'message': 'The selected environment does not exist in your inventory'}), 400
         environment = environment[0]
 
         # Check environment contains at least one server
@@ -600,7 +600,7 @@ class Deployments:
         # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=data['environment'])
         if len(environment) == 0:
-            return jsonify({'message': 'The selected environment does not exist'}), 400
+            return jsonify({'message': 'The selected environment does not exist in your inventory'}), 400
         environment = environment[0]
 
         # Check environment contains at least one server
@@ -746,7 +746,7 @@ class Deployments:
         # Check environment exists
         environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=execution['environment_id'])
         if len(environment) == 0:
-            return jsonify({'message': 'The selected environment does not exist'}), 400
+            return jsonify({'message': 'The selected environment does not exist in your inventory'}), 400
 
         # Check environment contains at least one server
         servers = self._servers.get_by_environment(authority['id'], authority['group_id'], execution['environment_id'])

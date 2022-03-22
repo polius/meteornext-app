@@ -92,7 +92,7 @@ class Environments:
         # Check environment
         check = self._environments.get(user['id'], user['group_id'], environment['id'])
         if len(check) == 0:
-            return jsonify({'message': "The environment does not exist"}), 400
+            return jsonify({'message': "The environment does not exist in your inventory"}), 400
         # Check privileges
         if check[0]['secured'] or (environment['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401
