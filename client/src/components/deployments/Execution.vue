@@ -282,7 +282,7 @@
               <v-flex xs12>
                 <v-form ref="form">
                   <v-text-field v-if="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment.name" label="Environment" readonly></v-text-field>
-                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']">
+                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '', v => v == null || '']" required>
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
@@ -311,7 +311,7 @@
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
                       <v-toolbar-items v-else style="padding-left:0px;">
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click='showQuery()'><v-icon small style="margin-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length == 0" text @click='showQuery()'><v-icon small style="margin-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -1472,6 +1472,10 @@
         if (this.information_dialog_mode != 'parameters') this.information_dialog_execution_mode = 'PRO'
       },
       editSubmit() {
+        // Check environment
+        const environment_found = this.environments.find(x => x.id == this.information_dialog_data.environment) !== undefined
+        if (!environment_found) this.information_dialog_data.environment = null
+        // Validate form
         if (!this.$refs.form.validate()) {
           this.notification('Please fill the required fields', '#EF5354')
           return
@@ -1566,7 +1570,7 @@
       },
       showQuery() {
         this.query_dialog_mode = 'info'
-        this.query_dialog_code = this.information_dialog_query_selected[0]['query']
+        this.query_dialog_code = this.information_dialog_query_selected.map(x => x.query).join('\n\n')
         this.query_dialog_title = 'DETAILS'
         this.query_dialog_icon = 'fas fa-bookmark'
         this.cmOptions2.readOnly = true

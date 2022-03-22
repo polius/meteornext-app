@@ -145,7 +145,7 @@ class Servers:
         # Check server
         check = self._servers.get(user['id'], user['group_id'], server['id'])
         if len(check) == 0:
-            return jsonify({'message': "The server does not exist"}), 400
+            return jsonify({'message': "The server does not exist in your inventory"}), 400
         # Check privileges
         if check[0]['secured'] or (server['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401

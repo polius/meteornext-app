@@ -249,7 +249,7 @@ class Imports:
         # Get server details
         server = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['server'])
         if len(server) == 0:
-            return jsonify({"message": 'This server does not exist.'}), 400
+            return jsonify({"message": 'This server does not exist in your inventory.'}), 400
         server = server[0]
         if not server['active']:
             return jsonify({"message": 'The selected server is disabled.'}), 400

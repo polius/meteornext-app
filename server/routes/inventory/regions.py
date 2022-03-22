@@ -121,7 +121,7 @@ class Regions:
         # Check region
         check = self._regions.get(user['id'], user['group_id'], region['id'])
         if len(check) == 0:
-            return jsonify({'message': "The region does not exist"}), 400
+            return jsonify({'message': "The region does not exist in your inventory"}), 400
         # Check privileges
         if check[0]['secured'] or (region['shared'] and not user['owner']):
             return jsonify({'message': "Insufficient privileges"}), 401

@@ -119,7 +119,7 @@ class Clones:
         servers = {}
         servers['source'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['source_server'])
         if len(servers['source']) == 0:
-            return jsonify({"message": 'The source server does not exist.'}), 400
+            return jsonify({"message": 'The source server does not exist in your inventory.'}), 400
         servers['source'] = servers['source'][0]
         if not servers['source']['active']:
             return jsonify({"message": 'The source server is disabled.'}), 400
@@ -127,7 +127,7 @@ class Clones:
         # Get server details (destination)
         servers['destination'] = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['destination_server'])
         if len(servers['destination']) == 0:
-            return jsonify({"message": 'The destination server does not exist.'}), 400
+            return jsonify({"message": 'The destination server does not exist in your inventory.'}), 400
         servers['destination'] = servers['destination'][0]
         if not servers['destination']['active']:
             return jsonify({"message": 'The destination server is disabled.'}), 400

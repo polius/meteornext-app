@@ -121,7 +121,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Check Server Disabled
             if not cred['active']:
@@ -162,7 +162,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             try:
@@ -202,7 +202,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Server Variables
@@ -232,7 +232,7 @@ class Client:
             # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Get Connection Timeout
             cred['sql']['read_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] and group['client_limits_timeout_mode'] == 2 else None
@@ -303,7 +303,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Retrieve Processlist
@@ -326,7 +326,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Explain Query
@@ -350,7 +350,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Structure
@@ -377,7 +377,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Columns
@@ -401,7 +401,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Info
@@ -466,7 +466,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Collations
@@ -490,7 +490,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.form['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.form['connection'], cred)
             
             # Get uploaded file
@@ -527,7 +527,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             try:
@@ -561,7 +561,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], client_json['connection'], cred)
 
             # Start clone
@@ -664,7 +664,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Rights
@@ -736,7 +736,7 @@ class Client:
             # Get Server Credentials + Connection
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
+                return jsonify({"message": 'This server does not exist in your inventory'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Table PKs
