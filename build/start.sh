@@ -49,5 +49,4 @@ mv /etc/nginx/nginx2.conf /etc/nginx/nginx.conf
 
 # Start Meteor Next
 ./server &
-nginx
-/bin/bash
+nginx -g 'daemon off;'
