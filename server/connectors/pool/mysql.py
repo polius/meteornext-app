@@ -27,9 +27,9 @@ class MySQL:
         }
         POOL_CONFIG = {
             "creator": pymysql,
-            "maxconnections": None,
+            "maxconnections": config.get('pool', 20),
             "mincached": 0,
-            "maxcached": 20,
+            "maxcached": config.get('pool', 20),
             "maxshared": 0,
             "blocking": True,
             "maxusage": 0,
