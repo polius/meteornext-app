@@ -47,7 +47,6 @@ import routes.utils.imports
 import routes.utils.exports
 import routes.utils.clones
 import connectors.pool
-import apps.monitoring.monitoring
 from cron import Cron
 
 class Setup:
@@ -67,7 +66,6 @@ class Setup:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
             # Set unique hardware id
-            # hashlib.md5("host|port|user|pass|db".encode("utf-8")).hexdigest()
             self._conf['license']['uuid'] = str(uuid.getnode())
             # Init sql pool
             sql = connectors.pool.Pool(self._conf['sql'])
@@ -76,9 +74,6 @@ class Setup:
             self._license.validate()
             # Register blueprints
             self.register_blueprints(sql)
-            # Start monitoring
-            monitoring = apps.monitoring.monitoring.Monitoring(self._license, sql)
-            monitoring.start()
             # Init cron
             Cron(self._app, self._license, sql)
             print("- Meteor initiated from existing configuration.")
