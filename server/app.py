@@ -46,14 +46,6 @@ def health_method():
 def version_method():
     return jsonify({'version': version}), 200
 
-# Debug endpoint (to be deleted)
-@app.route("/api/debug")
-def debug_method():
-    import socket
-    import uuid
-    from flask import jsonify
-    return jsonify({'uuid': uuid.getnode(), 'ip': socket.gethostbyname(socket.gethostname())}), 200
-
 # Run with python
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port='5000', debug=False)

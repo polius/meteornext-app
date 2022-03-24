@@ -18,11 +18,15 @@ class Monitoring:
         self._notifications = models.notifications.Notifications(sql)
 
     def start(self):
-        t = threading.Thread(target=self.__start_monitor)
-        t.daemon = True
-        t.start()
+        self.__start_monitor()
 
     def clean(self):
+        self.__clean_monitor()
+
+    ####################
+    # Internal Methods #
+    ####################
+    def __clean_monitor(self):
         utcnow = self.__utcnow()
         # Clean monitoring entries
         query = """
@@ -66,15 +70,7 @@ class Monitoring:
         """
         self._sql.execute(query=query, args=(utcnow))
 
-    ####################
-    # Internal Methods #
-    ####################
     def __start_monitor(self):
-        while True:
-            self.__start_monitor2()
-            time.sleep(10)
-
-    def __start_monitor2(self):
         # Get Monitoring Servers
         query = """
             SELECT 

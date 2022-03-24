@@ -25,6 +25,7 @@ class Cron:
             schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
             schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
             schedule.every().day.do(self.__run_threaded, self.__check_license)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
@@ -160,6 +161,19 @@ class Cron:
                 os.remove(path + '.json')
             # SQL
             self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
+
+    def __monitoring(self):
+        if not self._license.validated:
+            return
+
+        # Check master node
+        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+        if len(result) == 0 or result[0]['type'] != 'master':
+            return
+
+        # Clean monitoring servers
+        monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
+        monitoring.start()
 
     def __monitoring_clean(self):
         if not self._license.validated:
