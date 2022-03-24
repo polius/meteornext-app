@@ -119,32 +119,19 @@
     <!----------->
     <!-- COINS -->
     <!----------->
-    <v-dialog v-model="coinsDialog" max-width="360px">
+    <v-dialog v-model="coinsDialog" max-width="384px">
       <v-card>
-        <v-card-text style="padding:10px 15px 5px;">
-          <v-container style="padding:0px; max-width:100%;">
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-row justify="space-around" style="margin-top:0px">
-                  <v-avatar size="130"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
-                </v-row>
-                <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px;">
-                  <div class="text-h5 white--text" style="font-weight:400;">{{ coins + ' Coins' }}</div>
-                </v-row>
-                <v-row justify="space-around" style="margin-top:0px; margin-bottom:10px">
-                  <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
-                </v-row>
-                <v-row justify="space-around" style="margin-top:0px; margin-bottom:15px">
-                  <div class="text-subtitle-1" style="font-weight:400">{{ "1 Import / Export / Clone = " + this.utils_coins + " Coins" }}</div>
-                </v-row>
-                <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="coinsDialog = false" color="primary">Close</v-btn>
-                    </v-col>
-                  </v-row>
+                <div style="text-align:center; margin:10px">
+                  <v-icon size="70" color="#ffcb05">fas fa-coins</v-icon>
                 </div>
+                <div class="text-h5 white--text" style="margin:20px; text-align:center; font-weight:400;">{{ coins + ' Coins' }}</div>
+                <v-divider></v-divider>
+                <div class="text-subtitle-1" style="text-align:center; margin-top:15px; font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
+                <div class="text-subtitle-1" style="text-align:center; margin-top:10px; margin-bottom:5px; font-weight:400">{{ "1 Import / Export / Clone = " + this.utils_coins + " Coins" }}</div>
               </v-flex>
             </v-layout>
           </v-container>
