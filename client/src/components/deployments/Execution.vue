@@ -282,7 +282,7 @@
               <v-flex xs12>
                 <v-form ref="form">
                   <v-text-field v-if="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment.name" label="Environment" readonly></v-text-field>
-                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '', v => v == null || '']" required>
+                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" required>
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
@@ -1473,10 +1473,12 @@
       },
       editSubmit() {
         // Check environment
-        const environment_found = this.environments.find(x => x.id == this.information_dialog_data.environment) !== undefined
-        if (!environment_found) this.information_dialog_data.environment = null
+        if (this.information_dialog_data.environment != null) {
+          const environment_found = this.environments.find(x => x.id == this.information_dialog_data.environment.id) !== undefined
+          if (!environment_found) this.information_dialog_data.environment = null
+        }
         // Validate form
-        if (!this.$refs.form.validate()) {
+        if (!this.$refs.form.validate() || this.information_dialog_data.environment == null) {
           this.notification('Please fill the required fields', '#EF5354')
           return
         }
