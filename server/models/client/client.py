@@ -235,9 +235,9 @@ class Client:
             """
             return self._sql.execute(query, (folder['name'], user_id))[0]['exist']
 
-    def track_query(self, user_id, server_id, database, query, status, records=None, elapsed=None, error=None):
+    def track_query(self, date, user_id, server_id, database, query, status, records=None, elapsed=None, error=None):
         query2 = """
             INSERT INTO client_queries (`date`, `user_id`, `server_id`, `database`, `query`, `status`, `records`, `elapsed`, `error`)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query2, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id, server_id, database, query, status, records, elapsed, error))
+        return self._sql.execute(query2, (date, user_id, server_id, database, query, status, records, elapsed, error))
