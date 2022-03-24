@@ -7,6 +7,7 @@ import re
 import csv
 import json
 from itertools import repeat
+from datetime import datetime
 import models.admin.users
 import models.admin.groups
 import models.client.client
@@ -271,13 +272,13 @@ class Client:
                     # Track query
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,2]:
-                            self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
+                            self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
                     # Track query
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,3]:
-                            self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
+                            self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
                     errors = True
                     result = {'query': query, 'database': database, 'error': str(e)}
                     execution.append(result)
