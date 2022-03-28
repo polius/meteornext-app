@@ -57,7 +57,7 @@
                     <v-radio label="User" value="user"></v-radio>
                     <v-radio label="Group" value="group"></v-radio>
                   </v-radio-group>
-                  <v-autocomplete v-show="filter.by == 'user'" ref="filter_user" v-model="filter.user" v-on:keyup.enter="filterInventory()" filled :items="users" item-value="id" item-text="username" label="User" hide-details style="padding-top:0px; margin-bottom:20px">
+                  <v-autocomplete v-if="filter.by == 'user'" ref="filter_user" v-model="filter.user" v-on:keyup.enter="filterInventory()" filled :items="users" item-value="id" item-text="username" label="User" auto-select-first :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px">
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
@@ -69,7 +69,7 @@
                       </v-row>
                     </template>
                   </v-autocomplete>
-                  <v-autocomplete v-show="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
+                  <v-autocomplete v-else-if="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" auto-select-first :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">SCOPE</div>
                   <v-radio-group v-model="filter.scope" hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="All" value="all"></v-radio>
@@ -277,9 +277,8 @@ export default {
         if (typeof this.$refs.filter_user !== 'undefined' && this.filter.by == 'user') this.$refs.filter_user.focus()
       })
     },
-    'filter.by': function(val) {
-      if (typeof this.$refs.filter_group !== 'undefined' && val == 'group') this.$refs.filter_group.focus()
-        else if (typeof this.$refs.filter_user !== 'undefined' && val == 'user') this.$refs.filter_user.focus()
+    'filter.by': function() {
+      this.$refs.form.resetValidation()
     },
   },
 }
