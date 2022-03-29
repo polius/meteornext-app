@@ -2,8 +2,9 @@ import os
 import json
 import time
 import uuid
-import schedule
 import random
+import socket
+import schedule
 import threading
 from datetime import datetime, timedelta
 
@@ -48,21 +49,25 @@ class Cron:
             time.sleep(1)
 
     def __check_nodes(self):
-        # Determine master & worker nodes
+        # Determine master & worker nodes            
         connection, cursor = self._sql.raw()
         connection.begin()
+        try:
+            ip = socket.gethostbyname(socket.gethostname())
+        except Exception:
+            ip = None
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         last_minute = (datetime.utcnow() - timedelta(seconds = 60)).strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute("SELECT * FROM nodes FOR UPDATE")
         nodes = cursor.fetchall()
         if len(nodes) == 0:
-            cursor.execute("INSERT INTO `nodes`(`id`,`type`,`healthcheck`) VALUES (%s,'master',%s)", (self._node, now))
+            cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'master',%s,%s)", (self._node, ip, now))
         else:
             master = [i for i in nodes if i['type'] == 'master'][0]
             current = [i for i in nodes if i['id'] == self._node]
             # The current node is a worker
             if len(current) == 0 or current[0]['type'] == 'worker':
-                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`healthcheck`) VALUES (%s,'worker',%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, now))
+                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'worker',%s,%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, ip, now))
                 # Check if the node has to be promoted
                 if master['healthcheck'] < datetime.strptime(last_minute, "%Y-%m-%d %H:%M:%S"):
                     cursor.execute("UPDATE `nodes` SET `type` = IF(`id` = %s,'master','worker')", (self._node))

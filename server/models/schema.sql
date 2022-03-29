@@ -715,6 +715,7 @@ CREATE TABLE `utils_queued` (
 CREATE TABLE `nodes` (
   `id` VARCHAR(191) NOT NULL,
   `type` ENUM('master','worker') NOT NULL,
+  `ip` VARCHAR(191) NULL,
   `healthcheck` DATETIME NOT NULL,
   INDEX `type` (`type`),
   PRIMARY KEY(`id`)
