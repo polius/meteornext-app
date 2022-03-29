@@ -1,7 +1,7 @@
 import json
 import pyotp
 import bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, set_access_cookies, unset_access_cookies)
@@ -98,7 +98,7 @@ class Login:
                         return jsonify({'message': str(e)}), 400
 
             # Generate access tokens
-            access_token = create_access_token(identity=user['username'], fresh=timedelta(days=30))
+            access_token = create_access_token(identity=user['username'])
 
             # Update user data
             # ip = request.headers.getlist("X-Forwarded-For") + '|' + request.remote_addr
