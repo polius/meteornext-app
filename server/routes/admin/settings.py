@@ -79,6 +79,7 @@ class Settings:
 
             # Build data
             license = {
+                "account": self._license.status['account'],
                 "access_key": self._settings_conf['license']['access_key'],
                 "secret_key": self._settings_conf['license']['secret_key'],
                 "resources": self._license.status['resources'],
@@ -147,6 +148,7 @@ class Settings:
 
         # Get License Settings
         settings['license'] = {}
+        settings['license']['account'] = self._license.status['account']
         settings['license']['access_key'] = self._settings_conf['license']['access_key']
         settings['license']['secret_key'] = self._settings_conf['license']['secret_key']
         settings['license']['resources'] = self._license.status['resources']

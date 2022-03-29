@@ -2,9 +2,10 @@
     <v-flex xs12 style="margin:5px">
       <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-certificate</v-icon>LICENSE</div>
       <div class="body-1 font-weight-regular" style="margin-top:10px">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a">LICENSED</span>.</div>
-      <v-text-field readonly :loading="loading" v-model="license.access_key" label="Access Key" style="margin-top:15px" @click:append="show_access_key = !show_access_key" :append-icon="show_access_key ? 'visibility' : 'visibility_off'" :type="show_access_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-      <v-text-field readonly :loading="loading" v-model="license.secret_key" label="Secret Key" style="padding-top:0px" @click:append="show_secret_key = !show_secret_key" :append-icon="show_secret_key ? 'visibility' : 'visibility_off'" :type="show_secret_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-      <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px" required :rules="[v => !!v || '']" hide-details></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="license.account" label="Account" style="margin-top:15px"></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px"></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="license.access_key" label="Access Key" style="margin-top:0px" @click:append="show_access_key = !show_access_key" :append-icon="show_access_key ? 'visibility' : 'visibility_off'" :type="show_access_key ? 'text' : 'password'"></v-text-field>
+      <v-text-field readonly :loading="loading" v-model="license.secret_key" label="Secret Key" style="padding-top:0px" @click:append="show_secret_key = !show_secret_key" :append-icon="show_secret_key ? 'visibility' : 'visibility_off'" :type="show_secret_key ? 'text' : 'password'" hide-details></v-text-field>
       <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
       <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn>
       <v-btn @click="manageLicense" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">MANAGE LICENSE</v-btn>

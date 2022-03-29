@@ -183,12 +183,13 @@ class License:
 
             # Check "x-meteor2-key" header is valid
             if response.status_code != 200:
-                self._license_status = {"code": response.status_code, "response": "The license is not valid.", "resources": None, "sentry": None}
+                self._license_status = {"code": response.status_code, "response": "The license is not valid.", "account": None, "resources": None, "sentry": None}
             else:
                 # Check license is valid
                 response_code = json.loads(response.text)['statusCode']
                 response_body = json.loads(response.text)['body']
                 response_text = response_body['response']
+                account = response_body['account'] if response_code == 200 else None
                 resources = response_body['resources'] if response_code == 200 else None
                 sentry = response_body['sentry'] if response_code == 200 else None
 
@@ -203,7 +204,7 @@ class License:
                         response_text = "The license is not valid."
                         response_code = 401
 
-                self._license_status = {"code": response_code, "response": response_text, "resources": resources, "sentry": sentry}
+                self._license_status = {"code": response_code, "response": response_text, "account": account, "resources": resources, "sentry": sentry}
         except Exception:
             if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
                 self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
