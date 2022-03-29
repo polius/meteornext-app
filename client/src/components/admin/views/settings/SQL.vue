@@ -2,11 +2,12 @@
   <v-flex xs12 style="margin:5px">
     <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-database</v-icon>SQL</div>
     <div class="body-1 font-weight-regular" style="margin-top:10px">The SQL credentials where Meteor Next is stored.</div>
-    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-top:15px;" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="padding-top:0px; margin-bottom:5px" required :rules="[v => !!v || '']" hide-details></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.engine" label="Engine" style="margin-top:15px"></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="padding-top:0px"></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="padding-top:0px"></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="padding-top:0px"></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="padding-top:0px" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'"></v-text-field>
+    <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="padding-top:0px; margin-bottom:5px" hide-details></v-text-field>
     <v-card v-if="sql.ssl_client_key != null || sql.ssl_client_certificate != null || sql.ssl_ca_certificate != null" style="height:52px; margin-top:15px">
       <v-row no-gutters>
       <v-col cols="auto" style="display:flex; margin:15px">
