@@ -16,9 +16,13 @@ class Monitoring:
         self._license = license
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
+        self._busy = False
 
     def start(self):
-        self.__start_monitor()
+        if not self._busy:
+            self._busy = True
+            self.__start_monitor()
+            self._busy = False
 
     def clean(self):
         self.__clean_monitor()
@@ -212,7 +216,7 @@ class Monitoring:
                         INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
                         SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s
                         ON DUPLICATE KEY UPDATE
-                            available = 1,
+                            available = VALUES(available),
                             summary = COALESCE(VALUES(summary), summary),
                             parameters = COALESCE(VALUES(parameters), parameters),
                             processlist = COALESCE(VALUES(processlist), processlist),
@@ -244,7 +248,7 @@ class Monitoring:
         slack = None
 
         # Check 'Unavailable'
-        if server['monitor']['available'] == 1 and not available:
+        if int(server['monitor']['available']) == 1 and not available:
             notification = {
                 'name': f"Server '{server['sql']['name']}' has become unavailable.",
                 'status': 'ERROR',
@@ -263,7 +267,7 @@ class Monitoring:
                 self.__slack(slack=s, server=server, event='unavailable', data=error)
 
         # Check 'Available'
-        if server['monitor']['available'] == 0 and available:
+        if int(server['monitor']['available']) == 0 and available:
             notification = {
                 'name': f"Server '{server['sql']['name']}' has become available.",
                 'status': 'SUCCESS',
@@ -375,9 +379,9 @@ class Monitoring:
 
     def __slack(self, slack, server, event, data):
         if event == 'unavailable':
-            name = '[{}] Server is unavailable'.format(server['sql']['name'])
+            name = '[{}] Server has become unavailable'.format(server['sql']['name'])
         elif event == 'available':
-            name = '[{}] Server is available'.format(server['sql']['name'])
+            name = '[{}] Server has become available'.format(server['sql']['name'])
         elif event == 'restarted':
             name = '[{}] Server has restarted'.format(server['sql']['name'])
         elif event == 'parameters':

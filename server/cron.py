@@ -19,6 +19,7 @@ class Cron:
         self._license = license
         self._sql = sql
         self._node = str(uuid.uuid4())
+        self._monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
 
         @app.before_first_request
         def start():
@@ -177,8 +178,7 @@ class Cron:
             return
 
         # Clean monitoring servers
-        monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
-        monitoring.start()
+        self._monitoring.start()
 
     def __monitoring_clean(self):
         if not self._license.validated:
