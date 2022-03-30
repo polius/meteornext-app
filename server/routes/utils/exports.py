@@ -45,15 +45,12 @@ class Exports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json() if request.get_json() else request.form
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, data)
+                return self.post(user)
             elif request.method == 'DELETE':
-                return self.delete(user, data)
+                return self.delete(user)
 
         @exports_blueprint.route('/utils/exports/stop', methods=['POST'])
         @jwt_required()
@@ -69,11 +66,8 @@ class Exports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             # Stop export process
-            return self.stop(user, data)
+            return self.stop(user)
 
         return exports_blueprint
 
@@ -110,7 +104,10 @@ class Exports:
         # Return data
         return jsonify({'export': export}), 200
 
-    def post(self, user, data):
+    def post(self, user):
+        # Get data
+        data = request.get_json()
+
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
@@ -186,12 +183,16 @@ class Exports:
         # Return tracking identifier
         return jsonify({'uri': item['uri'], 'coins': coins}), 200
 
-    def delete(self, user, data):
+    def delete(self, user):
+        data = request.get_json()
         for item in data:
             self._export.delete(user, item)
         return jsonify({'message': 'Selected exports deleted'}), 200
 
-    def stop(self, user, data):
+    def stop(self, user):
+        # Get data
+        data = request.get_json()
+
         # Check params
         if 'uri' not in data:
             return jsonify({'message': 'uri parameter is required'}), 400

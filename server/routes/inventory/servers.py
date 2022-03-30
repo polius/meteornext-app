@@ -31,9 +31,6 @@ class Servers:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            server = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient privileges'}), 401
@@ -41,9 +38,9 @@ class Servers:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, server)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, server)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete(user)
 
@@ -118,7 +115,9 @@ class Servers:
                 servers_secured.append(s)
         return jsonify({'data': servers_secured}), 200
 
-    def post(self, user, server):
+    def post(self, user):
+        # Get data
+        server = request.get_json()
         # Check privileges
         if server['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
@@ -141,7 +140,9 @@ class Servers:
         self._servers.post(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server added'}), 200
 
-    def put(self, user, server):
+    def put(self, user):
+        # Get data
+        server = request.get_json()
         # Check server
         check = self._servers.get(user['id'], user['group_id'], server['id'])
         if len(check) == 0:

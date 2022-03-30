@@ -54,15 +54,12 @@ class Imports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json() if request.get_json() else request.form
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, data)
+                return self.post(user)
             elif request.method == 'DELETE':
-                return self.delete(user, data)
+                return self.delete(user)
 
         @imports_blueprint.route('/utils/imports/check', methods=['GET'])
         @jwt_required()
@@ -100,11 +97,8 @@ class Imports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             # Stop import process
-            return self.stop(user, data)
+            return self.stop(user)
 
         @imports_blueprint.route('/utils/imports/scan', methods=['POST','GET'])
         @jwt_required()
@@ -120,9 +114,6 @@ class Imports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             if request.method == 'GET':
                 # Return scanned file
                 try:
@@ -133,7 +124,7 @@ class Imports:
             elif request.method == 'POST':
                 # Register a new scan
                 try:
-                    scan = self.post_scan(user, data)
+                    scan = self.post_scan(user)
                     return jsonify(scan), 200
                 except Exception as e:
                     return jsonify({'message': str(e)}), 400
@@ -152,11 +143,8 @@ class Imports:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             # Stop Scan
-            return self.stop_scan(user, data)
+            return self.stop_scan(user)
 
         @imports_blueprint.route('/utils/imports/s3/buckets', methods=['GET'])
         @jwt_required()
@@ -234,7 +222,10 @@ class Imports:
         # Return data
         return jsonify({'import': imp}), 200
 
-    def post(self, user, data):
+    def post(self, user):
+        # Get data
+        data = request.get_json() if request.is_json else request.form
+
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
@@ -276,7 +267,7 @@ class Imports:
         # Method: file
         if data['mode'] == 'file':
             # Check file size limit
-            if group['utils_limit'] is not None and int(request.form['size']) >= group['utils_limit'] * 1024**2:
+            if group['utils_limit'] is not None and int(data['size']) >= group['utils_limit'] * 1024**2:
                 return jsonify({'message': f"The upload file exceeds the maximum allowed size ({group['utils_limit']} MB)"}), 400
 
             # Check file constraints
@@ -294,7 +285,7 @@ class Imports:
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
-            url = request.form['url']
+            url = data['url']
             create_database = json.loads(data['createDatabase'])
             recreate_database = json.loads(data['recreateDatabase'])
             amazon_s3 = None
@@ -367,12 +358,16 @@ class Imports:
         # Return tracking identifier
         return jsonify({'uri': item['uri'], 'coins': coins}), 200
 
-    def delete(self, user, data):
+    def delete(self, user):
+        data = request.get_json()
         for item in data:
             self._imports.delete(user, item)
         return jsonify({'message': 'Selected imports deleted'}), 200
 
-    def stop(self, user, data):
+    def stop(self, user):
+        # Get data
+        data = request.get_json()
+
         # Check params
         if 'uri' not in data:
             return jsonify({'message': 'uri parameter is required'}), 400
@@ -422,7 +417,10 @@ class Imports:
 
         return { "id": scan[0]['id'], "status": scan[0]['status'], "progress": progress, "data": data, "error": error}
 
-    def post_scan(self, user, data):
+    def post_scan(self, user):
+        # Get data
+        data = request.get_json()
+
         # Retrieve cloud details
         if 'cloud_id' in data:
             cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud_id'])
@@ -459,7 +457,10 @@ class Imports:
         # Return tracking metadata
         return {'id': data['id'], 'size': data['metadata']['size']}
 
-    def stop_scan(self, user, data):
+    def stop_scan(self, user):
+        # Get data
+        data = request.get_json()
+
         # Check params
         if 'id' not in data:
             return jsonify({'message': 'id parameter is required'}), 400

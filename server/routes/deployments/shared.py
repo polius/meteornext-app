@@ -30,15 +30,12 @@ class Shared:
             if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             if request.method == 'GET':
                 return self.get_you(user['id'])
             elif request.method == 'POST':
-                return self.post_you(user['id'], data)
+                return self.post_you(user['id'])
             elif request.method == 'DELETE':
-                return self.delete_you(user['id'], data)
+                return self.delete_you(user['id'])
 
         @shared_blueprint.route('/deployments/shared/you/pinned', methods=['POST','DELETE'])
         @jwt_required()
@@ -55,7 +52,7 @@ class Shared:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            data = request.get_json() if request.get_json() else request.form
+            data = request.get_json()
 
             if request.method == 'POST':
                 for deployment_id in data:
@@ -81,13 +78,10 @@ class Shared:
             if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             if request.method == 'GET':
                 return self.get_others(user['id'])
             elif request.method == 'DELETE':
-                return self.delete_others(user['id'], data)
+                return self.delete_others(user['id'])
 
         return shared_blueprint
 
@@ -100,7 +94,8 @@ class Shared:
         deployments = self._shared.get_you(user_id, dfilter=dfilter, dsort=dsort)
         return jsonify({'deployments': deployments}), 200
 
-    def post_you(self, user_id, data):
+    def post_you(self, user_id):
+        data = request.get_json()
         if 'url' not in data:
             return jsonify({'message': 'The deployment URL was not provided'}), 400
         if '/' not in data['url']:
@@ -125,7 +120,8 @@ class Shared:
         self._shared.post_you(user_id, uri)
         return jsonify({'message': 'Deployment added'}), 200
 
-    def delete_you(self, user_id, data):
+    def delete_you(self, user_id):
+        data = request.get_json()
         for deployment_id in data:
             self._shared.delete_you(user_id, deployment_id)
         return jsonify({'message': 'Selected deployments removed'}), 200
@@ -136,7 +132,8 @@ class Shared:
         deployments = self._shared.get_others(user_id, dfilter=dfilter, dsort=dsort)
         return jsonify({'deployments': deployments}), 200
 
-    def delete_others(self, user_id, data):
+    def delete_others(self, user_id):
+        data = request.get_json()
         for deployment_id in data:
             self._shared.delete_others(user_id, deployment_id)
         return jsonify({'message': 'Selected deployments unshared'}), 200

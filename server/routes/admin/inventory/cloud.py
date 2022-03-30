@@ -41,15 +41,12 @@ class Cloud:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            cloud = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, cloud)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, cloud)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -97,7 +94,9 @@ class Cloud:
         # Return data
         return jsonify({'cloud': cloud}), 200
 
-    def post(self, user, cloud):
+    def post(self, user):
+        # Get data
+        cloud = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(cloud['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
@@ -116,7 +115,9 @@ class Cloud:
         self._cloud.post(user, cloud)
         return jsonify({'message': 'Cloud key added'}), 200
 
-    def put(self, user, cloud):
+    def put(self, user):
+        # Get data
+        cloud = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(cloud['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400

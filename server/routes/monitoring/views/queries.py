@@ -35,13 +35,10 @@ class Queries:
             if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            monitoring_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user, monitoring_json)
+                return self.put(user)
 
         return monitoring_queries_blueprint
 
@@ -63,6 +60,6 @@ class Queries:
         queries = self._monitoring_queries.get(user)
         return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
 
-    def put(self, user, data):
-        self._monitoring.put_queries(user, data)
+    def put(self, user):
+        self._monitoring.put_queries(user, request.get_json())
         return jsonify({'message': 'Servers saved'}), 200

@@ -29,15 +29,12 @@ class Notifications:
             if user['disabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            notifications_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get(user['id'])
             elif request.method == 'PUT':
-                return self.put(user['id'], notifications_json)
+                return self.put(user['id'])
             elif request.method == 'DELETE':
-                return self.delete(user['id'], notifications_json)
+                return self.delete(user['id'])
 
         @notifications_blueprint.route('/notifications/bar', methods=['GET'])
         @jwt_required()
@@ -86,12 +83,14 @@ class Notifications:
     def get(self, user_id):
         return jsonify({'data': self._notifications.get(user_id)}), 200
 
-    def put(self, user_id, data):
+    def put(self, user_id):
+        data = request.get_json()
         self._notifications.put(user_id, data)
         return jsonify({'message': 'Notification edited'}), 200
 
-    def delete(self, user_id, data):
+    def delete(self, user_id):
         # Check inconsistencies
+        data = request.get_json()
         for notification in data:
             self._notifications.delete(user_id, notification)
         return jsonify({'message': 'Selected notifications deleted'}), 200

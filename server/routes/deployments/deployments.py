@@ -67,15 +67,12 @@ class Deployments:
             if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            deployment_json = request.get_json()
-
             if request.method == 'GET':
                 return self.__get(user)
             elif request.method == 'POST':
-                return self.__post(user, deployment_json)
+                return self.__post(user)
             elif request.method == 'PUT':
-                return self.__put(user, deployment_json)
+                return self.__put(user)
 
         @deployments_blueprint.route('/deployments/blueprint', methods=['GET'])
         @jwt_required()
@@ -230,7 +227,7 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Get Request Json
-            data = request.get_json() if request.get_json() else request.form
+            data = request.get_json()
 
             if request.method == 'POST':
                 for item in data:
@@ -430,7 +427,10 @@ class Deployments:
         executions = self._deployments.getExecutions(execution['deployment_id'])
         return jsonify({'data': executions }), 200
 
-    def __post(self, user, data):
+    def __post(self, user):
+        # Get Request Json
+        data = request.get_json()
+
         # Init Data
         deployment = {
             'name': data['name'],
@@ -553,7 +553,10 @@ class Deployments:
 
         return jsonify({'message': 'Deployment created', 'data': response}), 200
 
-    def __put(self, user, data):
+    def __put(self, user):
+        # Get Request Json
+        data = request.get_json()
+
         # Edit Metadata
         if 'name' in data.keys():
             self._deployments.putName(user, data)

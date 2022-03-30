@@ -20,21 +20,22 @@ class Cron:
         self._sql = sql
         self._node = str(uuid.uuid4())
         self._monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
+        self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False}
 
         @app.before_first_request
         def start():
             # Scheduled Tasks
-            schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
             schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
+            schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
+            schedule.every().hour.do(self.__run_threaded, self.__client_clean)
             schedule.every().day.do(self.__run_threaded, self.__check_license)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__import_clean)
-            schedule.every().hour.do(self.__run_threaded, self.__client_clean)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -50,66 +51,101 @@ class Cron:
             time.sleep(1)
 
     def __check_nodes(self):
-        # Determine master & worker nodes            
-        connection, cursor = self._sql.raw()
-        connection.begin()
         try:
-            ip = socket.gethostbyname(socket.gethostname())
-        except Exception:
-            ip = None
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        last_minute = (datetime.utcnow() - timedelta(seconds = 60)).strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("SELECT * FROM nodes FOR UPDATE")
-        nodes = cursor.fetchall()
-        if len(nodes) == 0:
-            cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'master',%s,%s)", (self._node, ip, now))
-        else:
-            master = [i for i in nodes if i['type'] == 'master'][0]
-            current = [i for i in nodes if i['id'] == self._node]
-            # The current node is a worker
-            if len(current) == 0 or current[0]['type'] == 'worker':
-                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'worker',%s,%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, ip, now))
-                # Check if the node has to be promoted
-                if master['healthcheck'] < datetime.strptime(last_minute, "%Y-%m-%d %H:%M:%S"):
-                    cursor.execute("UPDATE `nodes` SET `type` = IF(`id` = %s,'master','worker')", (self._node))
-                    cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
-            # The current node is the master
-            else:
-                cursor.execute("UPDATE `nodes` SET `healthcheck` = %s WHERE id = %s", (now, self._node))
-                cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
+            # Check lock
+            if self._locks['check_nodes']:
+                return
 
-        # Commit transaction
-        cursor.close()
-        connection.commit()
+            # Bind lock
+            self._locks['check_nodes'] = True
+
+            # Determine master & worker nodes
+            connection, cursor = self._sql.raw()
+            connection.begin()
+            try:
+                ip = socket.gethostbyname(socket.gethostname())
+            except Exception:
+                ip = None
+            now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            last_minute = (datetime.utcnow() - timedelta(seconds = 60)).strftime("%Y-%m-%d %H:%M:%S")
+            cursor.execute("SELECT * FROM nodes FOR UPDATE")
+            nodes = cursor.fetchall()
+            if len(nodes) == 0:
+                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'master',%s,%s)", (self._node, ip, now))
+            else:
+                master = [i for i in nodes if i['type'] == 'master'][0]
+                current = [i for i in nodes if i['id'] == self._node]
+                # The current node is a worker
+                if len(current) == 0 or current[0]['type'] == 'worker':
+                    cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'worker',%s,%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, ip, now))
+                    # Check if the node has to be promoted
+                    if master['healthcheck'] < datetime.strptime(last_minute, "%Y-%m-%d %H:%M:%S"):
+                        cursor.execute("UPDATE `nodes` SET `type` = IF(`id` = %s,'master','worker')", (self._node))
+                        cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
+                # The current node is the master
+                else:
+                    cursor.execute("UPDATE `nodes` SET `healthcheck` = %s WHERE id = %s", (now, self._node))
+                    cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
+
+            # Commit transaction
+            cursor.close()
+            connection.commit()
+        finally:
+            # Free lock
+            self._locks['check_nodes'] = False
 
     def __executions(self):
-        if not self._license.validated:
-            return
+        try:
+            # Check lock
+            if self._locks['executions']:
+                return
 
-        # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
-        if len(result) == 0 or result[0]['type'] != 'master':
-            return
+            # Bind lock
+            self._locks['executions'] = True
 
-        # Check new scheduled & queued executions
-        deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
-        deployments.check_finished()
-        deployments.check_recurring()
-        deployments.check_scheduled()
-        deployments.check_queued()
+            # Check license
+            if not self._license.validated:
+                return
+
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Check new scheduled & queued executions
+            deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
+            deployments.check_finished()
+            deployments.check_recurring()
+            deployments.check_scheduled()
+            deployments.check_queued()
+        finally:
+            # Free lock
+            self._locks['executions'] = False
 
     def __utils_queue(self):
-        if not self._license.validated:
-            return
+        try:
+            # Check lock
+            if self._locks['utils_queue']:
+                return
 
-        # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
-        if len(result) == 0 or result[0]['type'] != 'master':
-            return
+            # Bind lock
+            self._locks['utils_queue'] = True
 
-        # Check queued executions
-        utils = routes.utils.utils.Utils(self._app, self._sql, self._license)
-        utils.check_queued()
+            # Check license
+            if not self._license.validated:
+                return
+
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Check queued executions
+            utils = routes.utils.utils.Utils(self._app, self._sql, self._license)
+            utils.check_queued()
+        finally:
+            # Free lock
+            self._locks['utils_queue'] = False
 
     def __check_license(self):
         # Check if the license is still active
@@ -117,6 +153,7 @@ class Cron:
         self._license.validate(force=True)
 
     def __coins(self):
+        # Check license
         if not self._license.validated:
             return
 
@@ -134,6 +171,7 @@ class Cron:
         self._sql.execute(query)
 
     def __logs(self):
+        # Check license
         if not self._license.validated:
             return
 
@@ -169,18 +207,31 @@ class Cron:
             self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
 
     def __monitoring(self):
-        if not self._license.validated:
-            return
+        try:
+            # Check lock
+            if self._locks['monitoring']:
+                return
 
-        # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
-        if len(result) == 0 or result[0]['type'] != 'master':
-            return
+            # Bind lock
+            self._locks['monitoring'] = True
 
-        # Clean monitoring servers
-        self._monitoring.start()
+            # Check license
+            if not self._license.validated:
+                return
+
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Clean monitoring servers
+            self._monitoring.start()
+        finally:
+            # Free lock
+            self._locks['monitoring'] = False
 
     def __monitoring_clean(self):
+        # Check license
         if not self._license.validated:
             return
 
@@ -194,6 +245,7 @@ class Cron:
         monitoring.clean()
 
     def __import_clean(self):
+        # Check license
         if not self._license.validated:
             return
 
@@ -211,6 +263,7 @@ class Cron:
         self._sql.execute(query)
 
     def __client_clean(self):
+        # Check license
         if not self._license.validated:
             return
 
@@ -230,24 +283,36 @@ class Cron:
         self._sql.execute(query)
 
     def __utils_scans(self):
-        if not self._license.validated:
-            return
+        try:
+            # Check lock
+            if self._locks['utils_scans']:
+                return
 
-        # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
-        if len(result) == 0 or result[0]['type'] != 'master':
-            return
+            # Bind lock
+            self._locks['utils_scans'] = True
 
-        # Stop all scans not being tracked by the user
-        query = """
-            SELECT id, pid
-            FROM imports_scans
-            WHERE status = 'IN PROGRESS'
-            AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
-        """
-        result = self._sql.execute(query)
-        scan = apps.imports.scan.Scan(self._sql)
-        for i in result:
-            query = "UPDATE imports_scans SET status = 'STOPPED' WHERE id = %s"
-            self._sql.execute(query, (i['id']))
-            scan.stop(i['pid'])
+            # Check license
+            if not self._license.validated:
+                return
+
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Stop all scans not being tracked by the user
+            query = """
+                SELECT id, pid
+                FROM imports_scans
+                WHERE status = 'IN PROGRESS'
+                AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
+            """
+            result = self._sql.execute(query)
+            scan = apps.imports.scan.Scan(self._sql)
+            for i in result:
+                query = "UPDATE imports_scans SET status = 'STOPPED' WHERE id = %s"
+                self._sql.execute(query, (i['id']))
+                scan.stop(i['pid'])
+        finally:
+            # Free lock
+            self._locks['utils_scans'] = False

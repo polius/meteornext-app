@@ -28,9 +28,6 @@ class Cloud:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            data = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
@@ -38,9 +35,9 @@ class Cloud:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, data)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, data)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete(user)
 
@@ -87,7 +84,9 @@ class Cloud:
                 cloud_secured.append(c)
         return jsonify({'data': cloud_secured}), 200
 
-    def post(self, user, cloud):
+    def post(self, user):
+        # Get data
+        cloud = request.get_json()
         # Check privileges
         if cloud['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
@@ -104,7 +103,9 @@ class Cloud:
         self._cloud.post(user['id'], user['group_id'], cloud)
         return jsonify({'message': 'Cloud key added'}), 200
 
-    def put(self, user, cloud):
+    def put(self, user):
+        # Get data
+        cloud = request.get_json()
         # Check cloud
         check = self._cloud.get(user['id'], user['group_id'], cloud['id'])
         if len(check) == 0:

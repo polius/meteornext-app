@@ -29,9 +29,6 @@ class Regions:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            region = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient privileges'}), 401
@@ -39,9 +36,9 @@ class Regions:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, region)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, region)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete(user)
 
@@ -102,7 +99,9 @@ class Regions:
                 regions_secured.append(r)
         return jsonify({'data': regions_secured}), 200
 
-    def post(self, user, region):
+    def post(self, user):
+        # Get data
+        region = request.get_json()
         # Check privileges
         if region['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
@@ -117,7 +116,9 @@ class Regions:
         self._regions.post(user['id'], user['group_id'], region)
         return jsonify({'message': 'Region added'}), 200
 
-    def put(self, user, region):
+    def put(self, user):
+        # Get data
+        region = request.get_json()
         # Check region
         check = self._regions.get(user['id'], user['group_id'], region['id'])
         if len(check) == 0:

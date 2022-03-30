@@ -44,15 +44,12 @@ class Servers:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            server = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, server)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, server)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -124,7 +121,9 @@ class Servers:
         # Return data
         return jsonify({'servers': servers}), 200
 
-    def post(self, user, server):
+    def post(self, user):
+        # Get data
+        server = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(server['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
@@ -146,7 +145,9 @@ class Servers:
         self._servers.post(user, server)
         return jsonify({'message': 'Server added'}), 200
 
-    def put(self, user, server):
+    def put(self, user):
+        # Get data
+        server = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(server['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400

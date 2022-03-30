@@ -28,9 +28,6 @@ class Environments:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            environment = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
@@ -38,9 +35,9 @@ class Environments:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, environment)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, environment)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete(user)
 
@@ -74,7 +71,9 @@ class Environments:
         # Return request
         return jsonify({'environments': environments, 'environment_servers': environment_servers, 'servers': servers}), 200
 
-    def post(self, user, environment):
+    def post(self, user):
+        # Get data
+        environment = request.get_json()
         # Check privileges
         if environment['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
@@ -88,7 +87,9 @@ class Environments:
         self._environments.post(user['id'], user['group_id'], environment)
         return jsonify({'message': 'Environment added'}), 200
 
-    def put(self, user, environment):
+    def put(self, user):
+        # Get data
+        environment = request.get_json()
         # Check environment
         check = self._environments.get(user['id'], user['group_id'], environment['id'])
         if len(check) == 0:

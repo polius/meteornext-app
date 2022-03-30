@@ -43,7 +43,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            client_json = request.get_json()
+            client_json = request.get_json() if request.method != 'GET' else None
 
             if request.method == 'GET':
                 servers = self._client.get_servers(user['id'], user['group_id'])
@@ -587,7 +587,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            saved_json = request.get_json()
+            saved_json = request.get_json() if request.method != 'GET' else None
 
             if request.method == 'GET':
                 saved_queries = self._client.get_saved_queries(user['id'])
@@ -616,14 +616,12 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            settings_json = request.get_json()
-
             if request.method == 'GET':
                 settings = self._client.get_settings(user['id'])
                 return jsonify({'settings': settings}), 200
             elif request.method == 'PUT':
                 # Check JSON
+                settings_json = request.get_json()
                 for key in settings_json.keys():
                     if key not in ['font_size','refresh_rate','secure_mode']:
                         return jsonify({"message": 'Invalid JSON provided'}), 400
