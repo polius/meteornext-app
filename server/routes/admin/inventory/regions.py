@@ -42,15 +42,12 @@ class Regions:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            region = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, region)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, region)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -106,7 +103,9 @@ class Regions:
         # Return data
         return jsonify({'regions': regions}), 200
 
-    def post(self, user, region):
+    def post(self, user):
+        # Get data
+        region = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(region['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
@@ -123,7 +122,9 @@ class Regions:
         self._regions.post(user, region)
         return jsonify({'message': 'Region added'}), 200
 
-    def put(self, user, region):
+    def put(self, user):
+        # Get data
+        region = request.get_json()
         # Check group & user
         if not self._inventory.exist_group(region['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400

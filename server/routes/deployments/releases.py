@@ -31,17 +31,14 @@ class Releases:
             if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            release_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get(user['id'])
             elif request.method == 'POST':
-                return self.post(user['id'], release_json)
+                return self.post(user['id'])
             elif request.method == 'PUT':
-                return self.put(user['id'], release_json)
+                return self.put(user['id'])
             elif request.method == 'DELETE':
-                return self.delete(user['id'], release_json)
+                return self.delete(user['id'])
 
         @releases_blueprint.route('/deployments/releases/active', methods=['GET','PUT'])
         @jwt_required()
@@ -57,13 +54,10 @@ class Releases:
             if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            release_json = request.get_json()
-
             if request.method == 'GET':
                 return jsonify({'data': self._releases.getActive(user['id'])}), 200
             elif request.method == 'PUT':
-                self._releases.putActive(user['id'], release_json)
+                self._releases.putActive(user['id'], request.get_json())
                 return jsonify({'message': 'Release edited'}), 200
 
         return releases_blueprint
@@ -74,21 +68,24 @@ class Releases:
     def get(self, user_id):
         return jsonify({'data': self._releases.get(user_id)}), 200
 
-    def post(self, user_id, data):
+    def post(self, user_id):
+        data = request.get_json()
         if self._releases.exist(user_id, data):
             return jsonify({'message': 'This release currently exists'}), 400
         else:
             self._releases.post(user_id, data)
             return jsonify({'message': 'Release added'}), 200
 
-    def put(self, user_id, data):
+    def put(self, user_id):
+        data = request.get_json()
         if self._releases.exist(user_id, data):
             return jsonify({'message': 'This new release currently exists'}), 400
         else:
             self._releases.put(user_id, data)
             return jsonify({'message': 'Release edited'}), 200
 
-    def delete(self, user_id, data):
+    def delete(self, user_id):
+        data = request.get_json()
         for release in data:
             self._deployments.removeRelease(release)
             self._releases.delete(user_id, release)

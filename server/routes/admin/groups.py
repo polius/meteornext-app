@@ -44,14 +44,12 @@ class Groups:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            group_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user['id'], group_json)
+                return self.post(user['id'])
             elif request.method == 'PUT':
-                return self.put(user['id'], group_json)
+                return self.put(user['id'])
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -132,7 +130,10 @@ class Groups:
             group_owners = self._groups.get_owners(group_id=groupID)
             return jsonify({'group': group, 'owners': group_owners}), 200
 
-    def post(self, user_id, data):
+    def post(self, user_id):
+        # Get data
+        data = request.get_json()
+
         # Get Group
         group = json.loads(data['group'])
         source_id = None
@@ -156,7 +157,10 @@ class Groups:
 
         return jsonify({'message': 'Group added' if data['mode'] == 'new' else 'Group cloned'}), 200
 
-    def put(self, user_id, data):
+    def put(self, user_id):
+        # Get data
+        data = request.get_json()
+
         # Get Modified Group
         group = json.loads(data['group'])
 

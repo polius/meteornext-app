@@ -46,15 +46,12 @@ class Users:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            user_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user['id'], user_json)
+                return self.post(user['id'])
             elif request.method == 'PUT':
-                return self.put(user['id'], user_json)
+                return self.put(user['id'])
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -68,8 +65,13 @@ class Users:
             return jsonify({'data': self._users.get(request.args['username'])})
         return jsonify({'data': {'users': self._users.get(), 'groups': self._groups.get()}}), 200
 
-    def post(self, user_id, data):
+    def post(self, user_id):
+        # Get data
+        data = request.get_json()
+
+        # Get user
         user = self._users.get(data['username'])
+
         # Check unique user
         if len(user) > 0:
             return jsonify({'message': 'This user currently exists'}), 400
@@ -87,7 +89,11 @@ class Users:
         self._users.post(user_id, data)
         return jsonify({'message': 'User added'}), 200
 
-    def put(self, user_id, data):
+    def put(self, user_id):
+        # Get data
+        data = request.get_json()
+
+        # Get user
         user = self._users.get(data['current_username'])
 
         # Check unique user

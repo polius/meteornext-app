@@ -45,15 +45,12 @@ class Clones:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json() if request.get_json() else request.form
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, data)
+                return self.post(user)
             elif request.method == 'DELETE':
-                return self.delete(user, data)
+                return self.delete(user)
 
         @clones_blueprint.route('/utils/clones/stop', methods=['POST'])
         @jwt_required()
@@ -69,11 +66,8 @@ class Clones:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             # Stop clone process
-            return self.stop(user, data)
+            return self.stop(user)
 
         return clones_blueprint
 
@@ -103,7 +97,10 @@ class Clones:
         # Return data
         return jsonify({'clone': clone}), 200
 
-    def post(self, user, data):
+    def post(self, user):
+        # Get data
+        data = request.get_json()
+
         # Get group details
         group = self._groups.get(group_id=user['group_id'])[0]
 
@@ -201,12 +198,16 @@ class Clones:
         # Return tracking identifier
         return jsonify({'uri': item['uri'], 'coins': coins}), 200
 
-    def delete(self, user, data):
+    def delete(self, user):
+        data = request.get_json()
         for item in data:
             self._clone.delete(user, item)
         return jsonify({'message': 'Selected clones deleted'}), 200
 
-    def stop(self, user, data):
+    def stop(self, user):
+        # Get data
+        data = request.get_json()
+
         # Check params
         if 'uri' not in data:
             return jsonify({'message': 'uri parameter is required'}), 400

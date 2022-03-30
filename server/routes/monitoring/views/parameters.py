@@ -26,9 +26,6 @@ class Parameters:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            monitoring_json = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
@@ -36,7 +33,7 @@ class Parameters:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user, monitoring_json)
+                return self.put(user)
 
         return monitoring_parameters_blueprint
 
@@ -47,6 +44,6 @@ class Parameters:
         parameters = self._monitoring.get_parameters(user)
         return jsonify({'data': parameters}), 200
 
-    def put(self, user, data):
-        self._monitoring.put_parameters(user, data)
+    def put(self, user):
+        self._monitoring.put_parameters(user, request.get_json())
         return jsonify({'message': 'Servers saved'}), 200

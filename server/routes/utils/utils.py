@@ -332,7 +332,7 @@ class Utils:
                 "mode": execution['mode'],
                 "source": execution['source'],
                 "format": execution['format'],
-                "selected": execution['selected'],
+                "selected": None if execution['selected'] is None else [i.split('|')[0] for i in execution['selected'].split('\n')],
                 "size": execution['size'],
                 "database": execution['database'],
                 "recreate_database": execution['recreate_database'],

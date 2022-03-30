@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, jsonify, request, send_from_directory
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
@@ -39,17 +39,14 @@ class Deployments:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            deployment_json = request.get_json()
-
             if request.method == 'GET':
-                # Get Deployments
                 dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
                 dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
                 deployments = self._deployments.get(dfilter, dsort)
                 users_list = self._deployments.get_users_list()
                 return jsonify({'deployments': deployments, 'users_list': users_list}), 200
             elif request.method == 'PUT':
+                deployment_json = request.get_json()
                 if deployment_json['put'] == 'name':
                     self._deployments.put_name(deployment_json['user_id'], deployment_json)
                 elif deployment_json['put'] == 'release':

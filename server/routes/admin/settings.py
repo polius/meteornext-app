@@ -42,13 +42,10 @@ class Settings:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            settings_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user['id'], settings_json['name'], settings_json['value'])
+                return self.post(user['id'])
 
         @settings_blueprint.route('/admin/settings/license', methods=['GET'])
         @jwt_required()
@@ -175,15 +172,17 @@ class Settings:
         # Return Settings
         return jsonify({'settings': settings}), 200
 
-    def post(self, user_id, name, value):
-        if name == 'FILES':
-            # Check files path permissions
-            if not self.check_files_path(value['path']):
+    def post(self, user_id):
+        # Get data
+        data = request.get_json()
+        # Check files path permissions
+        if data['name'] == 'FILES':
+            if not self.check_files_path(data['value']['path']):
                 return jsonify({'message': 'No write permissions in the files folder'}), 400
         # Store Setting
         setting = {
-            'name': name,
-            'value': json.dumps(value)
+            'name': data['name'],
+            'value': json.dumps(data['value'])
         }
         self._settings.post(user_id, setting)
         return jsonify({'message': 'Changes saved'}), 200

@@ -31,9 +31,6 @@ class Auxiliary:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Get Request Json
-            auxiliary = request.get_json()
-
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
@@ -41,9 +38,9 @@ class Auxiliary:
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'POST':
-                return self.post(user, auxiliary)
+                return self.post(user)
             elif request.method == 'PUT':
-                return self.put(user, auxiliary)
+                return self.put(user)
             elif request.method == 'DELETE':
                 return self.delete(user)
 
@@ -115,7 +112,9 @@ class Auxiliary:
                 auxiliary_secured.append(a)
         return jsonify({'data': auxiliary_secured}), 200
 
-    def post(self, user, auxiliary):
+    def post(self, user):
+        # Get data
+        auxiliary = request.get_json()
         # Check privileges
         if auxiliary['shared'] and not user['owner']:
             return jsonify({'message': "Insufficient privileges"}), 401
@@ -135,7 +134,9 @@ class Auxiliary:
         self._auxiliary.post(user['id'], user['group_id'], auxiliary)
         return jsonify({'message': 'Auxiliary connection added'}), 200
 
-    def put(self, user, auxiliary):
+    def put(self, user):
+        # Get data
+        auxiliary = request.get_json()
         # Check auxiliary
         check = self._auxiliary.get(user['id'], user['group_id'], auxiliary['id'])
         if len(check) == 0:

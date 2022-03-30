@@ -36,13 +36,10 @@ class Monitoring:
             if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            monitoring_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user, monitoring_json)
+                return self.put(user)
 
         @monitoring_blueprint.route('/monitoring/settings', methods=['GET','PUT'])
         @jwt_required()
@@ -58,13 +55,10 @@ class Monitoring:
             if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            monitoring_json = request.get_json()
-
             if request.method == 'GET':
                 return jsonify({'settings': self._monitoring_settings.get(user)}), 200
             elif request.method == 'PUT':
-                self._monitoring_settings.put(user, monitoring_json)
+                self._monitoring_settings.put(user, request.get_json())
                 return jsonify({'message': 'Settings saved'}), 200
 
         @monitoring_blueprint.route('/monitoring/slack', methods=['GET'])
@@ -118,6 +112,6 @@ class Monitoring:
             events = self._monitoring.get_events(user)
             return jsonify({'servers': servers, 'events': events}), 200
 
-    def put(self, user, data):
-        self._monitoring.put_monitor(user, data)
+    def put(self, user):
+        self._monitoring.put_monitor(user, request.get_json())
         return jsonify({'message': 'Servers saved'}), 200
