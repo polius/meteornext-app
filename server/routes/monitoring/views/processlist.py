@@ -30,13 +30,10 @@ class Processlist:
             if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            monitoring_json = request.get_json()
-
             if request.method == 'GET':
                 return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user, monitoring_json)
+                return self.put(user, request.get_json())
 
         @monitoring_processlist_blueprint.route('/monitoring/processlist/start', methods=['PUT'])
         @jwt_required()

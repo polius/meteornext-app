@@ -20,7 +20,7 @@ class Cron:
         self._sql = sql
         self._node = str(uuid.uuid4())
         self._monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
-        self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False}
+        self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
 
         @app.before_first_request
         def start():
@@ -51,14 +51,14 @@ class Cron:
             time.sleep(1)
 
     def __check_nodes(self):
+        # Check lock
+        if self._locks['check_nodes']:
+            return
+
+        # Bind lock
+        self._locks['check_nodes'] = True
+
         try:
-            # Check lock
-            if self._locks['check_nodes']:
-                return
-
-            # Bind lock
-            self._locks['check_nodes'] = True
-
             # Determine master & worker nodes
             connection, cursor = self._sql.raw()
             connection.begin()
@@ -95,18 +95,18 @@ class Cron:
             self._locks['check_nodes'] = False
 
     def __executions(self):
+        # Check license
+        if not self._license.validated:
+            return
+
+        # Check lock
+        if self._locks['executions']:
+            return
+
+        # Bind lock
+        self._locks['executions'] = True
+
         try:
-            # Check lock
-            if self._locks['executions']:
-                return
-
-            # Bind lock
-            self._locks['executions'] = True
-
-            # Check license
-            if not self._license.validated:
-                return
-
             # Check master node
             result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
@@ -123,18 +123,18 @@ class Cron:
             self._locks['executions'] = False
 
     def __utils_queue(self):
+        # Check license
+        if not self._license.validated:
+            return
+
+        # Check lock
+        if self._locks['utils_queue']:
+            return
+
+        # Bind lock
+        self._locks['utils_queue'] = True
+
         try:
-            # Check lock
-            if self._locks['utils_queue']:
-                return
-
-            # Bind lock
-            self._locks['utils_queue'] = True
-
-            # Check license
-            if not self._license.validated:
-                return
-
             # Check master node
             result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
@@ -207,18 +207,18 @@ class Cron:
             self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
 
     def __monitoring(self):
+        # Check license
+        if not self._license.validated:
+            return
+
+        # Check lock
+        if self._locks['monitoring']:
+            return
+
+        # Bind lock
+        self._locks['monitoring'] = True
+
         try:
-            # Check lock
-            if self._locks['monitoring']:
-                return
-
-            # Bind lock
-            self._locks['monitoring'] = True
-
-            # Check license
-            if not self._license.validated:
-                return
-
             # Check master node
             result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
@@ -267,20 +267,31 @@ class Cron:
         if not self._license.validated:
             return
 
-        # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
-        if len(result) == 0 or result[0]['type'] != 'master':
+        # Check lock
+        if self._locks['client_clean']:
             return
 
-        # Clean tracked queries
-        query = """
-            DELETE cq
-            FROM client_queries cq
-            JOIN users u ON u.id = cq.user_id
-            JOIN groups g ON g.id = u.group_id
-            WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
-        """
-        self._sql.execute(query)
+        # Bind lock
+        self._locks['client_clean'] = True
+
+        try:
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Clean tracked queries
+            query = """
+                DELETE cq
+                FROM client_queries cq
+                JOIN users u ON u.id = cq.user_id
+                JOIN groups g ON g.id = u.group_id
+                WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
+            """
+            self._sql.execute(query)
+        finally:
+            # Free lock
+            self._locks['client_clean'] = False
 
     def __utils_scans(self):
         try:

@@ -225,6 +225,7 @@ class Monitoring:
                     self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
 
             except Exception as e:
+                traceback.print_exc()
                 # Set server unavailable with error
                 query = """
                     INSERT INTO monitoring_servers (server_id, available, error, updated)
@@ -248,7 +249,7 @@ class Monitoring:
         slack = None
 
         # Check 'Unavailable'
-        if int(server['monitor']['available']) == 1 and not available:
+        if (server['monitor']['available'] is None and error is not None) or (server['monitor']['available'] is not None and int(server['monitor']['available']) == 1 and not available):
             notification = {
                 'name': f"Server '{server['sql']['name']}' has become unavailable.",
                 'status': 'ERROR',
@@ -267,7 +268,7 @@ class Monitoring:
                 self.__slack(slack=s, server=server, event='unavailable', data=error)
 
         # Check 'Available'
-        if int(server['monitor']['available']) == 0 and available:
+        if server['monitor']['available'] is not None and int(server['monitor']['available']) == 0 and available:
             notification = {
                 'name': f"Server '{server['sql']['name']}' has become available.",
                 'status': 'SUCCESS',
