@@ -19,7 +19,7 @@
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                      <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line autofocus hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding:0px;">
                       <Splitpanes style="height:62vh">
