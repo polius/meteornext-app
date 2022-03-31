@@ -255,6 +255,7 @@ export default {
       })
     },
     newServer() {
+      this.search = ''
       this.dialog = true
     },
     newServerSubmit() {
