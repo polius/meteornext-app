@@ -443,6 +443,7 @@
       openServers() {
         this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
         this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
+        this.treeviewSearch = ''
         this.servers_dialog = true
       },
       submitServers() {
