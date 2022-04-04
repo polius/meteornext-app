@@ -168,7 +168,7 @@ function build_columns() {
         valueGetter: function execution_time_ValueGetter(params) {
           var execution_time = JSON.stringify(params.data.meteor_execution_time);
           if (typeof execution_time !== 'undefined') {
-            execution_time = (execution_time == '""') ? '' : execution_time.replace(/"/g, '') + 's';
+            execution_time = (execution_time == '""') ? '' : execution_time.slice(-2) == 's"' ? execution_time.replace(/"/g, '') : (execution_time.replace(/"/g, '') + 's');
             return execution_time;
           }
           else return params.data.meteor_execution_time;
