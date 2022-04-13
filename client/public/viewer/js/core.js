@@ -554,7 +554,7 @@ function init_settings_modal() {
   for (var i = 0; i < COLUMNS.length; ++i) {
     var column_name = get_column_name(COLUMNS[i]);
     // Pinned Columns
-    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-plain' style='top:3px; margin-right:0.5em;'><input id='" + COLUMNS[i] + "_pinned' type='checkbox' checked/><div class='state'><svg id='" + COLUMNS[i] + "_pinned_svg' class='svg' viewBox='0 0 8 8' style='fill: #00c4a7; position: relative;'><use xlink:href='css/open-iconic.svg#lock-unlocked'></use></svg><label></label></div></div>");
+    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-plain' style='top:2px; margin-right:10px'><input id='" + COLUMNS[i] + "_pinned' type='checkbox' checked/><svg id='" + COLUMNS[i] + "_pinned_svg' class='svg' viewBox='0 0 8 8' style='fill: #00c4a7; position: relative; width:16px'><use xlink:href='css/open-iconic.svg#lock-unlocked'></use></svg><label></label></div>");
     $("#" + COLUMNS[i] + "_pinned").click(function () {
       // Change the image
       var inner_html = $("#" + $(this)[0]['id'] + "_svg").html();
@@ -575,7 +575,7 @@ function init_settings_modal() {
     });
     SETTINGS_PINNED[COLUMNS[i]] = false;
     // Visible Columns
-    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-curve' style='margin-bottom:10px;'><img id='" + COLUMNS[i] + "_visible' src='res/visible.svg' width=20 height=20 style='margin-top:-2px; cursor:pointer;'><label style='margin-left:10px;'>" + column_name + "</label></div><br>");
+    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-curve' style='margin-bottom:10px;'><img id='" + COLUMNS[i] + "_visible' src='res/visible.svg' width=20 height=20 style='margin-top:-2px; cursor:pointer;'><label style='margin-left:12px;'>" + column_name + "</label></div><br>");
     $("#" + COLUMNS[i] + "_visible").click(function () {
       // Change the image
       var img_src = $("#" + $(this)[0]['id']).attr("src");
@@ -911,7 +911,7 @@ function filter_data() {
 
   // Check if Apply Filter on Raw Data or Transformed Data
   var data2filter = [];
-  if (TRANSFORMED_DATA.length == 0) {
+  if (transformation_query_selected == 0) {
     // Reset Grid Columns
     for (var i = 0; i < columnDefs.length; ++i) {
       if (columnDefs[i]['field'] == 'meteor_database') columnDefs[i]['pinned'] = null;
@@ -1092,6 +1092,8 @@ function init_transformation_modal() {
   // Sort Dropdown Values
   TRANSFORMATION_QUERY.sort()
   // Init Dropdown Values
+  $('#transformation-query').empty()
+  $('#transformation-query').append($('<option>', { value: 0, text: '- No Transformation -' }))
   for (let i = 0; i < TRANSFORMATION_QUERY.length; ++i) {
     $('#transformation-query').append($('<option>', { value: i + 1, text: TRANSFORMATION_QUERY[i] }))
   }
