@@ -97,7 +97,7 @@ export default {
       if (data.length > 0) {
         for (let [key] of Object.entries(data[0])) {
           let column = { headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false }
-          if (object == 'tables' && ['data_length','index_length','total_length'].includes(key)) {
+          if (object == 'tables' && ['data_length','index_length','total_length','data_free'].includes(key)) {
             column.valueFormatter = (params) => {
               return this.parseBytes(params.data[params.colDef.field])
             }
