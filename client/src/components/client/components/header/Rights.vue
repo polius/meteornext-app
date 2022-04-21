@@ -453,7 +453,7 @@ export default {
         let before = 'username' in this.rightsDiff['login'] ? '' : this.rights['login']['password']
         let after = 'username' in this.rightsDiff['login'] ? '' : this.rightsDiff['login']['password']
         let stmt = 'username' in this.rights['login'] ? 'GRANT USAGE ON *.* TO ' : 'CREATE USER '
-        let query = stmt + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsDiff['login']['password'] + "';"
+        let query = stmt + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'WITH mysql_native_password AS' : 'BY') + " '" + this.rightsDiff['login']['password'] + "';"
         this.checkItems.push({ section: 'login', action, object, right: '', before, after, query })        
       }
       // - Server -
