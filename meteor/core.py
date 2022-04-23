@@ -66,10 +66,10 @@ class core:
         # Perform the Deploy / Test Execution
         if self._args.deploy or self._args.test:
             try:
-                status = self.__deploy() # 0: All queries succeeded | 1: Some queries failed
-                self.__post_execution(status=status)
+                self.__deploy()
+                self.__post_execution()
             except (Exception, KeyboardInterrupt) as e:
-                self.__post_execution(status=2, error=e)
+                self.__post_execution(error=e)
 
     ##############
     # VALIDATION #
@@ -110,12 +110,12 @@ class core:
     # DEPLOY #
     ##########
     def __deploy(self):
-        return self._deployment.start()
+        self._deployment.start()
 
     ##################
     # POST EXECUTION #
     ##################
-    def __post_execution(self, status, error=None):
+    def __post_execution(self, error=None):
         # Supress CTRL+C events
         signal.signal(signal.SIGINT,signal.SIG_IGN)
         signal.signal(signal.SIGTERM,signal.SIG_IGN)
@@ -143,6 +143,7 @@ class core:
                 self._progress.error(str(error).rstrip())
             else:
                 self.slack(status=0, summary=summary)
+                status = 0 if summary['queries_failed'] == 0 else 1
                 self._progress.end(execution_status=status)
 
         except Exception as e:

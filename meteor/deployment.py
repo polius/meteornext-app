@@ -65,19 +65,6 @@ class deployment:
                 errors_parsed = errors_parsed[:-1]
                 raise Exception(errors_parsed)
 
-            # Print Execution Finished
-            queries_failed = False
-            for region in progress:
-                for server in region['servers']:
-                    if server['e']:
-                        queries_failed = True
-                        break
-                if queries_failed:
-                    break
-
-            # Return status
-            return 1 if queries_failed else 0
-
         except KeyboardInterrupt:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             if self._sigterm:
