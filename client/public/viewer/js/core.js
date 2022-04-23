@@ -67,7 +67,9 @@ var THEME = 'dark';
 init_theme();
 
 // Load All Components
-$(document).ready(function () {
+$(document).ready(() => { init() });
+
+function init() {
   // Disable All Components
   $("#quickFilterInput").attr("disabled", true);
   $("#delete-button").attr("disabled", true);
@@ -83,10 +85,7 @@ $(document).ready(function () {
 
   // Export Modal - Set Default Dropdown Value
   $("#export-format").val('meteor');
-
-  // Check Uri Parameter (Uniform Resource Identifier)
-  // check_uri();
-});
+}
 
 function check_uri() {
   var current_url = new URL(window.location.href);
@@ -411,6 +410,8 @@ $("#import-file").change(function (event) {
   var extension = file['name'].substr((file['name'].lastIndexOf('.') + 1));
   if (extension != 'json') show_error(error_title, error_message, error_code);
   else {
+    // Re-Init Components
+    init()
     // If Grid is Loaded then Destroy it and show the loading page again
     if (typeof gridOptions != 'undefined') {
       $("#bestHtml5Grid").hide();
@@ -805,9 +806,12 @@ $("#filter-modal-save").click(function () {
 });
 
 function init_filter_modal() {
-  //////////////////////
-  // DEFAULT ELEMENTS //
-  //////////////////////
+  // Init Variables
+  FILTER_ENVIRONMENT = []
+  FILTER_REGION = []
+  FILTER_SERVER = []
+  FILTER_DATABASE = []
+  FILTER_QUERY = []
 
   // Init UI Elements
   elements = ['meteor_environment', 'meteor_region', 'meteor_server', 'meteor_database', 'meteor_query'];
@@ -817,13 +821,12 @@ function init_filter_modal() {
     }
   }
   // Get Dropdown Values
-  for (var i = 0; i < DATA.length; ++i) {
+  for (let i = 0; i < DATA.length; ++i) {
     if ('meteor_environment' in DATA[i] && !FILTER_ENVIRONMENT.includes(DATA[i]['meteor_environment'])) FILTER_ENVIRONMENT.push(DATA[i]['meteor_environment']);
     if ('meteor_region' in DATA[i] && !FILTER_REGION.includes(DATA[i]['meteor_region'])) FILTER_REGION.push(DATA[i]['meteor_region']);
     if ('meteor_server' in DATA[i] && !FILTER_SERVER.includes(DATA[i]['meteor_server'])) FILTER_SERVER.push(DATA[i]['meteor_server']);
     if ('meteor_database' in DATA[i] && !FILTER_DATABASE.includes(DATA[i]['meteor_database'])) FILTER_DATABASE.push(DATA[i]['meteor_database']);
-    if ('meteor_query' in DATA[i] && !FILTER_QUERY.includes(DATA[i]['meteor_query'])) {
-      // FILTER_QUERY.push(DATA[i]['meteor_query']);
+    if ('meteor_query' in DATA[i] && FILTER_QUERY.length < 10000 && !FILTER_QUERY.includes(DATA[i]['meteor_query'])) {
       if (DATA[i]['meteor_query'].startsWith('[')) {
         // Parse Query Alias
         let stack = 0
@@ -842,6 +845,10 @@ function init_filter_modal() {
       else FILTER_QUERY.push(DATA[i]['meteor_query']);
     }
   }
+
+  // Show warning message
+  if (FILTER_QUERY.length == 10000) $('#filter-modal-meteor_query-limit-div').css({ display : "inline" });
+  else $('#filter-modal-meteor_query-limit-div').css({ display : "none" });
 
   // Sort Dropdown Values
   FILTER_ENVIRONMENT.sort();
@@ -1058,6 +1065,9 @@ function enable_transformation_modal(option) {
 }
 
 function init_transformation_modal() {
+  // Init Variables
+  TRANSFORMATION_QUERY = []
+
   // Do not init if there's no query in DATA
   if (!COLUMNS.includes('meteor_query') || !COLUMNS.includes('meteor_output')) return
 
@@ -1069,7 +1079,8 @@ function init_transformation_modal() {
     }
   }
   // Get Dropdown Values
-  for (var i = 0; i < DATA.length; ++i) {
+  for (let i = 0; i < DATA.length; ++i) {
+    if (TRANSFORMATION_QUERY.length == 10000) break
     if (!TRANSFORMATION_QUERY.includes(DATA[i]['meteor_query'])) {
       if (DATA[i]['meteor_query'].startsWith('[')) {
         // Parse Query Alias
@@ -1089,6 +1100,11 @@ function init_transformation_modal() {
       else TRANSFORMATION_QUERY.push(DATA[i]['meteor_query'])
     }
   }
+
+  // Show warning message
+  if (TRANSFORMATION_QUERY.length == 10000) $('#transformation-query-limit').css({ display : "inline" });
+  else $('#transformation-query-limit').css({ display : "none" });
+
   // Sort Dropdown Values
   TRANSFORMATION_QUERY.sort()
   // Init Dropdown Values
