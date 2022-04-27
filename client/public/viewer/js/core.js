@@ -1191,11 +1191,14 @@ function compile_query(data) {
     }
     else if (data[i]['meteor_output'] != '') {
       for (let j = 0; j < data[i]['meteor_output'].length; ++j) {
-        let expand = columns.reduce((acc, val) => {
-          acc[val] = data[i]['meteor_output'][j][val]
-          return acc
-        },{})
-        new_data.push({...data[i], meteor_output:[], ...expand});
+        let has_values = Object.values(data[i]['meteor_output'][j]).some(x => x != null && x.trim().length > 0)
+        if (!transformation_checkbox_checked || has_values) {
+          let expand = columns.reduce((acc, val) => {
+            acc[val] = data[i]['meteor_output'][j][val]
+            return acc
+          },{})
+          new_data.push({...data[i], meteor_output:[], ...expand});
+        }
       }
     }
   }
