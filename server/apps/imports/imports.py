@@ -68,6 +68,7 @@ class Imports:
             if item['mode'] == 'file':
                 t = threading.Thread(target=self.__upload, args=(core, item, paths,))
                 t.daemon = True
+                t.exception = None
                 t.start()
                 while t.is_alive():
                     if not self.__alive(item):
@@ -76,6 +77,8 @@ class Imports:
                         self.__slack(item, amazon_s3, start_time, 1)
                         return
                     time.sleep(1)
+                if t.exception is not None:
+                    raise t.exception
 
         # Define new path
         path = paths['remote'] if region['ssh_tunnel'] else paths['local']
@@ -190,7 +193,7 @@ class Imports:
                 command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
 
         # Start Import process
-        p = core.execute(command)
+        core.execute(command)
 
     def __monitor(self, core, item, path, status):
         # Check if a stop it's been requested
@@ -246,11 +249,12 @@ class Imports:
         return True
 
     def __upload(self, core, item, paths):
+        current_thread = threading.current_thread()
         # Upload file
         try:
             core.put(os.path.join(paths['local'], item['uri'], item['source']), os.path.join(paths['remote'], item['uri'], item['source']))
-        except OSError:
-            pass
+        except Exception as e:
+            current_thread.exception = e
 
     def __alive(self, item):
         # Check if process has been requested to be stopped
