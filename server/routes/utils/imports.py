@@ -281,7 +281,7 @@ class Imports:
             file.save(os.path.join(path['local'], uri, secure_filename(file.filename)))
 
             # Build file metadata
-            source = file.filename
+            source = secure_filename(file.filename)
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
