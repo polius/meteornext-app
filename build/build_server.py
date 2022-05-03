@@ -162,7 +162,7 @@ if __name__ == "__main__":
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log', timeout=3600)""")
+    gunicorn_app.run(workers=os.cpu_count()*2, threads=os.cpu_count()*2, worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log', timeout=3600)""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
