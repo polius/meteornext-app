@@ -110,10 +110,16 @@ class Monitoring:
             server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
             servers.append(server)
 
+        # Chunk Servers List
+        chunked_list = list()
+        chunk_size = 3
+        for i in range(0, len(servers), chunk_size):
+            chunked_list.append(servers[i:i+chunk_size])
+
         # Get Server Info
         threads = []
-        for s in servers:
-            t = threading.Thread(target=self.__monitor_server, args=(s,))
+        for s in chunked_list:
+            t = threading.Thread(target=self.__monitor_servers, args=(s,))
             t.daemon = True
             t.start()
             threads.append(t)
@@ -121,14 +127,15 @@ class Monitoring:
         for t in threads:
             t.join()
 
-    def __monitor_server(self, server):
-        # Protect thread against exceptions
-        try:
-            self.__monitor_server2(server)
-        except Exception:
-            traceback.print_exc()
+    def __monitor_servers(self, servers):
+        for s in servers:
+            # Protect thread against exceptions
+            try:
+                self.__monitor_server(s)
+            except Exception:
+                traceback.print_exc()
 
-    def __monitor_server2(self, server):
+    def __monitor_server(self, server):
         try:
             # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:
