@@ -21,33 +21,37 @@ class Cron:
         self._node = str(uuid.uuid4())
         self._monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
         self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
+        self._current_pid = os.getpid()
+        self.__start()
 
-        @app.before_first_request
-        def start():
-            # Scheduled Tasks
-            schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
-            schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
-            schedule.every().hour.do(self.__run_threaded, self.__client_clean)
-            schedule.every().day.do(self.__run_threaded, self.__check_license)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__import_clean)
+    def __start(self):
+        # Scheduled Tasks
+        schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
+        schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
+        schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
+        schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
+        schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
+        schedule.every().hour.do(self.__run_threaded, self.__client_clean)
+        schedule.every().day.do(self.__run_threaded, self.__check_license)
+        schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
+        schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
+        schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
+        schedule.every().day.at("00:00").do(self.__run_threaded, self.__import_clean)
 
-            # Start Cron Listener
-            t = threading.Thread(target=self.__run_schedule)
-            t.start()
+        # Start Cron Listener
+        t = threading.Thread(target=self.__run_schedule)
+        t.daemon = True
+        t.start()
 
     def __run_threaded(self, job_func):
-        job_thread = threading.Thread(target=job_func)
-        job_thread.start()
+        t = threading.Thread(target=job_func)
+        t.daemon = True
+        t.start()
 
     def __run_schedule(self):
         while True:
-            schedule.run_pending()
+            if os.getpid() == self._current_pid:
+                schedule.run_pending()
             time.sleep(1)
 
     def __check_nodes(self):
@@ -98,6 +102,11 @@ class Cron:
         # Check license
         if not self._license.validated:
             return
+
+        # Write file with timestamp for each run (for debugging).
+        with open('/tmp/meteor2.txt', 'a') as fopen:
+            now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            fopen.write(f"{now}\n")
 
         # Check lock
         if self._locks['executions']:

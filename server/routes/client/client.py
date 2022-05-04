@@ -332,7 +332,10 @@ class Client:
 
             # Explain Query
             database = request.args['database'] if 'database' in request.args else None
-            return jsonify({'explain': conn.explain(request.args['query'], database=database)}), 200
+            try:
+                return jsonify({'explain': conn.explain(request.args['query'], database=database)}), 200
+            except Exception as e:
+                return jsonify({'message': "The selected queries can't be analyzed (not a DML query)"}), 400
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required()

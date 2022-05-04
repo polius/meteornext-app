@@ -473,25 +473,20 @@ export default {
     explainQuery() {
       const selectedQuery = this.selected.map(x => x.Info)[0]
       const selectedDatabase = this.selected.map(x => x.db)[0]
-      if (selectedQuery == null || !(['SELECT','DELETE','INSERT','REPLACE','UPDATE'].some(x => selectedQuery.trim().substring(0, 7).toUpperCase().startsWith(x)))) {
-        EventBus.$emit('send-notification', "The selected queries can't be analyzed (not a DML query)", '#EF5354')
+      let payload = {
+        connection: this.id + '-shared2',
+        server: this.server.id,
+        query: selectedQuery.trim()
       }
-      else {
-        let payload = {
-          connection: this.id + '-shared2',
-          server: this.server.id,
-          query: selectedQuery.trim()
-        }
-        if (selectedDatabase != null) payload['database'] = selectedDatabase
-        axios.get('/client/explain', { params: payload })
-        .then((response) => {
-          this.parseExplain(response.data.explain)
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-      }
+      if (selectedDatabase != null) payload['database'] = selectedDatabase
+      axios.get('/client/explain', { params: payload })
+      .then((response) => {
+        this.parseExplain(response.data.explain)
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
     },
     parseExplain(data) {
       this.explainColumns = Object.keys(data[0]).map(key => ({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false }))
