@@ -112,7 +112,7 @@ class Monitoring:
 
         # Chunk Servers List
         chunked_list = list()
-        chunk_size = 3
+        chunk_size = 2
         for i in range(0, len(servers), chunk_size):
             chunked_list.append(servers[i:i+chunk_size])
 

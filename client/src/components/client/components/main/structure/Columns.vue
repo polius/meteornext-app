@@ -311,7 +311,7 @@ export default {
           + (event.node.data['Extra'].toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
           + (event.node.data['Extra'].toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')
           + (event.node.data['Comment'] ? " COMMENT '" + event.node.data['Comment'] + "'" : '')
-          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER `' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex - 1).data['Name']) + '`'
+          + (event.node.rowIndex == 0 ? ' FIRST' : (' AFTER `' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex - 1).data['Name']) + '`')
       }
       query += ';'
 
