@@ -103,11 +103,6 @@ class Cron:
         if not self._license.validated:
             return
 
-        # Write file with timestamp for each run (for debugging).
-        with open('/tmp/meteor2.txt', 'a') as fopen:
-            now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            fopen.write(f"{now}\n")
-
         # Check lock
         if self._locks['executions']:
             return
