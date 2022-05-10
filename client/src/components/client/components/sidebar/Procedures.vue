@@ -164,7 +164,7 @@ WHERE CountryCode = country;
       else if (item == 'Rename Procedure') this.renameProcedure()
       else if (item == 'Duplicate Procedure') this.duplicateProcedure()
       else if (item == 'Delete Procedure') this.deleteProcedure()
-      else if (item == 'Export') this.exportProcedure()
+      else if (item == 'Export Procedure') this.exportProcedure()
       else if (item == 'Copy Procedure Name') this.copyProcedureNameSubmit()
       else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
     },

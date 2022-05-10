@@ -151,7 +151,7 @@ export default {
       else if (item == 'Rename Trigger') this.renameTrigger()
       else if (item == 'Duplicate Trigger') this.duplicateTrigger()
       else if (item == 'Delete Trigger') this.deleteTrigger()
-      else if (item == 'Export') this.exportTrigger()
+      else if (item == 'Export Trigger') this.exportTrigger()
       else if (item == 'Copy Trigger Name') this.copyTriggerNameSubmit()
       else if (item == 'Copy Trigger Syntax') this.copyTriggerSyntaxSubmit()
     },

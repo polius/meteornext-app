@@ -339,7 +339,7 @@
       getMonitoring(refresh=true) {
         if (refresh || !this.active) clearTimeout(this.timer)
         if (!this.active) return
-        else if (refresh && !this.available_servers) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
+        else if (refresh && !this.available_servers) setTimeout(this.getMonitoring, 5000, true)
         else {
           axios.get('/monitoring')
           .then((response) => {
@@ -348,7 +348,7 @@
             this.parseTreeView(response.data.servers)
             this.parseLastUpdated(response.data.servers)
             this.available_servers = response.data.servers.some(x => x.selected)
-            if (refresh) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
+            if (refresh) setTimeout(this.getMonitoring, 5000, true)
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

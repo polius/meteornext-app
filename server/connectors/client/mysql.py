@@ -566,7 +566,7 @@ class MySQL:
         return result
 
     def get_all_rights(self):
-        self.execute("FLUSH PRIVILEGES")
+        # self.execute("FLUSH PRIVILEGES")
         query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY `user`, `host`"
         return self.execute(query)['data']
 

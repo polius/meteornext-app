@@ -3,7 +3,6 @@ import json
 import datetime
 import calendar
 import requests
-import threading
 import traceback
 from statistics import median
 from collections import OrderedDict
@@ -16,13 +15,9 @@ class Monitoring:
         self._license = license
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
-        self._busy = False
 
     def start(self):
-        if not self._busy:
-            self._busy = True
-            self.__start_monitor()
-            self._busy = False
+        self.__start_monitor()
 
     def clean(self):
         self.__clean_monitor()
@@ -81,7 +76,7 @@ class Monitoring:
                 s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
                 r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
                 ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
-				ms.updated, IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL MAX(g.monitoring_interval) SECOND) <= %s) AS 'needs_update'
+                ms.updated
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
@@ -95,8 +90,8 @@ class Monitoring:
                 OR m.monitor_enabled = 1
                 OR m.parameters_enabled = 1
             )
+            AND IF(ms.updated IS NULL, 1, TIMESTAMPDIFF(SECOND, ms.updated, %s) >= g.monitoring_interval) = 1
             GROUP BY m.server_id
-            HAVING needs_update = 1
         """
         servers_raw = self._sql.execute(query=query, args=(self.__utcnow()))
 
@@ -110,28 +105,10 @@ class Monitoring:
             server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
             servers.append(server)
 
-        # Chunk Servers List
-        chunked_list = list()
-        chunk_size = 2
-        for i in range(0, len(servers), chunk_size):
-            chunked_list.append(servers[i:i+chunk_size])
-
-        # Get Server Info
-        threads = []
-        for s in chunked_list:
-            t = threading.Thread(target=self.__monitor_servers, args=(s,))
-            t.daemon = True
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join()
-
-    def __monitor_servers(self, servers):
-        for s in servers:
-            # Protect thread against exceptions
+        # Start Monitoring
+        for server in servers:
             try:
-                self.__monitor_server(s)
+                self.__monitor_server(server)
             except Exception:
                 traceback.print_exc()
 
@@ -145,7 +122,7 @@ class Monitoring:
 
             # Start Connection
             conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
-            self.__connect(conn)
+            conn.connect()
         except Exception as e:
             # Monitoring Alarms
             if server['monitor']['monitor_enabled'] == 1:
@@ -501,15 +478,3 @@ class Monitoring:
     def __utcnow(self):
         # Get current timestamp in utc
         return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-    def __connect(self, conn):
-        # Establish connection to the server (30 seconds of retries)
-        for i in range(4):
-            try:
-                conn.test_sql()
-                conn.connect()
-                break
-            except Exception:
-                if i == 3:
-                    raise
-                time.sleep(10)

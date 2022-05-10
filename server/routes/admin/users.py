@@ -125,12 +125,12 @@ class Users:
         users = json.loads(request.args['users'])
 
         # Stop current imports
-        for username in users:
-            user = self._users.get(username)
-            imports = self._imports.get(user_id=user[0]['id'])
-            for i in imports:
-                if i['status'] == 'IN PROGRESS':
-                    self._import_app.stop(i['pid'])
+        # for username in users:
+        #     user = self._users.get(username)
+        #     imports = self._imports.get(user_id=user[0]['id'])
+        #     for i in imports:
+        #         if i['status'] == 'IN PROGRESS':
+        #             self._import_app.stop(i['pid'])
 
         # Remove user
         self._users.delete(users)

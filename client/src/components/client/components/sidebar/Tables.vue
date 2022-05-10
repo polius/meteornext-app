@@ -178,7 +178,7 @@ export default {
       else if (item == 'Duplicate Table') this.duplicateTable()
       else if (item == 'Truncate Table') this.truncateTable()
       else if (item == 'Delete Table') this.deleteTable()
-      else if (item == 'Export') this.exportTable()
+      else if (item == 'Export Table') this.exportTable()
       else if (item == 'Copy Table Name') this.copyTableNameSubmit()
       else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },

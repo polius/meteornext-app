@@ -1,9 +1,7 @@
-import sys
 import tempfile
 import pymysql
 import paramiko
 import sshtunnel
-import logging
 from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor

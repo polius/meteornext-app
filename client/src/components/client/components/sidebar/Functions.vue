@@ -171,7 +171,7 @@ RETURN (customerLevel);
       else if (item == 'Rename Function') this.renameFunction()
       else if (item == 'Duplicate Function') this.duplicateFunction()
       else if (item == 'Delete Function') this.deleteFunction()
-      else if (item == 'Export') this.exportFunction()
+      else if (item == 'Export Function') this.exportFunction()
       else if (item == 'Copy Function Name') this.copyFunctionNameSubmit()
       else if (item == 'Copy Function Syntax') this.copyFunctionSyntaxSubmit()
     },
