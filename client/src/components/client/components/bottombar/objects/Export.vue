@@ -234,21 +234,27 @@ export default {
     },
     dialog: function(val) {
       this.dialogOpened = val
-      this.buildObjects()
     },
   },
   methods: {
-    showDialog() {
+    showDialog(data) {
       this.include = 'Structure + Content'
       this.rows = '1000'
+      this.search = ''
+      this.onSearch('')
       this.includeFields = true
       this.dialog = true
       this.tabClick('sql')
       setTimeout(() => {
+        this.buildObjects(data)
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
-        this.tabObjectsSelected = 0
+        if (data !== undefined) {
+          const match = {'tables':0,'views':1,'triggers':2,'functions':3,'procedures':4,'events':5}
+          this.tabObjectsSelected = match[data['object']]
+        }
+        else this.tabObjectsSelected = 0
       },0)
     },
     onGridReady(object, params) {
@@ -272,6 +278,7 @@ export default {
     },
     resizeTable(object) {
       setTimeout(() => {
+        if (this.columnApi[object] == null) return
         var allColumnIds = []
         this.columnApi[object].getAllColumns().forEach(function(column) {
           allColumnIds.push(column.colId)
@@ -297,7 +304,7 @@ export default {
       this.tab = object
       this.tabObjectsSelected = 0
     },
-    buildObjects() {
+    buildObjects(data) {
       for (let obj of this.objects) {
         if (this.gridApi[obj] != null) this.gridApi[obj].showLoadingOverlay()
       }
@@ -308,8 +315,14 @@ export default {
       .then(() => {
         this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
         for (let obj of this.objects) this.resizeTable(obj)
+        if (data !== undefined) this.selectRows(data)
       })
       .finally(() => this.loading = false)
+    },
+    selectRows(data) {
+      this.gridApi[data['object']].forEachNode(node => {
+        if (data['items'].includes(node.data.name)) node.setSelected(true)
+      })
     },
     includeChanged() {
       if (this.include == 'Content') {
@@ -518,7 +531,9 @@ export default {
     },
     onSearch(value) {
       let ids = ['tablesCsv','tables','views','triggers','functions','procedures','events']
-      for (let id of ids) this.gridApi[id].setQuickFilter(value)
+      for (let id of ids) {
+        if (this.gridApi[id] != null) this.gridApi[id].setQuickFilter(value)
+      }
     },
   }
 }

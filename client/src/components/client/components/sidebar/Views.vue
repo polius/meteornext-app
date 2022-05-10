@@ -157,7 +157,7 @@ export default {
       else if (item == 'Rename View') this.renameView()
       else if (item == 'Duplicate View') this.duplicateView()
       else if (item == 'Delete View') this.deleteView()
-      else if (item == 'Export') this.exportView()
+      else if (item == 'Export View') this.exportView()
       else if (item == 'Copy View Name') this.copyViewNameSubmit()
       else if (item == 'Copy View Syntax') this.copyViewSyntaxSubmit()
     },
