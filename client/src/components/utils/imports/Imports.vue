@@ -16,7 +16,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -143,6 +143,7 @@ export default {
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
     ],
+    origin: [],
     items: [],
     selected: [],
     search: '',
@@ -160,13 +161,19 @@ export default {
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
+  watch: {
+    search: function() {
+      this.onSearch()
+    },
+  },
   methods: {
     getImports() {
       this.loading = true
       // Get Imports
       axios.get('/utils/imports')
         .then((response) => {
-          this.items = response.data.imports.map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.origin = response.data.imports.map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.items = this.origin.slice(0)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -207,6 +214,21 @@ export default {
       if (item['started'] == null) return null
       let diff = (item['ended'] == null) ? moment.utc().diff(moment(item['started'])) : moment(item['ended']).diff(moment(item['started']))
       return moment.utc(diff).format("HH:mm:ss")
+    },
+    onSearch() {
+      if (this.search.length == 0) this.items = this.origin.slice(0)
+      else {
+        const items = this.origin.filter(x =>
+          (x.mode != null && x.mode.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.server_name != null && x.server_name.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
+        )
+        this.items = items.slice(0)
+      }
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

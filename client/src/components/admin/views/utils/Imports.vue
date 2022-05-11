@@ -475,7 +475,7 @@ export default {
         const items = this.origin.filter(x =>
           (x.username != null && x.username.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.mode != null && x.mode.toLowerCase().includes(this.search.toLowerCase())) ||
-          (x.server != null && x.server.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.server_name != null && x.server_name.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
