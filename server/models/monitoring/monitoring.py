@@ -50,7 +50,7 @@ class Monitoring:
 
     def get_parameters(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN (
@@ -72,7 +72,7 @@ class Monitoring:
 
     def get_processlist(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN (
@@ -94,7 +94,7 @@ class Monitoring:
 
     def get_queries(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', t.id IS NOT NULL AS 'server_active', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN (
