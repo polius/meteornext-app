@@ -120,6 +120,14 @@ class progress:
         sql.stop()
         return result
 
+    def get(self):
+        query = "SELECT status, progress FROM executions WHERE id = %s"
+        result = self._sql.execute(query=query, args=(self._config['params']['id']), database=self._config['meteor_next']['database'])
+        return {
+            'status': result['query_result'][0]['status'],
+            'progress': json.loads(result['query_result'][0]['progress'])
+        }
+
     def __store(self):
         self._progress['updated'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query = "UPDATE executions SET progress = %s WHERE id = %s"
