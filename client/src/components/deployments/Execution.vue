@@ -1102,7 +1102,6 @@
         this.deployment['scheduled'] = data['scheduled']
         this.deployment['started'] = data['started']
         this.deployment['ended'] = data['ended']
-        this.deployment['progress'] = JSON.parse(data['progress'])
         this.deployment['error'] = data['error']
         this.deployment['uri'] = data['uri']
         this.deployment['url'] = data['url']
@@ -1167,24 +1166,12 @@
         // | PARSE PROGRESS DATA |
         // +---------------------+
         if (data['progress']) {
+          this.deployment['progress'] = JSON.parse(data['progress'])
           if ('validation' in this.deployment['progress']) this.deployment['progress']['validation'].sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
           if ('execution' in this.deployment['progress']) this.deployment['progress']['execution'].sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
 
           // Parse Last Updated
           this.last_updated = this.deployment['progress']['updated']
-
-          // Check if SO killed some region execution
-          if ('execution' in this.deployment['progress']) {
-            let finished = true
-            for (let r = 0; r < this.deployment['progress']['execution'].length; ++r) {
-              finished = this.deployment['progress']['execution'][r]['servers'].some(x => x.d != x.t)
-              if (!finished) break
-            }
-            if (!finished && this.deployment['status'] == 'SUCCESS') {
-              this.deployment['status'] = 'FAILED'
-              this.deployment['progress']['error'] = "The execution has been killed by the OS. The deployment has consumed more memory than is available on the region."
-            }
-          }
 
           // Calculate real-time overall
           if (data['overall'] == null && this.deployment['ended'] == null) {

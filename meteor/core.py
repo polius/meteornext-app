@@ -127,7 +127,9 @@ class core:
             # Get Logs
             logs = self.__get_logs()
             # Get Summary
-            summary = self.__summary(logs)       
+            summary = self.__summary(logs)
+            # Check Execution Integrity
+            error = self.__check_execution(error)
             # Compile Logs
             self._logs.compile(logs, summary, error)
             # Upload Logs to S3
@@ -318,6 +320,19 @@ class core:
 
         # Return Summary
         return summary
+
+    def __check_execution(self, error):
+        if error is None:
+            result = self._progress.get()
+            if 'execution' in result['progress']:
+                halted = False
+                for i in result['progress']['execution']:
+                    halted = any(s['d'] != s['t'] for s in i['servers'])
+                    if halted:
+                        break
+                if halted and result['status'] == 'IN PROGRESS':
+                    error = Exception("The execution has been killed by the OS. The deployment has consumed more memory than is available on the region.")
+        return error
 
     def clean(self):
         status_msg = "- Cleaning Regions..."
