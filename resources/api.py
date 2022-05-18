@@ -27,14 +27,14 @@ def login():
         "password": "&maXxo#gJCt:XoG=TXiH3_nn:+jE=s^w6hbU:zTb}T.zc.D3Q7wQV%#}TL]RT6DU",
         # "mfa": pyotp.TOTP('LOMBQEKO32BUYTOXDOV7Z6UW2VYIPOHK').now()
     }
-    r = session.post('https://meteor2.io/api/login', json=json)
+    r = session.post('https://www.meteornext.io/api/login', json=json)
     if r.status_code == 200:
         print("- Login successful.")
         session.headers['X-CSRF-TOKEN'] = session.cookies.get_dict()['csrf_access_token']
 
 def logout():
     global session
-    r = session.post('https://meteor2.io/api/logout')
+    r = session.post('https://www.meteornext.io/api/logout')
     if r.status_code == 200:
         print("- Logout successful.")
 
@@ -59,9 +59,9 @@ def deployment(i):
         "method": "DEPLOY",
         "scheduled": None,
         "start_execution": True,
-        "url": "https://meteor2.io",
+        "url": "https://www.meteornext.io",
     }
-    r = session.post('https://meteor2.io/api/deployments', json=json)
+    r = session.post('https://www.meteornext.io/api/deployments', json=json)
     if r.status_code == 200:
         result = r.json()
         print(f"- {result['message']}")

@@ -26,29 +26,29 @@ class builder:
         self.__build_client()
         # Build Docker
         subprocess.call("docker pull nginx:latest", shell=True)
-        subprocess.call("cd {} ; docker buildx build -t meteor2:latest -f build/docker.dockerfile --no-cache --platform linux/amd64 --load .".format(self._pwd), shell=True)
-        subprocess.call("docker save meteor2 | gzip -9 > {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
+        subprocess.call("cd {} ; docker buildx build -t meteornext:latest -f build/docker.dockerfile --no-cache --platform linux/amd64 --load .".format(self._pwd), shell=True)
+        subprocess.call("docker save meteornext | gzip -9 > {}/dist/meteornext.tar.gz".format(self._pwd), shell=True)
         self.__clean_docker()
-        print("\n- Build Path: {}/dist/meteor2.tar.gz".format(self._pwd))
+        print("\n- Build Path: {}/dist/meteornext.tar.gz".format(self._pwd))
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
     ####################
     # Internal Methods #
     ####################
     def __build_server(self):
-        subprocess.call("rm -rf {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/dist/meteornext.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
-        subprocess.call("docker rmi meteor2build:latest >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull amazonlinux:1", shell=True)
         # One Time: create a new builder instance to be able to build for multiplatform
         # docker buildx create --use
-        subprocess.call("docker buildx build -t meteor2build:latest --no-cache --platform linux/amd64 --load - < server.dockerfile", shell=True)
-        subprocess.call("docker run --rm -it -v {}:/root/ meteor2build:latest".format(self._pwd), shell=True)
-        subprocess.call("docker rmi meteor2build:latest", shell=True)
+        subprocess.call("docker buildx build -t meteornextbuild:latest --no-cache --platform linux/amd64 --load - < server.dockerfile", shell=True)
+        subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
 
     def __build_client(self):
-        subprocess.call("rm -rf {}/dist/meteor2.tar.gz".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/dist/meteornext.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("cd {}/client ; npm run build".format(self._pwd), shell=True)
         subprocess.call("mv {0}/client/dist {0}/dist/client".format(self._pwd), shell=True)
@@ -58,7 +58,7 @@ class builder:
         subprocess.call("sudo rm -rf {}/.cache".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
-        subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteor2) >/dev/null 2>&1", shell=True)
-        subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteor2) >/dev/null 2>&1", shell=True)
-        subprocess.call("docker rmi meteor2:latest >/dev/null 2>&1", shell=True)
+        subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)

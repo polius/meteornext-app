@@ -149,7 +149,7 @@ export default {
         .finally(() => this.loading = false)
     },
     manageLicense() {
-      window.open('https://account.meteor2.io', '_blank').focus()
+      window.open('https://account.meteornext.io', '_blank').focus()
     },
     filterBy(val) {
       this.filter = val
