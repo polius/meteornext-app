@@ -61,7 +61,7 @@
                           <v-icon size="18" color="info">fas fa-info-circle</v-icon>
                         </v-col>
                         <v-col>
-                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteor2.io/guides/administration/settings#amazon-s3" target="_blank">Admin Panel</a>.</div>
+                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteornext.io/guides/administration/settings#amazon-s3" target="_blank">Admin Panel</a>.</div>
                         </v-col>
                       </v-row>
                     </v-card>
@@ -153,7 +153,7 @@
     data: () => ({
       // Install Form
       license: { access_key: '', secret_key: '' },
-      sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteor2', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false },
+      sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteornext', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false },
       amazon: { enabled: false, aws_access_key: '', aws_secret_access_key: '', region: '', bucket: '' },
       account: { username: '', password: '' },
       installPart: 'license',

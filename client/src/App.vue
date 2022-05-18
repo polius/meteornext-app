@@ -64,7 +64,7 @@
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
       </router-link>
       <!-- DOCUMENTATION -->
-      <a href="https://docs.meteor2.io" target="_blank" title="Documentation">
+      <a href="https://docs.meteornext.io" target="_blank" title="Documentation">
         <v-btn icon><v-icon style="font-size:22px">fas fa-question</v-icon></v-btn>
       </a>
       <!-- FULL SCREEN -->
