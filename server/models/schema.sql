@@ -514,7 +514,7 @@ CREATE TABLE `client_queries` (
   `user_id` INT UNSIGNED NOT NULL,
   `server_id` INT UNSIGNED NOT NULL,
   `database` VARCHAR(191) NULL,
-  `query` TEXT NOT NULL,
+  `query` LONGTEXT NOT NULL,
   `status` TINYINT(1) UNSIGNED NOT NULL,
   `records` INT UNSIGNED NULL,
   `elapsed` VARCHAR(191) NULL,
