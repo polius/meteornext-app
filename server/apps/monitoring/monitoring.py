@@ -1,3 +1,4 @@
+import gc
 import time
 import json
 import datetime
@@ -18,6 +19,7 @@ class Monitoring:
 
     def start(self):
         self.__start_monitor()
+        gc.collect()
 
     def clean(self):
         self.__clean_monitor()

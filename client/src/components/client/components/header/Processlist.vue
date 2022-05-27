@@ -21,7 +21,7 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100vh - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressFieldDotNotation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100vh - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
                 <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
                   <v-list style="padding:0px;">
                     <v-list-item-group v-model="contextMenuModel">
@@ -128,7 +128,7 @@
                     <div id="explainEditor" style="float:left; height:100%; width:100%"></div>
                   </Pane>
                   <Pane size="50" min-size="0">
-                    <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onExplainGridReady" @cell-key-down="onCellKeyDown" @first-data-rendered="onFirstExplainDataRendered" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="explainColumns" :rowData="explainItems"></ag-grid-vue>
+                    <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressFieldDotNotation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onExplainGridReady" @cell-key-down="onCellKeyDown" @first-data-rendered="onFirstExplainDataRendered" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="explainColumns" :rowData="explainItems"></ag-grid-vue>
                   </Pane>
                 </Splitpanes>
               </v-flex>

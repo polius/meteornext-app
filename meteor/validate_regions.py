@@ -71,7 +71,6 @@ class validate_regions:
                 # Start SSH Connection
                 pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
                 client = paramiko.SSHClient()
-                client.load_system_host_keys()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], pkey=pkey, timeout=5)
                 client.close()
