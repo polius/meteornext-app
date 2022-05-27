@@ -25,7 +25,7 @@
                   </v-checkbox>
                   <v-divider style="margin-top:15px"></v-divider>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:12px; margin-bottom:10px; margin-left:2px">SHORTCUTS</div>
-                  <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
+                  <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressFieldDotNotation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
                 </v-form>
               </v-flex>
             </v-layout>

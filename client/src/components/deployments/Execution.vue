@@ -1645,6 +1645,10 @@
       },
       editQueryConfirm() {
         // Parse Queries
+        if (this.query_dialog_code.trim().length == 0) {
+          this.notification('Please enter a query', '#EF5354')
+          return
+        }
         if (this.parseQueriesFormat().length > 1) {
           this.notification('Multiple queries detected', '#EF5354')
           return

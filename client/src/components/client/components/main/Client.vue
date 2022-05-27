@@ -11,7 +11,7 @@
           </div>
         </Pane>
         <Pane size="50" min-size="0">
-          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenCellsLoseFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressFieldDotNotation suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenCellsLoseFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">

@@ -100,7 +100,6 @@ class MySQL:
         password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
         pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
         client = paramiko.SSHClient()
-        client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())        
         client.connect(hostname=self._server['ssh']['hostname'], port=int(self._server['ssh']['port']), username=self._server['ssh']['username'], password=self._server['ssh']['password'], pkey=pkey, timeout=5)
         client.close()

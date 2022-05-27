@@ -146,7 +146,6 @@ class Region:
             try:
                 # Init Paramiko SSH Connection
                 client = paramiko.SSHClient()
-                client.load_system_host_keys()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
                 transport = client.get_transport()
@@ -177,7 +176,6 @@ class Region:
         try:
             # Init Paramiko Connection
             client = paramiko.SSHClient()
-            client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'])
 
@@ -202,7 +200,6 @@ class Region:
             try:
                 # Init Paramiko Connection
                 client = paramiko.SSHClient()
-                client.load_system_host_keys()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], banner_timeout=60)
 

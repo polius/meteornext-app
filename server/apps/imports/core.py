@@ -27,7 +27,6 @@ class Core:
     def put(self, local_path, remote_path):
         # Init Paramiko Connection
         self._client = paramiko.SSHClient()
-        self._client.load_system_host_keys()
         self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         password = None if self._region['password'] is None or len(self._region['password'].strip()) == 0 else self._region['password']
         pkey = None if self._region['key'] is None or len(self._region['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._region['key']), password=password)
@@ -59,7 +58,6 @@ class Core:
     def __remote(self, command):
         # Init Paramiko SSH Connection
         client = paramiko.SSHClient()
-        client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         password = None if self._region['password'] is None or len(self._region['password'].strip()) == 0 else self._region['password']
         pkey = None if self._region['key'] is None or len(self._region['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._region['key']), password=password)
