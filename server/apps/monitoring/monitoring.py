@@ -1,10 +1,10 @@
-import gc
 import time
 import json
 import datetime
 import calendar
 import requests
 import traceback
+from sentry_sdk import capture_exception, flush
 from statistics import median
 from collections import OrderedDict
 
@@ -12,107 +12,72 @@ import connectors.base
 import models.notifications
 
 class Monitoring:
-    def __init__(self, license, sql):
+    def __init__(self, license, sql_config):
         self._license = license
-        self._sql = sql
-        self._notifications = models.notifications.Notifications(sql)
+        self._sql = connectors.base.Base({'sql': sql_config})
+        self._notifications = models.notifications.Notifications(self._sql)
 
     def start(self):
-        self.__start_monitor()
-        gc.collect()
-
-    def clean(self):
-        self.__clean_monitor()
+        try:
+            self.__start_monitor()
+        except Exception as e:
+            capture_exception(e)
+            flush()
 
     ####################
     # Internal Methods #
     ####################
-    def __clean_monitor(self):
-        utcnow = self.__utcnow()
-        # Clean monitoring entries
-        query = """
-            DELETE m
-            FROM monitoring m
-            WHERE monitor_enabled = 0
-            AND parameters_enabled = 0
-            AND processlist_enabled = 0
-            AND queries_enabled = 0
-        """
-        self._sql.execute(query)
-
-        query = """
-            DELETE ms
-            FROM monitoring_servers ms
-            LEFT JOIN monitoring m ON m.server_id = ms.server_id
-            WHERE m.server_id IS NULL
-        """
-        self._sql.execute(query)
-
-        # Clean monitoring events
-        query = """
-            DELETE FROM monitoring_events
-            WHERE DATE_ADD(`time`, INTERVAL 15 DAY) < %s
-        """
-        self._sql.execute(query, args=(utcnow))
-
-        # Clean queries that exceeds the MAX defined data retention
-        query = """
-            DELETE q
-            FROM monitoring_queries q
-            LEFT JOIN
-            (
-                SELECT m.server_id, MAX(s.query_data_retention) AS 'data_retention'
-                FROM monitoring_settings s
-                JOIN monitoring m ON m.user_id = s.user_id
-                GROUP BY m.server_id
-            ) t ON t.server_id = q.server_id
-            WHERE t.server_id IS NULL
-            OR DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= %s
-        """
-        self._sql.execute(query=query, args=(utcnow))
-
     def __start_monitor(self):
-        # Get Monitoring Servers
-        query = """
-            SELECT 
-                s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
-                r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
-                ms.updated
-            FROM monitoring m
-			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
-            JOIN users u ON u.id = m.user_id AND u.disabled = 0
-            JOIN groups g ON g.id = u.group_id
-            JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
-            JOIN regions r ON r.id = s.region_id
-            WHERE (
-                (m.processlist_enabled = 1 AND m.processlist_active = 1)
-                OR m.queries_enabled = 1
-                OR m.monitor_enabled = 1
-                OR m.parameters_enabled = 1
-            )
-            AND IF(ms.updated IS NULL, 1, TIMESTAMPDIFF(SECOND, ms.updated, %s) >= g.monitoring_interval) = 1
-            GROUP BY m.server_id
-        """
-        servers_raw = self._sql.execute(query=query, args=(self.__utcnow()))
+        # Start Connection
+        self._sql.connect()
 
-        # Build Servers List
-        servers = []
-        for s in servers_raw:
-            server = {'ssh': {}, 'sql': {}}
-            server['id'] = s['id']
-            server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
-            server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password'], 'ssl': s['ssl'], 'ssl_client_key': s['ssl_client_key'], 'ssl_client_certificate': s['ssl_client_certificate'], 'ssl_ca_certificate': s['ssl_ca_certificate'], 'ssl_verify_ca': s['ssl_verify_ca']}
-            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
-            servers.append(server)
+        try:
+            # Get Monitoring Servers
+            query = """
+                SELECT
+                    s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
+                    r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
+                    ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
+                    ms.updated
+                FROM monitoring m
+                LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
+                LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
+                JOIN users u ON u.id = m.user_id AND u.disabled = 0
+                JOIN groups g ON g.id = u.group_id
+                JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
+                JOIN regions r ON r.id = s.region_id
+                WHERE (
+                    (m.processlist_enabled = 1 AND m.processlist_active = 1)
+                    OR m.queries_enabled = 1
+                    OR m.monitor_enabled = 1
+                    OR m.parameters_enabled = 1
+                )
+                AND IF(ms.updated IS NULL, 1, TIMESTAMPDIFF(SECOND, ms.updated, %s) >= g.monitoring_interval) = 1
+                GROUP BY m.server_id
+            """
+            servers_raw = self._sql.execute(query=query, args=(self.__utcnow()))
 
-        # Start Monitoring
-        for server in servers:
-            try:
-                self.__monitor_server(server)
-            except Exception:
-                traceback.print_exc()
+            # Build Servers List
+            servers = []
+            for s in servers_raw:
+                server = {'ssh': {}, 'sql': {}}
+                server['id'] = s['id']
+                server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
+                server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password'], 'ssl': s['ssl'], 'ssl_client_key': s['ssl_client_key'], 'ssl_client_certificate': s['ssl_client_certificate'], 'ssl_ca_certificate': s['ssl_ca_certificate'], 'ssl_verify_ca': s['ssl_verify_ca']}
+                server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
+                servers.append(server)
+
+            # Start Monitoring
+            for server in servers:
+                try:
+                    self.__monitor_server(server)
+                except Exception as e:
+                    capture_exception(e)
+                    flush()
+                    traceback.print_exc()
+
+        finally:
+            self._sql.stop()
 
     def __monitor_server(self, server):
         try:
