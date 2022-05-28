@@ -6,6 +6,7 @@ import random
 import socket
 import schedule
 import threading
+from multiprocessing import Process
 from datetime import datetime, timedelta
 
 import routes.deployments.deployments
@@ -19,7 +20,6 @@ class Cron:
         self._license = license
         self._sql = sql
         self._node = str(uuid.uuid4())
-        self._monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
         self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
         self._current_pid = os.getpid()
         self.__start()
@@ -228,8 +228,12 @@ class Cron:
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
-            # Clean monitoring servers
-            self._monitoring.start()
+            # Start monitoring servers
+            monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql.config)
+            p = Process(target=monitoring.start)
+            p.daemon = True
+            p.start()
+            p.join()
         finally:
             # Free lock
             self._locks['monitoring'] = False
@@ -245,8 +249,47 @@ class Cron:
             return
 
         # Clean monitoring servers
-        monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql)
-        monitoring.clean()
+        utcnow = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        query = """
+            DELETE m
+            FROM monitoring m
+            WHERE monitor_enabled = 0
+            AND parameters_enabled = 0
+            AND processlist_enabled = 0
+            AND queries_enabled = 0
+        """
+        self._sql.execute(query)
+
+        query = """
+            DELETE ms
+            FROM monitoring_servers ms
+            LEFT JOIN monitoring m ON m.server_id = ms.server_id
+            WHERE m.server_id IS NULL
+        """
+        self._sql.execute(query)
+
+        # Clean monitoring events
+        query = """
+            DELETE FROM monitoring_events
+            WHERE DATE_ADD(`time`, INTERVAL 15 DAY) < %s
+        """
+        self._sql.execute(query, args=(utcnow))
+
+        # Clean queries that exceeds the MAX defined data retention
+        query = """
+            DELETE q
+            FROM monitoring_queries q
+            LEFT JOIN
+            (
+                SELECT m.server_id, MAX(s.query_data_retention) AS 'data_retention'
+                FROM monitoring_settings s
+                JOIN monitoring m ON m.user_id = s.user_id
+                GROUP BY m.server_id
+            ) t ON t.server_id = q.server_id
+            WHERE t.server_id IS NULL
+            OR DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= %s
+        """
+        self._sql.execute(query=query, args=(utcnow))
 
     def __import_clean(self):
         # Check license
