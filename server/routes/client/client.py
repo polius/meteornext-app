@@ -236,8 +236,9 @@ class Client:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
             # Get Connection Timeout
-            cred['sql']['read_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] and group['client_limits_timeout_mode'] == 2 else None
-            cred['sql']['write_timeout'] = group['client_limits_timeout_value'] if group['client_limits'] else None
+            if group['client_limits']:
+                cred['sql']['timeout_type'] = 'select' if group['client_limits_timeout_mode'] == 2 else 'all'
+                cred['sql']['timeout_value'] = group['client_limits_timeout_value']
 
             # Get Connection
             try:

@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import time
 import uuid
@@ -6,12 +7,11 @@ import random
 import socket
 import schedule
 import threading
-from multiprocessing import Process
+import subprocess
 from datetime import datetime, timedelta
 
 import routes.deployments.deployments
 import routes.utils.utils
-import apps.monitoring.monitoring
 import apps.imports.scan
 
 class Cron:
@@ -22,6 +22,8 @@ class Cron:
         self._node = str(uuid.uuid4())
         self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
         self._current_pid = os.getpid()
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
         self.__start()
 
     def __start(self):
@@ -228,12 +230,19 @@ class Cron:
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
-            # Start monitoring servers
-            monitoring = apps.monitoring.monitoring.Monitoring(self._license, self._sql.config)
-            p = Process(target=monitoring.start)
-            p.daemon = True
-            p.start()
-            p.join()
+            # Build executable path
+            base_path = sys._MEIPASS if self._bin else self._app.root_path
+            path = "{}/apps/monitor/init".format(base_path) if self._bin else "python3 {}/../monitor/monitor.py".format(base_path)
+            config_path = "/root/server.conf".format(base_path) if self._bin else "{}/server.conf".format(base_path)
+
+            # Build Command
+            command = f"{path} --conf '{config_path}' --resources '{self._license.resources}'"
+            if self._license.status['sentry']:
+                command += f" --sentry '{self._license.status['sentry']}'"
+
+            # Execute Monitor
+            process = subprocess.Popen(command, shell=True)
+            process.wait()
         finally:
             # Free lock
             self._locks['monitoring'] = False

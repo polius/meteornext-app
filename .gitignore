@@ -10,5 +10,6 @@ server.conf
 .bash_history
 .cache/
 /server/apps/meteor.tar.gz
+/server/apps/monitor.tar.gz
 /meteor/version.txt
 /license/dist/
