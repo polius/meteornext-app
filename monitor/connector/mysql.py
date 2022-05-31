@@ -96,54 +96,6 @@ class MySQL:
                 return self.mogrify(query, args, retry=False)
             raise
 
-    def kill(self, connection_id):
-        if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
-            self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
-        elif self._server['sql']['engine'] == 'MySQL':
-            self.execute('KILL QUERY {}'.format(connection_id))
-
-    def test_ssh(self):
-        password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
-        pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())        
-        client.connect(hostname=self._server['ssh']['hostname'], port=int(self._server['ssh']['port']), username=self._server['ssh']['username'], password=self._server['ssh']['password'], pkey=pkey, timeout=5)
-        client.close()
-
-    def test_sql(self):
-        try:
-            ssl = self.__get_ssl()
-            database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            # Start SSH Connection
-            if self._server['ssh']['enabled']:
-                logger = sshtunnel.create_logger(loglevel='CRITICAL')
-                password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
-                pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
-                sshtunnel.SSH_TIMEOUT = 5.0
-                tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=logger)
-                tunnel.start()
-                try:
-                    port = tunnel.local_bind_port
-                except Exception:
-                    raise Exception("Can't connect to the SSH Server.")
-
-            # Start SQL Connection
-            host = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
-            port = port if self._server['ssh']['enabled'] else self._server['sql']['port']
-            conn = pymysql.connect(host=host, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-        finally:
-            # Close SSL
-            self.__close_ssl(ssl)
-            # Close Connections
-            try:
-                conn.close()
-            except Exception:
-                pass
-            try:
-                tunnel.close()
-            except Exception:
-                pass
-
     def __get_ssl(self):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
         if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
@@ -191,25 +143,3 @@ class MySQL:
 
     def get_processlist(self):
         return self.execute('SELECT * FROM information_schema.processlist')
-
-    def get_databases(self):
-        return self.execute("SELECT schema_name AS 'name' FROM information_schema.schemata ORDER BY name")
-
-    def get_database_size(self, database):
-        query = """
-            SELECT SUM(data_length) AS 'size'
-            FROM information_schema.tables
-            WHERE table_schema = %s
-        """
-        size = self.execute(query, args=(database))[0]['size']
-        return 0 if size is None else int(size)
-
-    def get_tables_detailed(self, database):
-        query = """
-            SELECT table_name AS 'name', table_rows AS 'rows', data_length, index_length, (data_length + index_length) AS 'total_length', engine, row_format, avg_row_length, data_free, auto_increment, c.character_set_name AS 'charset', table_collation AS 'collation', table_comment AS 'comment', create_time AS 'created', update_time AS 'modified'
-            FROM information_schema.tables t
-            JOIN information_schema.collations c ON c.collation_name = t.table_collation
-            WHERE t.table_schema = %s
-            ORDER BY table_name
-        """
-        return self.execute(query, args=(database))

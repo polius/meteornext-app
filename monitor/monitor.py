@@ -1,32 +1,52 @@
 import time
 import json
-import datetime
+import argparse
 import calendar
 import requests
 import traceback
-from sentry_sdk import capture_exception, flush
+import sentry_sdk
+from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
 
-import connectors.base
-import models.notifications
+from connector import Connector
 
-class Monitoring:
-    def __init__(self, license, sql_config):
-        self._license = license
-        self._sql = connectors.base.Base({'sql': sql_config})
-        self._notifications = models.notifications.Notifications(self._sql)
+# Execute Meteor using $ python monitor.py ...
+if __name__ == '__main__':
+    from monitor import monitor
+    monitor()
+
+class monitor:
+    def __init__(self):
+        self._args = self.__init_parser()
+        self._sql = None
+        self.start()
 
     def start(self):
-        try:
-            self.__start_monitor()
-        except Exception as e:
-            capture_exception(e)
-            flush()
+        self.__init_sentry()
+        self.__init_sql()
+        self.__start_monitor()
 
     ####################
     # Internal Methods #
     ####################
+    def __init_parser(self):
+        parser = argparse.ArgumentParser(description='monitor')
+        parser.add_argument('--config', required=True, action='store', dest='config', help=argparse.SUPPRESS)
+        parser.add_argument('--resources', required=True, action='store', dest='resources', help=argparse.SUPPRESS)
+        parser.add_argument('--sentry', required=False, action='store', dest='sentry', help=argparse.SUPPRESS)
+        args = parser.parse_args()
+        return args
+
+    def __init_sentry(self):
+        if self._args.sentry:
+            sentry_sdk.init(self._args.sentry, traces_sample_rate=0)
+    
+    def __init_sql(self):
+        with open(self._args.config) as fopen:
+            data = json.load(fopen)
+            self._sql = Connector({'sql': data['sql']})
+
     def __start_monitor(self):
         # Start Connection
         self._sql.connect()
@@ -72,8 +92,9 @@ class Monitoring:
                 try:
                     self.__monitor_server(server)
                 except Exception as e:
-                    capture_exception(e)
-                    flush()
+                    if self._args.sentry:
+                        sentry_sdk.capture_exception(e)
+                        sentry_sdk.flush()
                     traceback.print_exc()
 
         finally:
@@ -83,12 +104,12 @@ class Monitoring:
         try:
             # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:
-                diff = (datetime.datetime.utcnow() - server['monitor']['updated']).total_seconds()
+                diff = (datetime.utcnow() - server['monitor']['updated']).total_seconds()
                 if server['monitor']['available'] == 0 and diff < 30:
                     return
 
             # Start Connection
-            conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
+            conn = Connector({'ssh': server['ssh'], 'sql': server['sql']})
             conn.connect()
 
             # Get current timestamp in utc
@@ -108,7 +129,7 @@ class Monitoring:
             # Build Summary
             summary = {}
             if server['monitor']['monitor_enabled']:
-                summary['info'] = {'version': params.get('version'), 'raw_uptime': status['Uptime'], 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
+                summary['info'] = {'version': params.get('version'), 'raw_uptime': status['Uptime'], 'uptime': str(timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.now() - timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
                 summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
                 summary['connections'] = {'current': status.get('Threads_connected'), 'max_connections_allowed': params.get('max_connections'), 'max_connections_reached': "{:.2f}%".format((int(status.get('Max_used_connections')) / int(params.get('max_connections'))) * 100), 'max_allowed_packet': params.get('max_allowed_packet'), 'transaction_isolation': params.get('tx_isolation') or params.get('transaction_isolation'), 'bytes_received': status.get('Bytes_received'), 'bytes_sent': status.get('Bytes_sent')}
                 summary['statements'] = {'select': int(status.get('Com_select')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
@@ -199,7 +220,7 @@ class Monitoring:
             self.__add_event(server_id=server['id'], event='unavailable', data=error)
             users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                self.__add_notification(user_id=user['user_id'], notification=notification)
 
             slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
@@ -219,7 +240,7 @@ class Monitoring:
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                self.__add_notification(user_id=user['user_id'], notification=notification)
 
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
@@ -241,7 +262,7 @@ class Monitoring:
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                self.__add_notification(user_id=user['user_id'], notification=notification)
 
             data = {'previous_uptime': info['uptime'], 'previous_start_time': info['start_time'], 'current_uptime': summary['info']['uptime'], 'current_start_time': summary['info']['start_time']}
             if slack is None:
@@ -267,7 +288,7 @@ class Monitoring:
                 if users is None:
                     users = self.__get_users_server(server_id=server['id'])
                 for user in users:
-                    self._notifications.post(user_id=user['user_id'], notification=notification)
+                    self.__add_notification(user_id=user['user_id'], notification=notification)
 
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
@@ -282,12 +303,12 @@ class Monitoring:
             queries.sort(reverse=True)
             event = ''
             # Connections - Critical [+100 connections. 3 top median >= 300 seconds. 5 top avg >= 300]
-            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=1) < datetime.datetime.utcnow())) and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
+            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + timedelta(minutes=1) < datetime.utcnow())) and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
                 notification_name = 'Server \'{}\' Critical | {} Connections.'.format(server['sql']['name'], len(queries))
                 notification_status = 'ERROR'
                 event = 'connections_critical'
             # Connections - Warning [+ 50 connections. 3 top median >= 60 seconds. 5 top avg >= 60]
-            elif (len(last_event) == 0 or last_event[0]['event'] == 'connections_stable' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=1) < datetime.datetime.utcnow() and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+            elif (len(last_event) == 0 or last_event[0]['event'] == 'connections_stable' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + timedelta(minutes=1) < datetime.utcnow() and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
                 notification_name = 'Server \'{}\' Warning | {} Connections.'.format(server['sql']['name'], len(queries))
                 notification_status = 'WARNING'
                 event = 'connections_warning'
@@ -310,7 +331,7 @@ class Monitoring:
                 if users is None:
                     users = self.__get_users_server(server_id=server['id'])
                 for user in users:
-                    self._notifications.post(user_id=user['user_id'], notification=notification)
+                    self.__add_notification(user_id=user['user_id'], notification=notification)
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
@@ -383,7 +404,7 @@ class Monitoring:
             AND m.monitor_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._args.resources})
 
     def __get_slack_server(self, server_id):
         query = """
@@ -405,7 +426,7 @@ class Monitoring:
             WHERE ms.monitor_slack_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._args.resources})
 
     def __get_last_event(self, server_id):
         query = """
@@ -422,6 +443,10 @@ class Monitoring:
         query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`, `time`) VALUES (%s, %s, %s, %s)"
         self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
 
+    def __add_notification(self, user_id, notification):
+        query = "INSERT IGNORE INTO notifications (name, `status`, category, data, `date`, user_id, `show`) VALUES (%s, %s, %s, %s, %s, %s, 1)"
+        self._sql.execute(query, (notification['name'], notification['status'], notification['category'], notification['data'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id))
+
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))
 
@@ -431,4 +456,4 @@ class Monitoring:
 
     def __utcnow(self):
         # Get current timestamp in utc
-        return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

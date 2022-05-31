@@ -1,6 +1,6 @@
-from connectors.base.mysql import MySQL
+from connector.mysql import MySQL
 
-class Base:
+class Connector:
     def __init__(self, config):
         if config['sql']['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(config)
@@ -10,15 +10,6 @@ class Base:
 
     def stop(self):
         self._sql.stop()
-
-    def kill(self, connection_id):
-        self._sql.kill(connection_id)
-
-    def test_sql(self):
-        self._sql.test_sql()
-
-    def test_ssh(self):
-        self._sql.test_ssh()
 
     def use(self, database):
         self._sql.use(database)
@@ -40,12 +31,3 @@ class Base:
 
     def get_processlist(self):
         return self._sql.get_processlist()
-
-    def get_databases(self):
-        return self._sql.get_databases()
-
-    def get_database_size(self, database):
-        return self._sql.get_database_size(database)
-
-    def get_tables_detailed(self, database):
-        return self._sql.get_tables_detailed(database)

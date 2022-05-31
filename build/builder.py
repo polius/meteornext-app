@@ -58,6 +58,8 @@ class builder:
         subprocess.call("sudo rm -rf {}/.cache".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/server/apps/meteor.tar.gz".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/server/apps/monitor.tar.gz".format(self._pwd), shell=True)
         subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)

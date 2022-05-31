@@ -43,6 +43,7 @@ class Client:
                 self._connections[user_id] = {} 
             self._connections[user_id][conn_id] = conn
         self._connections[user_id][conn_id].is_protected = True
+        self._connections[user_id][conn_id].server = server
         return self._connections[user_id][conn_id]
 
     def kill(self, user_id, conn_id):
@@ -104,6 +105,10 @@ class Connection:
     @property
     def server(self):
         return self._server
+
+    @server.setter
+    def server(self, value):
+        self._sql.server = value
 
     def connect(self):
         self._start = time.time()

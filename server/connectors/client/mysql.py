@@ -3,11 +3,16 @@ import time
 import tempfile
 import pymysql
 import paramiko
+import sqlparse
+import threading
 import sshtunnel
+import traceback
 from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 from pymysql.constants import CLIENT
+
+import connectors.base
 
 class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
@@ -52,6 +57,14 @@ class MySQL:
     def connection_id(self):
         return self._connection_id
 
+    @property
+    def server(self):
+        return self._server
+
+    @server.setter
+    def server(self, value):
+        self._server = value
+
     def connect(self):
         retries = 1
         exception = None
@@ -77,9 +90,7 @@ class MySQL:
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                read_timeout = self._server['sql']['read_timeout'] if 'read_timeout' in self._server['sql'] else None
-                write_timeout = self._server['sql']['write_timeout'] if 'write_timeout' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, read_timeout=read_timeout, write_timeout=write_timeout, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
                 return
 
@@ -152,22 +163,52 @@ class MySQL:
         if database:
             self._sql.select_db(database)
 
+        # Start timeout manager
+        if 'timeout_type' in self._server['sql']:
+            t = threading.Thread(target=self.__timeout_query, args=(query,))
+            t.daemon = True
+            t.alive = True
+            t.start()
+
         # Prepare the cursor
         if fetch:
-            with self._sql.cursor(OrderedDictCursor) as cursor:            
+            with self._sql.cursor(OrderedDictCursor) as cursor:
                 # Execute the SQL query
                 start_time = time.time()
                 cursor.execute(query, args)
 
                 # Get the query results
                 data = cursor.fetchall()
-
-            # Return query info
-            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
-            return query_data
         else:
             self._cursor = self._sql.cursor(OrderedDictCursor)
             self._cursor.execute(query, args)
+
+        # Expire timeout
+        if 'timeout_type' in self._server['sql']:
+            t.alive = False
+
+        # Return query info
+        if fetch:
+            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
+            return query_data
+
+    def __timeout_query(self, query):
+        current_thread = threading.current_thread()
+        is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower() == 'select'
+        condition = self._server['sql']['timeout_type'] == 'all' or (self._server['sql']['timeout_type'] == 'select' and is_select)
+        i = 0
+        while condition and current_thread.alive:
+            if i >= self._server['sql']['timeout_value']:
+                try:
+                    sql = connectors.base.Base(self._server)
+                    sql.kill(self._connection_id)
+                    sql.stop()
+                except Exception:
+                    traceback.print_exc()
+                finally:
+                    break
+            time.sleep(1)
+            i += 1
 
     def fetch_one(self):
         if self._cursor:
