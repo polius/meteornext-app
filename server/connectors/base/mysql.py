@@ -97,7 +97,10 @@ class MySQL:
             raise
 
     def kill(self, connection_id):
-        self._sql.kill(connection_id)
+        try:
+            self._sql.kill(connection_id)
+        except Exception:
+            pass
         # if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
         #     self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
         # elif self._server['sql']['engine'] == 'MySQL':
