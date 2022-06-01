@@ -97,10 +97,11 @@ class MySQL:
             raise
 
     def kill(self, connection_id):
-        if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
-            self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
-        elif self._server['sql']['engine'] == 'MySQL':
-            self.execute('KILL QUERY {}'.format(connection_id))
+        self._sql.kill(connection_id)
+        # if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
+        #     self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
+        # elif self._server['sql']['engine'] == 'MySQL':
+        #     self.execute('KILL QUERY {}'.format(connection_id))
 
     def test_ssh(self):
         password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
