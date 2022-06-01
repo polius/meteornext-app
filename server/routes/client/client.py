@@ -6,6 +6,7 @@ import io
 import re
 import csv
 import json
+import time
 from itertools import repeat
 from datetime import datetime
 import models.admin.users
@@ -254,12 +255,14 @@ class Client:
 
             for query in client_json['queries']:
                 try:
+                    start_time = time.time()
                     # Select database
                     if query.upper().startswith('USE '):
                         client_json['database'] = query[4:].strip()[1:-1] if query[4:].strip().startswith('`') and query[4:].strip().endswith('`') else query[4:].strip()
                     database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
                     # Execute query
                     result = conn.execute(query=query, database=database)
+                    result['time'] = "{0:.3f}".format(time.time() - start_time)
                     result['query'] = query
                     result['database'] = database
                     # Get table metadata
@@ -276,13 +279,13 @@ class Client:
                             self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
+                    errors = True
+                    result = {'query': query, 'database': database, 'error': str(e), 'time': "{0:.3f}".format(time.time() - start_time)}
+                    execution.append(result)
                     # Track query
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,3]:
                             self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
-                    errors = True
-                    result = {'query': query, 'database': database, 'error': str(e)}
-                    execution.append(result)
                     if ('executeAll' not in client_json or not client_json['executeAll']):
                         return jsonify({'data': self.__json(execution)}), 400
 

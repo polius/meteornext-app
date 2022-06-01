@@ -174,7 +174,6 @@ class MySQL:
         if fetch:
             with self._sql.cursor(OrderedDictCursor) as cursor:
                 # Execute the SQL query
-                start_time = time.time()
                 cursor.execute(query, args)
 
                 # Get the query results
@@ -189,7 +188,7 @@ class MySQL:
 
         # Return query info
         if fetch:
-            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
+            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount}
             return query_data
 
     def __timeout_query(self, query):
@@ -201,6 +200,7 @@ class MySQL:
             if i >= self._server['sql']['timeout_value']:
                 try:
                     sql = connectors.base.Base(self._server)
+                    sql.connect()
                     sql.kill(self._connection_id)
                     sql.stop()
                 except Exception:
