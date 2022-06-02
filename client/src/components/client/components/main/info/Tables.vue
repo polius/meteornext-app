@@ -156,10 +156,10 @@ export default {
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'
-      else if (value/1024/1024 < 1) return value/1024 + ' KB'
-      else if (value/1024/1024/1024 < 1) return value/1024/1024 + ' MB'
-      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + ' GB'
-      else return value/1024/1024/1024/1024 + ' TB' 
+      else if (value/1024/1024 < 1) return (value/1024).toFixed(2) + ' KB'
+      else if (value/1024/1024/1024 < 1) return (value/1024/1024).toFixed(2) + ' MB'
+      else if (value/1024/1024/1024/1024 < 1) return (value/1024/1024/1024).toFixed(2) + ' GB'
+      else return (value/1024/1024/1024/1024).toFixed(2) + ' TB'
     },
   },
 }

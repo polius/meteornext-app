@@ -398,7 +398,7 @@ class Deployments:
         execution['owner'] = (authority['id'] == user['id'] or user['admin'])
 
         # Get environments
-        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared']} for i in self._environments.get(user['id'], user['group_id'])]
+        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared'], "secured": i['secured']} for i in self._environments.get(user['id'], user['group_id'])]
 
         # Return data
         return jsonify({'deployment': execution, 'environments': environments}), 200

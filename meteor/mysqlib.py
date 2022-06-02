@@ -15,6 +15,11 @@ class MySQL:
         self._server = server
         self._tunnel = None
         self._sql = None
+        self._last_execution_time = None
+
+    @property
+    def last_execution_time(self):
+        return self._last_execution_time
 
     def start(self):
         # Close existing connections
@@ -78,10 +83,14 @@ class MySQL:
 
     def execute(self, query, args=None, database=None):
         try:
+            start_time = time.time()
             return self.__execute_query(query, args, database)
         except Exception:
             self.start()
+            start_time = time.time()
             return self.__execute_query(query, args, database)
+        finally:
+            self._last_execution_time = "{0:.3f}".format(time.time() - start_time)
 
     def mogrify(self, query, args=None):
         with self._sql.cursor(OrderedDictCursor) as cursor:
@@ -107,14 +116,13 @@ class MySQL:
         # Prepare the cursor
         with self._sql.cursor(OrderedDictCursor) as cursor:
             # Execute the SQL query
-            start_time = time.time()
             cursor.execute(query, args)
 
             # Get the query results
             query_result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
 
         # Return query info
-        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time), "query_rows_affected": cursor.rowcount}
+        query_data = {"query_result": query_result, "query_rows_affected": cursor.rowcount}
         return query_data
 
     def __get_ssl(self):

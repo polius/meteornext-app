@@ -50,7 +50,7 @@
         <v-card>
           <v-data-table :loading="loading" :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1" mobile-breakpoint="0">
             <template v-slot:[`item.environment`]="{ item }">
-              {{ item.environment.name }}
+              <span :title="item.environment.shared ? (item.environment.secured ? 'Shared (Secured)' : 'Shared') : (item.environment.secured ? 'Personal (Secured)' : 'Personal')">{{ item.environment.name }}</span>
             </template>
             <template v-slot:[`item.mode`]="{ item }">
               <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
@@ -281,17 +281,25 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <v-text-field v-if="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment.name" label="Environment" readonly></v-text-field>
-                  <v-autocomplete v-else v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" required>
+                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="information_dialog_mode == 'parameters' ? [information_dialog_data.environment] : environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" required>
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
                           {{ item.name }}
                         </v-col>
                         <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-                          <v-chip label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                          <v-chip label>
+                            <v-icon small :color="item.shared ? '#EF5354' : 'warning'" :style="`${item.secured ? 'margin-right:2px' : 'margin-right:10px'}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                            <v-icon v-if="item.secured" title="Secured" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-top:4px; padding-right:8px">fas fa-lock</v-icon>
+                            {{ item.shared ? 'Shared' : 'Personal' }}
+                            </v-chip>
                         </v-col>
                       </v-row>
+                    </template>
+                    <template v-slot:selection="{ item }" >
+                      <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="`${item.secured ? 'margin-right:2px' : 'margin-right:10px'}; cursor:default`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      <v-icon v-if="item.secured" title="Secured" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-top:4px; padding-right:8px; cursor:default">fas fa-lock</v-icon>
+                      <span style="margin-right:5px">{{ item.name }}</span>
                     </template>
                   </v-autocomplete>
                   <v-text-field v-if="information_dialog_execution_mode == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
@@ -1050,6 +1058,7 @@
             this.loading = false
           })
           .catch((error) => {
+            this.loading = false
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
@@ -1088,7 +1097,7 @@
         this.information_dialog_execution_mode = data['mode']
         this.deployment['name'] = data['name']
         this.deployment['release'] = data['release']
-        this.deployment['environment'] = { id: data['environment_id'], name: data['environment_name'] }
+        this.deployment['environment'] = { id: data['environment_id'], name: data['environment_name'], shared: data['environment_shared'], secured: data['environment_secured'] }
         this.deployment['query_headers'] = [{text: 'Query', value: 'query'}]
         this.deployment['queries'] = []
         this.deployment['databases'] = this.deployment['mode'] == 'BASIC' ? data['databases'] : ''
