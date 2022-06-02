@@ -7,6 +7,10 @@ class connector:
         if server['sql']['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(server)
 
+    @property
+    def last_execution_time(self):
+        return self._sql.last_execution_time
+
     def start(self):
         self._sql.start()
 

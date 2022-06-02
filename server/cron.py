@@ -20,7 +20,7 @@ class Cron:
         self._license = license
         self._sql = sql
         self._node = str(uuid.uuid4())
-        self._locks = {"executions": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
+        self._locks = {"executions": False, "deployments_monitor": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
         self._current_pid = os.getpid()
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
@@ -29,6 +29,7 @@ class Cron:
     def __start(self):
         # Scheduled Tasks
         schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
+        schedule.every(10).seconds.do(self.__run_threaded, self.__deployments_monitor)
         schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
@@ -127,6 +128,45 @@ class Cron:
         finally:
             # Free lock
             self._locks['executions'] = False
+
+    def __deployments_monitor(self):
+        # Check license
+        if not self._license.validated:
+            return
+
+        # Check lock
+        if self._locks['deployments_monitor']:
+            return
+
+        # Bind lock
+        self._locks['deployments_monitor'] = True
+
+        try:
+            # Check master node
+            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            if len(result) == 0 or result[0]['type'] != 'master':
+                return
+
+            # Check alive processes
+            result = self._sql.execute(query="SELECT id, pid FROM executions WHERE status IN ('IN PROGRESS','STOPPING')")
+            recheck = []
+            for i in result:
+                if not os.path.exists(f"/proc/{i['pid']}"):
+                    recheck.append(i['id'])
+
+            if len(recheck) > 0:
+                # Wait some time to double verify
+                time.sleep(60)
+                result = self._sql.execute(query=f"SELECT id, pid, progress FROM executions WHERE status IN ('IN PROGRESS','STOPPING') AND id IN({','.join(['%s'] * len(recheck))})", args=(recheck))
+                for i in result:
+                    if not os.path.exists(f"/proc/{i['pid']}"):
+                        # Update execution status and progres
+                        progress = json.loads(i['progress'])
+                        progress['error'] = "The execution has been interrupted. There is not enough memory available to run this deployment."
+                        self._sql.execute(query="UPDATE executions SET status = 'FAILED', error = 1, progress = %s WHERE id = %s", args=(json.dumps(progress), i['id']))
+        finally:
+            # Free lock
+            self._locks['deployments_monitor'] = False
 
     def __utils_queue(self):
         # Check license

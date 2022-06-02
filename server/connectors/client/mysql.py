@@ -164,9 +164,9 @@ class MySQL:
             self._sql.select_db(database)
 
         # Start timeout manager
+        t = None
         if 'timeout_type' in self._server['sql']:
             t = threading.Thread(target=self.__timeout_query, args=(query,))
-            t.daemon = True
             t.alive = True
             t.start()
 
@@ -183,7 +183,7 @@ class MySQL:
             self._cursor.execute(query, args)
 
         # Expire timeout
-        if 'timeout_type' in self._server['sql']:
+        if t is not None:
             t.alive = False
 
         # Return query info

@@ -5,7 +5,7 @@ class Deployments:
     def get(self, user_id=None, deployment_id=None, dfilter=None, dsort=None):
         if deployment_id is not None:
             query = """
-                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, e.created, e.scheduled, es.schedule_type, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', r.name AS 'release', e.mode, e.method, e.status, e.created, e.scheduled, es.schedule_type, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
                 FROM executions e
                 LEFT JOIN executions_scheduled es ON es.execution_id = e.id
                 JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s AND d.id = %(deployment_id)s
@@ -69,7 +69,7 @@ class Deployments:
                     all_executions = ''
 
             query = """
-                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, es.schedule_type, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', dp.deployment_id IS NOT NULL AS 'is_pinned'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, es.schedule_type, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', dp.deployment_id IS NOT NULL AS 'is_pinned'
                 FROM executions e
                 LEFT JOIN executions_scheduled es ON es.execution_id = e.id
                 JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s

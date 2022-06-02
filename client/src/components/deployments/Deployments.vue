@@ -49,6 +49,9 @@
             </template>
           </v-edit-dialog>
         </template>
+        <template v-slot:[`item.environment`]="{ item }">
+          <span :title="item.environment_shared ? (item.environment_secured ? 'Shared (Secured)' : 'Shared') : (item.environment_secured ? 'Personal (Secured)' : 'Personal')">{{ item.environment_name }}</span>
+        </template>
         <template v-slot:[`item.mode`]="{ item }">
           <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
         </template>

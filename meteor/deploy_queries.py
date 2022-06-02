@@ -120,7 +120,7 @@ class deploy_queries:
                 if not output:
                     execution_row['meteor_output'] = '-'
                 execution_row['meteor_response'] = ""
-                execution_row['meteor_execution_time'] = query_info['query_time']
+                execution_row['meteor_execution_time'] = conn.last_execution_time
                 execution_row['meteor_execution_rows'] = query_info['query_rows_affected']
                 self._execution_log['output'].append(execution_row)
 
@@ -132,6 +132,7 @@ class deploy_queries:
                 # Write Exception to the Log
                 execution_row['meteor_status'] = '0'
                 execution_row['meteor_response'] = self.__parse_error(str(e))
+                execution_row['meteor_execution_time'] = conn.last_execution_time
                 self._execution_log['output'].append(execution_row)
                 # Do not Raise the Exception. Continue with the Deployment
                 if e.__class__ == KeyboardInterrupt:
