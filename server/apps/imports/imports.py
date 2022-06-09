@@ -170,13 +170,13 @@ class Imports:
         # Check compressed file
         gunzip = ''
         if item['source'].endswith('.tar') or item['format'] == '.tar':
-            gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
+            gunzip = f"| tar --warning=none -xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
         elif item['source'].endswith('.tar.gz') or item['format'] == '.tar.gz':
-            gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
+            gunzip = f"| tar --warning=none -zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
         elif item['source'].endswith('.gz') or item['format'] == '.gz':
-            gunzip = f"| zcat 2> {error_gunzip_path}"
+            gunzip = f"| zcat -q 2> {error_gunzip_path}"
         if item['selected'] and item['selected'][0].endswith('.gz'):
-            gunzip += f" | zcat 2> {error_gunzip2_path}"
+            gunzip += f" | zcat -q 2> {error_gunzip2_path}"
 
         # Build options
         options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'

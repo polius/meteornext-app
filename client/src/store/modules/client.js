@@ -48,6 +48,7 @@ const connection = () => {
     structureHeaders: { columns: [], indexes: [], fks: [], triggers: [] },
     structureItems: { columns: [], indexes: [], fks: [], triggers: [] },
     structureState: null,
+    structureQueryStopped: false,
 
     // Content
     contentColumnsName: [],

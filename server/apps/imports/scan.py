@@ -105,10 +105,10 @@ class Scan:
         # Check sources file type
         for i in sources:
             if i.endswith('.tar'):
-                tar = f'tar tv 2> {error_path}'
+                tar = f'tar --warning=none -tv 2> {error_path}'
                 break
             elif i.endswith('.tar.gz'):
-                tar = f'tar ztv 2> {error_path}'
+                tar = f'tar --warning=none -ztv 2> {error_path}'
                 break
 
         # Generate presigned-url for cloud mde

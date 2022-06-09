@@ -42,10 +42,10 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:1px; padding-right:7px;">fas fa-spinner</v-icon>
-            <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
-            <v-icon v-else-if="bottomBar.client['status']=='stopped'" title="Stopped" small style="color:#EF5354; padding-bottom:1px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
+            <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:7px;">fas fa-spinner</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-times-circle</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='stopped'" title="Stopped" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <span :title="bottomBar.client['text']">{{ bottomBar.client['text'] }}</span>
           </div>
         </v-col>
@@ -449,6 +449,7 @@ export default {
           }
           const server = this.server
           const index = this.index
+          this.clientQueryStopped = false
           this.gridApi.client.showLoadingOverlay()
           axios.post('/client/execute', payload)
             .then((response) => {
@@ -482,7 +483,7 @@ export default {
                   'button1': 'Edit row',
                   'button2': 'Discard changes'
                 }
-                this.showDialog(dialogOptions)
+                if (!this.clientQueryStopped) this.showDialog(dialogOptions)
                 // Build BottomBar
                 this.parseClientBottomBar(data, current)
                 // Import vars
@@ -1032,7 +1033,7 @@ export default {
       this.clientExecuting = 'stop'
       const payload = { connection: this.id + '-main' }
       const index = this.index
-      axios.get('/client/stop', { params: payload })
+      axios.post('/client/stop', payload)
       .finally(() => {
         let current = this.connections.find(c => c['index'] == index)
         if (current !== undefined) current.clientExecuting = null
@@ -1097,9 +1098,13 @@ export default {
               'button1': '',
               'button2': ''
             }
-            if (this.index == index) this.showDialog(dialogOptions)
+            if (this.index == index && !this.clientQueryStopped) this.showDialog(dialogOptions)
             current.clientExecuting = null
             this.gridApi.client.showNoRowsOverlay()
+            // Focus Editor
+            let cursor = this.editor.getCursorPosition()
+            this.editor.focus()
+            this.editor.moveCursorTo(cursor.row, cursor.column)
             // Add execution to history
             const history = { section: 'client', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)

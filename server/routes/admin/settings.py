@@ -154,13 +154,14 @@ class Settings:
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
 
-        # Get Files / Security / Amazon / Deployments Settings
+        # Get Files / Security / Amazon / Deployments / Advanced
         settings['files'] = settings['amazon'] = settings['deployments'] = settings['security'] = {}
         settings['amazon'] = {}
         settings['deployments'] = {}
         settings['security'] = {}
+        settings['advanced'] = {}
         for i in s:
-            if i['name'] in ['FILES', 'SECURITY', 'AMAZON', 'DEPLOYMENTS']:
+            if i['name'] in ['FILES', 'SECURITY', 'AMAZON', 'DEPLOYMENTS', 'ADVANCED']:
                 settings[i['name'].lower()] = json.loads(i['value'])
 
         # Get current Domain URL from Security
