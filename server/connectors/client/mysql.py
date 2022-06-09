@@ -31,6 +31,7 @@ class MySQL:
         self._is_executing = False
         self._is_protected = False
         self._is_transaction = False
+        self._is_timeout = False
         self._locks = []
 
     @property
@@ -165,9 +166,11 @@ class MySQL:
 
         # Start timeout manager
         t = None
-        if 'timeout_type' in self._server['sql']:
-            t = threading.Thread(target=self.__timeout_query, args=(query,))
-            t.alive = True
+        timeout_type = self._server['sql']['timeout_type'] if 'timeout_type' in self._server['sql'] else None
+        timeout_value = self._server['sql']['timeout_value'] if 'timeout_value' in self._server['sql'] else None
+        if timeout_type is not None and timeout_value is not None:
+            self._is_timeout = True
+            t = threading.Thread(target=self.__timeout_query, args=(query, timeout_type, timeout_value,))
             t.start()
 
         # Prepare the cursor
@@ -183,21 +186,19 @@ class MySQL:
             self._cursor.execute(query, args)
 
         # Expire timeout
-        if t is not None:
-            t.alive = False
+        self._is_timeout = False
 
         # Return query info
         if fetch:
             query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount}
             return query_data
 
-    def __timeout_query(self, query):
-        current_thread = threading.current_thread()
+    def __timeout_query(self, query, timeout_type, timeout_value):
         is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower() == 'select'
-        condition = self._server['sql']['timeout_type'] == 'all' or (self._server['sql']['timeout_type'] == 'select' and is_select)
+        condition = timeout_type == 'all' or (timeout_type == 'select' and is_select)
         i = 0
-        while condition and current_thread.alive:
-            if i >= self._server['sql']['timeout_value']:
+        while condition and self._is_timeout:
+            if i >= timeout_value:
                 try:
                     sql = connectors.base.Base(self._server)
                     sql.connect()
@@ -206,9 +207,13 @@ class MySQL:
                 except Exception:
                     traceback.print_exc()
                 finally:
+                    self._is_timeout = False
                     break
             time.sleep(1)
             i += 1
+
+    def stop_timeout(self):
+        self._is_timeout = False
 
     def fetch_one(self):
         if self._cursor:

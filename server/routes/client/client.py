@@ -635,7 +635,7 @@ class Client:
                 self._client.save_settings(user['id'], settings_json)
                 return jsonify({'message': 'Changes saved'}), 200
 
-        @client_blueprint.route('/client/stop', methods=['GET'])
+        @client_blueprint.route('/client/stop', methods=['POST'])
         @jwt_required()
         def client_stop_query_method():
             # Check license
@@ -649,8 +649,11 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
+            # Get Request Json
+            client_json = request.get_json()
+
             # Kill Query
-            self._connections.kill(user['id'], request.args['connection'])
+            self._connections.kill(user['id'], client_json['connection'])
             return jsonify({'message': 'Query stopped'}), 200
 
         @client_blueprint.route('/client/rights', methods=['GET'])

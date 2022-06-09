@@ -49,8 +49,11 @@ class Client:
     def kill(self, user_id, conn_id):
         try:
             connection = self._connections[int(user_id)][str(conn_id)]
+            connection.stop_timeout()
             conn = Connection(connection.server)
+            conn.connect()
             conn.kill(connection.connection_id)
+            conn.close()
         except Exception:
             pass
 
@@ -143,6 +146,9 @@ class Connection:
 
     def explain(self, query, database=None):
         return self._sql.explain(query, database)
+
+    def stop_timeout(self):
+        self._sql.stop_timeout()
 
     ####################
     # INTERNAL QUERIES #

@@ -95,6 +95,7 @@ export default {
       'structureHeaders',
       'structureItems',
       'structureState',
+      'structureQueryStopped',
       'sidebarSelected',
       'sidebarLoadingObject',
       'server',
@@ -226,6 +227,7 @@ export default {
         this.loading = true
       }
       // Execute Queries
+      this.structureQueryStopped = false
       const index = this.index
       const payload = {
         connection: this.id + '-shared',
@@ -261,8 +263,10 @@ export default {
             // Build BottomBar
             this.parseBottomBar(data, current)
             // Show error
-            this.dialogText = data[0]['error']
-            this.dialog = true
+            if (!this.structureQueryStopped) {
+              this.dialogText = data[0]['error']
+              this.dialog = true
+            }
             // Add execution to history
             const history = { section: 'structure', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
@@ -286,8 +290,9 @@ export default {
       if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toFixed(3).toString() + 's elapsed'
     },
     stopExecution(resolve, reject) {
+      this.structureQueryStopped = true
       const payload = { connection: this.id + '-shared' }
-      axios.get('/client/stop', { params: payload })
+      axios.post('/client/stop', payload)
       .then((response) => resolve(response))
       .catch((error) => reject(error))
     },

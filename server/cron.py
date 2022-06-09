@@ -7,7 +7,8 @@ import random
 import socket
 import schedule
 import threading
-import subprocess
+# import subprocess
+from signal import SIGHUP
 from datetime import datetime, timedelta
 
 import routes.deployments.deployments
@@ -34,6 +35,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
         schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
+        schedule.every().minute.at(":00").do(self.__run_threaded, self.__advanced_memory)
         schedule.every().hour.do(self.__run_threaded, self.__client_clean)
         schedule.every().day.do(self.__run_threaded, self.__check_license)
         schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
@@ -270,9 +272,8 @@ class Cron:
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
-            # Build executable path
             base_path = sys._MEIPASS if self._bin else self._app.root_path
-            path = "{}/apps/monitor/init".format(base_path) if self._bin else "python3 {}/../monitor/monitor.py".format(base_path)
+            path = f"{base_path}/apps/monitor/init" if self._bin else f"python3 {base_path}/../monitor/monitor.py"
             config_path = "/root/server.conf".format(base_path) if self._bin else "{}/server.conf".format(base_path)
 
             # Build Command
@@ -281,8 +282,7 @@ class Cron:
                 command += f" --sentry '{self._license.status['sentry']}'"
 
             # Execute Monitor
-            process = subprocess.Popen(command, shell=True)
-            process.wait()
+            os.system(command + ' &')
         finally:
             # Free lock
             self._locks['monitoring'] = False
@@ -423,3 +423,21 @@ class Cron:
         finally:
             # Free lock
             self._locks['utils_scans'] = False
+
+    def __advanced_memory(self):
+        # Check license and environment
+        if not self._license.validated or not self._bin:
+            return
+
+        # Get current day and current time
+        DAYS = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7}
+        current_day = DAYS[datetime.today().strftime('%A')]
+        current_time = datetime.utcnow().strftime('%H:%M')
+
+        # Get setting values
+        setting = self._sql.execute("SELECT value FROM settings WHERE name = 'ADVANCED'")
+        advanced = json.loads(setting[0]['value'])
+
+        # Restart worker
+        if current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
+            os.kill(os.getpid(), SIGHUP)

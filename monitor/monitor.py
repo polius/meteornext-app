@@ -1,3 +1,4 @@
+import os
 import time
 import json
 import argparse
@@ -20,12 +21,17 @@ class monitor:
     def __init__(self):
         self._args = self.__init_parser()
         self._sql = None
+        self._conf = os.path.dirname(os.path.abspath(__file__)) + '/monitor.conf'
         self.start()
 
     def start(self):
         self.__init_sentry()
-        self.__init_sql()
-        self.__start_monitor()
+        status = self.__check_start()
+        if status:
+            self.__init_sql()
+            self.__start_monitor()            
+            with open(self._conf, 'w') as fopen:
+                fopen.write('0')
 
     ####################
     # Internal Methods #
@@ -41,7 +47,20 @@ class monitor:
     def __init_sentry(self):
         if self._args.sentry:
             sentry_sdk.init(self._args.sentry, traces_sample_rate=0)
-    
+
+    def __check_start(self):        
+        if not os.path.exists(self._conf):
+            with open(self._conf, 'w') as fopen:
+                fopen.write('1')
+                return True
+        else:
+            with open(self._conf, 'r+') as fopen:
+                if fopen.read() == '0':
+                    fopen.write('1')
+                    return True
+                else:
+                    return False
+
     def __init_sql(self):
         with open(self._args.config) as fopen:
             data = json.load(fopen)
