@@ -262,7 +262,7 @@ let router = new VueRouter({
         {
           path: 'settings',
           name: 'admin.settings',
-          alias: ["/admin/settings/license", "/admin/settings/sql", "/admin/settings/files", "/admin/settings/amazon", "/admin/settings/security", "/admin/settings/advanced"],
+          alias: ["/admin/settings/license", "/admin/settings/sql", "/admin/settings/files", "/admin/settings/amazon", "/admin/settings/security"],
           component: () => import('../components/admin/views/Settings'),
           meta: { requiresAdmin: true }
         },

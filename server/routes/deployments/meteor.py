@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-import subprocess
+# import subprocess
 
 import models.admin.settings
 import models.inventory.environments
@@ -239,4 +239,5 @@ class blueprint:
 
         # Execute Meteor
         # subprocess.Popen(command, shell=True)
-        subprocess.Popen(command, stdout=subprocess.DEVNULL, shell=True)
+        # subprocess.Popen(command, stdout=subprocess.DEVNULL, shell=True)
+        os.system(command + ' &')

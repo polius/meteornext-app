@@ -1,71 +1,37 @@
-import os
 import time
 import json
-import argparse
 import calendar
 import requests
 import traceback
-import sentry_sdk
+from sentry_sdk import capture_exception, flush
 from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
 
-from connector import Connector
+import connectors.base
+import models.notifications
 
-# Execute Meteor using $ python monitor.py ...
-if __name__ == '__main__':
-    from monitor import monitor
-    monitor()
-
-class monitor:
-    def __init__(self):
-        self._args = self.__init_parser()
-        self._sql = None
-        self._conf = os.path.dirname(os.path.abspath(__file__)) + '/monitor.conf'
-        self.start()
+class Monitor:
+    def __init__(self, license, sql_config):
+        self._license = license
+        self._sql = connectors.base.Base({'sql': sql_config})
+        self._notifications = models.notifications.Notifications(self._sql)
 
     def start(self):
-        self.__init_sentry()
-        status = self.__check_start()
-        if status:
-            self.__init_sql()
-            self.__start_monitor()            
-            with open(self._conf, 'w') as fopen:
-                fopen.write('0')
+        while True:
+            try:
+                self.__start_monitor()
+            except Exception as e:
+                traceback.print_exception()
+                if self._license.status.get('sentry'):
+                    capture_exception(e)
+                    flush()
+            finally:
+                time.sleep(10)
 
     ####################
     # Internal Methods #
     ####################
-    def __init_parser(self):
-        parser = argparse.ArgumentParser(description='monitor')
-        parser.add_argument('--config', required=True, action='store', dest='config', help=argparse.SUPPRESS)
-        parser.add_argument('--resources', required=True, action='store', dest='resources', help=argparse.SUPPRESS)
-        parser.add_argument('--sentry', required=False, action='store', dest='sentry', help=argparse.SUPPRESS)
-        args = parser.parse_args()
-        return args
-
-    def __init_sentry(self):
-        if self._args.sentry:
-            sentry_sdk.init(self._args.sentry, traces_sample_rate=0)
-
-    def __check_start(self):        
-        if not os.path.exists(self._conf):
-            with open(self._conf, 'w') as fopen:
-                fopen.write('1')
-                return True
-        else:
-            with open(self._conf, 'r+') as fopen:
-                if fopen.read() == '0':
-                    fopen.write('1')
-                    return True
-                else:
-                    return False
-
-    def __init_sql(self):
-        with open(self._args.config) as fopen:
-            data = json.load(fopen)
-            self._sql = Connector({'sql': data['sql']})
-
     def __start_monitor(self):
         # Start Connection
         self._sql.connect()
@@ -111,12 +77,13 @@ class monitor:
                 try:
                     self.__monitor_server(server)
                 except Exception as e:
-                    if self._args.sentry:
-                        sentry_sdk.capture_exception(e)
-                        sentry_sdk.flush()
                     traceback.print_exc()
+                    if self._license.status.get('sentry'):
+                        capture_exception(e)
+                        flush()
 
         finally:
+            # Stop SQL Connection
             self._sql.stop()
 
     def __monitor_server(self, server):
@@ -128,7 +95,7 @@ class monitor:
                     return
 
             # Start Connection
-            conn = Connector({'ssh': server['ssh'], 'sql': server['sql']})
+            conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
             conn.connect()
 
             # Get current timestamp in utc
@@ -239,7 +206,7 @@ class monitor:
             self.__add_event(server_id=server['id'], event='unavailable', data=error)
             users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self.__add_notification(user_id=user['user_id'], notification=notification)
+                self._notifications.post(user_id=user['user_id'], notification=notification)
 
             slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
@@ -259,7 +226,7 @@ class monitor:
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self.__add_notification(user_id=user['user_id'], notification=notification)
+                self._notifications.post(user_id=user['user_id'], notification=notification)
 
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
@@ -281,7 +248,7 @@ class monitor:
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
-                self.__add_notification(user_id=user['user_id'], notification=notification)
+                self._notifications.post(user_id=user['user_id'], notification=notification)
 
             data = {'previous_uptime': info['uptime'], 'previous_start_time': info['start_time'], 'current_uptime': summary['info']['uptime'], 'current_start_time': summary['info']['start_time']}
             if slack is None:
@@ -307,7 +274,7 @@ class monitor:
                 if users is None:
                     users = self.__get_users_server(server_id=server['id'])
                 for user in users:
-                    self.__add_notification(user_id=user['user_id'], notification=notification)
+                    self._notifications.post(user_id=user['user_id'], notification=notification)
 
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
@@ -350,7 +317,7 @@ class monitor:
                 if users is None:
                     users = self.__get_users_server(server_id=server['id'])
                 for user in users:
-                    self.__add_notification(user_id=user['user_id'], notification=notification)
+                    self._notifications.post(user_id=user['user_id'], notification=notification)
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
@@ -423,7 +390,7 @@ class monitor:
             AND m.monitor_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._args.resources})
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
 
     def __get_slack_server(self, server_id):
         query = """
@@ -445,7 +412,7 @@ class monitor:
             WHERE ms.monitor_slack_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._args.resources})
+        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
 
     def __get_last_event(self, server_id):
         query = """
@@ -461,10 +428,6 @@ class monitor:
     def __add_event(self, server_id, event, data=None):
         query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`, `time`) VALUES (%s, %s, %s, %s)"
         self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
-
-    def __add_notification(self, user_id, notification):
-        query = "INSERT IGNORE INTO notifications (name, `status`, category, data, `date`, user_id, `show`) VALUES (%s, %s, %s, %s, %s, %s, 1)"
-        self._sql.execute(query, (notification['name'], notification['status'], notification['category'], notification['data'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id))
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))

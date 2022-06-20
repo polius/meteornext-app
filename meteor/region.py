@@ -18,6 +18,17 @@ class Region:
         # Get UUID from path
         self._uuid = self._args.path[self._args.path.rfind('/')+1:]
 
+    def check_glibc(self):
+        # Get glibc version
+        glibc_version = self.__ssh("ldd --version | head -1 | awk '{print $NF}'")
+        try:
+            glibc_version = float(glibc_version)
+        except Exception:
+            raise Exception("The remote SSH server does not have the glibc installed. Alpine distros are not supported.")
+        else:
+            if glibc_version < 2.17:
+                raise Exception(f"The remote SSH server must have a glibc version greater than or equal to 2.17 (current version is {glibc_version}).")
+
     def check_version(self):
         # Get SSH Version
         ssh_version = self.__ssh("cat {}/bin/version.txt".format(self._remote_path))
@@ -72,7 +83,7 @@ class Region:
     def clean(self):
         current_thread = threading.current_thread()
         try:
-            self.__ssh("rm -rf {}/deployments/{}".format(self._remote_path, self._uuid), retry=False)
+            self.__ssh("rm -rf {}/deployments/{}".format(self._remote_path, self._uuid), retries=1)
             current_thread.progress = {'region': self._region['id'], 'success': True}
         except Exception as e:
             current_thread.progress = {'region': self._region['id'], 'success': False, 'error': str(e)}
@@ -112,7 +123,7 @@ class Region:
             self.__put("{}/config.json".format(self._args.path), ".meteor/deployments/{}/config.json".format(self._uuid))
             self.__put("{}/blueprint.py".format(self._args.path), ".meteor/deployments/{}/blueprint.py".format(self._uuid))
             # Start execution
-            self.__ssh('{} --path "{}/deployments/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['id']), f"{self._args.path}'/deployments/{self._region['id']}")
+            self.__ssh('{} --path "{}/deployments/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['id']))
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
@@ -140,8 +151,7 @@ class Region:
         # Return Execution Output
         return stdout[0] if len(stdout) > 0 else ''
 
-    def __ssh(self, command, retry=True):
-        retries = 6 if retry else 1
+    def __ssh(self, command, retries=5):
         for i in range(retries):
             try:
                 # Init Paramiko SSH Connection

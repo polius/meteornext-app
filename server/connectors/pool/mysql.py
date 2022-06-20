@@ -48,7 +48,7 @@ class MySQL:
                         connection.select_db(database)
                     with connection.cursor(OrderedDictCursor) as cursor:
                         cursor.execute(query, args)
-                        result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+                        result = cursor.fetchall() if query.strip().lower().startswith(('select','show')) else cursor.lastrowid # if cursor.lastrowid is None else cursor.lastrowid
                 return result
             except Exception as e:
                 exception = e

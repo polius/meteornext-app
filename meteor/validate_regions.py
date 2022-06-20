@@ -59,44 +59,23 @@ class validate_regions:
         current_thread.progress = progress
 
     def __validate_ssh(self):
-        # Get current thread 
-        current_thread = threading.current_thread()
-
-        # Validate SSH Connection
-        error = None
-        for _ in range(2):
-            try:
-                if not current_thread.alive:
-                    break
-                # Start SSH Connection
-                pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
-                client = paramiko.SSHClient()
-                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], pkey=pkey, timeout=5)
-                client.close()
-                error = None
-            except Exception as e:
-                error = e
-
-        # Raise Exception if validation failed
-        if error:
-            raise error
+        # Validate glibc version
+        self._Region.check_glibc()
 
         # Validate SSH Meteor Version
-        if self._region['ssh']['enabled']:
-            updated = self._Region.check_version()
-            if not updated:
-                proceed = self._progress.start_region_update(self._region['id'])
-                if proceed:
-                    try:
-                        self._Region.upload_binary()
-                    finally:
-                        self._progress.finish_region_update(self._region['id'])
-                else:
-                   finished = self._progress.check_region_update(self._region['id'])
-                   while not finished:
-                       time.sleep(1)
-                       finished = self._progress.check_region_update(self._region['id'])
+        updated = self._Region.check_version()
+        if not updated:
+            proceed = self._progress.start_region_update(self._region['id'])
+            if proceed:
+                try:
+                    self._Region.upload_binary()
+                finally:
+                    self._progress.finish_region_update(self._region['id'])
+            else:
+                finished = self._progress.check_region_update(self._region['id'])
+                while not finished:
+                    time.sleep(1)
+                    finished = self._progress.check_region_update(self._region['id'])
 
     def __validate_sql(self, server):
         current_thread = threading.current_thread()

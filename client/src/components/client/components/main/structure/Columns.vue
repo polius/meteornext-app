@@ -51,9 +51,10 @@
                     <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-autocomplete v-model="dialogOptions.item.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-text-field v-model="dialogOptions.item.length" label="Length" required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.collation" :items="server.collations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-text-field :disabled="dialogOptions.item.auto_increment" v-model="dialogOptions.item.default" label="Default" required style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="dialogOptions.item.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
+                    <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(dialogOptions.item.type)" @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" label="Encoding" auto-select-first required style="padding-top:5px;"></v-autocomplete>
+                    <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(dialogOptions.item.type) || loading" :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
                     <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                     <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.auto_increment" label="Auto Increment" @change="dialogOptions.item.auto_increment ? dialogOptions.item.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
@@ -87,6 +88,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
@@ -101,6 +103,8 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      encodings: [],
+      collations: [],
       // AG Grid
       selectedRows: false,
     }
@@ -128,6 +132,7 @@ export default {
     dialog (val) {
       this.dialogOpened = val
       if (!val) return
+      this.buildSelectors()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -149,6 +154,45 @@ export default {
     },
   },
   methods: {
+    buildSelectors() {
+      // Build Encodings
+      this.encodings = [{ text: 'Default (' + this.server.defaults.encoding + ')', value: this.server.defaults.encoding }]
+      this.encodings.push({ divider: true })
+      this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
+        acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
+        return acc
+      }, []))
+      if (this.dialogOptions.item.encoding.length == 0) this.dialogOptions.item.encoding = this.encodings[0].value
+
+      // Build Collations
+      let item = (this.dialogOptions.item.encoding.length != 0) ? this.dialogOptions.item.encoding : this.server.defaults.encoding
+      this.getCollations(item)
+    },
+    getCollations(encoding) {
+      // Retrieve Databases
+      this.loading = true
+      const payload = {
+        connection: this.id + '-shared',
+        server: this.server.id, 
+        encoding: encoding
+      }
+      axios.get('/client/collations', { params: payload })
+        .then((response) => {
+          this.parseCollations(encoding, response.data.collations)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, '#EF5354')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    parseCollations(encoding, data) {
+      let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
+      this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
+      if (this.dialogOptions.item.collation.length == 0) this.dialogOptions.item.collation = this.collations[0].value
+    },
     onGridReady(params) {
       this.gridApi.structure.columns = params.api
       this.columnApi.structure.columns = params.columnApi
@@ -223,7 +267,7 @@ export default {
         icon: 'fas fa-plus',
         title: 'NEW COLUMN',
         text: '',
-        item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
+        item: { name: '', type: '', length: '', default: '', comment: '', encoding: '', collation: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
         submit: 'Confirm',
         cancel: 'Cancel'
       }
@@ -239,6 +283,7 @@ export default {
           name: data['Name'], 
           type: data['Type'], 
           length: (data['Length'] == null) ? '' : ['ENUM','SET'].includes(data['Type']) ? data['Length'].replaceAll("'",'') : data['Length'], 
+          encoding: (data['Encoding'] == null) ? '' : data['Encoding'],
           collation: (data['Collation'] == null) ? '' : data['Collation'], 
           default: (data['Default'] == null) ? '' : data['Default'], 
           comment: (data['Comment'] == null) ? '' : data['Comment'], 
@@ -274,7 +319,10 @@ export default {
 
       if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields
-        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.collation = ''
+        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.dialogOptions.item.type)) {
+          this.dialogOptions.item.encoding = ''
+          this.dialogOptions.item.collation = ''
+        }
         if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.unsigned = false
         if (!['DATETIME','TIMESTAMP'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.current_timestamp = false
         if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.auto_increment = false
@@ -292,7 +340,7 @@ export default {
         query += ' ' + this.dialogOptions.item.type 
           + (this.dialogOptions.item.length.length > 0 ? (this.dialogOptions.item.length.indexOf(',') == -1) ? '(' + this.dialogOptions.item.length + ')' : '(' + this.dialogOptions.item.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
           + (this.dialogOptions.item.unsigned ? ' UNSIGNED' : '')
-          + (this.dialogOptions.item.collation.length > 0 ? ' CHARACTER SET ' + this.dialogOptions.item.collation.split('_')[0] + ' COLLATE ' + this.dialogOptions.item.collation : '')
+          + (this.dialogOptions.item.collation.length > 0 ? ' CHARACTER SET ' + this.dialogOptions.item.encoding + ' COLLATE ' + this.dialogOptions.item.collation : '')
           + (this.dialogOptions.item.null ? ' NULL' : ' NOT NULL')
           + (this.dialogOptions.item.default.length > 0 ? " DEFAULT" + (this.dialogOptions.item.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.dialogOptions.item.default + "'") : '')
           + (this.dialogOptions.item.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
@@ -305,7 +353,7 @@ export default {
           + ' ' + event.node.data['Type'] 
           + (event.node.data['Length'] !== null ? '(' + event.node.data['Length'] + ')' : '')
           + (event.node.data['Unsigned'] ? ' UNSIGNED' : '')
-          + (event.node.data['Collation'] !== null ? ' CHARACTER SET ' + event.node.data['Collation'].split('_')[0] + ' COLLATE ' + event.node.data['Collation'] : '')
+          + (event.node.data['Collation'] !== null ? ' CHARACTER SET ' + event.node.data['Encoding'] + ' COLLATE ' + event.node.data['Collation'] : '')
           + (event.node.data['Allow NULL'] ? ' NULL' : ' NOT NULL')
           + (event.node.data['Default'] !== null ? " DEFAULT" + (event.node.data['Default'] == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + event.node.data['Default'] + "'") : '')
           + (event.node.data['Extra'].toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')

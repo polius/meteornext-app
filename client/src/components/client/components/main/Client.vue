@@ -456,7 +456,7 @@ export default {
               let current = this.connections.find(c => c['index'] == index)
               if (current === undefined) return
               this.gridApi.client.hideOverlay()
-              let data = JSON.parse(response.data.data)
+              let data = JSON2.parse(response.data.data)
               // Build BottomBar
               this.parseClientBottomBar(data, current)
               // Add execution to history
@@ -473,7 +473,7 @@ export default {
               if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
               else {
                 // Show error
-                let data = JSON.parse(error.response.data.data)
+                let data = JSON2.parse(error.response.data.data)
                 let dialogOptions = {
                   'mode': 'cellEditingError',
                   'icon': 'fas fa-exclamation-triangle',
@@ -1052,7 +1052,7 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           // Parse execution result
-          let data = JSON.parse(response.data.data)
+          let data = JSON2.parse(response.data.data)
           // Add execution to history
           const history = { section: 'client', server: server, queries: data }
           this.$store.dispatch('client/addHistory', history)
@@ -1084,7 +1084,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('client/logout').then(() => this.$store.dispatch('app/logout').then(() => this.$router.push('/login')))
           else {
             // Get Response Data
-            let data = JSON.parse(error.response.data.data)
+            let data = JSON2.parse(error.response.data.data)
             this.parseClientBottomBar(data, current)
             // Close Editor Completer
             this.editor.blur()
