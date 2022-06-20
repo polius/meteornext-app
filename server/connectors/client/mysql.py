@@ -67,7 +67,7 @@ class MySQL:
         self._server = value
 
     def connect(self):
-        retries = 1
+        retries = 2
         exception = None
         for _ in range(retries):
             # Close existing connections

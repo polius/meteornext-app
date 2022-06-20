@@ -77,8 +77,16 @@ class Scan:
 
         # Update import status
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
+        data_path = os.path.join(base_path, item['uri'], 'data.txt')
+
+        # Read data log
+        data = None
+        if os.path.exists(data_path):
+            with open(data_path, 'r') as f:
+                data = self.__parse_data(f.read())
+
         status = 'SUCCESS'
-        if os.path.exists(error_path):
+        if data is None and os.path.exists(error_path):
             with open(error_path, 'rb') as f:
                 if len(f.read().decode('utf-8','ignore').strip()) > 0:
                     status = 'FAILED'
@@ -147,17 +155,21 @@ class Scan:
             p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             progress = self.__parse_progress(p.stdout) if len(p.stdout) > 0 else None
 
+        # Read data log
+        data = None
+        if os.path.exists(data_path):
+            with open(data_path, 'r') as f:
+                data = self.__parse_data(f.read())
+
         # Read error log
         error = None
         if os.path.exists(error_path):
             with open(error_path, 'rb') as f:
                 error = self.__parse_error(f.read().decode('utf-8','ignore'))
 
-        # Read data log
-        data = None
-        if os.path.exists(data_path):
-            with open(data_path, 'r') as f:
-                data = self.__parse_data(f.read())
+        # Suppress warnings if data is not empty
+        if data is not None:
+            error = None
 
         # Update import with progress file
         query = """

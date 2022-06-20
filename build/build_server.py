@@ -19,17 +19,12 @@ class build_server:
 
         if len(sys.argv) == 1:
             subprocess.call("python3 build_server.py build_ext meteor", shell=True)
-            subprocess.call("python3 build_server.py build_ext monitor", shell=True)
             subprocess.call("python3 build_server.py build_ext server", shell=True)
 
         elif 'meteor' in sys.argv:
             sys.argv.append("build_ext")
             sys.argv.remove("meteor")
             self.__build_meteor()
-        elif 'monitor' in sys.argv:
-            sys.argv.append("build_ext")
-            sys.argv.remove("monitor")
-            self.__build_monitor()
         elif 'server' in sys.argv:
             sys.argv.append("build_ext")
             sys.argv.remove("server")
@@ -58,22 +53,10 @@ class build_server:
         # Start Build
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
-    def __build_monitor(self):
-        # Build Monitoring App
-        build_path = "{}/monitor".format(self._pwd)
-        additional_files = []
-        additional_binaries = []
-        hidden_imports = ['json', 'pymysql', 'paramiko', 'requests', 'sshtunnel', 'sentry_sdk', 'statistics']
-        binary_name = 'monitor'
-        binary_path = '{}/server/apps'.format(self._pwd)
-
-        # Start Build
-        self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
-
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
-        additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz', 'apps/monitor.tar.gz']
+        additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
         hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse']
         additional_binaries = []
         binary_name = 'server'
@@ -153,37 +136,33 @@ class build_server:
         init_file = "{}/init.py".format(cythonized)
         with open(init_file, 'w') as file_open:
             if binary_name == 'server':
-                file_open.write("""# -*- coding: utf-8 -*-
-from gevent import monkey
+                file_open.write("""from gevent import monkey
 monkey.patch_all()
-from gunicorn.app.base import Application, Config
+import gunicorn.app.base
 import os
 import sys
-import json
 import tarfile
-import gunicorn
 from gunicorn import glogging
 from gunicorn.workers import ggevent
 from app import app
-class GUnicornFlaskApplication(Application):
-    def __init__(self, app):
-        self.usage, self.callable, self.prog, self.app = None, None, None, app
-    def run(self, **options):
-        self.cfg = Config()
-        [self.cfg.set(key, value) for key, value in options.items()]
-        return Application.run(self)
-    load = lambda self:self.app
+class StandaloneApplication(gunicorn.app.base.BaseApplication):
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+    def load_config(self):
+        config = {key: value for key, value in self.options.items()
+                  if key in self.cfg.settings and value is not None}
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+    def load(self):
+        return self.application
 if __name__ == "__main__":
     # Extract Meteor
     with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
-    # Extract Monitor
-    with tarfile.open("{}/apps/monitor.tar.gz".format(sys._MEIPASS)) as tar:
-        tar.extractall(path="{}/apps/monitor/".format(sys._MEIPASS))
-    os.remove("{}/apps/monitor.tar.gz".format(sys._MEIPASS))
     # Init Gunicorn App
-    gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log', timeout=3600)""")
+    StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "error.log", "timeout": 3600}).run()""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
@@ -233,8 +212,8 @@ if __name__ == "__main__":
         # 13) Rename pyinstaller file
         os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
 
-        # 14) Compress Meteor & Monitor
-        if binary_name in ['meteor','monitor']:
+        # 14) Compress Meteor
+        if binary_name in ['meteor']:
             shutil.make_archive('{}/{}'.format(binary_path, binary_name), 'gztar', '{}/{}'.format(binary_path, binary_name))
             shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
 

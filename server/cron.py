@@ -1,5 +1,5 @@
 import os
-import sys
+# import sys
 import json
 import time
 import uuid
@@ -7,12 +7,12 @@ import random
 import socket
 import schedule
 import threading
-# import subprocess
-from signal import SIGHUP
+from multiprocessing import Process
 from datetime import datetime, timedelta
 
 import routes.deployments.deployments
 import routes.utils.utils
+import apps.monitor.monitor
 import apps.imports.scan
 
 class Cron:
@@ -23,25 +23,24 @@ class Cron:
         self._node = str(uuid.uuid4())
         self._locks = {"executions": False, "deployments_monitor": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
         self._current_pid = os.getpid()
-        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-        self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
         self.__start()
 
     def __start(self):
+        # One Time Tasks
+        # self.__run_threaded(self.__monitoring)
         # Scheduled Tasks
         schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
         schedule.every(10).seconds.do(self.__run_threaded, self.__deployments_monitor)
         schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
-        schedule.every(30).seconds.do(self.__run_threaded, self.__check_nodes)
-        schedule.every().minute.at(":00").do(self.__run_threaded, self.__advanced_memory)
+        schedule.every(10).seconds.do(self.__run_threaded, self.__check_nodes)
         schedule.every().hour.do(self.__run_threaded, self.__client_clean)
+        schedule.every().hour.do(self.__run_threaded, self.__monitoring_clean)
+        schedule.every().hour.do(self.__run_threaded, self.__import_clean)
+        schedule.every().hour.do(self.__run_threaded, self.__logs)
         schedule.every().day.do(self.__run_threaded, self.__check_license)
         schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
-        schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
-        schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
-        schedule.every().day.at("00:00").do(self.__run_threaded, self.__import_clean)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
@@ -76,7 +75,7 @@ class Cron:
             except Exception:
                 ip = None
             now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-            last_minute = (datetime.utcnow() - timedelta(seconds = 60)).strftime("%Y-%m-%d %H:%M:%S")
+            last_minute = (datetime.utcnow() - timedelta(seconds = 30)).strftime("%Y-%m-%d %H:%M:%S")
             cursor.execute("SELECT * FROM nodes FOR UPDATE")
             nodes = cursor.fetchall()
             if len(nodes) == 0:
@@ -272,17 +271,24 @@ class Cron:
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
-            base_path = sys._MEIPASS if self._bin else self._app.root_path
-            path = f"{base_path}/apps/monitor/init" if self._bin else f"python3 {base_path}/../monitor/monitor.py"
-            config_path = "/root/server.conf".format(base_path) if self._bin else "{}/server.conf".format(base_path)
+            # Start monitoring servers
+            monitoring = apps.monitor.monitor.Monitor(self._license, self._sql.config)
+            p = threading.Thread(target=monitoring.start)
+            p.daemon = True
+            p.start()
+            p.join()
+
+            # base_path = sys._MEIPASS if self._bin else self._app.root_path
+            # path = f"{base_path}/apps/monitor/init" if self._bin else f"python3 {base_path}/../monitor/monitor.py"
+            # config_path = "/root/server.conf".format(base_path) if self._bin else "{}/server.conf".format(base_path)
 
             # Build Command
-            command = f"{path} --conf '{config_path}' --resources '{self._license.resources}'"
-            if self._license.status['sentry']:
-                command += f" --sentry '{self._license.status['sentry']}'"
+            # command = f"{path} --conf '{config_path}' --resources '{self._license.resources}'"
+            # if self._license.status['sentry']:
+            #     command += f" --sentry '{self._license.status['sentry']}'"
 
             # Execute Monitor
-            os.system(command + ' &')
+            # os.system(command + ' &')
         finally:
             # Free lock
             self._locks['monitoring'] = False
@@ -423,21 +429,3 @@ class Cron:
         finally:
             # Free lock
             self._locks['utils_scans'] = False
-
-    def __advanced_memory(self):
-        # Check license and environment
-        if not self._license.validated or not self._bin:
-            return
-
-        # Get current day and current time
-        DAYS = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7}
-        current_day = DAYS[datetime.today().strftime('%A')]
-        current_time = datetime.utcnow().strftime('%H:%M')
-
-        # Get setting values
-        setting = self._sql.execute("SELECT value FROM settings WHERE name = 'ADVANCED'")
-        advanced = json.loads(setting[0]['value'])
-
-        # Restart worker
-        if current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
-            os.kill(os.getpid(), SIGHUP)

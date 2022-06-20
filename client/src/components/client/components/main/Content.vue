@@ -472,7 +472,7 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(JSON.parse(response.data.data))
+          this.parseContentExecution(JSON2.parse(response.data.data))
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()
@@ -648,7 +648,7 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           // Get Response Data
-          let data = JSON.parse(response.data.data)
+          let data = JSON2.parse(response.data.data)
           // Remove Frontend Rows
           this.gridApi.content.applyTransaction({ remove: this.gridApi.content.getSelectedRows() })
           // Build BottomBar
@@ -664,7 +664,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
-            let data = JSON.parse(error.response.data.data)
+            let data = JSON2.parse(error.response.data.data)
             let dialogOptions = {
               'mode': 'info',
               'icon': 'fas fa-exclamation-triangle',
@@ -782,11 +782,13 @@ export default {
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()
-            let data = JSON.parse(response.data.data)
+            let data = JSON2.parse(response.data.data)
             // Build BottomBar
             this.parseContentBottomBar(data)
             // Check AUTO_INCREMENTs
-            if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0) node.setDataValue(this.contentPks[0], data[0].lastRowId)
+            if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0 && data[0].lastRowId != 0) {
+              node.setDataValue(this.contentPks[0], data[0].lastRowId)
+            }
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
@@ -800,7 +802,7 @@ export default {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
               // Show error
-              let data = JSON.parse(error.response.data.data)
+              let data = JSON2.parse(error.response.data.data)
               let dialogOptions = {
                 'mode': 'cellEditingError',
                 'icon': 'fas fa-exclamation-triangle',
@@ -906,7 +908,7 @@ export default {
       const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
-          let data = JSON.parse(response.data.data)
+          let data = JSON2.parse(response.data.data)
           // Add execution to history
           const history = { section: 'content', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
@@ -919,7 +921,7 @@ export default {
           else {
             this.gridApi.content.hideOverlay()
             // Show error
-            let data = JSON.parse(error.response.data.data)
+            let data = JSON2.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 

@@ -120,7 +120,7 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
@@ -130,7 +130,7 @@ class Client:
                 return jsonify({"message": 'This server is disabled'}), 400
 
             try:
-                # Open a server connection
+                # Get Server Connection
                 conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
                 # Get Databases
@@ -143,9 +143,8 @@ class Client:
                     "collation": conn.get_default_collation()
                 }
                 return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
-
             except Exception as e:
-                return jsonify({"message": str(e)}), 500
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required()
@@ -161,13 +160,15 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
+            # Get Server Connection
             try:
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
                 # Get Database Objects
                 if 'detailed' in request.args:
                     tables = conn.get_table_info(db=request.args['database'])
@@ -201,15 +202,20 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Get Server Variables
-            variables = conn.get_server_variables()
-            return jsonify({'variables': variables}), 200
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Get Server Variables
+                variables = conn.get_server_variables()
+                return jsonify({'variables': variables}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/execute', methods=['POST'])
         @jwt_required()
@@ -241,8 +247,8 @@ class Client:
                 cred['sql']['timeout_type'] = 'select' if group['client_limits_timeout_mode'] == 2 else 'all'
                 cred['sql']['timeout_value'] = group['client_limits_timeout_value']
 
-            # Get Connection
             try:
+                # Get Server Connection
                 conn = self._connections.connect(user['id'], client_json['connection'], cred)
             except Exception as e:
                 database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
@@ -305,14 +311,19 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Retrieve Processlist
-            return jsonify({'processlist': conn.get_processlist()}), 200
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Retrieve Processlist
+                return jsonify({'processlist': conn.get_processlist()}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/explain', methods=['GET'])
         @jwt_required()
@@ -328,11 +339,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             # Explain Query
             database = request.args['database'] if 'database' in request.args else None
@@ -355,18 +371,23 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Get Structure
-            columns = conn.get_columns(db=request.args['database'], table=request.args['table'])
-            indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
-            fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
-            triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
-            return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Get Structure
+                columns = conn.get_columns(db=request.args['database'], table=request.args['table'])
+                indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
+                fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
+                triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
+                return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/structure/columns', methods=['GET'])
         @jwt_required()
@@ -382,15 +403,20 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Get Columns
-            columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
-            return jsonify({'columns': self.__json(columns)}), 200
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Get Columns
+                columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
+                return jsonify({'columns': self.__json(columns)}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/info', methods=['GET'])
         @jwt_required()
@@ -406,11 +432,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             # Get Info
             if request.args['object'] == 'table':
@@ -471,15 +502,20 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Get Collations
-            collations = conn.get_collations(encoding=request.args['encoding'])
-            return jsonify({'collations': self.__json(collations)}), 200
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+                # Get Collations
+                collations = conn.get_collations(encoding=request.args['encoding'])
+                return jsonify({'collations': self.__json(collations)}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/import', methods=['POST'])
         @jwt_required()
@@ -495,11 +531,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.form['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.form['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.form['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
             
             # Get uploaded file
             if 'file' not in request.files or request.files['file'].filename == '':
@@ -532,11 +573,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             try:
                 options = json.loads(request.args['options'])
@@ -566,11 +612,16 @@ class Client:
             # Get Request Json
             client_json = request.get_json()
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], client_json['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], client_json['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             # Start clone
             try:
@@ -670,11 +721,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             # Get Rights
             if 'host' not in request.args and 'user' not in request.args:
@@ -742,11 +798,16 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Server Credentials + Connection
+            # Get Server Credentials
             cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
-            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            try:
+                # Get Server Connection
+                conn = self._connections.connect(user['id'], request.args['connection'], cred)
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
             # Get Table PKs
             pks = conn.get_table_pks(database=request.args['database'], table=request.args['table'])
