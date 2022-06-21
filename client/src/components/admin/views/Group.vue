@@ -87,20 +87,20 @@
                     <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Coins per execution</b>: Required coins needed to perform a deployment.
+                    <b>Coins per Deployment</b>: Required coins needed to perform a deployment.
                     <br>
-                    <b>Execution Threads</b>: Maximum number of spawned threads per server.
+                    <b>Concurrent Deployments</b>: Maximum concurrent deployments across all users in the group.
                     <br>
-                    <b>Execution Timeout</b>: Maximum execution time per query (in seconds).
+                    <b>Execution Threads</b>: This option is used to increase the parallelization factor and therefore reduce the execution time needed to finish a deployment.
                     <br>
-                    <b>Concurrent Executions</b>: Maximum concurrent executions across all users in the group.
+                    <b>Execution Timeout</b>: Maximum execution time per query (in seconds). This field is optional and can be left blank.
                   </span>
                 </v-tooltip>
                 </div>
-                <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_coins" label="Coins per Deployment" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Deployments" :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_timeout" label="Execution Timeout" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   RETENTION
                 <v-tooltip right>
@@ -108,7 +108,7 @@
                     <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Expiration Time</b>: The amount of time that have to pass before deleting old deployments.
+                    <b>Expiration Time</b>: The amount of time that has to pass before deleting old deployments. This option does not apply when the Amazon S3 storage is enabled.
                   </span>
                 </v-tooltip>
                 </div>
@@ -161,17 +161,17 @@
                       <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
-                      <b>Coins per execution</b>: Required coins needed to perform Imports, Exports and Clones.
-                      <br>
-                      <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
+                      <b>Coins per Execution</b>: Required coins needed to perform Imports, Exports and Clones.
                       <br>
                       <b>Concurrent Executions</b>: Maximum concurrent executions (Imports, Exports, Clones) across all users in the group.
+                      <br>
+                      <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
                     </span>
                   </v-tooltip>
                 </div>
-                <v-text-field v-model="group.utils_coins" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:10px" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_coins" label="Coins per Execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:10px" hide-details></v-text-field>
+                <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
                 <v-text-field v-model="group.utils_limit" label="Maximum Size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:10px" hide-details></v-text-field>
-                <v-text-field v-model="group.utils_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:10px" hide-details></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px">
                   SLACK
                   <v-tooltip right>
@@ -318,10 +318,10 @@ export default {
       deployments_enabled: false,
       deployments_basic: false,
       deployments_pro: false,
-      coins_execution: 10,
+      deployments_coins: 10,
+      deployments_execution_concurrent: 1,
       deployments_execution_threads: 10,
       deployments_execution_timeout: null,
-      deployments_execution_concurrent: null,
       deployments_expiration_days: 0,
       deployments_slack_enabled: false,
       deployments_slack_name: '',
@@ -330,8 +330,8 @@ export default {
       monitoring_interval: 10,
       utils_enabled: false,
       utils_coins: 10,
+      utils_concurrent: 1,
       utils_limit: null,
-      utils_concurrent: null,
       utils_export_limit: null,
       utils_slack_enabled: false,
       utils_slack_name: '',
@@ -419,9 +419,7 @@ export default {
       }
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
-      if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       if (!this.group.utils_limit) this.group.utils_limit = null
-      if (!this.group.utils_concurrent) this.group.utils_concurrent = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Add group to the DB
       const payload = {
@@ -451,9 +449,7 @@ export default {
       }
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
-      if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       if (!this.group.utils_limit) this.group.utils_limit = null
-      if (!this.group.utils_concurrent) this.group.utils_concurrent = null
       if (!this.group.utils_export_limit) this.group.utils_export_limit = null
       // Edit group to the DB
       const payload = {

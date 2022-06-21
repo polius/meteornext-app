@@ -9,7 +9,7 @@ from flask_jwt_extended import (JWTManager, jwt_required)
 import routes.setup
 
 # App Version
-version = '1.00-beta.30'
+version = '1.00-beta.31'
 
 # Instantiate Flask App
 app = Flask(__name__)

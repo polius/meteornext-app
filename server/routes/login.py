@@ -112,16 +112,16 @@ class Login:
                 'coins': user['coins'],
                 'admin': 1 if user['admin'] and valid_url else 0,
                 'owner': user['owner'],
+                'coins_day': user['coins_day'],
                 'inventory_enabled': user['inventory_enabled'],
                 'deployments_enabled': user['deployments_enabled'],
                 'deployments_basic': user['deployments_basic'],
                 'deployments_pro': user['deployments_pro'],
+                'deployments_coins': user['deployments_coins'],
                 'monitoring_enabled': user['monitoring_enabled'],
                 'utils_enabled': user['utils_enabled'],
-                'client_enabled': user['client_enabled'],
-                'coins_execution': user['coins_execution'],
                 'utils_coins': user['utils_coins'],
-                'coins_day': user['coins_day']
+                'client_enabled': user['client_enabled']
             }
             resp = jsonify({'data': data})
             set_access_cookies(resp, access_token, 12*60*60)

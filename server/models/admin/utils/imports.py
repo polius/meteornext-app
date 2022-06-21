@@ -3,7 +3,7 @@ class Imports:
         self._sql = sql
 
     def get(self, rfilter=None, rsort=None):
-        user = mode = size = server = database = status = started_from = started_to = ended_from = ended_to = ''
+        user = mode = size = server = database = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
         deleted = 'AND i.deleted = 0'
         args = {}
         sort_column = 'i.id'
@@ -34,6 +34,12 @@ class Imports:
                 status = 'AND i.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(rfilter['status']))])
                 for i,v in enumerate(rfilter['status']):
                     args[f'status{i}'] = v
+            if 'createdFrom' in rfilter and len(rfilter['createdFrom']) > 0:
+                created_from = 'AND i.created >= %(created_from)s'
+                args['created_from'] = rfilter['createdFrom']
+            if 'createdTo' in rfilter and len(rfilter['createdTo']) > 0:
+                created_to = 'AND i.created <= %(created_to)s'
+                args['created_to'] = rfilter['createdTo']
             if 'startedFrom' in rfilter and len(rfilter['startedFrom']) > 0:
                 started_from = 'AND i.started >= %(started_from)s'
                 args['started_from'] = rfilter['startedFrom']
@@ -55,15 +61,34 @@ class Imports:
             sort_order = 'DESC' if rsort['desc'] else 'ASC'
 
         query = """
-                SELECT i.id, i.mode, i.source, i.size, i.server_id, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', i.database, i.uri, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.user_id, u.username, i.deleted
+                SELECT i.id, i.mode, i.source, i.size, i.server_id, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', i.database, i.uri, i.status, i.created, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.user_id, u.username, i.deleted, q.queue
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 JOIN users u ON u.id = i.user_id
+                LEFT JOIN
+                (
+                    SELECT (@cnt := @cnt + 1) AS queue, source_id, source_type
+                    FROM (
+                        SELECT i.id AS 'source_id', 'import' AS 'source_type', i.created
+                        FROM imports i
+                        WHERE i.status = 'QUEUED'
+                        UNION ALL
+                        SELECT e.id AS 'source_id', 'export' AS 'source_type', e.created
+                        FROM exports e
+                        WHERE e.status = 'QUEUED'
+                        UNION ALL
+                        SELECT c.id AS 'source_id', 'clone' AS 'source_type', c.created
+                        FROM clones c
+                        WHERE c.status = 'QUEUED'
+                        ORDER BY created
+                    ) t
+                    JOIN (SELECT @cnt := 0) cnt
+                ) q ON q.source_id = i.id AND q.source_type = 'import'
                 WHERE 1=1
-                {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}
-                ORDER BY {11} {12}
+                {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
+                ORDER BY {13} {14}
                 LIMIT 1000
-        """.format(user, mode, size, server, database, status, started_from, started_to, ended_from, ended_to, deleted, sort_column, sort_order)
+        """.format(user, mode, size, server, database, status, created_from, created_to, started_from, started_to, ended_from, ended_to, deleted, sort_column, sort_order)
         return self._sql.execute(query, args)
 
     def get_users_list(self):

@@ -3,7 +3,7 @@ class Clones:
         self._sql = sql
 
     def get(self, efilter=None, esort=None):
-        user = mode = size = source_server = source_database = destination_server = destination_database = status = started_from = started_to = ended_from = ended_to = ''
+        user = mode = size = source_server = source_database = destination_server = destination_database = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
         deleted = 'AND c.deleted = 0'
         args = {}
         sort_column = 'c.id'
@@ -40,6 +40,12 @@ class Clones:
                 status = 'AND c.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(efilter['status']))])
                 for i,v in enumerate(efilter['status']):
                     args[f'status{i}'] = v
+            if 'createdFrom' in efilter and len(efilter['createdFrom']) > 0:
+                created_from = 'AND c.created >= %(created_from)s'
+                args['created_from'] = efilter['createdFrom']
+            if 'createdTo' in efilter and len(efilter['createdTo']) > 0:
+                created_to = 'AND c.created <= %(created_to)s'
+                args['created_to'] = efilter['createdTo']
             if 'startedFrom' in efilter and len(efilter['startedFrom']) > 0:
                 started_from = 'AND c.started >= %(started_from)s'
                 args['started_from'] = efilter['startedFrom']
@@ -61,16 +67,35 @@ class Clones:
             sort_order = 'DESC' if esort['desc'] else 'ASC'
 
         query = """
-            SELECT c.id, c.mode, c.source_server, c.source_database, c.destination_server, c.destination_database, c.size, c.uri, c.status, c.started, c.ended, c.deleted, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall', u.username
+            SELECT c.id, c.mode, c.source_server, c.source_database, c.destination_server, c.destination_database, c.size, c.uri, c.status, c.created, c.started, c.ended, c.deleted, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall', u.username, q.queue
             FROM clones c
             JOIN servers s ON s.id = c.source_server
             JOIN servers s2 ON s2.id = c.destination_server
             JOIN users u ON u.id = c.user_id
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, source_id, source_type
+                FROM (
+                    SELECT i.id AS 'source_id', 'import' AS 'source_type', i.created
+                    FROM imports i
+                    WHERE i.status = 'QUEUED'
+                    UNION ALL
+                    SELECT e.id AS 'source_id', 'export' AS 'source_type', e.created
+                    FROM exports e
+                    WHERE e.status = 'QUEUED'
+                    UNION ALL
+                    SELECT c.id AS 'source_id', 'clone' AS 'source_type', c.created
+                    FROM clones c
+                    WHERE c.status = 'QUEUED'
+                    ORDER BY created
+                ) t
+                JOIN (SELECT @cnt := 0) cnt
+            ) q ON q.source_id = c.id AND q.source_type = 'clone'
             WHERE 1=1
-            {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
-            ORDER BY {13} {14}
+            {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14}
+            ORDER BY {15} {16}
             LIMIT 1000
-        """.format(user, mode, size, source_server, source_database, destination_server, destination_database, status, started_from, started_to, ended_from, ended_to, deleted, sort_column, sort_order)
+        """.format(user, mode, size, source_server, source_database, destination_server, destination_database, status, created_from, created_to, started_from, started_to, ended_from, ended_to, deleted, sort_column, sort_order)
         return self._sql.execute(query, args)
 
     def get_users_list(self):
