@@ -101,6 +101,7 @@
                   <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created" value="created" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
@@ -133,6 +134,7 @@ export default {
       { text: 'Database', align: 'left', value: 'database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
+      { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
@@ -146,7 +148,7 @@ export default {
     deleteDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['mode','server_id','database','size','status','started','ended','overall'],
+    columns: ['mode','server_id','database','size','status','created','started','ended','overall'],
     columnsRaw: [],
   }),
   created() {
@@ -217,6 +219,7 @@ export default {
           (x.server_name != null && x.server_name.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
@@ -243,7 +246,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['mode','server_id','database','size','status','started','ended','overall']
+      this.columnsRaw = ['mode','server_id','database','size','status','created','started','ended','overall']
     },
     deselectAllColumns() {
       this.columnsRaw = []

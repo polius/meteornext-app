@@ -37,7 +37,9 @@
           {{ formatBytes(item.size) }}
         </template>
         <template v-slot:[`item.status`]="{ item }">
-          <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-if="item.status == 'QUEUED'" :title="`Queued: ${item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
@@ -73,6 +75,7 @@
                   <v-checkbox v-model="columnsRaw" label="Destination Database" value="destination_database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created" value="created" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
@@ -243,6 +246,18 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.createdFrom" label="Created - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('createdFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.createdTo" label="Created - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('createdTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.startedFrom" label="Started - From" style="padding-top:0px" hide-details>
                         <template v-slot:append><v-icon @click="dateTimeDialogOpen('startedFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
@@ -303,6 +318,7 @@ export default {
       { text: 'D.Database', align: 'left', value: 'destination_database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
+      { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' },
@@ -344,7 +360,7 @@ export default {
 
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['username','mode','source_server','source_database','destination_server','destination_database','status','started','ended','overall'],
+    columns: ['username','mode','source_server','source_database','destination_server','destination_database','status','created','started','ended','overall'],
     columnsRaw: [],
   }),
   props: ['active','search'],
@@ -383,7 +399,7 @@ export default {
       let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filterApplied) {
         this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
-        for (let i of ['startedFrom','startedTo','endedFrom','endedTo']) {
+        for (let i of ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
       }
@@ -453,7 +469,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['username','mode','source','size','source_server','source_database','destination_server','destination_database','status','started','ended','overall','deleted']
+      this.columnsRaw = ['username','mode','source','size','source_server','source_database','destination_server','destination_database','status','created','started','ended','overall','deleted']
     },
     deselectAllColumns() {
       this.columnsRaw = []
@@ -479,6 +495,7 @@ export default {
           (x.destination_server_name != null && x.destination_server_name.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.destination_database != null && x.destination_database.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))

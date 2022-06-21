@@ -23,7 +23,7 @@ class Executions_Queued:
 
     def getNext(self):
         query = """
-            SELECT e.id, e.status, g.id AS 'group', COALESCE(g.deployments_execution_concurrent,100) AS 'concurrent'
+            SELECT e.id, e.status, g.id AS 'group', g.deployments_execution_concurrent AS 'concurrent'
             FROM executions e
             JOIN executions_queued q ON q.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id

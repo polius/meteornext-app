@@ -130,7 +130,7 @@
                 </div>
                 <div class="text-h5 white--text" style="margin:20px; text-align:center; font-weight:400;">{{ coins + ' Coins' }}</div>
                 <v-divider></v-divider>
-                <div class="text-subtitle-1" style="text-align:center; margin-top:15px; font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
+                <div class="text-subtitle-1" style="text-align:center; margin-top:15px; font-weight:400">{{ "1 Deployment = " + this.deployments_coins + " Coins" }}</div>
                 <div class="text-subtitle-1" style="text-align:center; margin-top:10px; margin-bottom:5px; font-weight:400">{{ "1 Import / Export / Clone = " + this.utils_coins + " Coins" }}</div>
               </v-flex>
             </v-layout>
@@ -214,14 +214,14 @@ export default {
     isLoggedIn: function() { return this.$store.getters['app/isLoggedIn'] },
     admin: function() { return this.$store.getters['app/admin'] == 0 ? false : this.$store.getters['app/admin'] },
     coins: function() { return this.$store.getters['app/coins'] },
+    coins_day: function() { return this.$store.getters['app/coins_day'] },
     inventory_enabled: function() { return this.$store.getters['app/inventory_enabled'] },
     deployments_enabled: function() { return this.$store.getters['app/deployments_enabled'] },
     monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
     utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
     client_enabled: function() { return this.$store.getters['app/client_enabled'] },
-    coins_execution: function() { return this.$store.getters['app/coins_execution'] },
+    deployments_coins: function() { return this.$store.getters['app/deployments_coins'] },
     utils_coins: function() { return this.$store.getters['app/utils_coins'] },
-    coins_day: function() { return this.$store.getters['app/coins_day'] },
   },
   created() {
     this.getNotifications(true)

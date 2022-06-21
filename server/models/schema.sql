@@ -11,22 +11,23 @@ CREATE TABLE `settings` (
 INSERT INTO settings (`id`, `name`, `value`) VALUES 
 (1, 'FILES', '{"path":""}'),
 (2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}'),
-(3, 'AMAZON', '{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}');
+(3, 'AMAZON', '{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}'),
+(4, 'ADVANCED', '{"memory_enabled":true,"memory_time":"00:00","memory_days":[1,2,3,4,5,6,7]}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) NOT NULL,
-  `description` text,
+  `description` TEXT,
   `coins_day` INT UNSIGNED NOT NULL DEFAULT '25',
   `coins_max` INT UNSIGNED NOT NULL DEFAULT '100',
-  `coins_execution` INT UNSIGNED NOT NULL DEFAULT '10',
   `inventory_enabled` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
   `deployments_enabled` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
   `deployments_basic` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
   `deployments_pro` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
+  `deployments_coins` INT UNSIGNED NOT NULL DEFAULT '10',
+  `deployments_execution_concurrent` INT UNSIGNED NOT NULL DEFAULT '1',
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
   `deployments_execution_timeout` INT UNSIGNED NULL,
-  `deployments_execution_concurrent` INT UNSIGNED NULL,
   `deployments_expiration_days` INT UNSIGNED NOT NULL DEFAULT '0',
   `deployments_slack_enabled` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   `deployments_slack_name` VARCHAR(191) NULL,
@@ -35,8 +36,8 @@ CREATE TABLE `groups` (
   `monitoring_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `utils_enabled` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
   `utils_coins` INT UNSIGNED NOT NULL DEFAULT '10',
+  `utils_concurrent` INT UNSIGNED NOT NULL DEFAULT '1',
   `utils_limit` BIGINT UNSIGNED NULL,
-  `utils_concurrent` INT UNSIGNED NULL,
   `utils_slack_enabled` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   `utils_slack_name` VARCHAR(191) NULL,
   `utils_slack_url` VARCHAR(191) NULL,

@@ -324,7 +324,7 @@ class Deployments:
                 continue
 
             # Check coins
-            if (execution['user_coins'] - execution['coins_execution']) < 0:
+            if (execution['user_coins'] - execution['deployments_coins']) < 0:
                 notification = {'category': 'deployment', 'data': '{{"id": "{}"}}'.format(execution['uri']), 'status': 'ERROR', 'name': 'Cannot schedule a new recurring execution. Insufficient Coins.'}
                 self._notifications.post(execution['user_id'], notification)
                 self._executions_scheduled.delete(execution['execution_id'])
@@ -336,7 +336,7 @@ class Deployments:
             execution['status'] = 'SCHEDULED'
 
             # Consume coins
-            self._users.consume_coins({"username": execution['username']}, execution['coins_execution'])
+            self._users.consume_coins({"username": execution['username']}, execution['deployments_coins'])
 
             # Create a new scheduled execution
             execution['uri'] = str(uuid.uuid4())
@@ -453,7 +453,7 @@ class Deployments:
 
         # Check Coins
         group = self._groups.get(group_id=user['group_id'])[0]
-        if (user['coins'] - group['coins_execution']) < 0:
+        if (user['coins'] - group['deployments_coins']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
         # Check environment exists
@@ -498,7 +498,7 @@ class Deployments:
             execution['scheduled'] = None
             execution['start_execution'] = data['start_execution']
             if execution['start_execution']:
-                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+                execution['status'] = 'QUEUED'
             else:
                 execution['status'] = 'CREATED'
 
@@ -517,40 +517,12 @@ class Deployments:
             self._executions_scheduled.delete(execution_id)
 
         # Consume Coins
-        self._users.consume_coins(user, group['coins_execution'])
+        self._users.consume_coins(user, group['deployments_coins'])
 
         # Build Response Data
-        response = {'uri': execution['uri'], 'coins': user['coins'] - group['coins_execution'] }
+        response = {'uri': execution['uri'], 'coins': user['coins'] - group['deployments_coins'] }
 
-        if execution['start_execution'] and not group['deployments_execution_concurrent']:
-            # Get Deployment Details
-            deployment = self._deployments.get(user_id=user['id'], deployment_id=execution['deployment_id'])[0]
-
-            # Build Meteor Execution
-            meteor = {
-                'id': execution_id,
-                'name': deployment['name'],
-                'release': deployment['release'],
-                'user_id': user['id'],
-                'username': user['username'],
-                'group_id': group['id'],
-                'environment_id': environment['id'],
-                'environment_name': environment['name'],
-                'mode': execution['mode'],
-                'method': execution['method'],
-                'queries': execution['queries'],
-                'databases': execution['databases'],
-                'code': execution['code'],
-                'url': execution['url'],
-                'uri': execution['uri'],
-                'execution_threads': group['deployments_execution_threads'],
-                'execution_timeout': group['deployments_execution_timeout']
-            }
-
-            # Start Meteor Execution
-            self._meteor.execute(meteor)
-            return jsonify({'message': 'Deployment launched', 'data': response}), 200
-
+        # Return Response
         return jsonify({'message': 'Deployment created', 'data': response}), 200
 
     def __put(self, user):
@@ -646,7 +618,7 @@ class Deployments:
             execution['scheduled'] = None
             execution['start_execution'] = data['start_execution']
             if execution['start_execution']:
-                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+                execution['status'] = 'QUEUED'
             else:
                 execution['status'] = 'CREATED'
 
@@ -658,7 +630,7 @@ class Deployments:
         # Create a new execution
         else:
             # Check Coins
-            if (user['coins'] - group['coins_execution']) < 0:
+            if (user['coins'] - group['deployments_coins']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
             # Create a new Deployment
@@ -667,8 +639,8 @@ class Deployments:
             execution_id = self._executions.post(user['id'], execution)
 
             # Consume Coins
-            self._users.consume_coins(user, group['coins_execution'])
-            coins = user['coins'] - group['coins_execution']
+            self._users.consume_coins(user, group['deployments_coins'])
+            coins = user['coins'] - group['deployments_coins']
 
         # Add Schedule to the current execution
         if execution['scheduled'] and data['schedule_type'] in ['daily','weekly','monthly']:
@@ -686,35 +658,7 @@ class Deployments:
         # Build Response Data
         response = { 'uri': execution['uri'], 'coins': coins }
 
-        if execution['start_execution'] and not group['deployments_execution_concurrent']:
-            # Get Deployment Details
-            deployment = self._deployments.get(user_id=authority['id'], deployment_id=execution['deployment_id'])[0]
-
-            # Build Meteor Execution
-            meteor = {
-                'id': execution_id,
-                'name': deployment['name'],
-                'release': deployment['release'],
-                'user_id': user['id'],
-                'username': user['username'],
-                'group_id': user['group_id'],
-                'environment_id': environment['id'],
-                'environment_name': environment['name'],
-                'mode': execution['mode'],
-                'method': execution['method'],
-                'queries': execution['queries'],
-                'databases': execution['databases'],
-                'code': execution['code'],
-                'url': execution['url'],
-                'uri': execution['uri'],
-                'execution_threads': group['deployments_execution_threads'],
-                'execution_timeout': group['deployments_execution_timeout']
-            }
-
-            # Start Meteor Execution
-            self._meteor.execute(meteor)
-            return jsonify({'message': 'Deployment launched', 'data': response}), 200
-
+        # Return Response
         return jsonify({'message': 'Deployment created', 'data': response}), 200
 
     def __start(self, user, data):
@@ -788,15 +732,10 @@ class Deployments:
         }
 
         # Update Execution Status
-        status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'
-        self._executions.updateStatus(execution['id'], status)
-
-        # Start Meteor Execution
-        if not group['deployments_execution_concurrent']:
-            self._meteor.execute(meteor)
+        self._executions.updateStatus(execution['id'], 'QUEUED')
 
         # Return Successful Message
-        return jsonify({'message': 'Deployment launched'}), 200
+        return jsonify({'message': 'Deployment started'}), 200
 
     def __stop(self, user, data):
         # Check params

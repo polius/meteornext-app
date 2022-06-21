@@ -110,6 +110,7 @@
                   <v-checkbox v-model="columnsRaw" label="Destination Database" value="destination_database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created" value="created" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
@@ -144,6 +145,7 @@ export default {
       { text: 'D.Database', align: 'left', value: 'destination_database' },
       { text: 'Size', align: 'left', value: 'size' },
       { text: 'Status', align:'left', value: 'status' },
+      { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
@@ -157,7 +159,7 @@ export default {
     deleteDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['mode','source_server','source_database','destination_server','destination_database','status','started','ended','overall'],
+    columns: ['mode','source_server','source_database','destination_server','destination_database','status','created','started','ended','overall'],
     columnsRaw: [],
   }),
   created() {
@@ -230,6 +232,7 @@ export default {
           (x.destination_server_name != null && x.destination_server_name.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.destination_database != null && x.destination_database.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.started != null && x.started.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.overall != null && x.overall.toLowerCase().includes(this.search.toLowerCase()))
@@ -256,7 +259,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['mode','source_server','source_database','destination_server','destination_database','size','status','started','ended','overall']
+      this.columnsRaw = ['mode','source_server','source_database','destination_server','destination_database','size','status','created','started','ended','overall']
     },
     deselectAllColumns() {
       this.columnsRaw = []

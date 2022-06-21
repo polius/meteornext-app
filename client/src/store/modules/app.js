@@ -7,6 +7,7 @@ const state = () => ({
   username: localStorage.getItem('username') || '',
   remember: localStorage.getItem('remember') == '1' ? true : false,
   coins: localStorage.getItem('coins') || 0,
+  coins_day: localStorage.getItem('coins_day') || 0,
   admin: localStorage.getItem('admin') == '1' ? true : false,
   owner: localStorage.getItem('owner') == '1' ? true : false,
   inventory_enabled: localStorage.getItem('inventory_enabled') == '1' ? true : false,
@@ -16,9 +17,8 @@ const state = () => ({
   monitoring_enabled: localStorage.getItem('monitoring_enabled') == '1' ? true : false,
   utils_enabled: localStorage.getItem('utils_enabled') == '1' ? true : false,
   client_enabled: localStorage.getItem('client_enabled') == '1' ? true : false,
-  coins_execution: localStorage.getItem('coins_execution') || 0,
+  deployments_coins: localStorage.getItem('deployments_coins') || 0,
   utils_coins: localStorage.getItem('utils_coins') || 0,
-  coins_day: localStorage.getItem('coins_day') || 0,
 })
 
 // getters
@@ -27,6 +27,7 @@ const getters = {
   username: state => state.username,
   remember: state => state.remember,
   coins: state => state.coins,
+  coins_day: state => state.coins_day,
   admin: state => state.admin,
   owner: state => state.owner,
   inventory_enabled: state => state.inventory_enabled,
@@ -36,9 +37,8 @@ const getters = {
   monitoring_enabled: state => state.monitoring_enabled,
   utils_enabled: state => state.utils_enabled,
   client_enabled: state => state.client_enabled,
-  coins_execution: state => state.coins_execution,
+  deployments_coins: state => state.deployments_coins,
   utils_coins: state => state.utils_coins,
-  coins_day: state => state.coins_day,
 }
 
 // actions
@@ -55,6 +55,7 @@ const actions = {
               username: response.data.data.username,
               remember: user['remember'],
               coins: response.data.data.coins,
+              coins_day: response.data.data.coins_day,
               admin: response.data.data.admin,
               owner: response.data.data.owner,
               inventory_enabled: response.data.data.inventory_enabled,
@@ -64,14 +65,14 @@ const actions = {
               monitoring_enabled: response.data.data.monitoring_enabled,
               utils_enabled: response.data.data.utils_enabled,
               client_enabled: response.data.data.client_enabled,
-              coins_execution: response.data.data.coins_execution,
+              deployments_coins: response.data.data.deployments_coins,
               utils_coins: response.data.data.utils_coins,
-              coins_day: response.data.data.coins_day,
             }
             // Store variables to the local storage
             localStorage.setItem('username', data['username'])
             localStorage.setItem('remember', user['remember'] ? '1' : '0')
             localStorage.setItem('coins', data['coins'])
+            localStorage.setItem('coins_day', data['coins_day'])
             localStorage.setItem('admin', data['admin'])
             localStorage.setItem('owner', data['owner'])
             localStorage.setItem('inventory_enabled', data['inventory_enabled'])
@@ -81,9 +82,8 @@ const actions = {
             localStorage.setItem('monitoring_enabled', data['monitoring_enabled'])
             localStorage.setItem('utils_enabled', data['utils_enabled'])
             localStorage.setItem('client_enabled', data['client_enabled'])
-            localStorage.setItem('coins_execution', data['coins_execution'])
+            localStorage.setItem('deployments_coins', data['deployments_coins'])
             localStorage.setItem('utils_coins', data['utils_coins'])
-            localStorage.setItem('coins_day', data['coins_day'])
 
             // Add the token to the axios lib
             axios.defaults.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
@@ -97,6 +97,7 @@ const actions = {
           // Remove variables from the local storage
           if (!user['remember']) localStorage.removeItem('username')
           localStorage.removeItem('coins')
+          localStorage.removeItem('coins_day')
           localStorage.removeItem('admin')
           localStorage.removeItem('owner')
           localStorage.removeItem('inventory_enabled')
@@ -106,9 +107,8 @@ const actions = {
           localStorage.removeItem('monitoring_enabled')
           localStorage.removeItem('utils_enabled')
           localStorage.removeItem('client_enabled')
-          localStorage.removeItem('coins_execution')
+          localStorage.removeItem('deployments_coins')
           localStorage.removeItem('utils_coins')
-          localStorage.removeItem('coins_day')
           Cookies.remove('csrf_access_token')
           reject(error)
         })
@@ -129,6 +129,7 @@ const actions = {
         // Remove variables from the local storage
         if (!getters.remember) localStorage.removeItem('username')
         localStorage.removeItem('coins')
+        localStorage.removeItem('coins_day')
         localStorage.removeItem('admin')
         localStorage.removeItem('owner')
         localStorage.removeItem('inventory_enabled')
@@ -138,9 +139,8 @@ const actions = {
         localStorage.removeItem('monitoring_enabled')
         localStorage.removeItem('utils_enabled')
         localStorage.removeItem('client_enabled')
-        localStorage.removeItem('coins_execution')
+        localStorage.removeItem('deployments_coins')
         localStorage.removeItem('utils_coins')
-        localStorage.removeItem('coins_day')
         Cookies.remove('csrf_access_token')
 
         // Remove token from axios header
@@ -158,6 +158,7 @@ const mutations = {
     state.username = data.username
     state.remember = data.remember == 1
     state.coins = data.coins
+    state.coins_day = data.coins_day
     state.admin = data.admin == 1
     state.owner = data.owner == 1
     state.inventory_enabled = data.inventory_enabled == 1
@@ -167,14 +168,14 @@ const mutations = {
     state.monitoring_enabled = data.monitoring_enabled == 1
     state.utils_enabled = data.utils_enabled == 1
     state.client_enabled = data.client_enabled == 1
-    state.coins_execution = data.coins_execution
+    state.deployments_coins = data.deployments_coins
     state.utils_coins = data.utils_coins
-    state.coins_day = data.coins_day
   },
   logout(state) {
     state.isLoggedIn = false
     state.username = (state.remember) ? state.username : ''
     state.coins = 0
+    state.coins_day = 0
     state.admin = 0
     state.owner = 0
     state.inventory_enabled = 0
@@ -184,9 +185,8 @@ const mutations = {
     state.monitoring_enabled = 0
     state.utils_enabled = 0
     state.client_enabled = 0
-    state.coins_execution = 0
+    state.deployments_coins = 0
     state.utils_coins = 0
-    state.coins_day = 0
   },
   coins(state, value) {
     state.coins = value
