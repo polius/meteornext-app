@@ -87,7 +87,7 @@
                     <v-icon small style="margin-left:5px; margin-bottom:4px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Coins per Deployment</b>: Required coins needed to perform a deployment.
+                    <b>Coins per Deployment</b>: How many coins will be consumed for every deployment.
                     <br>
                     <b>Concurrent Deployments</b>: Maximum concurrent deployments across all users in the group.
                     <br>
@@ -165,7 +165,7 @@
                       <br>
                       <b>Concurrent Executions</b>: Maximum concurrent executions (Imports, Exports, Clones) across all users in the group.
                       <br>
-                      <b>Maximum Size</b>: The maximum allowed size to perform Imports, Exports and Clones.
+                      <b>Maximum Size</b>: The maximum allowed size to perform File Imports. This field is optional and can be left blank.
                     </span>
                   </v-tooltip>
                 </div>

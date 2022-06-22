@@ -210,7 +210,7 @@ class Exports:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check if the execution is in progress
-        if export['status'] != 'IN PROGRESS':
+        if export['status'] in ['SUCCESS','FAILED','STOPPED']:
             return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution

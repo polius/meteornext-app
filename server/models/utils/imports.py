@@ -80,11 +80,12 @@ class Imports:
     def stop(self, user, import_uri):
         query = """
             UPDATE imports
-            SET `stop` = 1
-            WHERE `user_id` = %s
-            AND `uri` = %s
+            SET `stop` = 1,
+                `status` = 'STOPPING'
+            WHERE `uri` = %s
+            AND (1 = %s OR `user_id` = %s)
         """
-        return self._sql.execute(query, (user['id'], import_uri))
+        return self._sql.execute(query, (import_uri, user['admin'], user['id']))
 
     def update_status(self, user, import_id, status, error=None):
         query = """

@@ -80,11 +80,12 @@ class Exports:
     def stop(self, user, export_uri):
         query = """
             UPDATE exports
-            SET `stop` = 1
-            WHERE `user_id` = %s
-            AND `uri` = %s
+            SET `stop` = 1,
+                `status` = 'STOPPING'
+            WHERE `uri` = %s
+            AND (1 = %s OR `user_id` = %s)
         """
-        return self._sql.execute(query, (user['id'], export_uri))
+        return self._sql.execute(query, (export_uri, user['admin'], user['id']))
 
     def update_status(self, user, export_id, status, error=None):
         query = """

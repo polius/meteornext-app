@@ -385,7 +385,7 @@ class Imports:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check if the execution is in progress
-        if imp['status'] != 'IN PROGRESS':
+        if imp['status'] in ['SUCCESS','FAILED','STOPPED']:
             return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution

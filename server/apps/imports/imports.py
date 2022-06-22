@@ -45,6 +45,10 @@ class Imports:
             self.__slack(item, amazon_s3, start_time, 2, str(e))
 
     def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
+        # Check if import is already stopped
+        if not self.__alive(item):
+            return
+
         # Update import status
         query = """
             UPDATE `imports`
