@@ -433,5 +433,5 @@ class Cron:
         advanced = json.loads(setting[0]['value'])
 
         # Restart worker
-        if advanced['enabled'] and current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
+        if advanced['memory_enabled'] and current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
             os.kill(os.getpid(), SIGHUP)
