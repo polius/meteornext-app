@@ -82,11 +82,12 @@ class Clones:
     def stop(self, user, clone_uri):
         query = """
             UPDATE clones
-            SET `stop` = 1
-            WHERE `user_id` = %s
-            AND `uri` = %s
+            SET `stop` = 1,
+                `status` = 'STOPPING'
+            WHERE `uri` = %s
+            AND (1 = %s OR `user_id` = %s)
         """
-        return self._sql.execute(query, (user['id'], clone_uri))
+        return self._sql.execute(query, (clone_uri, user['admin'], user['id']))
 
     def update_status(self, user, clone_id, status, error=None):
         query = """

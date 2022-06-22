@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-btn v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :disabled="stop" text title="Stop Execution" @click="stopClone" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+        <v-btn v-if="information_items.length != 0 ['QUEUED','STARTING','IN PROGRESS','STOPPING','STOPPED'].includes(information_items[0]['status'])" :disabled="stop || (information_items.length != 0 && information_items[0]['status'] == 'STOPPING')" text title="Stop Execution" @click="stopClone" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         <v-divider v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'STARTING' && !stop" class="subtitle-1">Starting the execution...</div>

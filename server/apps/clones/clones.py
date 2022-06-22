@@ -51,6 +51,10 @@ class Clones:
             self.__clean(core['destination'], regions['destination'], item, paths)
 
     def __core2(self, start_time, core, user, item, servers, regions, paths, amazon_s3):
+        # Check if clone is already stopped
+        if not self.__alive(item):
+            return
+
         # Update clone status
         query = """
             UPDATE `clones`
@@ -305,7 +309,7 @@ class Clones:
         size = response['ContentLength']
 
         # Build options
-        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
+        options = '--max-allowed-packet=64M --default-character-set=utf8mb4'
 
         # MySQL & Amazon Aurora (MySQL) engines
         if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):

@@ -225,7 +225,7 @@ class Clones:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check if the execution is in progress
-        if clone['status'] != 'IN PROGRESS':
+        if clone['status'] in ['SUCCESS','FAILED','STOPPED']:
             return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution
