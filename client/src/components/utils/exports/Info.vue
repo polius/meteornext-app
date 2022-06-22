@@ -4,12 +4,12 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-btn v-if="information_items.length != 0 ['QUEUED','STARTING','IN PROGRESS','STOPPING','STOPPED'].includes(information_items[0]['status'])" :disabled="stop || (information_items.length != 0 && information_items[0]['status'] == 'STOPPING')" text title="Stop Execution" @click="stopExport" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
-        <v-divider v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
+        <v-btn v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING','STOPPED'].includes(information_items[0]['status'])" :disabled="stop || (information_items.length != 0 && information_items[0]['status'] == 'STOPPING')" text title="Stop Execution" @click="stopExport" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+        <v-divider v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING','STOPPED'].includes(information_items[0]['status'])" class="mx-3" inset vertical></v-divider>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'STARTING' && !stop" class="subtitle-1">Starting the execution...</div>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
-        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && stop" class="subtitle-1">Stopping the execution...</div>
+        <div v-if="(information_items.length != 0 && information_items[0]['status'] == 'STOPPING') || stop" class="subtitle-1">Stopping the execution...</div>
         <v-progress-circular v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(information_items[0]['status'])" :size="22" indeterminate color="white" width="2" style="margin-left:20px"></v-progress-circular>
         <v-spacer></v-spacer>
         <div v-if="information_items.length != 0 && information_items[0]['updated'] != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(information_items[0]['updated']) }}</b></div>
@@ -140,7 +140,7 @@
                 <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to stop the export?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :disabled="loading" color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="#EF5354" @click="stopDialog = false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>

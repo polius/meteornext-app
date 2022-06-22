@@ -309,7 +309,7 @@ class Clones:
         size = response['ContentLength']
 
         # Build options
-        options = '--max-allowed-packet=64M --default-character-set=utf8mb4'
+        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
 
         # MySQL & Amazon Aurora (MySQL) engines
         if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
