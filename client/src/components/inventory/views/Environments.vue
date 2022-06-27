@@ -59,7 +59,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
+                <v-alert v-if="mode != 'delete' && !owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field :readonly="readonly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px; padding-top:0px"></v-text-field>
                   <v-card>
@@ -86,10 +86,26 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
-                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected environments?</div>
+                <div v-else>
+                  <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
+                  <v-card style="margin-top:15px; margin-bottom:15px">
+                    <v-list>
+                      <v-list-item v-for="item in selected" :key="item.id" style="min-height:35px">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title>
+                            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                            <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+                            {{ item.name }}
+                          </v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                  <v-checkbox v-model="dialogConfirm" label="I confirm I want to delete the selected environments." hide-details class="body-1" style="margin-bottom:15px"></v-checkbox>
+                </div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                  <v-btn :disabled="mode == 'delete' && !dialogConfirm" :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -136,6 +152,7 @@ export default {
     loading: true,
     dialog: false,
     dialog_title: '',
+    dialogConfirm: false,
     // Servers Treeview
     treeviewItems: [],
     treeviewShared: {0: [], 1: []},
@@ -324,7 +341,9 @@ export default {
     },
     deleteEnvironment() {
       this.mode = 'delete'
-      this.dialog_title = 'DELETE ENVIRONMENT'
+      this.dialog_title = 'DELETE ENVIRONMENTS'
+      this.dialogConfirm = false
+      this.selected.sort((a, b) => a.name.localeCompare(b.name))
       this.dialog = true
     },
     submitEnvironment() {

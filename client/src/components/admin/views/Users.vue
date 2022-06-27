@@ -49,11 +49,11 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-bottom:20px;">
                   <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" color="#fb8c00" dense><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" autocomplete="email" required></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required autocomplete="username" style="padding-top:0px;"></v-text-field>
@@ -64,12 +64,23 @@
                   <v-checkbox v-model="item.disabled" label="Disable Account" color="#EF5354" style="margin-top:10px;" hide-details></v-checkbox>
                   <v-switch v-model="item.change_password" label="Force user to change password at next login" color="#fa8231" style="margin-top:10px" hide-details></v-switch>
                 </v-form>
-                <v-alert v-if="mode=='delete'" color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (Deployments, Monitoring, Client, Inventory) will be deleted.</v-alert>
-                <div style="margin-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
+                <div v-if="mode == 'delete'">
+                  <div class="subtitle-1">Are you sure you want to delete the selected users?</div>
+                  <v-card style="margin-top:15px; margin-bottom:15px">
+                    <v-list>
+                      <v-list-item v-for="item in selected" :key="item.username" style="min-height:35px">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title>{{ item.username }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                  <v-checkbox v-model="dialog_confirm" label="I confirm I want to delete the selected users." hide-details class="body-1" style="margin-bottom:15px"></v-checkbox>
+                </div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
-                    <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
+                    <v-btn :disabled="mode == 'delete' && !dialog_confirm" :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                   </v-col>
                   <v-col cols="auto">
@@ -175,6 +186,7 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+    dialog_confirm: false,
     showPassword: false,
     // User Groups
     groups: [],
@@ -232,7 +244,8 @@ export default {
     },
     deleteUser() {
       this.mode = 'delete'
-      this.dialog_title = 'DELETE USER'
+      this.dialog_title = 'DELETE USERS'
+      this.dialog_confirm = false
       this.dialog = true
     },
     submitUser() {

@@ -58,7 +58,8 @@
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center">Select a group</div>
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:label="{ item }">
-                          <v-icon v-if="item.children" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="item.shared ? 'margin-right:10px; margin-bottom:2px' : 'margin-left:2px; margin-right:16px; margin-bottom:2px'">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
                           {{ item.name }}
                         </template>
                         <template v-slot:prepend="{ item }">
@@ -71,10 +72,26 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
-                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected environments?</div>
+                <div v-else>
+                  <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
+                  <v-card style="margin-top:15px; margin-bottom:15px">
+                    <v-list>
+                      <v-list-item v-for="item in selected" :key="item.id" style="min-height:35px">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title>
+                            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                            <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+                            {{ item.name }}
+                          </v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                  <v-checkbox v-model="dialogConfirm" label="I confirm I want to delete the selected environments." hide-details class="body-1" style="margin-bottom:15px"></v-checkbox>
+                </div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                  <v-btn :disabled="mode == 'delete' && !dialogConfirm" :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -162,6 +179,7 @@ export default {
     loading: true,
     dialog: false,
     dialog_title: '',
+    dialogConfirm: false,
     users: [],
     // Servers Treeview
     treeviewItems: [],
@@ -388,7 +406,9 @@ export default {
     },
     deleteEnvironment() {
       this.mode = 'delete'
-      this.dialog_title = 'DELETE ENVIRONMENT'
+      this.dialog_title = 'DELETE ENVIRONMENTS'
+      this.dialogConfirm = false
+      this.selected.sort((a, b) => a.name.localeCompare(b.name))
       this.dialog = true
     },
     submitEnvironment() {

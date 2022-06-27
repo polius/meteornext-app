@@ -139,11 +139,28 @@
                     <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
-                <div v-else class="subtitle-1" style="margin-bottom:12px">Are you sure you want to delete the selected servers?</div>
+                <div v-else>
+                  <div class="subtitle-1">Are you sure you want to delete the selected servers?</div>
+                  <v-card style="margin-top:15px; margin-bottom:15px">
+                    <v-list>
+                      <v-list-item v-for="item in selected" :key="item.id" style="min-height:35px">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title>
+                            <v-icon v-if="!item.active" small color="warning" title="Maximum allowed resources exceeded. Upgrade your license to have more servers." style="margin-right:10px">fas fa-exclamation-triangle</v-icon>
+                            <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                            <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+                            {{ item.name }}
+                          </v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                  <v-checkbox v-model="dialogConfirm" label="I confirm I want to delete the selected servers." hide-details class="body-1" style="margin-bottom:15px"></v-checkbox>
+                </div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:15px;">
                   <v-col cols="auto" class="mr-auto">
-                    <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
+                    <v-btn :disabled="mode == 'delete' && !dialogConfirm" :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
@@ -343,6 +360,7 @@ export default {
     // Dialog: Item
     dialog: false,
     dialog_title: '',
+    dialogConfirm: false,
     users: [],
     // Dialog: Confirm
     confirm_dialog: false,
@@ -513,7 +531,9 @@ export default {
     },
     deleteServer() {
       this.mode = 'delete'
-      this.dialog_title = 'DELETE SERVER'
+      this.dialog_title = 'DELETE SERVERS'
+      this.dialogConfirm = false
+      this.selected.sort((a, b) => a.name.localeCompare(b.name))
       this.dialog = true
     },
     submitServer(check=true) {
