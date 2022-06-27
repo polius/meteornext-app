@@ -35,19 +35,35 @@
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-minus</v-icon>DELETE GROUP</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-minus</v-icon>DELETE GROUPS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>The inventory related to the selected groups will be deleted as well</v-alert>
-                <div style="margin-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected groups?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected groups?</div>
+                <v-card style="margin-top:15px; margin-bottom:15px">
+                  <v-list>
+                    <v-list-item v-for="item in selected" :key="item.name" style="min-height:35px">
+                      <v-list-item-content style="padding:0px">
+                        <v-list-item-title>{{ item.name }}</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </v-card>
+                <v-checkbox v-model="dialogConfirm" label="I confirm I want to delete my Meteor Next account." style="margin-bottom:15px" hide-details>
+                  <template v-slot:label>
+                    <div style="margin-left:5px">
+                      <div style="color:#e2e2e2">I confirm I want to delete the selected groups.</div>
+                      <div class="font-weight-regular caption" style="font-size:0.85rem !important">The inventory related to the selected groups will be deleted as well.</div>
+                    </div>
+                  </template>
+                </v-checkbox>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn color="#00b16a" @click="deleteGroupSubmit()">Confirm</v-btn>
+                  <v-btn :disabled="!dialogConfirm" color="#00b16a" @click="deleteGroupSubmit()">Confirm</v-btn>
                   <v-btn color="#EF5354" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
@@ -130,6 +146,7 @@ export default {
     item: { name: '', description: '' },
     loading: true,
     dialog: false,
+    dialogConfirm: false,
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','description','created_at','updated_at','users'],
@@ -179,6 +196,7 @@ export default {
       this.$router.push({ name:'admin.group', params: { id: this.selected[0]['id'], mode: 'clone' }})
     },
     deleteGroup() {
+      this.dialogConfirm = false
       this.dialog = true
     },
     deleteGroupSubmit() {
