@@ -3,6 +3,7 @@ import string
 import bcrypt
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+from sentry_sdk import set_user
 
 import models.admin.groups
 import models.admin.users
@@ -40,7 +41,11 @@ class Users:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get user data
-            user = self._users.get(get_jwt_identity())[0]
+            try:
+                user = self._users.get(get_jwt_identity())[0]
+                set_user({"id": user['id'], "username": user['username']})
+            except IndexError:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user privileges
             if user['disabled'] or not user['admin']:

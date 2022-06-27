@@ -1,6 +1,7 @@
 import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+from sentry_sdk import set_user
 
 import models.admin.users
 import models.inventory.environments
@@ -26,7 +27,11 @@ class Environments:
                 return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
-            user = self._users.get(get_jwt_identity())[0]
+            try:
+                user = self._users.get(get_jwt_identity())[0]
+                set_user({"id": user['id'], "username": user['username']})
+            except IndexError:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled']:
@@ -49,7 +54,11 @@ class Environments:
                 return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
-            user = self._users.get(get_jwt_identity())[0]
+            try:
+                user = self._users.get(get_jwt_identity())[0]
+                set_user({"id": user['id'], "username": user['username']})
+            except IndexError:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled'] and request.method != 'GET':

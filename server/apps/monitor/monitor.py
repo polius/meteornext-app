@@ -3,7 +3,7 @@ import json
 import calendar
 import requests
 import traceback
-from sentry_sdk import capture_exception, flush
+from sentry_sdk import capture_exception, flush, set_user
 from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
@@ -24,6 +24,7 @@ class Monitor:
             except Exception as e:
                 traceback.print_exception()
                 if self._license.status.get('sentry'):
+                    set_user({"id": "monitor"})
                     capture_exception(e)
                     flush()
             finally:
@@ -79,6 +80,7 @@ class Monitor:
                 except Exception as e:
                     traceback.print_exc()
                     if self._license.status.get('sentry'):
+                        set_user({"id": "monitor"})
                         capture_exception(e)
                         flush()
 
