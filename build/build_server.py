@@ -162,7 +162,7 @@ if __name__ == "__main__":
     with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
     # Init Gunicorn App
-    StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "error.log", "timeout": 3600}).run()""")
+    StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "error.log", "pidfile": "pid.log", "timeout": 3600}).run()""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 

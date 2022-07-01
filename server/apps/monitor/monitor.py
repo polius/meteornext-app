@@ -18,17 +18,14 @@ class Monitor:
         self._notifications = models.notifications.Notifications(self._sql)
 
     def start(self):
-        while True:
-            try:
-                self.__start_monitor()
-            except Exception as e:
-                traceback.print_exception()
-                if self._license.status.get('sentry'):
-                    set_user({"id": "monitor"})
-                    capture_exception(e)
-                    flush()
-            finally:
-                time.sleep(10)
+        try:
+            self.__start_monitor()
+        except Exception as e:
+            traceback.print_exception()
+            if self._license.status.get('sentry'):
+                set_user({"id": "monitor"})
+                capture_exception(e)
+                flush()
 
     ####################
     # Internal Methods #
