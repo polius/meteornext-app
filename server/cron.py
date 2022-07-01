@@ -22,14 +22,14 @@ class Cron:
         self._sql = sql
         self._node = str(uuid.uuid4())
         self._locks = {"executions": False, "deployments_monitor": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
-        self._current_pid = os.getpid()
+        self._master_pid = None
         self.__start()
 
     def __start(self):
         # Scheduled Tasks
         schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
         schedule.every(10).seconds.do(self.__run_threaded, self.__deployments_monitor)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
+        # schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
         schedule.every(10).seconds.do(self.__run_threaded, self.__check_nodes)
@@ -47,15 +47,27 @@ class Cron:
         t.start()
 
     def __run_threaded(self, job_func):
+        if self._master_pid is None:
+            self._master_pid = self.__get_master_pid()
+
+        if self._master_pid != os.getpid():
+            return schedule.CancelJob
+
         t = threading.Thread(target=job_func)
         t.daemon = True
         t.start()
 
     def __run_schedule(self):
         while True:
-            if os.getpid() == self._current_pid:
-                schedule.run_pending()
+            schedule.run_pending()
             time.sleep(1)
+
+    def __get_master_pid(self):
+        is_production = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        if is_production:
+            with open('/root/pid.log', 'r') as fopen:
+                return int(fopen.read())
+        return os.getpid()
 
     def __check_nodes(self):
         # Check lock
@@ -78,20 +90,20 @@ class Cron:
             cursor.execute("SELECT * FROM nodes FOR UPDATE")
             nodes = cursor.fetchall()
             if len(nodes) == 0:
-                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'master',%s,%s)", (self._node, ip, now))
+                cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`pid`,`healthcheck`) VALUES (%s,'master',%s,%s,%s)", (self._node, ip, os.getpid(), now))
             else:
                 master = [i for i in nodes if i['type'] == 'master'][0]
                 current = [i for i in nodes if i['id'] == self._node]
                 # The current node is a worker
                 if len(current) == 0 or current[0]['type'] == 'worker':
-                    cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`healthcheck`) VALUES (%s,'worker',%s,%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, ip, now))
+                    cursor.execute("INSERT INTO `nodes`(`id`,`type`,`ip`,`pid`,`healthcheck`) VALUES (%s,'worker',%s,%s,%s) ON DUPLICATE KEY UPDATE `healthcheck` = VALUES(`healthcheck`)", (self._node, ip, os.getpid(), now))
                     # Check if the node has to be promoted
                     if master['healthcheck'] < datetime.strptime(last_minute, "%Y-%m-%d %H:%M:%S"):
                         cursor.execute("UPDATE `nodes` SET `type` = IF(`id` = %s,'master','worker')", (self._node))
                         cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
                 # The current node is the master
                 else:
-                    cursor.execute("UPDATE `nodes` SET `healthcheck` = %s WHERE id = %s", (now, self._node))
+                    cursor.execute("UPDATE `nodes` SET `pid` = %s, `healthcheck` = %s WHERE id = %s", (os.getpid(), now, self._node))
                     cursor.execute("DELETE FROM `nodes` WHERE `healthcheck` < %s", (last_minute))
 
             # Commit transaction
@@ -115,7 +127,7 @@ class Cron:
 
         try:
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -143,7 +155,7 @@ class Cron:
 
         try:
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -182,7 +194,7 @@ class Cron:
 
         try:
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -204,7 +216,7 @@ class Cron:
             return
 
         # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+        result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
         if len(result) == 0 or result[0]['type'] != 'master':
             return
 
@@ -222,7 +234,7 @@ class Cron:
             return
 
         # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+        result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
         if len(result) == 0 or result[0]['type'] != 'master':
             return
 
@@ -266,7 +278,7 @@ class Cron:
 
         try:
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -286,7 +298,7 @@ class Cron:
             return
 
         # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+        result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
         if len(result) == 0 or result[0]['type'] != 'master':
             return
 
@@ -339,7 +351,7 @@ class Cron:
             return
 
         # Check master node
-        result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+        result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
         if len(result) == 0 or result[0]['type'] != 'master':
             return
 
@@ -365,7 +377,7 @@ class Cron:
 
         try:
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -396,7 +408,7 @@ class Cron:
                 return
 
             # Check master node
-            result = self._sql.execute(query="SELECT type FROM nodes WHERE id = %s", args=(self._node))
+            result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
             if len(result) == 0 or result[0]['type'] != 'master':
                 return
 
@@ -421,6 +433,11 @@ class Cron:
         # Check license and environment
         is_production = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         if not self._license.validated or not is_production:
+            return
+
+        # Check master node
+        result = self._sql.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
+        if len(result) == 0 or result[0]['type'] != 'master':
             return
 
         # Get current day and current time

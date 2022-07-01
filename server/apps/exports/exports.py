@@ -21,7 +21,7 @@ class Exports:
     def start(self, user, item, server, region, path, amazon_s3):
         # Start Process in another thread
         t = threading.Thread(target=self.__core, args=(user, item, server, region, path,amazon_s3,))
-        t.daemon = True
+        t.daemon = False
         t.start()
 
     def __core(self, user, item, server, region, paths, amazon_s3):
