@@ -369,18 +369,25 @@ export default {
     },
     cellEditingStarted(event) {
       this.$nextTick(() => {
-        // Store row node
-        this.currentCellEditNode = this.gridApi.client.getSelectedNodes()[0]
-      
+        // Select edited row
+        this.gridApi.client.getSelectedNodes().forEach(x => x.setSelected(false))
+        event.node.setSelected(true)
+        // Check if the user edited a different row
+        if (this.currentCellEditNode.rowIndex != event.rowIndex && this.cellEditingValuesToUpdate(this.currentCellEditValues)) {
+          this.cellEditConfirm()
+          return
+        }
         // Store row values
-        if (Object.keys(this.currentCellEditValues).length == 0) {
-          let node = this.gridApi.client.getSelectedNodes()[0].data
+        if (this.currentCellEditNode.rowIndex != event.rowIndex) {
+          let node = event.node.data
           let keys = Object.keys(node)
           this.currentCellEditValues = {}
           for (let i = 0; i < keys.length; ++i) {
             this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
           }
         }
+        // Store row node
+        this.currentCellEditNode = event.node
         // If the cell includes an special character (\n or \t) or the value length >= 50 chars, ... then open the extended editor
         if (event.value.toString().length >= 50 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
@@ -391,23 +398,37 @@ export default {
     cellEditingStopped(event) {
       // Store new value
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
-      if (this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+      if (this.currentCellEditValues[event.colDef.field] !== undefined) {
+        if (this.currentCellEditNode.rowIndex == event.rowIndex) {
+          this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+        }
+      }
     },
-    cellEditingSubmit(node, values, confirm=false) {
+    cellEditingValuesToUpdate(values) {
+      // Build values to update
+      let keys = Object.keys(values)
+      for (let i = 0; i < keys.length; ++i) {
+        if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+          if (values[keys[i]]['new'] !== undefined) return true
+        }
+      }
+      return false
+    },
+    async cellEditingSubmit(node, values, confirm=false) {
       if (Object.keys(values).length == 0) return
-      new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
-        // Build values to update
-        var valuesToUpdate = []
-        let keys = Object.keys(values)
-        for (let i = 0; i < keys.length; ++i) {
-          if (values[keys[i]]['old'] != values[keys[i]]['new']) {
-            if (values[keys[i]]['new'] !== undefined) {
-              if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
-              else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
-            }
+      // Build values to update
+      var valuesToUpdate = []
+      let keys = Object.keys(values)
+      for (let i = 0; i < keys.length; ++i) {
+        if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+          if (values[keys[i]]['new'] !== undefined) {
+            if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
+            else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
           }
         }
-        if (valuesToUpdate.length > 0) {
+      }
+      if (valuesToUpdate.length > 0) {
+        await new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
           // Check if PKs exists in the result set
           if (pks.length == 0 || !pks.every(x => x in values)) {
             let dialogOptions = {
@@ -494,13 +515,14 @@ export default {
                 this.$store.dispatch('client/addHistory', history)
               }
             })
-        }
-        else {
-          // Clean vars
-          this.currentCellEditNode = {}
-          this.currentCellEditValues = {}
-        }
-      })
+        })
+      }
+      else {
+        // Clean vars
+        console.log("CLEAN")
+        this.currentCellEditNode = {}
+        this.currentCellEditValues = {}
+      }
     },
     editDialogOpen(columnName, text) {
       this.editDialogColumnName = columnName

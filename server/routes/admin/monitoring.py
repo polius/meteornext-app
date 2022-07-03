@@ -8,15 +8,14 @@ import models.admin.monitoring
 import routes.admin.settings
 
 class Monitoring:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._sql = sql
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._monitoring = models.admin.monitoring.Monitoring(sql, license)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql, license)
+        self._settings = routes.admin.settings.Settings(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -26,8 +25,8 @@ class Monitoring:
         @jwt_required()
         def admin_monitoring_servers_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():

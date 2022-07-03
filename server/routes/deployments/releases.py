@@ -7,7 +7,7 @@ import models.deployments.releases
 import models.deployments.deployments
 
 class Releases:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -22,8 +22,8 @@ class Releases:
         @jwt_required()
         def releases_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -49,8 +49,8 @@ class Releases:
         @jwt_required()
         def releases_active_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:

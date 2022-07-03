@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from sentry_sdk import set_user
 import os
+import sys
 import json
 
 import models.admin.users
@@ -22,8 +23,7 @@ import apps.clones.clones
 import connectors.base
 
 class Utils:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -42,6 +42,10 @@ class Utils:
         self._import_app = apps.imports.imports.Imports(sql)
         self._export_app = apps.exports.exports.Exports(sql)
         self._clone_app = apps.clones.clones.Clones(sql)
+        # Retrieve base path
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
+
 
     def blueprint(self):
         # Init blueprint
@@ -51,8 +55,8 @@ class Utils:
         @jwt_required()
         def utils_servers_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -74,8 +78,8 @@ class Utils:
         @jwt_required()
         def utils_servers_test_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -102,8 +106,8 @@ class Utils:
         @jwt_required()
         def utils_databases_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -142,8 +146,8 @@ class Utils:
         @jwt_required()
         def utils_database_size_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -182,8 +186,8 @@ class Utils:
         @jwt_required()
         def utils_tables_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -293,18 +297,15 @@ class Utils:
         if len(execution_ids['clone']):
             executions['clone'] = self._utils_queued.get_queued_clones(clone_ids=execution_ids['clone'])
 
-        # Get file path
-        file_path = json.loads(self._settings.get(setting_name='FILES'))['path']
-
         # Get Amazon S3 credentials
         amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
 
         # Process imports
-        self.__process_queued_imports(executions['import'], file_path)
-        self.__process_queued_exports(executions['export'], file_path, amazon_s3)
-        self.__process_queued_clones(executions['clone'], file_path, amazon_s3)
+        self.__process_queued_imports(executions['import'])
+        self.__process_queued_exports(executions['export'], amazon_s3)
+        self.__process_queued_clones(executions['clone'], amazon_s3)
 
-    def __process_queued_imports(self, executions, file_path):
+    def __process_queued_imports(self, executions):
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -328,7 +329,7 @@ class Utils:
 
             # Init path
             path = {
-                "local": os.path.join(file_path, 'imports'),
+                "local": f"{self._base_path}/files/imports",
                 "remote": '.meteor/imports'
             }
 
@@ -371,7 +372,7 @@ class Utils:
             self._imports.update_status(user, execution['id'], 'STARTING')
             self._import_app.start(user, item, server, region, path, amazon_s3)
 
-    def __process_queued_exports(self, executions, file_path, amazon_s3):
+    def __process_queued_exports(self, executions, amazon_s3):
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -395,7 +396,7 @@ class Utils:
 
             # Init path
             path = {
-                "local": os.path.join(file_path, 'exports'),
+                "local": f"{self._base_path}/files/exports",
                 "remote": '.meteor/exports'
             }
 
@@ -430,7 +431,7 @@ class Utils:
             self._exports.update_status(user, execution['id'], 'STARTING')
             self._export_app.start(user, item, server, region, path, amazon_s3)
 
-    def __process_queued_clones(self, executions, file_path, amazon_s3):
+    def __process_queued_clones(self, executions, amazon_s3):
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -473,7 +474,7 @@ class Utils:
 
             # Init path
             path = {
-                "local": os.path.join(file_path, 'clones'),
+                "local": f"{self._base_path}/files/clones",
                 "remote": '.meteor/clones'
             }
 

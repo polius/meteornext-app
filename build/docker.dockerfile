@@ -18,6 +18,7 @@ RUN apt update -qq && \
     apt install jq -y && \
     apt install pv -y && \
     apt install default-mysql-client -y && \
+    apt install awscli -y && \
     apt clean -qq && \
     tar -zxf /usr/share/nginx/html/client.tar.gz -C /usr/share/nginx/html/ && \
     mv /usr/share/nginx/html/client/* /usr/share/nginx/html/ && \

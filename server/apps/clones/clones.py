@@ -150,6 +150,7 @@ class Clones:
             import_status = [None]
             t = threading.Thread(target=self.__import, args=(core['destination'], item, servers['destination'], path['destination'], amazon_s3, url, import_status,))
             t.daemon = True
+            t.error = None
             t.start()
 
             # Start Monitor (Import)
@@ -162,18 +163,19 @@ class Clones:
                 self.__monitor_import(core['destination'], item, path['destination'], monitor_status)
 
             # Update clone status
-            status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
+            status = 'SUCCESS' if not monitor_status[0] and not t.error else 'FAILED'
             query = """
                 UPDATE `clones`
                 SET
                     `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
                     `url` = %s,
+                    `error` = IF (`error` IS NOT NULL, `error`, %s),
                     `ended` = %s,
                     `updated` = %s
                 WHERE `id` = %s
             """
             now = self.__utcnow()
-            self._sql.execute(query, args=(status, url[0], now, now, item['id']))
+            self._sql.execute(query, args=(status, url[0], t.error, now, now, item['id']))
 
         # Get clones details
         query = """
@@ -226,8 +228,14 @@ class Clones:
         error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
+        # Check mysqldump version
+        p = core.execute('mysqldump --version')
+        is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
+
         # Build options
-        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
+        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
+        if not is_mariadb:
+            options += ' --set-gtid-purged=OFF'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
@@ -297,29 +305,34 @@ class Clones:
         return True
 
     def __import(self, core, item, server, path, amazon_s3, url, status):
+        t = threading.current_thread()
+
         # Build paths
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
         error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
         error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
         error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
 
-        # Get file size
-        client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
-        response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
-        size = response['ContentLength']
+        try:
+            # Get file size
+            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+            response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
+            size = response['ContentLength']
+        except Exception as e:
+            t.error = str(e)
+        else:
+            # Build options
+            options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
 
-        # Build options
-        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
+            # MySQL & Amazon Aurora (MySQL) engines
+            if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
+                command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
 
-        # MySQL & Amazon Aurora (MySQL) engines
-        if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
-            command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
+            # Start Import process
+            p = core.execute(command)
 
-        # Start Import process
-        p = core.execute(command)
-
-        # Check if subprocess command has been killed (= stopped by user).
-        status[0] = len(p['stderr']) > 0
+            # Check if subprocess command has been killed (= stopped by user).
+            status[0] = len(p['stderr']) > 0
 
     def __monitor_import(self, core, item, path, status):
         # Check if a stop it's been requested

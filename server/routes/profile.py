@@ -9,7 +9,7 @@ import models.admin.users
 import models.admin.settings
 
 class Profile:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -23,7 +23,7 @@ class Profile:
         @jwt_required()
         def profile_method():
             # Check license
-            if not self._license.validated:
+            if not self._license.is_validated():
                 return jsonify({"message": self._license['response']}), 401
 
             # Get User
@@ -45,7 +45,7 @@ class Profile:
         @jwt_required()
         def profile_password_method():
             # Check license
-            if not self._license.validated:
+            if not self._license.is_validated():
                 return jsonify({"message": self._license['response']}), 401
 
             # Get User

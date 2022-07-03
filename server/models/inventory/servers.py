@@ -27,7 +27,7 @@ class Servers:
                 AND (s.shared = 1 OR s.owner_id = %(user_id)s)
                 ORDER BY s.id DESC
             """
-            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
+            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.get_resources()})
         else:
             query = """
                 SELECT 
@@ -51,7 +51,7 @@ class Servers:
                 AND (s.shared = 1 OR s.owner_id = %(user_id)s)
                 AND s.id = %(server_id)s
             """
-            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources, "server_id": server_id})
+            return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.get_resources(), "server_id": server_id})
 
     def post(self, user_id, group_id, server):
         query = """

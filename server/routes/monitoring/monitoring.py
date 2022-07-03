@@ -11,8 +11,7 @@ import models.monitoring.monitoring
 import models.monitoring.monitoring_settings
 
 class Monitoring:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -27,8 +26,8 @@ class Monitoring:
         @jwt_required()
         def monitoring_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -50,8 +49,8 @@ class Monitoring:
         @jwt_required()
         def monitoring_settings_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -74,8 +73,8 @@ class Monitoring:
         @jwt_required()
         def monitoring_slack_test_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:

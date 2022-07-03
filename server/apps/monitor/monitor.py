@@ -12,17 +12,16 @@ import connectors.base
 import models.notifications
 
 class Monitor:
-    def __init__(self, license, sql_config):
+    def __init__(self, license, sql):
         self._license = license
-        self._sql = connectors.base.Base({'sql': sql_config})
-        self._notifications = models.notifications.Notifications(self._sql)
+        self._sql = sql
 
     def start(self):
         try:
             self.__start_monitor()
         except Exception as e:
             traceback.print_exception()
-            if self._license.status.get('sentry'):
+            if self._license.get_status().get('sentry'):
                 set_user({"id": "monitor"})
                 capture_exception(e)
                 flush()
@@ -31,59 +30,57 @@ class Monitor:
     # Internal Methods #
     ####################
     def __start_monitor(self):
-        # Start Connection
-        self._sql.connect()
+        # Init SQL Connection
+        conn = connectors.base.Base(self._sql)
 
-        try:
-            # Get Monitoring Servers
-            query = """
-                SELECT
-                    s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
-                    r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                    ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
-                    ms.updated
-                FROM monitoring m
-                LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-                LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
-                JOIN users u ON u.id = m.user_id AND u.disabled = 0
-                JOIN groups g ON g.id = u.group_id
-                JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
-                JOIN regions r ON r.id = s.region_id
-                WHERE (
-                    (m.processlist_enabled = 1 AND m.processlist_active = 1)
-                    OR m.queries_enabled = 1
-                    OR m.monitor_enabled = 1
-                    OR m.parameters_enabled = 1
-                )
-                AND IF(ms.updated IS NULL, 1, TIMESTAMPDIFF(SECOND, ms.updated, %s) >= g.monitoring_interval) = 1
-                GROUP BY m.server_id
-            """
-            servers_raw = self._sql.execute(query=query, args=(self.__utcnow()))
+        # Get Monitoring Servers
+        query = """
+            SELECT
+                s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
+                r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
+                ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
+                ms.updated
+            FROM monitoring m
+            LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
+            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
+            JOIN users u ON u.id = m.user_id AND u.disabled = 0
+            JOIN groups g ON g.id = u.group_id
+            JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
+            JOIN regions r ON r.id = s.region_id
+            WHERE (
+                (m.processlist_enabled = 1 AND m.processlist_active = 1)
+                OR m.queries_enabled = 1
+                OR m.monitor_enabled = 1
+                OR m.parameters_enabled = 1
+            )
+            AND IF(ms.updated IS NULL, 1, TIMESTAMPDIFF(SECOND, ms.updated, %s) >= g.monitoring_interval) = 1
+            GROUP BY m.server_id
+        """
+        servers_raw = conn.execute(query=query, args=(self.__utcnow()))
 
-            # Build Servers List
-            servers = []
-            for s in servers_raw:
-                server = {'ssh': {}, 'sql': {}}
-                server['id'] = s['id']
-                server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
-                server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password'], 'ssl': s['ssl'], 'ssl_client_key': s['ssl_client_key'], 'ssl_client_certificate': s['ssl_client_certificate'], 'ssl_ca_certificate': s['ssl_ca_certificate'], 'ssl_verify_ca': s['ssl_verify_ca']}
-                server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
-                servers.append(server)
+        # Close SQL Connection
+        conn.stop()
 
-            # Start Monitoring
-            for server in servers:
-                try:
-                    self.__monitor_server(server)
-                except Exception as e:
-                    traceback.print_exc()
-                    if self._license.status.get('sentry'):
-                        set_user({"id": "monitor"})
-                        capture_exception(e)
-                        flush()
+        # Build Servers List
+        servers = []
+        for s in servers_raw:
+            server = {'ssh': {}, 'sql': {}}
+            server['id'] = s['id']
+            server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
+            server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password'], 'ssl': s['ssl'], 'ssl_client_key': s['ssl_client_key'], 'ssl_client_certificate': s['ssl_client_certificate'], 'ssl_ca_certificate': s['ssl_ca_certificate'], 'ssl_verify_ca': s['ssl_verify_ca']}
+            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
+            servers.append(server)
 
-        finally:
-            # Stop SQL Connection
-            self._sql.stop()
+        # Start Monitoring
+        for server in servers:
+            try:
+                self.__monitor_server(server)
+            except Exception as e:
+                traceback.print_exc()
+                if self._license.get_status().get('sentry'):
+                    set_user({"id": "monitor"})
+                    capture_exception(e)
+                    flush()
 
     def __monitor_server(self, server):
         try:
@@ -121,6 +118,12 @@ class Monitor:
                 summary['statements']['all'] = summary['statements']['select'] + summary['statements']['insert'] + summary['statements']['update'] + summary['statements']['delete']
                 summary['index'] = {'percent': "{:.2f}%".format((int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd'])) / (int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd']) + int(status['Handler_read_first']) + int(status['Handler_read_next']) + int(status['Handler_read_key']) + int(status['Handler_read_prev']))), 'selects': status['Select_scan']}
 
+            # Stop Connection
+            conn.stop()
+
+            # Start Connection
+            conn = connectors.base.Base(self._sql)
+
             # Store Queries
             if server['monitor']['queries_enabled']:
                 for i in processlist:
@@ -140,11 +143,11 @@ class Monitor:
                                 count = IF(query_id = VALUES(query_id), count, count+1),
                                 query_id = VALUES(query_id);
                         """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
+                        conn.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
             # Monitoring Alarms
             if server['monitor']['monitor_enabled'] == 1:
-                self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
+                self.__monitor_alarms(conn, available=True, server=server, summary=summary, params=params, processlist=processlist)
 
             # Parse Variables
             summary = self.__dict2str(summary) if bool(summary) else ''
@@ -163,12 +166,18 @@ class Monitor:
                         processlist = COALESCE(VALUES(processlist), processlist),
                         updated = VALUES(updated)
                 """
-                self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
+                conn.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
+
+            # Close SQL Connection
+            conn.stop()
 
         except Exception as e:
+            # Start Connection
+            conn = connectors.base.Base(self._sql)
+
             # Monitoring Alarms
             if server['monitor']['monitor_enabled'] == 1:
-                self.__monitor_alarms(available=False, server=server, error=str(e))
+                self.__monitor_alarms(conn, available=False, server=server, error=str(e))
 
             # Set server unavailable with error
             query = """
@@ -179,16 +188,14 @@ class Monitor:
                     error = VALUES(error),
                     updated = VALUES(updated)
             """
-            self._sql.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
-        finally:
-            # Stop Connection
-            try:
-                conn.stop()
-            except Exception:
-                pass
+            conn.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
 
-    def __monitor_alarms(self, available, server, summary={}, params={}, processlist=[], error=None):
+            # Close SQL Connection
+            conn.stop()
+
+    def __monitor_alarms(self, conn, available, server, summary={}, params={}, processlist=[], error=None):
         # Init vars
+        notifications = models.notifications.Notifications(conn)
         users = None
         slack = None
 
@@ -202,12 +209,12 @@ class Monitor:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], event='unavailable', data=error)
-            users = self.__get_users_server(server_id=server['id'])
+            self.__add_event(conn, server_id=server['id'], event='unavailable', data=error)
+            users = self.__get_users_server(conn, server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                notifications.post(user_id=user['user_id'], notification=notification)
 
-            slack = self.__get_slack_server(server_id=server['id'])
+            slack = self.__get_slack_server(conn, server_id=server['id'])
             for s in slack:
                 self.__slack(slack=s, server=server, event='unavailable', data=error)
 
@@ -221,14 +228,14 @@ class Monitor:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], event='available')
+            self.__add_event(conn, server_id=server['id'], event='available')
             if users is None:
-                users = self.__get_users_server(server_id=server['id'])
+                users = self.__get_users_server(conn, server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                notifications.post(user_id=user['user_id'], notification=notification)
 
             if slack is None:
-                slack = self.__get_slack_server(server_id=server['id'])
+                slack = self.__get_slack_server(conn, server_id=server['id'])
             for s in slack:
                 self.__slack(slack=s, server=server, event='available', data=None)
 
@@ -243,15 +250,15 @@ class Monitor:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], event='restarted')
+            self.__add_event(conn, server_id=server['id'], event='restarted')
             if users is None:
-                users = self.__get_users_server(server_id=server['id'])
+                users = self.__get_users_server(conn, server_id=server['id'])
             for user in users:
-                self._notifications.post(user_id=user['user_id'], notification=notification)
+                notifications.post(user_id=user['user_id'], notification=notification)
 
             data = {'previous_uptime': info['uptime'], 'previous_start_time': info['start_time'], 'current_uptime': summary['info']['uptime'], 'current_start_time': summary['info']['start_time']}
             if slack is None:
-                slack = self.__get_slack_server(server_id=server['id'])
+                slack = self.__get_slack_server(conn, server_id=server['id'])
             for s in slack:
                 self.__slack(slack=s, server=server, event='restarted', data=data)
 
@@ -269,21 +276,21 @@ class Monitor:
                     'date': self.__utcnow(),
                     'show': 1
                 }
-                self.__add_event(server_id=server['id'], event='parameters', data=self.__dict2str(data))
+                self.__add_event(conn, server_id=server['id'], event='parameters', data=self.__dict2str(data))
                 if users is None:
-                    users = self.__get_users_server(server_id=server['id'])
+                    users = self.__get_users_server(conn, server_id=server['id'])
                 for user in users:
-                    self._notifications.post(user_id=user['user_id'], notification=notification)
+                    notifications.post(user_id=user['user_id'], notification=notification)
 
                 if slack is None:
-                    slack = self.__get_slack_server(server_id=server['id'])
+                    slack = self.__get_slack_server(conn, server_id=server['id'])
                 for s in slack:
                     self.__slack(slack=s, server=server, event='parameters', data=data)
 
         # Check connections
         connections = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['connections']
         if server['monitor']['available'] == 1 and available:
-            last_event = self.__get_last_event(server['id'])
+            last_event = self.__get_last_event(conn, server['id'])
             queries = [int(i['TIME']) for i in processlist if i['COMMAND'] in ['Query','Execute']]
             queries.sort(reverse=True)
             event = ''
@@ -312,13 +319,13 @@ class Monitor:
                     'date': self.__utcnow(),
                     'show': 1
                 }
-                self.__add_event(server_id=server['id'], event=event, data=len(queries))
+                self.__add_event(conn, server_id=server['id'], event=event, data=len(queries))
                 if users is None:
-                    users = self.__get_users_server(server_id=server['id'])
+                    users = self.__get_users_server(conn, server_id=server['id'])
                 for user in users:
-                    self._notifications.post(user_id=user['user_id'], notification=notification)
+                    notifications.post(user_id=user['user_id'], notification=notification)
                 if slack is None:
-                    slack = self.__get_slack_server(server_id=server['id'])
+                    slack = self.__get_slack_server(conn, server_id=server['id'])
                 for s in slack:
                     self.__slack(slack=s, server=server, event=event, data=len(queries))
 
@@ -369,7 +376,7 @@ class Monitor:
         # Send Slack Message
         requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
-    def __get_users_server(self, server_id):
+    def __get_users_server(self, conn, server_id):
         query = """
             SELECT m.user_id
             FROM monitoring m
@@ -389,9 +396,9 @@ class Monitor:
             AND m.monitor_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
+        return conn.execute(query=query, args={"server_id": server_id, "license": self._license.get_resources()})
 
-    def __get_slack_server(self, server_id):
+    def __get_slack_server(self, conn, server_id):
         query = """
             SELECT DISTINCT ms.monitor_slack_url, ms.monitor_base_url
             FROM monitoring_settings ms
@@ -411,9 +418,9 @@ class Monitor:
             WHERE ms.monitor_slack_enabled = 1
             AND t.active = 1
         """
-        return self._sql.execute(query=query, args={"server_id": server_id, "license": self._license.resources})
+        return conn.execute(query=query, args={"server_id": server_id, "license": self._license.get_resources()})
 
-    def __get_last_event(self, server_id):
+    def __get_last_event(self, conn, server_id):
         query = """
             SELECT event, time
             FROM monitoring_events
@@ -422,11 +429,11 @@ class Monitor:
             ORDER BY id DESC
             LIMIT 1
         """
-        return self._sql.execute(query=query, args=(server_id))
+        return conn.execute(query=query, args=(server_id))
 
-    def __add_event(self, server_id, event, data=None):
+    def __add_event(self, conn, server_id, event, data=None):
         query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`, `time`) VALUES (%s, %s, %s, %s)"
-        self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
+        conn.execute(query=query, args=(server_id, event, data, self.__utcnow()))
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))

@@ -27,7 +27,7 @@ class Client:
             WHERE s.group_id = %(group_id)s AND (s.shared = 1 OR s.owner_id = %(user_id)s)
             ORDER BY s.name;
         """
-        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.resources})
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.get_resources()})
 
     def get_servers_unassigned(self, user_id, group_id):
         query = """
@@ -52,7 +52,7 @@ class Client:
             AND cs.server_id IS NULL
             ORDER BY s.name
         """
-        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.resources})
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "license": self._license.get_resources()})
 
     def get_folders(self, user_id):
         query = """
@@ -84,7 +84,7 @@ class Client:
             WHERE s.id = %(server_id)s
             AND (s.shared = 1 OR s.owner_id = %(user_id)s)
         """
-        result = self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.resources})
+        result = self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.get_resources()})
         if len(result) == 0:
             return None
 

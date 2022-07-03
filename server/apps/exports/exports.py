@@ -158,8 +158,14 @@ class Exports:
         error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
         progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
+        # Check mysqldump version
+        p = core.execute('mysqldump --version')
+        is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
+
         # Build options
-        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4 --set-gtid-purged=OFF'
+        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
+        if not is_mariadb:
+            options += ' --set-gtid-purged=OFF'
         if not item['export_schema']:
             options += ' --no-create-info'
         elif item['add_drop_table']:
