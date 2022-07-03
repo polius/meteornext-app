@@ -685,18 +685,25 @@ export default {
     },
     cellEditingStarted(event) {
       this.$nextTick(() => {
-        // Store row node
-        this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
-      
+        // Select edited row
+        this.gridApi.content.getSelectedNodes().forEach(x => x.setSelected(false))
+        event.node.setSelected(true)
+        // Check if the user edited a different row
+        if (this.currentCellEditNode.rowIndex != event.rowIndex && this.cellEditingValuesToUpdate(this.currentCellEditValues)) {
+          this.cellEditingConfirm()
+          return
+        }
         // Store row values
-        if (Object.keys(this.currentCellEditValues).length == 0) {
-          let node = this.gridApi.content.getSelectedNodes()[0].data
+        if (this.currentCellEditNode.rowIndex != event.rowIndex) {
+          let node = event.node.data
           let keys = Object.keys(node)
           this.currentCellEditValues = {}
           for (let i = 0; i < keys.length; ++i) {
             this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
           }
         }
+        // Store row node
+        this.currentCellEditNode = event.node
         // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
         let columnType = this.contentColumnsType[event.colDef.colId]
         if (['text','mediumtext','longtext','blob','mediumblob','longblob'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
@@ -708,13 +715,29 @@ export default {
     cellEditingStopped(event) {
       // Store new value
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
-      if (this.currentCellEditMode == 'edit' && this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+      if (this.currentCellEditMode == 'edit' && this.currentCellEditValues[event.colDef.field] !== undefined) {
+        if (this.currentCellEditNode.rowIndex == event.rowIndex) {
+          this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+        }
+      }
     },
     cellEditingConfirm() {
       this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, false)
     },
     cellEditingConfirmSubmit() {
       this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, true)
+    },
+    cellEditingValuesToUpdate(values) {
+      if (this.currentCellEditMode == 'new') return true
+      else if (this.currentCellEditMode == 'edit') {
+        let keys = Object.keys(values)
+        for (let i = 0; i < keys.length; ++i) {
+          if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+            if (values[keys[i]]['new'] !== undefined) return true
+          }
+        }
+      }
+      return false
     },
     cellEditingSubmit(mode, node, values, confirm=false) {
       if (Object.keys(values).length == 0) return

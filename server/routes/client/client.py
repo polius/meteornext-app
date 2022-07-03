@@ -17,7 +17,6 @@ import connectors.client
 
 class Client:
     def __init__(self, app, sql, license):
-        self._app = app
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -34,8 +33,8 @@ class Client:
         @jwt_required()
         def client_servers_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -91,8 +90,8 @@ class Client:
         @jwt_required()
         def client_servers_unassigned_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -119,8 +118,8 @@ class Client:
         @jwt_required()
         def client_databases_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -163,8 +162,8 @@ class Client:
         @jwt_required()
         def client_objects_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -209,8 +208,8 @@ class Client:
         @jwt_required()
         def client_variables_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -242,8 +241,8 @@ class Client:
         @jwt_required()
         def client_execute_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -326,8 +325,8 @@ class Client:
         @jwt_required()
         def client_processlist_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -358,8 +357,8 @@ class Client:
         @jwt_required()
         def client_explain_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -394,8 +393,8 @@ class Client:
         @jwt_required()
         def client_structure_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -430,8 +429,8 @@ class Client:
         @jwt_required()
         def client_structure_columns_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -463,8 +462,8 @@ class Client:
         @jwt_required()
         def client_info_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -537,8 +536,8 @@ class Client:
         @jwt_required()
         def client_collations_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -570,8 +569,8 @@ class Client:
         @jwt_required()
         def client_import_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -616,8 +615,8 @@ class Client:
         @jwt_required()
         def client_export_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -656,8 +655,8 @@ class Client:
         @jwt_required()
         def client_clone_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -695,8 +694,8 @@ class Client:
         @jwt_required()
         def client_saved_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -729,8 +728,8 @@ class Client:
         @jwt_required()
         def client_settings_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -759,8 +758,8 @@ class Client:
         @jwt_required()
         def client_stop_query_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -784,8 +783,8 @@ class Client:
         @jwt_required()
         def client_rights_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -832,8 +831,8 @@ class Client:
         @jwt_required()
         def client_close_connection_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:
@@ -857,8 +856,8 @@ class Client:
         @jwt_required()
         def client_pks_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get User
             try:

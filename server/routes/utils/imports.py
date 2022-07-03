@@ -3,6 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from sentry_sdk import set_user
 from werkzeug.utils import secure_filename
 import os
+import sys
 import uuid
 import json
 import shutil
@@ -21,8 +22,7 @@ import apps.imports.imports
 import apps.imports.scan
 
 class Imports:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -36,6 +36,9 @@ class Imports:
         # Init core
         self._import_app = apps.imports.imports.Imports(sql)
         self._scan_app = apps.imports.scan.Scan(sql)
+        # Retrieve base path
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
 
     def blueprint(self):
         # Init blueprint
@@ -45,8 +48,8 @@ class Imports:
         @jwt_required()
         def imports_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -70,8 +73,8 @@ class Imports:
         @jwt_required()
         def imports_check_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -96,8 +99,8 @@ class Imports:
         @jwt_required()
         def imports_stop_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -117,8 +120,8 @@ class Imports:
         @jwt_required()
         def imports_scan_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -150,8 +153,8 @@ class Imports:
         @jwt_required()
         def imports_scan_stop_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -171,8 +174,8 @@ class Imports:
         @jwt_required()
         def imports_s3_buckets_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -192,8 +195,8 @@ class Imports:
         @jwt_required()
         def imports_s3_objects_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -283,15 +286,9 @@ class Imports:
         # Generate uuid
         uri = str(uuid.uuid4())
 
-        # Init path
-        path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'imports'),
-            "remote": '.meteor/imports'
-        }
-
         # Make import folder
-        if not os.path.exists(os.path.join(path['local'], uri)):
-            os.makedirs(os.path.join(path['local'], uri))
+        if not os.path.exists(f"{self._base_path}/files/imports/{uri}"):
+            os.makedirs(f"{self._base_path}/files/imports/{uri}")
 
         # Method: file
         if data['mode'] == 'file':
@@ -307,12 +304,12 @@ class Imports:
                 return jsonify({"message": 'The file extension is not valid.'}), 400
 
             # Store file
-            file.save(os.path.join(path['local'], uri, secure_filename(file.filename)))
+            file.save(f"{self._base_path}/files/imports/{uri}/{secure_filename(file.filename)}")
 
             # Build file metadata
             source = secure_filename(file.filename)
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
-            size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
+            size = os.path.getsize(f"{self._base_path}/files/imports/{uri}/{secure_filename(file.filename)}")
             selected = ''
             url = data['url']
             create_database = json.loads(data['createDatabase'])
@@ -352,7 +349,7 @@ class Imports:
                 "bucket": data['bucket']
             }
 
-        # Build Item
+        # Create mew import
         item = {
             'username': user['username'],
             'mode': data['mode'],
@@ -367,7 +364,7 @@ class Imports:
             'database': data['database'].strip(),
             'create_database': create_database,
             'recreate_database': recreate_database,
-            'status': 'STARTING' if not group['utils_concurrent'] else 'QUEUED',
+            'status': 'QUEUED',
             'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None,
@@ -375,14 +372,7 @@ class Imports:
             'slack_url': group['utils_slack_url'],
             'url': url
         }
-        item['id'] = self._imports.post(user, item)
-
-        # Parse selected for import process
-        item['selected'] = [i['file'] for i in data['selected']] if selected else []
-
-        # Start import process
-        if not group['utils_concurrent']:
-            self._import_app.start(user, item, server, region, path, amazon_s3)
+        self._imports.post(user, item)
 
         # Return tracking identifier
         return jsonify({'uri': item['uri'], 'coins': coins}), 200
@@ -476,12 +466,11 @@ class Imports:
         data['id'] = self._scans.post(user, data)
 
         # Make scan folder
-        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'scans')
-        if not os.path.exists(os.path.join(local_path, data['uri'])):
-            os.makedirs(os.path.join(local_path, data['uri']))
+        if not os.path.exists(f"{self._base_path}/files/scans/{data['uri']}"):
+            os.makedirs(f"{self._base_path}/files/scans/{data['uri']}")
 
         # Start new scan (threaded)
-        self._scan_app.start(data, local_path)
+        self._scan_app.start(data, f"{self._base_path}/files/scans/{data['uri']}")
 
         # Return tracking metadata
         return {'id': data['id'], 'size': data['metadata']['size']}

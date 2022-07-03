@@ -12,8 +12,7 @@ import models.admin.users
 import models.admin.settings
 
 class Settings:
-    def __init__(self, app, sql, license, settings=None):
-        self._app = app
+    def __init__(self, sql, license, settings=None):
         self._sql = sql
         self._license = license
         self._settings_conf = settings
@@ -29,8 +28,8 @@ class Settings:
         @jwt_required()
         def settings_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -56,8 +55,8 @@ class Settings:
         @jwt_required()
         def settings_license_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -76,7 +75,7 @@ class Settings:
 
             # Check number of seconds elapsed before last check
             now = datetime.utcnow()
-            last = self._license.last_check_date
+            last = self._license.get_last_check_date()
             diff = int((now-last).total_seconds())
 
             # Check license status
@@ -85,11 +84,11 @@ class Settings:
 
             # Build data
             license = {
-                "account": self._license.status['account'],
+                "account": self._license.get_status()['account'],
                 "access_key": self._settings_conf['license']['access_key'],
                 "secret_key": self._settings_conf['license']['secret_key'],
-                "resources": self._license.status['resources'],
-                "last_check_date": self._license.last_check_date,
+                "resources": self._license.get_status()['resources'],
+                "last_check_date": self._license.get_last_check_date(),
             }
             if int(diff) < 60:
                 return jsonify({'license': license, 'message': f"Wait {60-diff} seconds to refresh again"}), 400
@@ -100,8 +99,8 @@ class Settings:
         @jwt_required()
         def settings_license_usage_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -126,8 +125,8 @@ class Settings:
         @jwt_required()
         def settings_files_test_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -162,11 +161,11 @@ class Settings:
 
         # Get License Settings
         settings['license'] = {}
-        settings['license']['account'] = self._license.status['account']
+        settings['license']['account'] = self._license.get_status()['account']
         settings['license']['access_key'] = self._settings_conf['license']['access_key']
         settings['license']['secret_key'] = self._settings_conf['license']['secret_key']
-        settings['license']['resources'] = self._license.status['resources']
-        settings['license']['last_check_date'] = self._license.last_check_date
+        settings['license']['resources'] = self._license.get_status()['resources']
+        settings['license']['last_check_date'] = self._license.get_last_check_date()
 
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
@@ -191,10 +190,6 @@ class Settings:
     def post(self, user_id):
         # Get data
         data = request.get_json()
-        # Check files path permissions
-        if data['name'] == 'FILES':
-            if not self.check_files_path(data['value']['path']):
-                return jsonify({'message': 'No write permissions in the files folder'}), 400
         # Store Setting
         setting = {
             'name': data['name'],
@@ -225,13 +220,6 @@ class Settings:
             security = self._settings.get(setting_name='SECURITY')
         data = json.loads(security)
         if 'force_mfa' in data and data['force_mfa'] is True:
-            return True
-        return False
-
-    def check_files_path(self, path):
-        while not os.path.exists(path) and path != '/':
-            path = os.path.normpath(os.path.join(path, os.pardir))
-        if os.access(path, os.X_OK | os.W_OK):
             return True
         return False
 

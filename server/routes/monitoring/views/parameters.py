@@ -6,8 +6,7 @@ import models.admin.users
 import models.monitoring.monitoring
 
 class Parameters:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -21,8 +20,8 @@ class Parameters:
         @jwt_required()
         def monitoring_parameters_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:

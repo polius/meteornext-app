@@ -57,7 +57,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.ggevent']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
@@ -135,36 +135,7 @@ class build_server:
         # 6) Create 'init.py' to invoke cythonized code
         init_file = "{}/init.py".format(cythonized)
         with open(init_file, 'w') as file_open:
-            if binary_name == 'server':
-                file_open.write("""from gevent import monkey
-monkey.patch_all()
-import gunicorn.app.base
-import os
-import sys
-import tarfile
-from gunicorn import glogging
-from gunicorn.workers import ggevent
-from app import app
-class StandaloneApplication(gunicorn.app.base.BaseApplication):
-    def __init__(self, app, options=None):
-        self.options = options or {}
-        self.application = app
-        super().__init__()
-    def load_config(self):
-        config = {key: value for key, value in self.options.items()
-                  if key in self.cfg.settings and value is not None}
-        for key, value in config.items():
-            self.cfg.set(key.lower(), value)
-    def load(self):
-        return self.application
-if __name__ == "__main__":
-    # Extract Meteor
-    with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
-        tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
-    # Init Gunicorn App
-    StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "error.log", "pidfile": "pid.log", "timeout": 3600}).run()""")
-            else:
-                file_open.write("from {0} import {0}\n{0}()".format(binary_name))
+            file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
         # 7) Build binaries list
         binaries = []

@@ -11,20 +11,16 @@ import tempfile
 import models.admin.settings
 import connectors.base
 import models.admin.users
-from cron import Cron
 
 class Install:
-    def __init__(self, app, license, conf, register_blueprints):
-        self._app = app
+    def __init__(self, license, conf, register_blueprints):
         self._license = license
         self._conf = conf
         self._register_blueprints = register_blueprints
         self._available = None
-        # Init files path
-        self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
-        self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
-        self._keys_path = "{}/keys/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/keys/".format(os.path.dirname(sys.executable))
-        self._files_folder = "{}/files".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/files".format(os.path.dirname(sys.executable))
+        # Retrieve base path
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
 
     def blueprint(self):
         # Init blueprint
@@ -53,9 +49,9 @@ class Install:
             data['uuid'] = str(uuid.getnode())
 
             # Check License
-            self._license.license = data
+            self._license.set_license(data)
             self._license.validate(force=True)
-            return jsonify({"message": self._license.status['response']}), self._license.status['code']
+            return jsonify({"message": self._license.get_status()['response']}), self._license.get_status()['code']
 
         @install_blueprint.route('/install/sql', methods=['POST'])
         def install_sql_method():
@@ -118,8 +114,9 @@ class Install:
     ####################
     def available(self):
         if self._available is None:
-            if os.path.exists(self._setup_file):
-                with open(self._setup_file) as file_open:
+            conf_path = f"{self._base_path}/server.conf"
+            if os.path.exists(conf_path):
+                with open(conf_path) as file_open:
                     f = json.load(file_open)
                     if f['sql']['hostname'] != '' and f['sql']['username'] != '' and f['sql']['password'] != '' and f['sql']['port'] != '' and f['sql']['database'] != '':
                         self._available = False
@@ -152,7 +149,8 @@ class Install:
             sql.execute('DROP DATABASE IF EXISTS `{}`'.format(data['sql']['database']))
             sql.execute('CREATE DATABASE `{}`'.format(data['sql']['database']))
             sql.use(data['sql']['database'])
-            with open(self._schema_file) as file_open:
+            schema_file = f"{sys._MEIPASS}/models/schema.sql" if self._bin else f"{self._base_path}/models/schema"
+            with open(schema_file) as file_open:
                 queries = file_open.read().split(';')
                 for q in queries:
                     if q.strip() != '':
@@ -169,19 +167,16 @@ class Install:
             user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
             users.post(1, user)
 
-            # Init Files Path
-            settings = models.admin.settings.Settings(sql, self._license)
-            setting = {"name": "FILES", "value": f'{{"path":"{self._files_folder}"}}'}
-            settings.post(user_id=1, setting=setting)
-
             # Init Amazon S3
+            settings = models.admin.settings.Settings(sql, self._license)
             if data['amazon']['enabled']:
                 setting = {"name": "AMAZON", "value": f'{{"enabled":true,"aws_access_key":"{data["amazon"]["aws_access_key"]}","aws_secret_access_key":"{data["amazon"]["aws_secret_access_key"]}","region":"{data["amazon"]["region"]}","bucket":"{data["amazon"]["bucket"]}"}}'}
                 settings.post(user_id=1, setting=setting)
 
         # Create keys folder
-        if not os.path.exists(self._keys_path):
-            os.makedirs(self._keys_path)
+        keys_path = f"{self._base_path}/keys"
+        if not os.path.exists(keys_path):
+            os.makedirs(keys_path)
 
         # Write setup to the setup file
         self._conf["license"] = {
@@ -201,18 +196,18 @@ class Install:
             "ssl_verify_ca": data['sql']['ssl_verify_ca']
         }
         if data['sql']['ssl_client_key']:
-            with open(self._keys_path + 'ssl_key.pem', 'w') as outfile:
+            with open(f"{keys_path}/ssl_key.pem", 'w') as outfile:
                 outfile.write(data['sql']['ssl_client_key'])
             self._conf['sql']['ssl_client_key'] = 'ssl_key.pem'
         if data['sql']['ssl_client_certificate']:
-            with open(self._keys_path + 'ssl_cert.pem', 'w') as outfile:
+            with open(f"{keys_path}/ssl_cert.pem", 'w') as outfile:
                 outfile.write(data['sql']['ssl_client_certificate'])
             self._conf['sql']['ssl_client_certificate'] = 'ssl_cert.pem'
         if data['sql']['ssl_ca_certificate']:
-            with open(self._keys_path + 'ssl_ca.pem', 'w') as outfile:
+            with open(f"{keys_path}/ssl_ca.pem", 'w') as outfile:
                 outfile.write(data['sql']['ssl_ca_certificate'])
             self._conf['sql']['ssl_ca_certificate'] = 'ssl_ca.pem'
-        with open(self._setup_file, 'w') as outfile:
+        with open(f"{self._base_path}/server.conf", 'w') as outfile:
             json.dump(self._conf, outfile)
 
         # Init sql pool
@@ -223,9 +218,6 @@ class Install:
 
         # Set unique hardware id
         self._conf['license']['uuid'] = str(uuid.getnode())
-
-        # Init cron
-        Cron(self._app, self._license, sql)
 
         # Disable Install
         self._available = False

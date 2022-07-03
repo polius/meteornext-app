@@ -13,7 +13,7 @@ import routes.admin.settings
 import apps.imports.imports
 
 class Users:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._groups = models.admin.groups.Groups(sql)
@@ -21,7 +21,7 @@ class Users:
         self._settings = models.admin.settings.Settings(sql, license)
         self._imports = models.utils.imports.Imports(sql, license)
         # Init routes
-        self._settings_route = routes.admin.settings.Settings(app, sql, license)
+        self._settings_route = routes.admin.settings.Settings(sql, license)
         # Init apps
         self._import_app = apps.imports.imports.Imports(sql)
 
@@ -33,8 +33,8 @@ class Users:
         @jwt_required()
         def users_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings_route.check_url():

@@ -67,5 +67,5 @@ class Monitoring_Queries:
             {2} {3} {4} {5} {6} {7} {8} {9} {10}
             ORDER BY {11} {12}
             LIMIT 1000
-        """.format(user['id'], user['group_id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order, self._license.resources)
+        """.format(user['id'], user['group_id'], server, host, user_text, database, query_text, first_seen_from, first_seen_to, last_seen_from, last_seen_to, sort_column, sort_order, self._license.get_resources())
         return self._sql.execute(query, args)

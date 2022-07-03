@@ -26,13 +26,13 @@ import models.admin.user_mfa
 import routes.admin.settings
 
 class MFA:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql, license)
+        self._settings = routes.admin.settings.Settings(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -42,7 +42,7 @@ class MFA:
         @jwt_required()
         def mfa_method():
             # Check license
-            if not self._license.validated:
+            if not self._license.is_validated():
                 return jsonify({"message": self._license['response']}), 401
 
             # Get request data
@@ -79,7 +79,7 @@ class MFA:
         @jwt_required(optional=True)
         def mfa_2fa_method():
             # Check license
-            if not self._license.validated:
+            if not self._license.is_validated():
                 return jsonify({"message": self._license['response']}), 401
             
             # Get request data
@@ -109,7 +109,7 @@ class MFA:
         @jwt_required(optional=True)
         def mfa_webauthn_register_method():
             # Check license
-            if not self._license.validated:
+            if not self._license.is_validated():
                 return jsonify({"message": self._license['response']}), 401
             
             # Get request data

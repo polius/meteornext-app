@@ -24,7 +24,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY s.id
         """
-        return self._sql.execute(query, {"server_id": server_id, "group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
+        return self._sql.execute(query, {"server_id": server_id, "group_id": user['group_id'], "user_id": user['id'], "license": self._license.get_resources()})
 
     def get_monitoring(self, user):
         query = """
@@ -46,7 +46,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.get_resources()})
 
     def get_parameters(self, user):
         query = """
@@ -68,7 +68,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.get_resources()})
 
     def get_processlist(self, user):
         query = """
@@ -90,7 +90,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.get_resources()})
 
     def get_queries(self, user):
         query = """
@@ -112,7 +112,7 @@ class Monitoring:
             AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name
         """
-        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": user['group_id'], "user_id": user['id'], "license": self._license.get_resources()})
 
     def get_events(self, user):
         query = """

@@ -30,7 +30,7 @@ import models.notifications
 import routes.deployments.meteor
 
 class Deployments:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -48,7 +48,7 @@ class Deployments:
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(app, sql, license)
+        self._meteor = routes.deployments.meteor.Meteor(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -58,8 +58,8 @@ class Deployments:
         @jwt_required()
         def deployments_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -83,8 +83,8 @@ class Deployments:
         @jwt_required()
         def deployments_code():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -106,8 +106,8 @@ class Deployments:
         @jwt_required()
         def deployments_start():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -126,8 +126,8 @@ class Deployments:
         @jwt_required()
         def deployments_stop():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -146,8 +146,8 @@ class Deployments:
         @jwt_required()
         def deployments_results_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get Request Json URI
             uri = request.args.get('uri')
@@ -174,13 +174,13 @@ class Deployments:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
             # Get Execution Results File
-            files = json.loads(self._settings.get(setting_name='FILES'))
             if results['logs'] == 'local':
-                path = os.path.join(files['path'], 'deployments')
                 # Check if exists
-                if not os.path.exists(f"{path}/{uri}.json"):
+                bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+                base_path = os.path.realpath(os.path.dirname(sys.executable)) if bin else os.path.realpath(os.path.dirname(sys.argv[0]))
+                if not os.path.exists(f"{base_path}/files/deployments/{uri}.json"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                return send_from_directory(path, f"{uri}.json")
+                return send_from_directory(f"{base_path}/files/deployments", f"{uri}.json")
 
             elif results['logs'] == 'amazon_s3':
                 amazon = json.loads(self._settings.get(setting_name='AMAZON'))
@@ -209,8 +209,8 @@ class Deployments:
         @jwt_required()
         def deployments_executions():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -229,8 +229,8 @@ class Deployments:
         @jwt_required()
         def deployments_shared():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -249,8 +249,8 @@ class Deployments:
         @jwt_required()
         def deployments_pinned():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -881,10 +881,12 @@ class Deployments:
         return schedule
 
     def __check_files_path(self):
-        path = json.loads(self._settings.get(setting_name='FILES'))['path']
-        return self.__check_local_path(path)
+        # Get Path
+        bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        base_path = os.path.realpath(os.path.dirname(sys.executable)) if bin else os.path.realpath(os.path.dirname(sys.argv[0]))
+        path = f"{base_path}/files"
 
-    def __check_local_path(self, path):
+        # Check Write permissions in path
         while not os.path.exists(path) and path != '/':
             path = os.path.normpath(os.path.join(path, os.pardir))
         if os.access(path, os.X_OK | os.W_OK):

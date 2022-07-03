@@ -2,11 +2,8 @@ import os
 import sys
 import json
 import uuid
-import hashlib
-import requests
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from datetime import datetime
 
 import routes.install
 import routes.login
@@ -47,37 +44,39 @@ import routes.utils.imports
 import routes.utils.exports
 import routes.utils.clones
 import connectors.pool
-from cron import Cron
 
 class Setup:
-    def __init__(self, app, version, url_prefix):
+    def __init__(self, app, license, url_prefix):
         self._app = app
         self._url_prefix = url_prefix
         self._conf = {}
-        self._license = License(version)
-        self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
+        self._license = license
+        root_path = os.path.realpath(os.path.dirname(sys.argv[0]))
+        setup_file = "{}/server.conf".format(root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
 
         # Init Install blueprint
-        install = routes.install.Install(self._app, self._license, self._conf, self.register_blueprints)
+        install = routes.install.Install(self._license, self._conf, self.register_blueprints)
         self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
         try:
             # Check if Meteor is initiated with all required params.
-            with open(self._setup_file) as file_open:
+            with open(setup_file) as file_open:
                 self._conf = json.load(file_open)
             # Set unique hardware id
             self._conf['license']['uuid'] = str(uuid.getnode())
             # Init sql pool
             sql = connectors.pool.Pool(self._conf['sql'])
             # Init license
-            self._license.license = self._conf['license']
+            self._license.set_license(self._conf['license'])
             self._license.validate()
+            # Init sentry
+            if 'sentry' in self._license.get_status() and self._license.get_status()['sentry'] is not None:
+                sentry_sdk.init(dsn=self._license.get_status()['sentry'], environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
             # Register blueprints
             self.register_blueprints(sql)
-            # Init cron
-            Cron(self._app, self._license, sql)
             print("- Meteor initiated from existing configuration.")
-        except Exception:
+        except Exception as e:
+            print(f"Error: {str(e)}")
             print("- Meteor initiated. No configuration detected. Install is required.")
 
     ####################
@@ -85,126 +84,45 @@ class Setup:
     ####################
     def register_blueprints(self, sql):
         # Init all blueprints
-        login = routes.login.Login(self._app, sql, self._license)
-        profile = routes.profile.Profile(self._app, sql, self._license)
-        mfa = routes.mfa.MFA(self._app, sql, self._license)
-        notifications = routes.notifications.Notifications(self._app, sql, self._license)
-        settings = routes.admin.settings.Settings(self._app, sql, self._license, self._conf)
-        groups = routes.admin.groups.Groups(self._app, sql, self._license)
-        users = routes.admin.users.Users(self._app, sql, self._license)
-        admin_deployments = routes.admin.deployments.Deployments(self._app, sql, self._license)
-        admin_inventory = routes.admin.inventory.inventory.Inventory(self._app, sql, self._license)
-        admin_inventory_environments = routes.admin.inventory.environments.Environments(self._app, sql, self._license)
-        admin_inventory_regions = routes.admin.inventory.regions.Regions(self._app, sql, self._license)
-        admin_inventory_servers = routes.admin.inventory.servers.Servers(self._app, sql, self._license)
-        admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
-        admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._app, sql, self._license)
-        admin_utils_imports = routes.admin.utils.imports.Imports(self._app, sql, self._license)
-        admin_utils_exports = routes.admin.utils.exports.Exports(self._app, sql, self._license)
-        admin_utils_clones = routes.admin.utils.clones.Clones(self._app, sql, self._license)
-        admin_client = routes.admin.client.Client(self._app, sql, self._license)
-        admin_monitoring = routes.admin.monitoring.Monitoring(self._app, sql, self._license)
-        inventory = routes.inventory.inventory.Inventory(self._app, sql, self._license)
-        environments = routes.inventory.environments.Environments(self._app, sql, self._license)
-        regions = routes.inventory.regions.Regions(self._app, sql, self._license)
-        servers = routes.inventory.servers.Servers(self._app, sql, self._license)
-        auxiliary = routes.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
-        cloud = routes.inventory.cloud.Cloud(self._app, sql, self._license)
-        releases = routes.deployments.releases.Releases(self._app, sql, self._license)
-        shared = routes.deployments.shared.Shared(self._app, sql, self._license)
-        deployments = routes.deployments.deployments.Deployments(self._app, sql, self._license)
-        monitoring = routes.monitoring.monitoring.Monitoring(self._app, sql, self._license)
-        monitoring_parameters = routes.monitoring.views.parameters.Parameters(self._app, sql, self._license)
-        monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
-        monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
+        login = routes.login.Login(sql, self._license)
+        profile = routes.profile.Profile(sql, self._license)
+        mfa = routes.mfa.MFA(sql, self._license)
+        notifications = routes.notifications.Notifications(sql, self._license)
+        settings = routes.admin.settings.Settings(sql, self._license, self._conf)
+        groups = routes.admin.groups.Groups(sql, self._license)
+        users = routes.admin.users.Users(sql, self._license)
+        admin_deployments = routes.admin.deployments.Deployments(sql, self._license)
+        admin_inventory = routes.admin.inventory.inventory.Inventory(sql, self._license)
+        admin_inventory_environments = routes.admin.inventory.environments.Environments(sql, self._license)
+        admin_inventory_regions = routes.admin.inventory.regions.Regions(sql, self._license)
+        admin_inventory_servers = routes.admin.inventory.servers.Servers(sql, self._license)
+        admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(sql, self._license)
+        admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(sql, self._license)
+        admin_utils_imports = routes.admin.utils.imports.Imports(sql, self._license)
+        admin_utils_exports = routes.admin.utils.exports.Exports(sql, self._license)
+        admin_utils_clones = routes.admin.utils.clones.Clones(sql, self._license)
+        admin_client = routes.admin.client.Client(sql, self._license)
+        admin_monitoring = routes.admin.monitoring.Monitoring(sql, self._license)
+        inventory = routes.inventory.inventory.Inventory(sql, self._license)
+        environments = routes.inventory.environments.Environments(sql, self._license)
+        regions = routes.inventory.regions.Regions(sql, self._license)
+        servers = routes.inventory.servers.Servers(sql, self._license)
+        auxiliary = routes.inventory.auxiliary.Auxiliary(sql, self._license)
+        cloud = routes.inventory.cloud.Cloud(sql, self._license)
+        releases = routes.deployments.releases.Releases(sql, self._license)
+        shared = routes.deployments.shared.Shared(sql, self._license)
+        deployments = routes.deployments.deployments.Deployments(sql, self._license)
+        monitoring = routes.monitoring.monitoring.Monitoring(sql, self._license)
+        monitoring_parameters = routes.monitoring.views.parameters.Parameters(sql, self._license)
+        monitoring_processlist = routes.monitoring.views.processlist.Processlist(sql, self._license)
+        monitoring_queries = routes.monitoring.views.queries.Queries(sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
-        utils = routes.utils.utils.Utils(self._app, sql, self._license)
-        imports = routes.utils.imports.Imports(self._app, sql, self._license)
-        exports = routes.utils.exports.Exports(self._app, sql, self._license)
-        clones = routes.utils.clones.Clones(self._app, sql, self._license)
+        utils = routes.utils.utils.Utils(sql, self._license)
+        imports = routes.utils.imports.Imports(sql, self._license)
+        exports = routes.utils.exports.Exports(sql, self._license)
+        clones = routes.utils.clones.Clones(sql, self._license)
 
         # Register all blueprints
         blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, utils, client, imports, exports, clones]
         for i in blueprints:
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
-
-class License:
-    def __init__(self, version):
-        self._version = version
-        self._license_params = None
-        self._license_status = {}
-        self._last_check_date = datetime.utcnow()
-
-    @property
-    def status(self):
-        return self._license_status
-
-    @property
-    def validated(self):
-        return self._license_status and self._license_status['code'] == 200
-
-    @property
-    def resources(self):
-        return self._license_status['resources']
-
-    @property
-    def last_check_date(self):
-        return self._last_check_date
-
-    @property
-    def license(self): pass
-
-    @license.setter
-    def license(self, license):
-        self._license_params = license
-
-    def validate(self, force=False):
-        if force or not self._license_status or self._license_status['code'] != 200:
-            # Check license
-            self.__check()
-
-            # Store last check date
-            self._last_check_date = datetime.utcnow()
-
-            # Check sentry
-            if 'sentry' in self._license_status and self._license_status['sentry'] is not None:
-                sentry_sdk.init(dsn=self._license_status['sentry'], environment=self._license_params['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
-
-    def __check(self):
-        try:
-            # Add version
-            self._license_params['version'] = self._version
-
-            # Generate challenge
-            self._license_params['challenge'] = str(uuid.uuid4())
-
-            # Check license
-            response = requests.post("https://license.meteornext.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
-
-            # Check "x-meteor2-key" header is valid
-            if response.status_code != 200:
-                self._license_status = {"code": response.status_code, "response": "The license is not valid.", "account": None, "resources": None, "sentry": None}
-            else:
-                # Check license is valid
-                response_code = json.loads(response.text)['statusCode']
-                response_body = json.loads(response.text)['body']
-                response_text = response_body['response']
-                account = response_body['account'] if response_code == 200 else None
-                resources = response_body['resources'] if response_code == 200 else None
-                sentry = response_body['sentry'] if response_code == 200 else None
-
-                # Solve challenge
-                if response_code == 200:
-                    response_challenge = response_body['challenge']
-                    challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
-                    challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
-
-                    # Validate challenge
-                    if response_challenge != challenge:
-                        response_text = "The license is not valid."
-                        response_code = 401
-
-                self._license_status = {"code": response_code, "response": response_text, "account": account, "resources": resources, "sentry": sentry}
-        except Exception:
-            if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
-                self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}

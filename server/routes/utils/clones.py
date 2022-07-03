@@ -3,6 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from sentry_sdk import set_user
 from datetime import datetime
 import os
+import sys
 import uuid
 import json
 
@@ -15,8 +16,7 @@ import models.utils.clones
 import apps.clones.clones
 
 class Clones:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -27,6 +27,9 @@ class Clones:
         self._clone = models.utils.clones.Clones(sql, license)
         # Init core
         self._clone_app = apps.clones.clones.Clones(sql)
+        # Retrieve base path
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
 
     def blueprint(self):
         # Init blueprint
@@ -36,8 +39,8 @@ class Clones:
         @jwt_required()
         def clones_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -61,8 +64,8 @@ class Clones:
         @jwt_required()
         def clones_stop_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Get user data
             try:
@@ -154,22 +157,16 @@ class Clones:
         # Generate uuid
         uri = str(uuid.uuid4())
 
-        # Init path
-        path = {
-            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['path'], 'clones'),
-            "remote": '.meteor/clones'
-        }
-
         # Get Amazon S3 credentials
         amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
         if not amazon_s3['enabled']:
             return jsonify({"message": 'To perform clones enable the Amazon S3 flag in the Admin Panel.'}), 400
 
         # Make clones folder
-        if not os.path.exists(os.path.join(path['local'], uri)):
-            os.makedirs(os.path.join(path['local'], uri))
+        if not os.path.exists(f"{self._base_path}/files/clones/{uri}"):
+            os.makedirs(f"{self._base_path}/files/clones/{uri}")
 
-        # Build Item
+        # Create new clone
         item = {
             'username': user['username'],
             'source_server': data['source_server'],
@@ -191,18 +188,14 @@ class Clones:
             'export_routines': data['export_routines'],
             'export_events': data['export_events'],
             'size': data['size'],
-            'status': 'STARTING' if not group['utils_concurrent'] else 'QUEUED',
+            'status': 'QUEUED',
             'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'slack_enabled': group['utils_slack_enabled'],
             'slack_url': group['utils_slack_url'],
             'url': data['url']
         }
-        item['id'] = self._clone.post(user, item)
-
-        # Start import process
-        if not group['utils_concurrent']:
-            self._clone_app.start(user, item, servers, regions, path, amazon_s3)
+        self._clone.post(user, item)
 
         # Return tracking identifier
         return jsonify({'uri': item['uri'], 'coins': coins}), 200

@@ -115,7 +115,7 @@ class Client:
                 ORDER BY cs.date DESC, available.user ASC, available.server ASC
                 LIMIT 1000
             """
-            return self._sql.execute(query, {"license": self._license.resources})
+            return self._sql.execute(query, {"license": self._license.get_resources()})
         else:
             user = server = attached = ''
             args = []
@@ -128,8 +128,8 @@ class Client:
                 if 'server' in dfilter and dfilter['server'] is not None:
                     server = 'AND s.name = %s'
                     args.append(dfilter['server'])
-            args.append(self._license.resources)
-            args.append(self._license.resources)
+            args.append(self._license.get_resources())
+            args.append(self._license.get_resources())
             if dfilter is not None:
                 if 'attached' in dfilter and dfilter['attached'] is not None:
                     attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND cs.server_id IS NULL'

@@ -119,7 +119,7 @@ class Environments:
             WHERE (s.shared = 1 AND r.group_id = %(group_id)s)
             OR s.owner_id = %(user_id)s
         """
-        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.get_resources()})
 
     def get_environment_servers(self, user_id, group_id):
         query = """
@@ -138,7 +138,7 @@ class Environments:
             ) t ON t.id = s.id
             LEFT JOIN regions r ON r.id = s.region_id
         """
-        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.resources})
+        return self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "license": self._license.get_resources()})
 
     def is_disabled(self, user_id, group_id, environment_id):
         query = """
@@ -161,7 +161,7 @@ class Environments:
                 AND t.id IS NULL
             ) AS 'exist'
         """
-        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "environment_id": environment_id, "license": self._license.resources})[0]['exist']
+        return self._sql.execute(query, {"user_id": user_id, "group_id": group_id, "environment_id": environment_id, "license": self._license.get_resources()})[0]['exist']
 
     def valid(self, user_id, environment):
         query = """

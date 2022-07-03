@@ -8,13 +8,13 @@ import models.admin.inventory.inventory
 import routes.admin.settings
 
 class Inventory:
-    def __init__(self, app, sql, license):
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql, license)
+        self._settings = routes.admin.settings.Settings(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -24,8 +24,8 @@ class Inventory:
         @jwt_required()
         def admin_inventory_groups_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():
@@ -49,8 +49,8 @@ class Inventory:
         @jwt_required()
         def admin_inventory_users_method():
             # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():

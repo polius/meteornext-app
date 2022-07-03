@@ -14,17 +14,16 @@ import routes.profile
 import routes.mfa
 
 class Login:
-    def __init__(self, app, sql, license):
-        self._app = app
+    def __init__(self, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
         self._settings = models.admin.settings.Settings(sql, license)
         # Init routes
-        self._settings_route = routes.admin.settings.Settings(app, sql, license)
-        self._profile_route = routes.profile.Profile(app, sql, license)
-        self._mfa = routes.mfa.MFA(app, sql, license)
+        self._settings_route = routes.admin.settings.Settings(sql, license)
+        self._profile_route = routes.profile.Profile(sql, license)
+        self._mfa = routes.mfa.MFA(sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -34,8 +33,8 @@ class Login:
         def login_user():
             # Check license
             self._license.validate()
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            if not self._license.is_validated():
+                return jsonify({"message": self._license.get_status()['response']}), 401
 
             # Check parameters
             if not request.is_json:

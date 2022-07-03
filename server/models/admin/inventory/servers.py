@@ -28,7 +28,7 @@ class Servers:
                 WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
                 ORDER BY s.id DESC
             """
-            return self._sql.execute(query, {"user_id": user_id, "license": self._license.resources})
+            return self._sql.execute(query, {"user_id": user_id, "license": self._license.get_resources()})
         elif group_id is not None:
             query = """
                 SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.usage, s.shared, s.owner_id, s.secured, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', '1' AS 'active'

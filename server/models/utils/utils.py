@@ -21,7 +21,7 @@ class Utils:
             AND s.usage LIKE '%%U%%'
             ORDER BY s.name
         """
-        return self._sql.execute(query, {"user_id": user['id'], "group_id": user['group_id'], "license": self._license.resources})
+        return self._sql.execute(query, {"user_id": user['id'], "group_id": user['group_id'], "license": self._license.get_resources()})
 
     def get_credentials(self, user_id, group_id, server_id):
         query = """
@@ -44,7 +44,7 @@ class Utils:
             WHERE s.id = %(server_id)s
             AND (s.shared = 1 OR s.owner_id = %(user_id)s)
         """
-        result = self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.resources})
+        result = self._sql.execute(query, {"group_id": group_id, "user_id": user_id, "server_id": server_id, "license": self._license.get_resources()})
         if len(result) == 0:
             return None
 
