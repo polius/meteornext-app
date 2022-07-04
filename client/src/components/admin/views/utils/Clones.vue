@@ -214,22 +214,6 @@
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field v-model="filter.server" label="Server" style="padding-top:0px" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.serverFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.name === undefined || filter.name.length == 0) || (filter.name.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field v-model="filter.database" label="Database" style="padding-top:0px" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.databaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.name === undefined || filter.name.length == 0) || (filter.name.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
                     <v-col>
                       <v-autocomplete v-model="filter.status" :items="cloneStatus" multiple label="Status" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
@@ -243,6 +227,38 @@
                           </v-chip>
                         </template>
                       </v-autocomplete>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.sourceServer" label="Source Server" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.sourceServerFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.source_server === undefined || filter.source_server.length == 0) || (filter.source_server.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.sourceDatabase" label="Source Database" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.sourceDatabaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.source_database === undefined || filter.source_database.length == 0) || (filter.source_database.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.destinationServer" label="Destination Server" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.destinationServerFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.destination_server === undefined || filter.destination_server.length == 0) || (filter.destination_server.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.destinationDatabase" label="Destination Database" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.destinationDatabaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.destination_database === undefined || filter.destination_database.length == 0) || (filter.destination_database.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">

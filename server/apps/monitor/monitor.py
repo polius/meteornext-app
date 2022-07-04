@@ -2,6 +2,7 @@ import time
 import json
 import calendar
 import requests
+import threading
 import traceback
 from sentry_sdk import capture_exception, flush, set_user
 from datetime import datetime, timedelta
@@ -72,17 +73,31 @@ class Monitor:
             servers.append(server)
 
         # Start Monitoring
+        threads = []
         for server in servers:
-            try:
-                self.__monitor_server(server)
-            except Exception as e:
-                traceback.print_exc()
-                if self._license.get_status().get('sentry'):
-                    set_user({"id": "monitor"})
-                    capture_exception(e)
-                    flush()
+            t = threading.Thread(target=self.__monitor_server, args=(server,))
+            t.daemon = True
+            threads.append(t)
+            t.start()
+
+        # Wait Threads to Finish
+        try:
+            for t in threads:
+                t.join()
+        except KeyboardInterrupt:
+            pass
 
     def __monitor_server(self, server):
+        try:
+            self.__monitor_server2(server)
+        except Exception as e:
+            traceback.print_exc()
+            if self._license.get_status().get('sentry'):
+                set_user({"id": "monitor"})
+                capture_exception(e)
+                flush()
+
+    def __monitor_server2(self, server):
         try:
             # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:
@@ -172,26 +187,27 @@ class Monitor:
             conn.stop()
 
         except Exception as e:
-            # Start Connection
-            conn = connectors.base.Base(self._sql)
+            try:
+                # Start Connection
+                conn = connectors.base.Base(self._sql)
 
-            # Monitoring Alarms
-            if server['monitor']['monitor_enabled'] == 1:
-                self.__monitor_alarms(conn, available=False, server=server, error=str(e))
+                # Monitoring Alarms
+                if server['monitor']['monitor_enabled'] == 1:
+                    self.__monitor_alarms(conn, available=False, server=server, error=str(e))
 
-            # Set server unavailable with error
-            query = """
-                INSERT INTO monitoring_servers (server_id, available, error, updated)
-                VALUES (%s, 0, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    available = VALUES(available),
-                    error = VALUES(error),
-                    updated = VALUES(updated)
-            """
-            conn.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
-
-            # Close SQL Connection
-            conn.stop()
+                # Set server unavailable with error
+                query = """
+                    INSERT INTO monitoring_servers (server_id, available, error, updated)
+                    VALUES (%s, 0, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        available = VALUES(available),
+                        error = VALUES(error),
+                        updated = VALUES(updated)
+                """
+                conn.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
+            finally:
+                # Close SQL Connection
+                conn.stop()
 
     def __monitor_alarms(self, conn, available, server, summary={}, params={}, processlist=[], error=None):
         # Init vars

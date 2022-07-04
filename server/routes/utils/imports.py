@@ -265,10 +265,6 @@ class Imports:
         if (user['coins'] - group['utils_coins']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
-        # Consume Coins
-        self._users.consume_coins(user, group['utils_coins'])
-        coins = user['coins'] - group['utils_coins']
-
         # Get server details
         server = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['server'])
         if len(server) == 0:
@@ -314,7 +310,6 @@ class Imports:
             url = data['url']
             create_database = json.loads(data['createDatabase'])
             recreate_database = json.loads(data['recreateDatabase'])
-            amazon_s3 = None
 
         elif data['mode'] == 'url':
             source = data['source']
@@ -324,7 +319,6 @@ class Imports:
             url = data['url']
             create_database = data['createDatabase']
             recreate_database = data['recreateDatabase']
-            amazon_s3 = None
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
@@ -343,11 +337,10 @@ class Imports:
             url = data['url']
             create_database = data['createDatabase']
             recreate_database = data['recreateDatabase']
-            amazon_s3 = {
-                "aws_access_key": cloud['access_key'],
-                "aws_secret_access_key": cloud['secret_key'],
-                "bucket": data['bucket']
-            }
+
+        # Consume Coins
+        self._users.consume_coins(user, group['utils_coins'])
+        coins = user['coins'] - group['utils_coins']
 
         # Create mew import
         item = {
