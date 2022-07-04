@@ -103,7 +103,7 @@ class Clones:
         # Generated Presigned URL
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         try:
-            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=30)
+            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=3600)
         except Exception as e:
             proceed = False
             # Update clone status

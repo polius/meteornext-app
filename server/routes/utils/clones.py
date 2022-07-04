@@ -120,9 +120,9 @@ class Clones:
         if (user['coins'] - group['utils_coins']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
-        # Consume Coins
-        self._users.consume_coins(user, group['utils_coins'])
-        coins = user['coins'] - group['utils_coins']
+        # Check the source is different than the destination
+        if data['source_server'] == data['destination_server'] and data['source_database'].strip() == data['destination_database'].strip():
+            return jsonify({'message': 'The source server and database cannot be the same as the destination.'}), 400
 
         # Get server details (source)
         servers = {}
@@ -165,6 +165,10 @@ class Clones:
         # Make clones folder
         if not os.path.exists(f"{self._base_path}/files/clones/{uri}"):
             os.makedirs(f"{self._base_path}/files/clones/{uri}")
+
+        # Consume Coins
+        self._users.consume_coins(user, group['utils_coins'])
+        coins = user['coins'] - group['utils_coins']
 
         # Create new clone
         item = {

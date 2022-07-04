@@ -26,16 +26,16 @@ class Clones:
                     args[f'mode{i}'] = v
             if 'sourceServer' in efilter and len(efilter['sourceServer']) > 0 and 'sourceServerFilter' in efilter and efilter['sourceServerFilter'] in matching:
                 source_server = f"AND s.name {matching[efilter['sourceServerFilter']]['operator']} %(source_server)s"
-                args['source_server'] = matching[efilter['sourceServerFilter']]['args'].format(efilter['source_server'])
+                args['source_server'] = matching[efilter['sourceServerFilter']]['args'].format(efilter['sourceServer'])
             if 'sourceDatabase' in efilter and len(efilter['sourceDatabase']) > 0 and 'sourceDatabaseFilter' in efilter and efilter['sourceDatabaseFilter'] in matching:
                 source_database = f"AND c.source_database {matching[efilter['sourceDatabaseFilter']]['operator']} %(source_database)s"
-                args['source_database'] = matching[efilter['sourceDatabaseFilter']]['args'].format(efilter['source_database'])
+                args['source_database'] = matching[efilter['sourceDatabaseFilter']]['args'].format(efilter['sourceDatabase'])
             if 'destinationServer' in efilter and len(efilter['destinationServer']) > 0 and 'destinationServerFilter' in efilter and efilter['destinationServerFilter'] in matching:
                 destination_server = f"AND s2.name {matching[efilter['destinationServerFilter']]['operator']} %(destination_server)s"
-                args['destination_server'] = matching[efilter['destinationServerFilter']]['args'].format(efilter['destination_server'])
+                args['destination_server'] = matching[efilter['destinationServerFilter']]['args'].format(efilter['destinationServer'])
             if 'destinationDatabase' in efilter and len(efilter['destinationDatabase']) > 0 and 'destinationDatabaseFilter' in efilter and efilter['destinationDatabaseFilter'] in matching:
                 destination_database = f"AND c.destination_database {matching[efilter['destinationDatabaseFilter']]['operator']} %(destination_database)s"
-                args['destination_database'] = matching[efilter['destinationDatabaseFilter']]['args'].format(efilter['destination_database'])
+                args['destination_database'] = matching[efilter['destinationDatabaseFilter']]['args'].format(efilter['destinationDatabase'])
             if 'status' in efilter and efilter['status'] is not None and len(efilter['status']) > 0:
                 status = 'AND c.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(efilter['status']))])
                 for i,v in enumerate(efilter['status']):
