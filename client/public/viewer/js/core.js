@@ -1169,7 +1169,7 @@ function compile_query(data) {
 
   // Rebuild Data + Rebuild Columns
   for (var i = 0; i < data.length; ++i) {
-    if (data[i]['meteor_output'] == '' || typeof data[i]['meteor_output'] == 'undefined') continue;
+    if (data[i]['meteor_output'].length == 0 || typeof data[i]['meteor_output'] == 'undefined' || typeof data[i]['meteor_output'] == 'number') continue;
     if (!is_alias && data[i]['meteor_query'] != transformation_query) continue;
     if (is_alias && !data[i]['meteor_query'].startsWith('[' + transformation_query.substr(8, transformation_query.length) + ']')) continue;
     // Rebuild Columns
