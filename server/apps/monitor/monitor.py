@@ -92,7 +92,6 @@ class Monitor:
         except Exception as e:
             traceback.print_exc()
             if self._license.get_status().get('sentry'):
-                set_user({"id": "monitor"})
                 capture_exception(e)
                 flush()
 
