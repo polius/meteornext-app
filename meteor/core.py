@@ -8,6 +8,7 @@ import re
 import signal
 import json
 import threading
+import sentry_sdk
 from collections import OrderedDict
 from datetime import timedelta
 
@@ -38,6 +39,11 @@ class core:
         self._amazon_s3 = amazon_s3(self._args, self._imports, self._progress)
         self._validation = validation(self._args, self._imports, self._progress)
         self._deployment = deployment(self._args, self._imports, self._progress)
+
+        # Init sentry
+        if self._imports.config['sentry']['enabled']:
+            sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
+            sentry_sdk.init(dsn=sentry_dsn, environment=self._imports.config['sentry']['environment'], traces_sample_rate=0)
 
         if self._args.region:
             self.__remote()

@@ -54,7 +54,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -79,7 +79,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -105,7 +105,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -126,7 +126,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -159,7 +159,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -180,7 +180,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
@@ -201,7 +201,7 @@ class Imports:
             # Get user data
             try:
                 user = self._users.get(get_jwt_identity())[0]
-                set_user({"id": user['id'], "username": user['username']})
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
             except IndexError:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 

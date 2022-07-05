@@ -8,7 +8,6 @@ import socket
 import schedule
 import threading
 import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
 from signal import SIGHUP
 from datetime import datetime, timedelta
 
@@ -47,8 +46,9 @@ class Cron:
             self._sql = {"sql": conf['sql']}
 
         # Init sentry
-        if 'sentry' in self._license.get_status() and self._license.get_status()['sentry'] is not None:
-            sentry_sdk.init(dsn=self._license.get_status()['sentry'], environment=conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
+        if self._license.get_status()['sentry']:
+            sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
+            sentry_sdk.init(dsn=sentry_dsn, environment=conf['license']['access_key'], traces_sample_rate=0)
 
     def __start(self):
         # Scheduled Tasks

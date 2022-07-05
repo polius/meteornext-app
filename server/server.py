@@ -2,7 +2,7 @@ from multiprocessing import Process
 from multiprocessing.managers import BaseManager
 
 # App Version
-version = '1.00-beta.33'
+version = '1.00-beta.34'
 
 # Init Shared License Class
 from license import License
