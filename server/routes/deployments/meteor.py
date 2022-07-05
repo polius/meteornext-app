@@ -12,6 +12,7 @@ import models.admin.groups
 
 class Meteor:
     def __init__(self, sql, license):
+        self._license = license
         # Init models
         self._settings = models.admin.settings.Settings(sql, license)
         self._environments = models.inventory.environments.Environments(sql, license)
@@ -157,16 +158,16 @@ class Meteor:
 
         # Enable Meteor Next
         with open(f"{self._base_path}/server.conf") as outfile:
-            next_credentials = json.load(outfile)['sql']
+            next_credentials = json.load(outfile)
 
         # Compile Meteor Next Credentials
         config['meteor_next'] = {
             "enabled": True,
-            "hostname": next_credentials['hostname'],
-            "port": int(next_credentials['port']),
-            "username": next_credentials['username'],
-            "password": next_credentials['password'],
-            "database": next_credentials['database'],
+            "hostname": next_credentials['sql']['hostname'],
+            "port": int(next_credentials['sql']['port']),
+            "username": next_credentials['sql']['username'],
+            "password": next_credentials['sql']['password'],
+            "database": next_credentials['sql']['database'],
             "ssl_ca_certificate": None,
             "ssl_client_certificate": None,
             "ssl_client_key": None,
@@ -185,6 +186,12 @@ class Meteor:
             "environment": deployment['environment_name'],
             "url": deployment['url']
         }
+
+        # Compile Sentry
+        config['sentry'] = {"enabled": False}
+        if self._license.get_status()['sentry']:
+            config['sentry']['enabled'] = True
+            config['sentry']['environment'] = next_credentials['license']['access_key']
 
         # Store Config
         with open(f"{self._base_path}/files/deployments/{deployment['uri']}/config.json", 'w') as outfile:

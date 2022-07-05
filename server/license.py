@@ -57,7 +57,7 @@ class License:
                 response_text = response_body['response']
                 account = response_body['account'] if response_code == 200 else None
                 resources = response_body['resources'] if response_code == 200 else None
-                sentry = response_body['sentry'] if response_code == 200 else None
+                sentry = response_body['sentry'] if response_code == 200 else False
 
                 # Solve challenge
                 if response_code == 200:

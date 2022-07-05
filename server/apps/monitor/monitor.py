@@ -4,7 +4,7 @@ import calendar
 import requests
 import threading
 import traceback
-from sentry_sdk import capture_exception, flush, set_user
+from sentry_sdk import capture_exception, flush
 from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
@@ -23,7 +23,6 @@ class Monitor:
         except Exception as e:
             traceback.print_exception()
             if self._license.get_status().get('sentry'):
-                set_user({"id": "monitor"})
                 capture_exception(e)
                 flush()
 

@@ -70,8 +70,9 @@ class Setup:
             self._license.set_license(self._conf['license'])
             self._license.validate()
             # Init sentry
-            if 'sentry' in self._license.get_status() and self._license.get_status()['sentry'] is not None:
-                sentry_sdk.init(dsn=self._license.get_status()['sentry'], environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
+            if self._license.get_status()['sentry']:
+                sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
+                sentry_sdk.init(dsn=sentry_dsn, environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
             # Register blueprints
             self.register_blueprints(sql)
             print("- Meteor initiated from existing configuration.")
