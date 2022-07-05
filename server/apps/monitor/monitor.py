@@ -177,6 +177,7 @@ class Monitor:
                         summary = COALESCE(VALUES(summary), summary),
                         parameters = COALESCE(VALUES(parameters), parameters),
                         processlist = COALESCE(VALUES(processlist), processlist),
+                        error = NULL,
                         updated = VALUES(updated)
                 """
                 conn.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
