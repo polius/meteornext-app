@@ -12,7 +12,7 @@ from flask_compress import Compress
 from flask_jwt_extended import (JWTManager, jwt_required)
 
 class App:
-    def __init__(self, version, license):
+    def __init__(self, version, license, sentry_dsn):
         # Monkey Patch in Compiled Version (Gunicorn) & Sync License Class
         bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         if bin:
@@ -39,7 +39,7 @@ class App:
         # Instantiate & Register Settings Blueprint
         URL_PREFIX = "/api"
         import routes.setup
-        routes.setup.Setup(app, license, URL_PREFIX)
+        routes.setup.Setup(app, license, URL_PREFIX, sentry_dsn)
 
         # Enable CORS
         CORS(app)

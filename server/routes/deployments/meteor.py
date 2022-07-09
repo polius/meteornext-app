@@ -230,13 +230,13 @@ class blueprint:
     def __execute(self, deployment):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._base_path
-        meteor_path = f"{meteor_base_path}/apps/meteor/init" if self._bin else f"python3 {meteor_base_path}/../meteor/meteor.py"
+        meteor_path = [f"{meteor_base_path}/apps/meteor/init"] if self._bin else ["python3", f"{meteor_base_path}/../meteor/meteor.py"]
         execution_path = f"{self._base_path}/files/deployments/{deployment['uri']}"
         execution_method = deployment['method'].lower()
 
         # Build Meteor Command
-        command = f"{meteor_path} --path '{execution_path}' --uri '{deployment['uri']}' --{execution_method}"
+        command = meteor_path + ["--path", execution_path, "--uri", deployment['uri'], f"--{execution_method}"]
 
         # Execute Meteor
         # subprocess.Popen(command, shell=True)
-        subprocess.Popen(command, stdout=subprocess.DEVNULL, shell=True)
+        subprocess.Popen(command, stdout=subprocess.DEVNULL)

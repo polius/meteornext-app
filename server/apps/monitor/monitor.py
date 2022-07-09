@@ -83,7 +83,6 @@ class Monitor:
         for servers_chunk in servers_split:
             if len(servers_chunk) != 0:
                 t = threading.Thread(target=self.__monitor_servers, args=(servers_chunk,))
-                t.daemon = True
                 threads.append(t)
                 t.start()
 
