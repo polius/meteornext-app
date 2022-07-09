@@ -1,10 +1,11 @@
+import os
 import time
 import json
 import calendar
 import requests
 import threading
 import traceback
-from sentry_sdk import capture_exception, flush
+import sentry_sdk
 from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
@@ -13,18 +14,23 @@ import connectors.base
 import models.notifications
 
 class Monitor:
-    def __init__(self, license, sql):
+    def __init__(self, license, sql, sentry):
         self._license = license
         self._sql = sql
+        self._sentry = sentry
+
+        # Init Sentry
+        if self._sentry['enabled']:
+            sentry_sdk.init(dsn=self._sentry['dsn'], environment=self._sentry['environment'], traces_sample_rate=0)
 
     def start(self):
         try:
             self.__start_monitor()
         except Exception as e:
             traceback.print_exception()
-            if self._license.get_status().get('sentry'):
-                capture_exception(e)
-                flush()
+            if self._sentry['enabled']:
+                sentry_sdk.capture_exception(e)
+                sentry_sdk.flush()
 
     ####################
     # Internal Methods #
@@ -72,12 +78,14 @@ class Monitor:
             servers.append(server)
 
         # Start Monitoring
+        servers_split = list(self.__split(servers, os.cpu_count()))
         threads = []
-        for server in servers:
-            t = threading.Thread(target=self.__monitor_server, args=(server,))
-            t.daemon = True
-            threads.append(t)
-            t.start()
+        for servers_chunk in servers_split:
+            if len(servers_chunk) != 0:
+                t = threading.Thread(target=self.__monitor_servers, args=(servers_chunk,))
+                t.daemon = True
+                threads.append(t)
+                t.start()
 
         # Wait Threads to Finish
         try:
@@ -86,16 +94,21 @@ class Monitor:
         except KeyboardInterrupt:
             pass
 
-    def __monitor_server(self, server):
-        try:
-            self.__monitor_server2(server)
-        except Exception as e:
-            traceback.print_exc()
-            if self._license.get_status().get('sentry'):
-                capture_exception(e)
-                flush()
+    def __split(self, a, n):
+        k, m = divmod(len(a), n)
+        return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
-    def __monitor_server2(self, server):
+    def __monitor_servers(self, servers):
+        for server in servers:
+            try:
+                self.__monitor_server(server)
+            except Exception as e:
+                traceback.print_exc()
+                if self._sentry['enabled']:
+                    sentry_sdk.capture_exception(e)
+                    sentry_sdk.flush()
+
+    def __monitor_server(self, server):
         try:
             # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:

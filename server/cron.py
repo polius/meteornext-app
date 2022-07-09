@@ -7,6 +7,7 @@ import random
 import socket
 import schedule
 import threading
+import multiprocessing
 import sentry_sdk
 from signal import SIGHUP
 from datetime import datetime, timedelta
@@ -23,6 +24,7 @@ class Cron:
         self._license = license
         self._node = str(uuid.uuid4())
         self._locks = {"executions": False, "deployments_monitor": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
+        self._sentry = None
         # Retrieve base path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -46,9 +48,9 @@ class Cron:
             self._sql = {"sql": conf['sql']}
 
         # Init sentry
-        if self._license.get_status()['sentry']:
-            sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
-            sentry_sdk.init(dsn=sentry_dsn, environment=conf['license']['access_key'], traces_sample_rate=0)
+        self._sentry = {"enabled": self._license.get_status()['sentry'], "environment": conf['license']['access_key'], "dsn": "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"}
+        if self._sentry['enabled']:
+            sentry_sdk.init(dsn=self._sentry['dsn'], environment=self._sentry['environment'], traces_sample_rate=0)
 
     def __start(self):
         # Scheduled Tasks
@@ -325,8 +327,8 @@ class Cron:
                 return
 
             # Start monitoring servers
-            monitoring = apps.monitor.monitor.Monitor(self._license, self._sql)
-            p = threading.Thread(target=monitoring.start)
+            monitoring = apps.monitor.monitor.Monitor(self._license, self._sql, self._sentry)
+            p = multiprocessing.Process(target=monitoring.start)
             p.daemon = True
             p.start()
             p.join()
