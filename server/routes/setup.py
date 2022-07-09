@@ -46,7 +46,7 @@ import routes.utils.clones
 import connectors.pool
 
 class Setup:
-    def __init__(self, app, license, url_prefix):
+    def __init__(self, app, license, url_prefix, sentry_dsn):
         self._app = app
         self._url_prefix = url_prefix
         self._conf = {}
@@ -71,7 +71,6 @@ class Setup:
             self._license.validate()
             # Init sentry
             if self._license.get_status()['sentry']:
-                sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
                 sentry_sdk.init(dsn=sentry_dsn, environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
             # Register blueprints
             self.register_blueprints(sql)

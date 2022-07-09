@@ -896,7 +896,6 @@ class Deployments:
     def __secure_code(self, code):
         q = multiprocessing.Queue()
         p = multiprocessing.Process(target=self.__secure_code2, args=(code,q))
-        p.daemon = True
         p.start()
         p.join(3)
         if p.is_alive():

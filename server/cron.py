@@ -19,7 +19,7 @@ import apps.monitor.monitor
 import apps.imports.scan
 
 class Cron:
-    def __init__(self, license):
+    def __init__(self, license, sentry_dsn):
         self._sql = None
         self._license = license
         self._node = str(uuid.uuid4())
@@ -29,11 +29,11 @@ class Cron:
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
         # Check if the Api process has been started and the license is active 
-        self.__check()
+        self.__check(sentry_dsn)
         # Start the Cron engine
         self.__start()
 
-    def __check(self):
+    def __check(self, sentry_dsn):
         # Redirect stderr to file
         if self._bin:
             sys.stderr = open('/root/cron.err', 'w')
@@ -48,7 +48,7 @@ class Cron:
             self._sql = {"sql": conf['sql']}
 
         # Init sentry
-        self._sentry = {"enabled": self._license.get_status()['sentry'], "environment": conf['license']['access_key'], "dsn": "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"}
+        self._sentry = {"enabled": self._license.get_status()['sentry'], "environment": conf['license']['access_key'], "dsn": sentry_dsn}
         if self._sentry['enabled']:
             sentry_sdk.init(dsn=self._sentry['dsn'], environment=self._sentry['environment'], traces_sample_rate=0)
 
@@ -56,7 +56,7 @@ class Cron:
         # Scheduled Tasks
         schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
         schedule.every(10).seconds.do(self.__run_threaded, self.__deployments_monitor)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
+        # schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
         schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
         schedule.every(10).seconds.do(self.__run_threaded, self.__check_nodes)
@@ -68,24 +68,13 @@ class Cron:
         schedule.every().day.do(self.__run_threaded, self.__check_license)
         schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
 
-        # Start Cron Listener
-        t = threading.Thread(target=self.__run_schedule)
-        t.daemon = True
-        t.start()
-        # try:
-        #     t.join()
-        # except KeyboardInterrupt:
-        #     pass
-
-    def __run_threaded(self, job_func):
-        t = threading.Thread(target=job_func)
-        t.daemon = True
-        t.start()
-
-    def __run_schedule(self):
         while True:
             schedule.run_pending()
             time.sleep(1)
+
+    def __run_threaded(self, job_func):
+        t = threading.Thread(target=job_func)
+        t.start()
 
     def __check_nodes(self):
         # Check lock
@@ -329,7 +318,6 @@ class Cron:
             # Start monitoring servers
             monitoring = apps.monitor.monitor.Monitor(self._license, self._sql, self._sentry)
             p = multiprocessing.Process(target=monitoring.start)
-            p.daemon = True
             p.start()
             p.join()
         finally:
