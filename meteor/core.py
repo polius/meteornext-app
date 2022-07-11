@@ -42,7 +42,7 @@ class core:
 
         # Init sentry
         if self._imports.config['sentry']['enabled']:
-            sentry_dsn = "https://7de474b9a31148d29d10eb5aea1dff71@o1100742.sentry.io/6138582"
+            sentry_dsn = 'https://7de474b9a31148d29d10eb5aea1dff71@o1100742.ingest.sentry.io/6138582'
             sentry_sdk.init(dsn=sentry_dsn, environment=self._imports.config['sentry']['environment'], traces_sample_rate=0)
 
         if self._args.region:

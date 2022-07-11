@@ -171,11 +171,12 @@ class build_server:
 
         command += ' --upx-dir /tmp/upx-3.96-amd64_linux'
 
-        if binary_name == 'server':
-            command += ' --onefile'
-        else:
-            command += ' --onedir'
-        command += ' "{}/init.py"'.format(cythonized)
+        # if binary_name == 'server':
+        #     command += ' --onefile'
+        # else:
+        #     command += ' --onedir'
+        
+        command += '--onedir "{}/init.py"'.format(cythonized)
 
         # 12) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)
@@ -184,7 +185,7 @@ class build_server:
         os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
 
         # 14) Compress Meteor
-        if binary_name in ['meteor']:
+        if binary_name == 'meteor':
             shutil.make_archive('{}/{}'.format(binary_path, binary_name), 'gztar', '{}/{}'.format(binary_path, binary_name))
             shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
 

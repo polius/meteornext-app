@@ -189,7 +189,7 @@ class Meteor:
 
         # Compile Sentry
         config['sentry'] = {"enabled": False}
-        if self._license.get_status()['sentry']:
+        if self._license.get_sentry():
             config['sentry']['enabled'] = True
             config['sentry']['environment'] = next_credentials['license']['access_key']
 
