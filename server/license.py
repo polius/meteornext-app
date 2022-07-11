@@ -17,7 +17,7 @@ class License:
         return self._license_status and self._license_status['code'] == 200
 
     def get_resources(self):
-        return self._license_status['resources']
+        return self._license_status.get('resources')
 
     def get_last_check_date(self):
         return self._last_check_date

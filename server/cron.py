@@ -2,29 +2,28 @@ import os
 import sys
 import json
 import time
-import uuid
+import queue
+import traceback
 import random
 import socket
 import schedule
 import threading
-import multiprocessing
 import sentry_sdk
 from signal import SIGHUP
 from datetime import datetime, timedelta
 
 import connectors.base
-import routes.deployments.deployments
-import routes.utils.utils
 import apps.monitor.monitor
 import apps.imports.scan
 
 class Cron:
-    def __init__(self, license, sentry_dsn):
+    def __init__(self, license, sentry_dsn, node):
         self._sql = None
         self._license = license
-        self._node = str(uuid.uuid4())
-        self._locks = {"executions": False, "deployments_monitor": False, "monitoring": False, "utils_queue": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
+        self._node = node
         self._sentry = None
+        self._locks = {"deployments_monitor": False, "utils_scans": False, "check_nodes": False, "client_clean": False}
+        self._queue = queue.Queue()
         # Retrieve base path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -54,27 +53,37 @@ class Cron:
 
     def __start(self):
         # Scheduled Tasks
-        schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__deployments_monitor)
-        # schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__utils_queue)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
-        schedule.every(10).seconds.do(self.__run_threaded, self.__check_nodes)
-        schedule.every().minute.at(":00").do(self.__run_threaded, self.__advanced_memory)
-        schedule.every().hour.do(self.__run_threaded, self.__client_clean)
-        schedule.every().hour.do(self.__run_threaded, self.__monitoring_clean)
-        schedule.every().hour.do(self.__run_threaded, self.__import_clean)
-        schedule.every().hour.do(self.__run_threaded, self.__logs)
-        schedule.every().day.do(self.__run_threaded, self.__check_license)
-        schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
+        schedule.every(10).seconds.do(self._queue.put, self.__deployments_monitor)
+        schedule.every(10).seconds.do(self._queue.put, self.__utils_scans)
+        schedule.every(10).seconds.do(self._queue.put, self.__check_nodes)
+        schedule.every().minute.at(":00").do(self._queue.put, self.__advanced_memory)
+        schedule.every().hour.do(self._queue.put, self.__client_clean)
+        schedule.every().hour.do(self._queue.put, self.__monitoring_clean)
+        schedule.every().hour.do(self._queue.put, self.__import_clean)
+        schedule.every().hour.do(self._queue.put, self.__logs)
+        schedule.every().day.do(self._queue.put, self.__check_license)
+        schedule.every().day.at("00:00").do(self._queue.put, self.__coins)
 
-        while True:
+        t = threading.Thread(target=self.__worker_main)
+        t.daemon = True
+        t.start()
+
+        while 1:
             schedule.run_pending()
             time.sleep(1)
 
-    def __run_threaded(self, job_func):
-        t = threading.Thread(target=job_func)
-        t.start()
+    def __worker_main(self):
+        while 1:
+            job_func = self._queue.get()
+            try:
+                job_func()
+            except Exception as e:
+                traceback.print_exc()
+                if self._sentry['enabled']:
+                    sentry_sdk.capture_exception(e)
+                    sentry_sdk.flush()
+            finally:
+                self._queue.task_done()
 
     def __check_nodes(self):
         # Check lock
@@ -117,39 +126,6 @@ class Cron:
             conn.stop()
             # Free lock
             self._locks['check_nodes'] = False
-
-    def __executions(self):
-        # Check license
-        if not self._license.is_validated():
-            return
-
-        # Check lock
-        if self._locks['executions']:
-            return
-
-        # Bind lock
-        self._locks['executions'] = True
-
-        try:
-            # Init SQL Connection
-            conn = connectors.base.Base(self._sql)
-
-            # Check master node
-            result = conn.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
-            if len(result) == 0 or result[0]['type'] != 'master':
-                return
-
-            # Check new scheduled & queued executions
-            deployments = routes.deployments.deployments.Deployments(conn, self._license)
-            deployments.check_finished()
-            deployments.check_recurring()
-            deployments.check_scheduled()
-            deployments.check_queued()
-        finally:
-            # Close SQL Connection
-            conn.stop()
-            # Free lock
-            self._locks['executions'] = False
 
     def __deployments_monitor(self):
         # Check license
@@ -194,36 +170,6 @@ class Cron:
             conn.stop()
             # Free lock
             self._locks['deployments_monitor'] = False
-
-    def __utils_queue(self):
-        # Check license
-        if not self._license.is_validated():
-            return
-
-        # Check lock
-        if self._locks['utils_queue']:
-            return
-
-        # Bind lock
-        self._locks['utils_queue'] = True
-
-        try:
-            # Init SQL Connection
-            conn = connectors.base.Base(self._sql)
-
-            # Check master node
-            result = conn.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
-            if len(result) == 0 or result[0]['type'] != 'master':
-                return
-
-            # Check queued executions
-            utils = routes.utils.utils.Utils(conn, self._license)
-            utils.check_queued()
-        finally:
-            # Close SQL Connection
-            conn.stop()
-            # Free lock
-            self._locks['utils_queue'] = False
 
     def __check_license(self):
         # Check if the license is still active
@@ -293,38 +239,6 @@ class Cron:
         finally:
             # Close SQL Connection
             conn.stop()
-
-    def __monitoring(self):
-        # Check license
-        if not self._license.is_validated():
-            return
-
-        # Check lock
-        if self._locks['monitoring']:
-            return
-
-        # Bind lock
-        self._locks['monitoring'] = True
-
-        try:
-            # Init SQL Connection
-            conn = connectors.base.Base(self._sql)
-
-            # Check master node
-            result = conn.execute(query="SELECT type, pid FROM nodes WHERE id = %s", args=(self._node))
-            if len(result) == 0 or result[0]['type'] != 'master':
-                return
-
-            # Start monitoring servers
-            monitoring = apps.monitor.monitor.Monitor(self._license, self._sql, self._sentry)
-            p = multiprocessing.Process(target=monitoring.start)
-            p.start()
-            p.join()
-        finally:
-            # Close SQL Connection
-            conn.stop()
-            # Free lock
-            self._locks['monitoring'] = False
 
     def __monitoring_clean(self):
         # Check license
@@ -513,7 +427,7 @@ class Cron:
 
             # Restart worker
             if advanced['memory_enabled'] and current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
-                with open('/root/pid.log', 'r') as fopen:
+                with open('/root/server.pid', 'r') as fopen:
                     os.kill(fopen.read(), SIGHUP)
 
         finally:

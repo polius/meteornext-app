@@ -4,8 +4,6 @@ import json
 import calendar
 import requests
 import threading
-import traceback
-import sentry_sdk
 from datetime import datetime, timedelta
 from statistics import median
 from collections import OrderedDict
@@ -14,23 +12,12 @@ import connectors.base
 import models.notifications
 
 class Monitor:
-    def __init__(self, license, sql, sentry):
+    def __init__(self, license, sql):
         self._license = license
         self._sql = sql
-        self._sentry = sentry
-
-        # Init Sentry
-        if self._sentry['enabled']:
-            sentry_sdk.init(dsn=self._sentry['dsn'], environment=self._sentry['environment'], traces_sample_rate=0)
 
     def start(self):
-        try:
-            self.__start_monitor()
-        except Exception as e:
-            traceback.print_exception()
-            if self._sentry['enabled']:
-                sentry_sdk.capture_exception(e)
-                sentry_sdk.flush()
+        self.__start_monitor()
 
     ####################
     # Internal Methods #
@@ -99,13 +86,7 @@ class Monitor:
 
     def __monitor_servers(self, servers):
         for server in servers:
-            try:
-                self.__monitor_server(server)
-            except Exception as e:
-                traceback.print_exc()
-                if self._sentry['enabled']:
-                    sentry_sdk.capture_exception(e)
-                    sentry_sdk.flush()
+            self.__monitor_server(server)
 
     def __monitor_server(self, server):
         try:
@@ -412,7 +393,7 @@ class Monitor:
                     u.id AS 'user_id',
                     s.id AS 'server_id',
                     IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
-                    IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active',
+                    IF(%(resources)s = -1 OR (@cnt := @cnt + 1) <= %(resources)s, 1, 0) AS 'active',
                     @usr := u.id AS 'logic2'
                 FROM users u
                 JOIN (SELECT @cnt := 0, @usr := 0) t
@@ -423,7 +404,7 @@ class Monitor:
             AND m.monitor_enabled = 1
             AND t.active = 1
         """
-        return conn.execute(query=query, args={"server_id": server_id, "license": self._license.get_resources()})
+        return conn.execute(query=query, args={"server_id": server_id, "resources": self._license.get_resources()})
 
     def __get_slack_server(self, conn, server_id):
         query = """
@@ -435,7 +416,7 @@ class Monitor:
                     u.id AS 'user_id',
                     s.id AS 'server_id',
                     IF(@usr != u.id, @cnt := 0, @cnt := @cnt) AS 'logic1',
-                    IF(%(license)s = -1 OR (@cnt := @cnt + 1) <= %(license)s, 1, 0) AS 'active',
+                    IF(%(resources)s = -1 OR (@cnt := @cnt + 1) <= %(resources)s, 1, 0) AS 'active',
                     @usr := u.id AS 'logic2'
                 FROM users u
                 JOIN (SELECT @cnt := 0, @usr := 0) t
@@ -445,7 +426,7 @@ class Monitor:
             WHERE ms.monitor_slack_enabled = 1
             AND t.active = 1
         """
-        return conn.execute(query=query, args={"server_id": server_id, "license": self._license.get_resources()})
+        return conn.execute(query=query, args={"server_id": server_id, "resources": self._license.get_resources()})
 
     def __get_last_event(self, conn, server_id):
         query = """
