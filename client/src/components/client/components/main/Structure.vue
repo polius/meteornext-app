@@ -230,6 +230,7 @@ export default {
       this.structureQueryStopped = false
       const index = this.index
       const payload = {
+        origin: 'structure',
         connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,

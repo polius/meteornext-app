@@ -210,12 +210,15 @@
                     <b>Execution Timeout Mode</b>: The type of queries that will be affected by the execution timeout.
                     <br>
                     <b>Execution Timeout Value</b>: Maximum execution time per query (in seconds).
+                    <br>
+                    <b>Execution Rows</b>: Maximum number of rows returned by SELECTs.
                   </span>
                 </v-tooltip>
                 </div>
                 <v-switch v-model="group.client_limits" label="Apply Limits" color="#fa8231" style="margin-top:0px" hide-details></v-switch>
                 <v-select v-if="group.client_limits" v-model="group.client_limits_timeout_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Only SELECTs'}]" item-value="id" item-text="name" label="Execution Timeout Mode" required :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-select>
                 <v-text-field v-if="group.client_limits" v-model="group.client_limits_timeout_value" label="Execution Timeout Value" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
+                <v-text-field v-if="group.client_limits" v-model="group.client_limits_rows" label="Execution Rows" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">TRACKING</div>
                 <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px" hide-details></v-switch>
                 <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-select>

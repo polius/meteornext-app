@@ -42,6 +42,7 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <v-icon v-if="bottomBar.client['status']=='success' && clientItems.length == clientLimit" :title="`The returned rows have been limited to ${clientLimit}.`" small style="color:#ff9800; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:7px;">fas fa-spinner</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:7px;">fas fa-check-circle</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-times-circle</v-icon>
@@ -237,6 +238,7 @@ export default {
       'sidebarMode',
       'clientCompleters',
       'clientSession',
+      'clientLimit',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
@@ -464,6 +466,7 @@ export default {
           }
           // Execute Query
           const payload = {
+            origin: 'editor',
             connection: this.id + '-shared',
             server: this.server.id,
             database: this.database,
@@ -979,6 +982,7 @@ export default {
     runQuery() {
       this.clientExecuting = 'query'
       const payload = {
+        origin: 'editor',
         connection: this.id + '-main',
         server: this.server.id,
         database: this.database,
@@ -993,6 +997,7 @@ export default {
     explainQuery() {
       this.clientExecuting = 'explain'
       const payload = {
+        origin: 'editor',
         connection: this.id + '-main',
         server: this.server.id,
         database: this.database,
@@ -1223,6 +1228,7 @@ export default {
         }
       })
       current.clientItems = itemsToLoad
+      current.clientLimit = 'limit' in data[data.length - 1] ? data[data.length - 1]['limit'] : null
       // Check if executed DROP DATABASE in the current DB
       for (let query of payload.queries) {
         if (query.trim().toLowerCase().startsWith('drop database')) {

@@ -10,12 +10,12 @@ import traceback
 import logging
 from io import StringIO
 from collections import OrderedDict
-from pymysql.cursors import DictCursorMixin, Cursor
+from pymysql.cursors import DictCursorMixin, SSCursor
 from pymysql.constants import CLIENT
 
 import connectors.base
 
-class OrderedDictCursor(DictCursorMixin, Cursor):
+class OrderedDictCursor(DictCursorMixin, SSCursor):
     dict_type = OrderedDict
 
 class MySQL:
@@ -170,6 +170,7 @@ class MySQL:
         t = None
         timeout_type = self._server['sql']['timeout_type'] if 'timeout_type' in self._server['sql'] else None
         timeout_value = self._server['sql']['timeout_value'] if 'timeout_value' in self._server['sql'] else None
+        execution_rows = self._server['sql']['execution_rows'] if 'execution_rows' in self._server['sql'] else None
         if timeout_type is not None and timeout_value is not None:
             self._is_timeout = True
             t = threading.Thread(target=self.__timeout_query, args=(query, timeout_type, timeout_value,))
@@ -182,7 +183,7 @@ class MySQL:
                 cursor.execute(query, args)
 
                 # Get the query results
-                data = cursor.fetchall()
+                data = cursor.fetchmany(execution_rows) if execution_rows else cursor.fetchall()
         else:
             self._cursor = self._sql.cursor(OrderedDictCursor)
             self._cursor.execute(query, args)
@@ -192,7 +193,7 @@ class MySQL:
 
         # Return query info
         if fetch:
-            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount}
+            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": len(data)}
             return query_data
 
     def __timeout_query(self, query, timeout_type, timeout_value):

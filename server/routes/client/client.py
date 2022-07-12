@@ -270,6 +270,8 @@ class Client:
             if group['client_limits']:
                 cred['sql']['timeout_type'] = 'select' if group['client_limits_timeout_mode'] == 2 else 'all'
                 cred['sql']['timeout_value'] = group['client_limits_timeout_value']
+                if client_json['origin'] == 'editor':
+                    cred['sql']['execution_rows'] = group['client_limits_rows']
 
             try:
                 # Get Server Connection
@@ -295,6 +297,8 @@ class Client:
                     result['time'] = "{0:.3f}".format(time.time() - start_time)
                     result['query'] = query
                     result['database'] = database
+                    if client_json['origin'] == 'editor' and group['client_limits']:
+                        result['limit'] = group['client_limits_rows']
                     # Get table metadata
                     if 'table' in client_json:
                         columns = conn.get_column_names(db=database, table=client_json['table'])

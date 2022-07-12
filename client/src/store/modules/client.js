@@ -42,6 +42,7 @@ const connection = () => {
     clientExecuting: null, // query, explain, stop
     clientCompleters: { databases: [], objects: [] },
     clientSession: null,
+    clientLimit: null,
 
     // Structure
     tabStructureSelected: 'columns',
