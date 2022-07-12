@@ -56,9 +56,9 @@
         <v-col cols="auto">
           <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="addRow" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+          <v-btn @click="addRow" :disabled="Object.keys(currentCellEditValues).length != 0" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="removeRow" :disabled="!isRowSelected" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn @click="removeRow" :disabled="!isRowSelected || Object.keys(currentCellEditValues).length != 0" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn :disabled="contentItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
@@ -280,10 +280,7 @@ export default {
   },
   watch: {
     currentConn() {
-      // Reload Table Headers
-      const headers = this.contentHeaders
-      this.gridApi.content.setColumnDefs([])
-      this.contentHeaders = headers
+      if (this.headerTabSelected == 'content') this.$nextTick(() => this.filterClick())
     },
     sidebarSelected: {
       handler: function () {
@@ -689,7 +686,7 @@ export default {
         this.gridApi.content.getSelectedNodes().forEach(x => x.setSelected(false))
         event.node.setSelected(true)
         // Check if the user edited a different row
-        if (this.currentCellEditNode.rowIndex != event.rowIndex && this.cellEditingValuesToUpdate(this.currentCellEditValues)) {
+        if (this.currentCellEditMode == 'edit' && this.currentCellEditNode.rowIndex != event.rowIndex && this.cellEditingValuesToUpdate(this.currentCellEditValues)) {
           this.cellEditingConfirm()
           return
         }

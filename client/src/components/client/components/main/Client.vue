@@ -270,6 +270,7 @@ export default {
     },
     headerTabSelected(val) {
       if (val == 'client') {
+        this.cellEditingDiscard()
         this.editor.renderer.updateFull()
         this.$nextTick(() => this.resizeTable())
       }
