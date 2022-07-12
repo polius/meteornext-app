@@ -5,7 +5,7 @@ FROM nginx:latest
 COPY dist/client.tar.gz /usr/share/nginx/html/
 
 # Copy the server application into docker
-COPY dist/server /root/
+COPY dist/server /root/meteornext/
 
 # Copy the respective nginx configuration files
 COPY build/nginx.conf /etc/nginx/

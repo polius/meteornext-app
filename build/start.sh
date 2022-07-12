@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /root
+cd /root/meteornext
 
 # Generate 'server.conf' file
 if [[ -n $LIC_ACCESS_KEY && -n $LIC_SECRET_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
@@ -52,6 +52,31 @@ fi
 envsubst '${STS}' < /etc/nginx/nginx.conf > /etc/nginx/nginx2.conf
 mv /etc/nginx/nginx2.conf /etc/nginx/nginx.conf
 
+# Define cron methods
+deployments() {
+    while true; do 
+        sleep 10;
+        ./init --deployments
+    done
+}
+monitoring() {
+    while true; do 
+        sleep 10;
+        ./init --monitoring
+    done
+}
+utils() {
+    while true; do 
+        sleep 10;
+        ./init --utils
+    done
+}
+
+# Start Cron
+deployments &
+monitoring &
+utils &
+
 # Start Meteor Next
-./server &
+./init &
 nginx -g 'daemon off;'

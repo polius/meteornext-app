@@ -33,34 +33,34 @@ class build_server:
     def __build_meteor(self):
         # Generate App Version
         version = ''
-        files = os.listdir("{}/meteor".format(self._pwd))
+        files = os.listdir(f"{self._pwd}/meteor")
         for f in files:
-            if not os.path.isdir("{}/meteor/{}".format(self._pwd, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'blueprint.py', 'config.json']:
-                with open("{}/meteor/{}".format(self._pwd, f), 'rb') as file_content:
+            if not os.path.isdir(f"{self._pwd}/meteor/{f}") and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'blueprint.py', 'config.json']:
+                with open(f"{self._pwd}/meteor/{f}", 'rb') as file_content:
                     file_hash = hashlib.sha512(file_content.read()).hexdigest()
                     version += file_hash
-        with open('{}/meteor/version.txt'.format(self._pwd), 'w') as file_content:
+        with open(f'{self._pwd}/meteor/version.txt', 'w') as file_content:
             file_content.write(version)
 
         # Build Meteor Py
-        build_path = "{}/meteor".format(self._pwd)
+        build_path = f"{self._pwd}/meteor"
         additional_files = ['version.txt']
         additional_binaries = []
         hidden_imports = ['json','pymysql','uuid','requests','importlib','paramiko','boto3','sshtunnel','inspect','sentry_sdk']
         binary_name = 'meteor'
-        binary_path = '{}/server/apps'.format(self._pwd)
+        binary_path = f'{self._pwd}/server/apps'
 
         # Start Build
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     def __build_server(self):
         # Build Meteor Next Server
-        build_path = "{}/server".format(self._pwd)
+        build_path = f"{self._pwd}/server"
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
         hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','gevent','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.ggevent']
         additional_binaries = []
         binary_name = 'server'
-        binary_path = '{}/dist'.format(self._pwd)
+        binary_path = f'{self._pwd}/dist'
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     ####################
@@ -70,15 +70,15 @@ class build_server:
         self.__clean(build_path)
         
         # Clean distpath files
-        shutil.rmtree("{}/{}".format(binary_path, binary_name), ignore_errors=True)
+        shutil.rmtree(f"{binary_path}/{binary_name}", ignore_errors=True)
 
         # Copy files to the build dir
-        shutil.copytree(build_path, "{}/build".format(build_path))
+        shutil.copytree(build_path, f"{build_path}/build")
 
         # Clean __pycache__ folders in build dir
-        for root, dirs, files in os.walk("{}/build".format(build_path)):
+        for root, dirs, files in os.walk(f"{build_path}/build"):
             if '__pycache__' in dirs:
-                shutil.rmtree("{}/{}".format(root, '__pycache__'), ignore_errors=True)
+                shutil.rmtree(f"{root}/__pycache__", ignore_errors=True)
 
         # Clean files folder
         if binary_name == 'server':
@@ -94,7 +94,7 @@ class build_server:
     def __compile(self, build_path, binary_name):
         # Build ext_modules
         ext_modules = []
-        for root, dirs, files in os.walk("{}/build".format(build_path)):
+        for root, dirs, files in os.walk(f"{build_path}/build"):
             for f in files:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
@@ -117,38 +117,38 @@ class build_server:
 
     def __pack(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         # 4) Get the cythonized directory path
-        files = os.listdir("{}/build/build".format(self._pwd))
+        files = os.listdir(f"{self._pwd}/build/build")
         for f in files:
-            if f.startswith('lib.') and os.path.isdir("{}/{}".format("{}/build".format(self._pwd), f)):
+            if f.startswith('lib.') and os.path.isdir(f"{self._pwd}/build/{f}"):
                 break
-        cythonized = "{}/build/build/{}".format(self._pwd, f)
+        cythonized = f"{self._pwd}/build/build/{f}"
 
         # Create apps folder
         if binary_name == 'server':
-            os.makedirs("{}/apps".format(cythonized), exist_ok=True)
+            os.makedirs(f"{cythonized}/apps", exist_ok=True)
 
         # 5) Copy additional files to the cytonized directory path
         for f in additional_files:
-            if (os.path.isfile("{}/{}".format(build_path, f))):
-                shutil.copyfile("{}/{}".format(build_path, f), "{}/{}".format(cythonized, f))
+            if (os.path.isfile(f"{build_path}/{f}")):
+                shutil.copyfile(f"{build_path}/{f}", f"{cythonized}/{f}")
 
         # 6) Create 'init.py' to invoke cythonized code
-        init_file = "{}/init.py".format(cythonized)
+        init_file = f"{cythonized}/init.py"
         with open(init_file, 'w') as file_open:
-            file_open.write("from {0} import {0}\n{0}()".format(binary_name))
+            file_open.write(f"from {binary_name} import {binary_name}\n{binary_name}()")
 
         # 7) Build binaries list
         binaries = []
-        for root, dirs, files in os.walk("{}/build".format(self._pwd)):
+        for root, dirs, files in os.walk(f"{self._pwd}/build"):
             for f in files:
                 if f.endswith('.so'):
                     binaries.append(f)
 
         # 8) Build hidden imports
-        for root, dirs, files in os.walk("{}/build".format(build_path)):
+        for root, dirs, files in os.walk(f"{build_path}/build"):
             for f in files:
                 if f.endswith('.pyx'):
-                    hidden_imports.append(os.path.join(root, f)[len("{}/build".format(build_path))+1:-4].replace('/','.'))
+                    hidden_imports.append(os.path.join(root, f)[len(f"{build_path}/build")+1:-4].replace('/','.'))
 
         # 9) Create "dist" folder
         os.makedirs(binary_path, exist_ok=True)
@@ -158,16 +158,16 @@ class build_server:
         subprocess.call("tar xvfJ /tmp/upx-3.96-amd64_linux.tar.xz -C /tmp", shell=True)
 
         # 11) Build pyinstaller command
-        command = "cd '{}'; pyinstaller --clean --distpath '{}'".format(cythonized, binary_path)
+        command = f"cd '{cythonized}'; pyinstaller --clean --distpath '{binary_path}'"
         for i in hidden_imports:
-            command += " --hidden-import={}".format(i)
+            command += f" --hidden-import={i}"
         for b in binaries:
-            command += " -r '{}'".format(b)
+            command += f" -r '{b}'"
         for f in additional_files:
             path = '.' if f.find('/') == -1 else f[:f.rfind('/')]
-            command += " --add-data '{}:{}'".format(f, path)
+            command += f" --add-data '{f}:{path}'"
         for b in additional_binaries:
-            command += " --add-binary '{}:{}'".format(b[0], b[1])
+            command += f" --add-binary '{b[0]}:{b[1]}'"
 
         command += ' --upx-dir /tmp/upx-3.96-amd64_linux'
 
@@ -176,28 +176,28 @@ class build_server:
         # else:
         #     command += ' --onedir'
         
-        command += '--onedir "{}/init.py"'.format(cythonized)
+        command += f'--onedir "{cythonized}/init.py"'
 
         # 12) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)
 
         # 13) Rename pyinstaller file
-        os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
+        os.rename(f'{binary_path}/init', f'{binary_path}/{binary_name}')
 
         # 14) Compress Meteor
         if binary_name == 'meteor':
-            shutil.make_archive('{}/{}'.format(binary_path, binary_name), 'gztar', '{}/{}'.format(binary_path, binary_name))
-            shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
+            shutil.make_archive(f'{binary_path}/{binary_name}', 'gztar', f'{binary_path}/{binary_name}')
+            shutil.rmtree(f'{binary_path}/{binary_name}', ignore_errors=True)
 
     def __clean(self, build_path):
-        shutil.rmtree("{}/build/build".format(self._pwd), ignore_errors=True)
-        shutil.rmtree("{}/dist/logs".format(self._pwd), ignore_errors=True)
-        shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
-        shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
+        shutil.rmtree(f"{self._pwd}/build/build", ignore_errors=True)
+        shutil.rmtree(f"{self._pwd}/dist/logs", ignore_errors=True)
+        shutil.rmtree(f"{build_path}/build", ignore_errors=True)
+        shutil.rmtree(f"{build_path}/logs", ignore_errors=True)
 
         # Delete compiled path
         compile_path = build_path[len(self._pwd)+1:]
         if compile_path.find('/') == -1:
-            shutil.rmtree("{}/{}".format(build_path, compile_path), ignore_errors=True)
+            shutil.rmtree(f"{build_path}/{compile_path}", ignore_errors=True)
         else:
-            shutil.rmtree("{}/{}".format(build_path, compile_path[:compile_path.find('/')+1]), ignore_errors=True)
+            shutil.rmtree(f"{build_path}/{compile_path[:compile_path.find('/')+1]}", ignore_errors=True)

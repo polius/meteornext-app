@@ -11,7 +11,7 @@ from flask_cors import CORS
 from flask_compress import Compress
 from flask_jwt_extended import (JWTManager, jwt_required)
 
-class App:
+class Api:
     def __init__(self, version, license, sentry_dsn, node):
         # Monkey Patch in Compiled Version (Gunicorn) & Sync License Class
         bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
@@ -63,7 +63,7 @@ class App:
             # Extract Meteor & Start Api
             with tarfile.open(f"{sys._MEIPASS}/apps/meteor.tar.gz") as tar:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
-            StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "error.log", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
         else:
             StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gevent", "pidfile": "server.pid", "timeout": 3600}).run()
             # app.run(host='0.0.0.0', port='5000', debug=False)

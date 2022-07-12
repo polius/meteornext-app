@@ -435,7 +435,7 @@
         for (let i = 0; i < servers.length; ++i) {
           if (servers[i]['selected']) {
             if (last_updated == null) last_updated = servers[i]['updated']
-            else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+            else if (moment(servers[i]['updated']) > moment(last_updated)) last_updated = servers[i]['updated']
           }
         }
         this.last_updated = last_updated
