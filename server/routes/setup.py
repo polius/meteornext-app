@@ -58,10 +58,13 @@ class Setup:
         install = routes.install.Install(self._license, self._conf, self.register_blueprints)
         self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
+        # Check if Meteor is initiated with all required params.
         try:
-            # Check if Meteor is initiated with all required params.
             with open(setup_file) as file_open:
                 self._conf = json.load(file_open)
+        except FileNotFoundError:
+            print("- Meteor initiated. No configuration detected. Install is required.")
+        else:
             # Set unique hardware id
             self._conf['license']['uuid'] = str(uuid.getnode())
             # Init sql pool
@@ -75,9 +78,6 @@ class Setup:
             # Register blueprints
             self.register_blueprints(sql)
             print("- Meteor initiated from existing configuration.")
-        except Exception as e:
-            print(f"Error: {str(e)}")
-            print("- Meteor initiated. No configuration detected. Install is required.")
 
     ####################
     # Internal Methods #
