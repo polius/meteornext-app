@@ -520,7 +520,6 @@ export default {
       }
       else {
         // Clean vars
-        console.log("CLEAN")
         this.currentCellEditNode = {}
         this.currentCellEditValues = {}
       }
