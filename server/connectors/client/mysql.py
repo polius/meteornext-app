@@ -193,7 +193,8 @@ class MySQL:
 
         # Return query info
         if fetch:
-            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": len(data)}
+            rowcount = cursor.rowcount if query.strip().lower().startswith(('insert','update','delete')) else len(data)
+            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": rowcount}
             return query_data
 
     def __timeout_query(self, query, timeout_type, timeout_value):
