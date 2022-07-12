@@ -35,7 +35,7 @@ class Cron:
     def __check(self, sentry_dsn):
         # Redirect stderr to file
         if self._bin:
-            sys.stderr = open('/root/cron.err', 'w')
+            sys.stderr = open(f'{self._base_path}/cron.err', 'w')
 
         # Check if 'server.conf' file exists and license is valid
         while not os.path.exists(f"{self._base_path}/server.conf") or not self._license.is_validated():

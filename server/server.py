@@ -8,7 +8,6 @@ class server:
         # Init Global Varoabñes
         self._version = '1.00-beta.35'
         self._sentry_dsn = 'https://7de474b9a31148d29d10eb5aea1dff71@o1100742.ingest.sentry.io/6138582'
-        self._node = str(uuid.uuid4())
 
         # Init args
         args = self.__init_parser()
@@ -22,7 +21,7 @@ class server:
             self.__init()
 
     def __init_parser(self):
-        parser = argparse.ArgumentParser(description='meteor')
+        parser = argparse.ArgumentParser(description='server')
         parser.add_argument('--deployments', required=False, action='store_true', dest='deployments', help=argparse.SUPPRESS)
         parser.add_argument('--monitoring', required=False, action='store_true', dest='monitoring', help=argparse.SUPPRESS)
         parser.add_argument('--utils', required=False, action='store_true', dest='utils', help=argparse.SUPPRESS)
@@ -40,15 +39,18 @@ class server:
         manager.start()
         l = manager.License(self._version)
 
+        # Init Node
+        node = str(uuid.uuid4())
+
         # Init Server Api
-        from app import App
-        p = Process(target=App, args=(self._version, l, self._sentry_dsn, self._node))
+        from api import Api
+        p = Process(target=Api, args=(self._version, l, self._sentry_dsn, node))
         p.start()
 
         # Init Cron
         from cron import Cron
         try:
-            Cron(l, self._sentry_dsn, self._node)
+            Cron(l, self._sentry_dsn, node)
         except KeyboardInterrupt:
             manager.shutdown()
 
@@ -159,8 +161,6 @@ class server:
         # Get Metadata
         port = 80 if bin else 5000
         response = requests.get(f"http://127.0.0.1:{port}/api/metadata", allow_redirects=False)
-        if response.status_code != 200:
-            return
         metadata = json.loads(response.text)
 
         # Check license
