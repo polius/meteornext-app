@@ -461,6 +461,7 @@ export default {
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
+        origin: 'content',
         connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
@@ -476,7 +477,8 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
-            EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
+            error = data.find(x => 'error' in x)['error']
+            EventBus.$emit('send-notification', error, '#EF5354')
           }
         })
         .finally(() => this.sidebarLoadingObject = false)
@@ -636,6 +638,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Execute Query/ies
       const payload = {
+        origin: 'content',
         connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
@@ -793,6 +796,7 @@ export default {
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
+          origin: 'content',
           connection: this.id + '-shared',
           server: this.server.id,
           database: this.database,
@@ -918,6 +922,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Build payload
       const payload = {
+        origin: 'content',
         connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,

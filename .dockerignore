@@ -6,3 +6,4 @@ client
 meteor
 server
 dist/meteornext.tar
+server/server.pid

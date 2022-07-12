@@ -761,6 +761,7 @@ export default {
     execute(queries, resolve, reject) {
       // Execute Query
       const payload = {
+        origin: 'sidebar',
         connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,

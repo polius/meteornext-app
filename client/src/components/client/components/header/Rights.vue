@@ -507,6 +507,7 @@ export default {
       // Execute generated queries
       this.rightsLoading = true
       const payload = {
+        origin: 'rights',
         connection: this.id + '-shared',
         server: this.server.id,
         database: null,

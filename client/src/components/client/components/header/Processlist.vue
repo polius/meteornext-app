@@ -510,6 +510,7 @@ export default {
       } 
       // Build payload
       const payload = {
+        origin: 'processlist',
         connection: this.id + '-shared2',
         server: this.server.id,
         database: null,
