@@ -42,7 +42,7 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.client['status']=='success' && clientItems.length == clientLimit" :title="`The returned rows have been limited to ${clientLimit}.`" small style="color:#ff9800; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
+            <v-icon v-if="bottomBar.client['status']=='success' && clientItems.length == clientLimit" :title="`The returned rows have been limited to ${clientLimit}.`" small style="color:#fa8131; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:7px;">fas fa-spinner</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:7px;">fas fa-check-circle</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-times-circle</v-icon>
