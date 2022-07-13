@@ -997,7 +997,7 @@ export default {
     explainQuery() {
       this.clientExecuting = 'explain'
       const payload = {
-        origin: 'editor',
+        origin: 'explain',
         connection: this.id + '-main',
         server: this.server.id,
         database: this.database,
