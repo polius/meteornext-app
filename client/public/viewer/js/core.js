@@ -30,6 +30,7 @@ var ERROR;
 // | SETTINGS |
 // +----------+
 // Global Settings Modal Variables
+var SETTINGS_NORMALIZED = {};
 var SETTINGS_VISIBLE = {};
 var SETTINGS_PINNED = {};
 // +--------+
@@ -504,6 +505,20 @@ function init_select2() {
   else apply_dark_theme();
 }
 
+function normalize(str) {
+  let string = ''
+  // Remove accents & lowercase (adding a letter to the beginning)
+  str = 'a' + str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  // Replace non standard values to '_'
+  for (let i = 0; i < str.length; ++i) {
+    if (/[a-zA-Z]/.test(str[i]) === false && !(['0','1','2','3','4','5','6','7','8','9','-','_','.'].includes(str[i]))) string += '_'
+    else string += str[i]
+  }
+  // Ensure the string endswith a letter
+  string += 'a'
+  return string
+}
+
 // ##############################################################################################
 // DELETE ROWS
 // ##############################################################################################
@@ -553,10 +568,11 @@ $("#settings-modal-save").click(function () {
 
 function init_settings_modal() {
   for (var i = 0; i < COLUMNS.length; ++i) {
+    SETTINGS_NORMALIZED[this.normalize(COLUMNS[i])] = COLUMNS[i];
     var column_name = get_column_name(COLUMNS[i]);
     // Pinned Columns
-    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-plain' style='top:2px; margin-right:10px'><input id='" + COLUMNS[i] + "_pinned' type='checkbox' checked/><svg id='" + COLUMNS[i] + "_pinned_svg' class='svg' viewBox='0 0 8 8' style='fill: #00c4a7; position: relative; width:16px'><use xlink:href='css/open-iconic.svg#lock-unlocked'></use></svg><label></label></div>");
-    $("#" + COLUMNS[i] + "_pinned").click(function () {
+    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-plain' style='top:2px; margin-right:10px'><input id='" + this.normalize(COLUMNS[i]) + "_pinned' type='checkbox' checked/><svg id='" + this.normalize(COLUMNS[i]) + "_pinned_svg' class='svg' viewBox='0 0 8 8' style='fill: #00c4a7; position: relative; width:16px'><use xlink:href='css/open-iconic.svg#lock-unlocked'></use></svg><label></label></div>");
+    $("#" + this.normalize(COLUMNS[i]) + "_pinned").click(function () {
       // Change the image
       var inner_html = $("#" + $(this)[0]['id'] + "_svg").html();
       if (inner_html == '<use xlink:href="css/open-iconic.svg#lock-unlocked"></use>') {
@@ -574,10 +590,10 @@ function init_settings_modal() {
       var id = $(this)[0]['id'].substring(0, $(this)[0]['id'].length - 7);
       SETTINGS_PINNED[id] = !SETTINGS_PINNED[id];
     });
-    SETTINGS_PINNED[COLUMNS[i]] = false;
+    SETTINGS_PINNED[this.normalize(COLUMNS[i])] = false;
     // Visible Columns
-    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-curve' style='margin-bottom:10px;'><img id='" + COLUMNS[i] + "_visible' src='res/visible.svg' width=20 height=20 style='margin-top:-2px; cursor:pointer;'><label style='margin-left:12px;'>" + column_name + "</label></div><br>");
-    $("#" + COLUMNS[i] + "_visible").click(function () {
+    $("#settings-modal-visible_fields").append("<div class='pretty p-svg p-curve' style='margin-bottom:10px;'><img id='" + this.normalize(COLUMNS[i]) + "_visible' src='res/visible.svg' width=20 height=20 style='margin-top:-2px; cursor:pointer;'><label style='margin-left:12px;'>" + column_name + "</label></div><br>");
+    $("#" + this.normalize(COLUMNS[i]) + "_visible").click(function () {
       // Change the image
       var img_src = $("#" + $(this)[0]['id']).attr("src");
       if (img_src == 'res/visible.svg') $("#" + $(this)[0]['id']).attr("src", "res/hidden.svg");
@@ -586,27 +602,27 @@ function init_settings_modal() {
       var id = $(this)[0]['id'].substring(0, $(this)[0]['id'].length - 8);
       SETTINGS_VISIBLE[id] = !SETTINGS_VISIBLE[id];
     });
-    SETTINGS_VISIBLE[COLUMNS[i]] = true;
+    SETTINGS_VISIBLE[this.normalize(COLUMNS[i])] = true;
   }
 }
 
 function set_column_pinned(column_name, is_pinned) {
   if (is_pinned) {
-    $("#" + column_name + "_pinned_svg").css('fill', '#ff6961');
-    $("#" + column_name + "_pinned_svg").css('margin-top', '2px');
-    $("#" + column_name + "_pinned_svg").html('<use xlink:href="css/open-iconic.svg#lock-locked"></use>');
+    $("#" + this.normalize(column_name) + "_pinned_svg").css('fill', '#ff6961');
+    $("#" + this.normalize(column_name) + "_pinned_svg").css('margin-top', '2px');
+    $("#" + this.normalize(column_name) + "_pinned_svg").html('<use xlink:href="css/open-iconic.svg#lock-locked"></use>');
   }
   else {
-    $("#" + column_name + "_pinned_svg").css('fill', '#00c4a7');
-    $("#" + column_name + "_pinned_svg").css('margin-top', '0px');
-    $("#" + column_name + "_pinned_svg").html('<use xlink:href="css/open-iconic.svg#lock-unlocked"></use>');
+    $("#" + this.normalize(column_name) + "_pinned_svg").css('fill', '#00c4a7');
+    $("#" + this.normalize(column_name) + "_pinned_svg").css('margin-top', '0px');
+    $("#" + this.normalize(column_name) + "_pinned_svg").html('<use xlink:href="css/open-iconic.svg#lock-unlocked"></use>');
   }
   SETTINGS_PINNED[column_name] = is_pinned;
 }
 
 function set_column_visible(column_name, is_visible) {
-  if (is_visible) $("#" + column_name + "_visible").attr("src", "res/visible.svg");
-  else $("#" + column_name + "_visible").attr("src", "res/hidden.svg");
+  if (is_visible) $("#" + this.normalize(column_name) + "_visible").attr("src", "res/visible.svg");
+  else $("#" + this.normalize(column_name) + "_visible").attr("src", "res/hidden.svg");
   SETTINGS_VISIBLE[column_name] = is_visible
 }
 
@@ -615,12 +631,12 @@ function apply_settings_modal() {
   var pinned = Object.keys(SETTINGS_PINNED).sort();
   for (var i = 0; i < pinned.length; i++) {
     var pinned_value = (SETTINGS_PINNED[pinned[i]]) ? 'left' : null;
-    gridOptions.columnApi.setColumnPinned(pinned[i], pinned_value);
+    gridOptions.columnApi.setColumnPinned(SETTINGS_NORMALIZED[pinned[i]], pinned_value);
   }
   // Visible Columns
   var visible = Object.keys(SETTINGS_VISIBLE).sort();
   for (var i = 0; i < visible.length; i++) {
-    gridOptions.columnApi.setColumnVisible(visible[i], SETTINGS_VISIBLE[visible[i]]);
+    gridOptions.columnApi.setColumnVisible(SETTINGS_NORMALIZED[visible[i]], SETTINGS_VISIBLE[visible[i]]);
   }
   setTimeout(function () {
     // Auto Size Columns
@@ -880,13 +896,13 @@ function init_filter_modal() {
   for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) {
     var column_name = get_column_name(FILTER_CUSTOM_COLUMNS[i]);
     $('#filter-modal-content').append(`
-      <div id="filter-modal-` + FILTER_CUSTOM_COLUMNS[i] + `-div" style="width:100%; margin-top:10px;">
+      <div id="filter-modal-` + this.normalize(FILTER_CUSTOM_COLUMNS[i]) + `-div" style="width:100%; margin-top:10px;">
         <!-- ` + column_name + ` -->
         <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
           <span>` + column_name + `:</span>
         </div>
         <div style="width:80%; float:left;">
-          <select id="filter-` + FILTER_CUSTOM_COLUMNS[i] + `" class="js-example-basic-single" name="state" style="width:50%;">
+          <select id="filter-` + this.normalize(FILTER_CUSTOM_COLUMNS[i]) + `" class="js-example-basic-single" name="state" style="width:50%;">
             <option value="0">- All Data -</option>
           </select>
         </div>
@@ -895,7 +911,7 @@ function init_filter_modal() {
   // Init Dropdown Values
   for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) {
     for (var j = 0; j < FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]].length; ++j) {
-      $('#filter-' + FILTER_CUSTOM_COLUMNS[i]).append($('<option>', { value: i + 1, text: FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]][j] }))
+      $('#filter-' + this.normalize(FILTER_CUSTOM_COLUMNS[i])).append($('<option>', { value: i + 1, text: FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]][j] }))
     }
   }
 }
@@ -944,8 +960,8 @@ function filter_data() {
     row_match = (environment_condition & region_condition & server_condition & database_condition & query_condition);
     // Custom Elements
     for (var j = 0; j < FILTER_CUSTOM_COLUMNS.length; ++j) {
-      var row_selected = $("#filter-" + FILTER_CUSTOM_COLUMNS[j]).val();
-      var row_value = $("#filter-" + FILTER_CUSTOM_COLUMNS[j] + " option:selected").text();
+      var row_selected = $("#filter-" + this.normalize(FILTER_CUSTOM_COLUMNS[j])).val();
+      var row_value = $("#filter-" + this.normalize(FILTER_CUSTOM_COLUMNS[j]) + " option:selected").text();
       row_match &= (row_selected == 0) ? 1 : ((data2filter[i][FILTER_CUSTOM_COLUMNS[j]] == row_value) ? 1 : 0)
     }
     // If Row Match the Filter, then show the row
@@ -1075,7 +1091,7 @@ function init_transformation_modal() {
   elements = ['meteor_query'];
   for (var i = 0; i < elements.length; ++i) {
     if (!COLUMNS.includes(elements[i])) {
-      $("#transformation-modal-" + elements[i] + "-div").fadeOut();
+      $("#transformation-modal-" + this.normalize(elements[i]) + "-div").fadeOut();
     }
   }
   // Get Dropdown Values
