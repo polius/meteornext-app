@@ -41,13 +41,13 @@ class deploy_blueprint:
         self.__after(server)
 
     def __before(self, server):
-        try:
-            # Get the current thread
-            current_thread = threading.current_thread()
-            if not current_thread.alive:
-                return
+        # Get the current thread
+        current_thread = threading.current_thread()
+        if not current_thread.alive:
+            return
 
-            # Start Deploy
+        # Start Deploy
+        try:
             query_instance = deploy_queries(self._args, self._imports, self._region)
             query_instance.start_sql_connection(server)
 
@@ -146,13 +146,13 @@ class deploy_blueprint:
             raise
 
     def __after(self, server):
-        try:
-            # Get the current thread
-            current_thread = threading.current_thread()
-            if len(current_thread.critical) > 0 or not current_thread.alive:
-                return
+        # Get the current thread
+        current_thread = threading.current_thread()
+        if len(current_thread.critical) > 0 or not current_thread.alive:
+            return
 
-            # Start Deploy
+        # Start Deploy
+        try:
             query_instance = deploy_queries(self._args, self._imports, self._region)
             query_instance.start_sql_connection(server)
 
