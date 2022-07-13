@@ -404,7 +404,7 @@ class Cron:
 
     def __advanced_memory(self):
         # Check license and environment
-        if not self._license.is_validated() or not self._bin:
+        if not self._license.is_validated():
             return
 
         try:
@@ -427,8 +427,8 @@ class Cron:
 
             # Restart worker
             if advanced['memory_enabled'] and current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
-                with open('/root/server.pid', 'r') as fopen:
-                    os.kill(fopen.read(), SIGHUP)
+                with open(f'{self._base_path}/server.pid', 'r') as fopen:
+                    os.kill(int(fopen.read()), SIGHUP)
 
         finally:
             # Close SQL Connection

@@ -617,13 +617,13 @@ function set_column_pinned(column_name, is_pinned) {
     $("#" + this.normalize(column_name) + "_pinned_svg").css('margin-top', '0px');
     $("#" + this.normalize(column_name) + "_pinned_svg").html('<use xlink:href="css/open-iconic.svg#lock-unlocked"></use>');
   }
-  SETTINGS_PINNED[column_name] = is_pinned;
+  SETTINGS_PINNED[this.normalize(column_name)] = is_pinned;
 }
 
 function set_column_visible(column_name, is_visible) {
   if (is_visible) $("#" + this.normalize(column_name) + "_visible").attr("src", "res/visible.svg");
   else $("#" + this.normalize(column_name) + "_visible").attr("src", "res/hidden.svg");
-  SETTINGS_VISIBLE[column_name] = is_visible
+  SETTINGS_VISIBLE[this.normalize(column_name)] = is_visible
 }
 
 function apply_settings_modal() {
