@@ -917,7 +917,7 @@
         foldGutter: true,
         matchBrackets: true,
         showCursorWhenSelecting: true,
-        mode: 'sql',
+        mode: 'text/x-mysql',
         theme: 'one-dark',
         keyMap: 'sublime',
         extraKeys: {
