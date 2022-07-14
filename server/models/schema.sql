@@ -515,7 +515,7 @@ CREATE TABLE `client_queries` (
   `server_id` INT UNSIGNED NOT NULL,
   `database` VARCHAR(191) NULL,
   `query` LONGTEXT NOT NULL,
-  `status` ENUM('EXECUTING','SUCCESS','FAILED','STOPPED') NOT NULL,
+  `status` ENUM('RUNNING','SUCCESS','FAILED','STOPPED') NOT NULL,
   `start_date` DATETIME NOT NULL,
   `end_date` DATETIME NULL,
   `records` BIGINT UNSIGNED NULL,
