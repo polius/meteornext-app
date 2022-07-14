@@ -31,11 +31,11 @@
       </template>
       <template v-slot:expanded-item="{ headers, item }">
         <td :colspan="headers.length">
-          <div v-if="item.records != null" style="margin-top:10px">
+          <div v-if="item.records != null && item.error == null" style="margin-top:10px">
             Records:
             <span style="margin-left:6px">{{ item.records }}</span>
           </div>
-          <div v-if="item.elapsed != null" style="margin-top:2px">
+          <div v-if="item.elapsed != null && item.error == null" style="margin-top:2px">
             Elapsed:
             <span style="margin-left:8px">{{ item.elapsed + 's' }}</span>
           </div>
