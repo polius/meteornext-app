@@ -28,7 +28,7 @@ class MySQL:
         self._cursor = None
         # Internal variables
         self._connection_id = None
-        self._query_id = None
+        self._query_uuid = None
         self._start_execution = None
         self._last_execution = None
         self._is_executing = False
@@ -131,10 +131,10 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, fetch=True, import_file=False, skip_lock=False):
         self._is_executing = True
-        self._query_id = str(uuid.uuid4())
+        self._query_uuid = str(uuid.uuid4())
         if not skip_lock:
-            self._locks.append(self._query_id)
-            while self._locks[0] != self._query_id:
+            self._locks.append(self._query_uuid)
+            while self._locks[0] != self._query_uuid:
                 time.sleep(1)
 
         # Check connection
@@ -178,7 +178,7 @@ class MySQL:
         timeout_value = self._server['sql']['timeout_value'] if 'timeout_value' in self._server['sql'] else None
         execution_rows = self._server['sql']['execution_rows'] if 'execution_rows' in self._server['sql'] else None
         if timeout_type is not None and timeout_value is not None:
-            t = threading.Thread(target=self.__timeout_query, args=(query, self._query_id, timeout_type, timeout_value,))
+            t = threading.Thread(target=self.__timeout_query, args=(query, self._query_uuid, timeout_type, timeout_value,))
             t.start()
 
         # Prepare the cursor
@@ -203,7 +203,7 @@ class MySQL:
         is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower() == 'select'
         condition = timeout_type == 'all' or (timeout_type == 'select' and is_select)
         i = 0
-        while condition and self._query_id == query_id:
+        while condition and self._query_uuid == query_id:
             if i >= timeout_value:
                 try:
                     sql = connectors.base.Base(self._server)
@@ -218,7 +218,7 @@ class MySQL:
             i += 1
 
     def stop_timeout(self):
-        self._query_id = None
+        self._query_uuid = None
 
     def fetch_one(self):
         if self._cursor:

@@ -222,7 +222,6 @@
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">TRACKING</div>
                 <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px" hide-details></v-switch>
                 <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECT, SHOW and USE)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:15px" hide-details></v-select>
-                <v-select v-if="group.client_tracking" v-model="group.client_tracking_filter" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'Succeeded'}, {id: 3, name: 'Failed'}]" item-value="id" item-text="name" label="Tracking Filter" required :rules="[v => !!v || '']" style="margin-top:10px" hide-details></v-select>
                 <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Tracking Retention Days" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:10px" hide-details></v-text-field>
               </v-card-text>
             </v-card>
@@ -343,7 +342,6 @@ export default {
       client_tracking: false,
       client_tracking_retention: 1,
       client_tracking_mode: 1,
-      client_tracking_filter: 1,
     },
     toolbar_title: '',
     form_valid: false,

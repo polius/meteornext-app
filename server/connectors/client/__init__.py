@@ -80,17 +80,17 @@ class Client:
 class Connection:
     def __init__(self, server):
         self._server = server
-        self._query_id = None
+        self._client_query_id = None
         if server['sql']['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(server)
 
     @property
     def query_id(self):
-        return self._query_id
+        return self._client_query_id
 
     @query_id.setter
     def query_id(self, value):
-        self._query_id = value
+        self._client_query_id = value
 
     @property
     def start_execution(self):
