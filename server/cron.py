@@ -352,7 +352,7 @@ class Cron:
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN groups g ON g.id = u.group_id
-                WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
+                WHERE DATE_ADD(DATE(cq.end_date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
             """
             conn.execute(query)
         finally:

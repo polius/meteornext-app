@@ -51,7 +51,10 @@ class Api:
         # Metadata endpoint
         @app.route("/api/metadata")
         def metadata_method():
-            return jsonify({'enabled': license.is_validated(), 'resources': license.get_resources(), 'sentry': license.get_status().get('sentry', False), 'node': node})
+            try:
+                return jsonify({'enabled': license.is_validated(), 'resources': license.get_resources(), 'sentry': license.get_status().get('sentry', False), 'node': node})
+            except BrokenPipeError:
+                return jsonify({'enabled': False, 'resources': 1, 'sentry': False, 'node': node})
 
         # Version endpoint
         @app.route('/api/version', methods=['GET'])
