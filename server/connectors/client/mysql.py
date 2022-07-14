@@ -28,12 +28,12 @@ class MySQL:
         self._cursor = None
         # Internal variables
         self._connection_id = None
+        self._query_id = None
         self._start_execution = None
         self._last_execution = None
         self._is_executing = False
         self._is_protected = False
         self._is_transaction = False
-        self._is_timeout = False
         self._locks = []
 
     @property
@@ -131,10 +131,10 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, fetch=True, import_file=False, skip_lock=False):
         self._is_executing = True
+        self._query_id = str(uuid.uuid4())
         if not skip_lock:
-            qid = str(uuid.uuid4())
-            self._locks.append(qid)
-            while self._locks[0] != qid:
+            self._locks.append(self._query_id)
+            while self._locks[0] != self._query_id:
                 time.sleep(1)
 
         # Check connection
@@ -178,8 +178,7 @@ class MySQL:
         timeout_value = self._server['sql']['timeout_value'] if 'timeout_value' in self._server['sql'] else None
         execution_rows = self._server['sql']['execution_rows'] if 'execution_rows' in self._server['sql'] else None
         if timeout_type is not None and timeout_value is not None:
-            self._is_timeout = True
-            t = threading.Thread(target=self.__timeout_query, args=(query, timeout_type, timeout_value,))
+            t = threading.Thread(target=self.__timeout_query, args=(query, self._query_id, timeout_type, timeout_value,))
             t.start()
 
         # Prepare the cursor
@@ -194,20 +193,17 @@ class MySQL:
             self._cursor = self._sql.cursor(OrderedDictCursor)
             self._cursor.execute(query, args)
 
-        # Expire timeout
-        self._is_timeout = False
-
         # Return query info
         if fetch:
-            rowcount = cursor.rowcount if query.strip().lower().startswith(('insert','update','delete')) else len(data)
+            rowcount = cursor.rowcount if sqlparse.format(query, strip_comments=True).strip().lower().startswith(('insert','update','delete')) else len(data)
             query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": rowcount}
             return query_data
 
-    def __timeout_query(self, query, timeout_type, timeout_value):
+    def __timeout_query(self, query, query_id, timeout_type, timeout_value):
         is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower() == 'select'
         condition = timeout_type == 'all' or (timeout_type == 'select' and is_select)
         i = 0
-        while condition and self._is_timeout:
+        while condition and self._query_id == query_id:
             if i >= timeout_value:
                 try:
                     sql = connectors.base.Base(self._server)
@@ -217,13 +213,12 @@ class MySQL:
                 except Exception:
                     traceback.print_exc()
                 finally:
-                    self._is_timeout = False
                     break
             time.sleep(1)
             i += 1
 
     def stop_timeout(self):
-        self._is_timeout = False
+        self._query_id = None
 
     def fetch_one(self):
         if self._cursor:

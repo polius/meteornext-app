@@ -240,7 +240,7 @@ class Client:
         start_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query2 = """
             INSERT INTO client_queries (`user_id`, `server_id`, `database`, `query`, `status`, `start_date`)
-            VALUES (%s, %s, %s, %s, 'EXECUTING', %s)
+            VALUES (%s, %s, %s, %s, 'RUNNING', %s)
         """
         return self._sql.execute(query2, (user_id, server_id, database, query, start_date))
 

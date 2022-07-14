@@ -21,9 +21,9 @@
         <span style="display:block; min-width:70px">{{ item.database }}</span>
       </template>
       <template v-slot:[`item.status`]="{ item }">
-        <span :style="`display:block; min-width:78px; color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'FAILED' ? '#EF5354' : '#fa8131'};`">
-          <v-icon small :title="item.status == 'SUCCESS' ? 'Success' : item.status == 'FAILED' ? 'Failed' : 'Stopped'" :style="`color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'FAILED' ? '#EF5354' : '#fa8131'}; margin-right:5px; margin-bottom:2px`">{{ item.status == 'SUCCESS' ? 'fas fa-check-circle' : item.status == 'FAILED' ? 'fas fa-times-circle' : 'fas fa-exclamation-circle' }}</v-icon>
-          {{ item.status == 'SUCCESS' ? 'Success' : item.status == 'FAILED' ? 'Failed' : 'Stopped' }}
+        <span :style="`display:block; min-width:78px; color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'RUNNING' ? '#fa8131' : '#EF5354' };`">
+          <v-icon small :title="item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()" :style="`color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'RUNNING' ? '#fa8131' : '#EF5354' }; margin-right:5px; margin-bottom:2px`">{{ item.status == 'SUCCESS' ? 'fas fa-check-circle' : item.status == 'FAILED' ? 'fas fa-times-circle' : item.status == 'STOPPED' ? 'fas fa-exclamation-circle' : 'fas fa-spinner' }}</v-icon>
+          {{ item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase() }}
         </span>
       </template>
       <template v-slot:[`item.query`]="{ item }">
