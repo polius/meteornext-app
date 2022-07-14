@@ -8,7 +8,7 @@ class Client:
     def get_queries(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.start_date, cq.end_date, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
@@ -17,7 +17,7 @@ class Client:
             """
             return self._sql.execute(query)
         else:
-            user = server = database = query = status = date_from = date_to = ''
+            user = server = database = query = status = start_date_from = start_date_to = end_date_from = end_date_to = ''
             args = []
             sort_column = 'cq.id'
             sort_order = 'DESC'
@@ -42,30 +42,37 @@ class Client:
                 if 'query' in dfilter and len(dfilter['query']) > 0 and 'queryFilter' in dfilter and dfilter['queryFilter'] in matching:
                     query = f"AND cq.query {matching[dfilter['queryFilter']]['operator']} %s"
                     args.append(matching[dfilter['queryFilter']]['args'].format(dfilter['query']))
-                if 'status' in dfilter and dfilter['status'] is not None:
-                    status = 'AND cq.status = %s'
-                    args.append(dfilter['status'])
-                if 'dateFrom' in dfilter and len(dfilter['dateFrom']) > 0:
-                    date_from = 'AND cq.date >= %s'
-                    args.append(dfilter['dateFrom'])
-                if 'dateTo' in dfilter and len(dfilter['dateTo']) > 0:
-                    date_to = 'AND cq.date <= %s'
-                    args.append(dfilter['dateTo'])
+                if 'status' in dfilter and dfilter['status'] is not None and len(dfilter['status']) > 0:
+                    status = 'AND e.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(dfilter['status']))])
+                    for i,v in enumerate(dfilter['status']):
+                        args[f'status{i}'] = v
+                if 'startDateFrom' in dfilter and len(dfilter['startDateFrom']) > 0:
+                    start_date_from = 'AND cq.start_date >= %s'
+                    args.append(dfilter['startDateFrom'])
+                if 'startDateTo' in dfilter and len(dfilter['startDateTo']) > 0:
+                    start_date_to = 'AND cq.start_date <= %s'
+                    args.append(dfilter['startDateTo'])
+                if 'endDateFrom' in dfilter and len(dfilter['endDateFrom']) > 0:
+                    start_date_from = 'AND cq.end_date >= %s'
+                    args.append(dfilter['endDateFrom'])
+                if 'endDateTo' in dfilter and len(dfilter['endDateTo']) > 0:
+                    start_date_to = 'AND cq.end_date <= %s'
+                    args.append(dfilter['endDateTo'])
 
             if dsort is not None:
                 sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, cq.query, cq.status, cq.start_date, cq.end_date, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
                 WHERE 1=1
-                {} {} {} {} {} {} {}
+                {} {} {} {} {} {} {} {} {}
                 ORDER BY {} {}
                 LIMIT 1000
-            """.format(user, server, database, query, status, date_from, date_to, sort_column, sort_order)
+            """.format(user, server, database, query, status, start_date_from, start_date_to, end_date_from, end_date_to, sort_column, sort_order)
             return self._sql.execute(query, args)
 
     def get_users_list(self):

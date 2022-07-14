@@ -28,12 +28,17 @@ class MySQL:
         self._cursor = None
         # Internal variables
         self._connection_id = None
+        self._start_execution = None
         self._last_execution = None
         self._is_executing = False
         self._is_protected = False
         self._is_transaction = False
         self._is_timeout = False
         self._locks = []
+
+    @property
+    def start_execution(self):
+        return self._start_execution
 
     @property
     def last_execution(self):
@@ -162,6 +167,7 @@ class MySQL:
                 del self._locks[0]
 
     def __execute_query(self, query, args, database, fetch):
+        self._start_execution = time.time()
         # Select the database
         if database:
             self._sql.select_db(database)

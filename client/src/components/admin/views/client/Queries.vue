@@ -1,8 +1,11 @@
 <template>
   <div>
-    <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1" mobile-breakpoint="0">
-      <template v-slot:[`item.date`]="{ item }">
-        <span style="display:block; min-width:130px">{{ item.date }}</span>
+    <v-data-table :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1" mobile-breakpoint="0">
+      <template v-slot:[`item.start_date`]="{ item }">
+        <span style="display:block; min-width:130px">{{ item.start_date }}</span>
+      </template>
+      <template v-slot:[`item.end_date`]="{ item }">
+        <span style="display:block; min-width:130px">{{ item.end_date }}</span>
       </template>
       <template v-slot:[`item.user`]="{ item }">
         <span style="display:block; min-width:44px">{{ item.user }}</span>
@@ -18,9 +21,9 @@
         <span style="display:block; min-width:70px">{{ item.database }}</span>
       </template>
       <template v-slot:[`item.status`]="{ item }">
-        <span :style="`display:block; min-width:78px; color:${item.status ? '#00b16a' : '#EF5354'};`">
-          <v-icon small :title="item.status ? 'Success' : 'Failed'" :style="`color:${item.status ? '#00b16a' : '#EF5354'}; margin-right:5px; margin-bottom:2px`">{{ item.status ? 'fas fa-check-circle' : 'fas fa-times-circle' }}</v-icon>
-          {{ item.status ? 'Success' : 'Failed' }}
+        <span :style="`display:block; min-width:78px; color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'FAILED' ? '#EF5354' : '#fa8131'};`">
+          <v-icon small :title="item.status == 'SUCCESS' ? 'Success' : item.status == 'FAILED' ? 'Failed' : 'Stopped'" :style="`color:${item.status == 'SUCCESS' ? '#00b16a' : item.status == 'FAILED' ? '#EF5354' : '#fa8131'}; margin-right:5px; margin-bottom:2px`">{{ item.status == 'SUCCESS' ? 'fas fa-check-circle' : item.status == 'FAILED' ? 'fas fa-times-circle' : 'fas fa-exclamation-circle' }}</v-icon>
+          {{ item.status == 'SUCCESS' ? 'Success' : item.status == 'FAILED' ? 'Failed' : 'Stopped' }}
         </span>
       </template>
       <template v-slot:[`item.query`]="{ item }">
@@ -44,7 +47,9 @@
         </td>
       </template>
     </v-data-table>
-
+    <!------------------->
+    <!-- FILTER DIALOG -->
+    <!------------------->
     <v-dialog v-model="filterDialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -101,13 +106,25 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
-                      <v-text-field v-model="filter.dateFrom" label="Date From" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      <v-text-field v-model="filter.startDateFrom" label="Start Date - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('startDateFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
-                      <v-text-field v-model="filter.dateTo" label="Date To" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      <v-text-field v-model="filter.startDateTo" label="Start Date - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('startDateTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.endDateFrom" label="End Date - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('endDateFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.endDateTo" label="End Date - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('endDateTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                   </v-row>
@@ -118,6 +135,46 @@
                   <v-btn :disabled="loading" color="#EF5354" @click="filterDialog = false" style="margin-left:5px;">CANCEL</v-btn>
                   <v-btn v-show="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
                 </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Start Date" value="start_date" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="End Date" value="end_date" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="User" value="user" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Elapsed" value="elapsed" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Records" value="records" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Query" value="query" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
               </v-flex>
             </v-layout>
           </v-container>
@@ -173,11 +230,14 @@ export default {
       origin: [],
       items: [],
       headers: [
-        { text: 'Date', align: 'left', value: 'date' },
+        { text: 'Start Date', align: 'left', value: 'start_date' },
+        { text: 'End Date', align: 'left', value: 'end_date' },
         { text: 'User', align: 'left', value: 'user' },
         { text: 'Server', align: 'left', value: 'server' },
         { text: 'Database', align: 'left', value: 'database' },
         { text: 'Status', align: 'left', value: 'status' },
+        { text: 'Elapsed', align: 'left', value: 'elapsed' },
+        { text: 'Records', align: 'left', value: 'records' },
         { text: 'Query', align: 'left', value: 'query', sortable: false },
       ],
       options: null,
@@ -202,17 +262,25 @@ export default {
       dateTimeField: '',
       dateTimeMode: 'date',
       dateTimeValue: { date: null, time: null },
+      // Filter Columns Dialog
+      columnsDialog: false,
+      columns: ['start_date','user','server','database','status','query'],
+      columnsRaw: [],
     }
   },
   props: ['active','search'],
   mounted() {
     EventBus.$on('filter-client-queries', () => { this.filterDialog = true })
+    EventBus.$on('filter-client-columns', this.filterQueriesColumns)
     EventBus.$on('refresh-client-queries', this.getQueries)
     this.editor = ace.edit("editor", {
       mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
       keyboardHandler: "ace/keyboard/vscode",
     })
+  },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   watch: {
     options: {
@@ -271,8 +339,10 @@ export default {
       var payload = {}
       // Build Filter
       let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
-      if (this.filterApplied && 'dateFrom' in filter) filter.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filterApplied && 'dateTo' in filter) filter.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'startDateFrom' in filter) filter.startDateFrom = moment(this.filter.startDateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'startDateTo' in filter) filter.startDateTo = moment(this.filter.startDateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'endDateFrom' in filter) filter.endDateFrom = moment(this.filter.endDateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'endDateTo' in filter) filter.endDateTo = moment(this.filter.endDateTo).utc().format("YYYY-MM-DD HH:mm:ss")
       if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options
@@ -280,7 +350,7 @@ export default {
       // Get Client queries
       axios.get('/admin/client/queries', { params: payload })
         .then((response) => {
-          this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
+          this.origin = response.data.queries.map(x => ({...x, start_date: this.dateFormat(x.start_date), end_date: this.dateFormat(x.end_date)}))
           this.filterUsers = response.data.users_list
           this.filterServers = response.data.servers_list
           this.onSearch()
@@ -304,7 +374,8 @@ export default {
       }
       else {
         const items = this.origin.filter(x =>
-          x.date.includes(this.search) ||
+          x.start_date.includes(this.search) ||
+          x.end_date.includes(this.search) ||
           x.user.toLowerCase().includes(this.search.toLowerCase()) ||
           x.server.toLowerCase().includes(this.search.toLowerCase()) ||
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
@@ -318,29 +389,48 @@ export default {
       this.dateTimeField = field
       this.dateTimeMode = 'date'
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
-      if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
-        let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+      if (this.dateTimeField == 'startDateFrom' && this.filter.startDateFrom !== undefined && this.filter.startDateFrom.length > 0) {
+        let isValid = moment(this.filter.startDateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
           this.notification("Enter a valid date", '#EF5354')
           return
         }
-        this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
+        this.dateTimeValue = { date: moment(this.filter.startDateFrom).format("YYYY-MM-DD"), time: moment(this.filter.startDateFrom).format("HH:mm") }
       }
-      else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
-        let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
+      else if (this.dateTimeField == 'startDateTo' && this.filter.startDateTo !== undefined && this.filter.startDateTo.length > 0) {
+        let isValid = moment(this.filter.startDateTo, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
           this.notification("Enter a valid date", '#EF5354')
           return
         }
-        this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
+        this.dateTimeValue = { date: moment(this.filter.startDateTo).format("YYYY-MM-DD"), time: moment(this.filter.startDateTo).format("HH:mm") }
+      }
+      else if (this.dateTimeField == 'endDateFrom' && this.filter.endDateFrom !== undefined && this.filter.endDateFrom.length > 0) {
+        let isValid = moment(this.filter.endDateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date", '#EF5354')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.endDateFrom).format("YYYY-MM-DD"), time: moment(this.filter.endDateFrom).format("HH:mm") }
+      }
+      else if (this.dateTimeField == 'endDateTo' && this.filter.endDateTo !== undefined && this.filter.endDateTo.length > 0) {
+        let isValid = moment(this.filter.endDateTo, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date", '#EF5354')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.endDateTo).format("YYYY-MM-DD"), time: moment(this.filter.endDateTo).format("HH:mm") }
       }
       this.dateTimeDialog = true
     },
     dateTimeSubmit() {
+      console.log(this.dateTimeField)
       if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
       else {
-        if (this.dateTimeField == 'from') this.filter.dateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
-        else if (this.dateTimeField == 'to') this.filter.dateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        if (this.dateTimeField == 'startDateFrom') this.filter.startDateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        else if (this.dateTimeField == 'startDateTo') this.filter.startDateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        else if (this.dateTimeField == 'endDateFrom') this.filter.endDateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        else if (this.dateTimeField == 'endDateTo') this.filter.endDateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
         this.dateTimeDialog = false
       }
     },
@@ -369,6 +459,20 @@ export default {
       EventBus.$emit('client-toggle-filter', { from: 'queries', value: false })
       this.filterApplied = false
       this.getQueries()
+    },
+    filterQueriesColumns() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['start_date','end_date','user','server','database','status','elapsed','records','query']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
