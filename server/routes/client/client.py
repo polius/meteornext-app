@@ -292,7 +292,8 @@ class Client:
                         client_json['database'] = query[4:].strip()[1:-1] if query[4:].strip().startswith('`') and query[4:].strip().endswith('`') else query[4:].strip()
                     database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
                     # Track query (start)
-                    conn.query_id = self._client.track_query_start(user_id=user['id'], server_id=client_json['server'], database=database, query=query)
+                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
+                        conn.query_id = self._client.track_query_start(user_id=user['id'], server_id=client_json['server'], database=database, query=query)
                     # Execute query
                     result = conn.execute(query=query, database=database)
                     result['time'] = "{0:.3f}".format(time.time() - start_time)
@@ -309,21 +310,21 @@ class Client:
                         result['pks'] = pks
                     execution.append(result)
                     # Track query (end)
-                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
-                        if group['client_tracking_filter'] in [1,2]:
-                            self._client.track_query_end(query_id = conn.query_id, status='SUCCESS', records=result['rowCount'], elapsed=result['time'])
-
+                    if conn.query_id:
+                        self._client.track_query_end(query_id = conn.query_id, status='SUCCESS', records=result['rowCount'], elapsed=result['time'])
                 except Exception as e:
                     errors = True
                     result = {'query': query, 'database': database, 'error': str(e), 'time': "{0:.3f}".format(time.time() - start_time)}
                     execution.append(result)
                     # Track query (end)
-                    if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
-                        if group['client_tracking_filter'] in [1,3]:
-                            self._client.track_query_end(query_id=conn.query_id, status='FAILED', elapsed=result['time'], error=str(e))
+                    if conn.query_id:
+                        self._client.track_query_end(query_id=conn.query_id, status='FAILED', elapsed=result['time'], error=str(e))
                     if ('executeAll' not in client_json or not client_json['executeAll']):
                         return jsonify({'data': self.__json(execution)}), 400
+                finally:
+                    conn.query_id = None
 
+            # Return queries data
             return jsonify({'data': self.__json(execution)}), 200 if not errors else 400
 
         @client_blueprint.route('/client/processlist', methods=['GET'])
@@ -782,16 +783,15 @@ class Client:
 
             # Get current connection - query_id & start_time
             conn = self._connections.get(user['id'], client_json['connection'])
-            query_id = None if conn is None else conn.query_id
-            start_time = None if conn is None else conn.start_execution
 
             # Kill Query
             self._connections.kill(user['id'], client_json['connection'])
 
             # Track query (stopped)
-            if query_id:
-                elapsed = "{0:.3f}".format(time.time() - start_time)
-                self._client.track_query_end(query_id=query_id, status='STOPPED', elapsed=elapsed)
+            if conn.query_id:
+                elapsed = "{0:.3f}".format(time.time() - conn.start_execution)
+                self._client.track_query_end(query_id=conn.query_id, status='STOPPED', elapsed=elapsed)
+                conn.query_id = None
 
             # Return confirmation message
             return jsonify({'message': 'Query stopped'}), 200

@@ -48,7 +48,6 @@ CREATE TABLE `groups` (
   `client_tracking` tinyint(1) UNSIGNED NOT NULL DEFAULT '0',
   `client_tracking_retention` INT UNSIGNED NOT NULL DEFAULT '1',
   `client_tracking_mode` INT UNSIGNED NOT NULL DEFAULT '1',
-  `client_tracking_filter` INT UNSIGNED NOT NULL DEFAULT '1',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
