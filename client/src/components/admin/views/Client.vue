@@ -16,6 +16,8 @@
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider v-if="tabs == 0" class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn v-if="tabs == 0" @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
       <Queries v-show="tabs == 0" :active="tabs == 0" :search="search" />
       <Servers v-show="tabs == 1" :active="tabs == 1" :search="search" />
@@ -178,6 +180,9 @@ export default {
     attachClick() {
       if (this.attached) EventBus.$emit('detach-client-servers')
       else EventBus.$emit('attach-client-servers')
+    },
+    filterColumnsClick() {
+      EventBus.$emit('filter-client-columns')
     },
     testConnection() {
       // Test Connection

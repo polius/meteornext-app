@@ -33,6 +33,12 @@ class Client:
             pass
             # print("- [CLIENT] Connections closed: {}".format(total))
 
+    def get(self, user_id, conn_id):
+        try:
+            return self._connections[user_id][conn_id]
+        except KeyError:
+            return None
+
     def connect(self, user_id, conn_id, server):
         user_id = int(user_id)
         conn_id = str(conn_id)
@@ -74,8 +80,21 @@ class Client:
 class Connection:
     def __init__(self, server):
         self._server = server
+        self._query_id = None
         if server['sql']['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
             self._sql = MySQL(server)
+
+    @property
+    def query_id(self):
+        return self._query_id
+
+    @query_id.setter
+    def query_id(self, value):
+        self._query_id = value
+
+    @property
+    def start_execution(self):
+        return self._sql.start_execution
 
     @property
     def last_execution(self):
@@ -114,7 +133,7 @@ class Connection:
         self._sql.server = value
 
     def connect(self):
-        self._start = time.time()
+        self._start_time = time.time()
         self._connection_id = self._sql.connect()
 
     def close(self):

@@ -9,7 +9,6 @@ import csv
 import json
 import time
 from itertools import repeat
-from datetime import datetime
 import models.admin.users
 import models.admin.groups
 import models.client.client
@@ -292,6 +291,8 @@ class Client:
                     if query.upper().startswith('USE '):
                         client_json['database'] = query[4:].strip()[1:-1] if query[4:].strip().startswith('`') and query[4:].strip().endswith('`') else query[4:].strip()
                     database = None if client_json['database'] is None or len(client_json['database']) == 0 else client_json['database']
+                    # Track query (start)
+                    conn.query_id = self._client.track_query_start(user_id=user['id'], server_id=client_json['server'], database=database, query=query)
                     # Execute query
                     result = conn.execute(query=query, database=database)
                     result['time'] = "{0:.3f}".format(time.time() - start_time)
@@ -307,19 +308,19 @@ class Client:
                         result['columns'] = columns
                         result['pks'] = pks
                     execution.append(result)
-                    # Track query
+                    # Track query (end)
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,2]:
-                            self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
+                            self._client.track_query_end(query_id = conn.query_id, status='SUCCESS', records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
                     errors = True
                     result = {'query': query, 'database': database, 'error': str(e), 'time': "{0:.3f}".format(time.time() - start_time)}
                     execution.append(result)
-                    # Track query
+                    # Track query (end)
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         if group['client_tracking_filter'] in [1,3]:
-                            self._client.track_query(date=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
+                            self._client.track_query_end(query_id=conn.query_id, status='FAILED', elapsed=result['time'], error=str(e))
                     if ('executeAll' not in client_json or not client_json['executeAll']):
                         return jsonify({'data': self.__json(execution)}), 400
 
@@ -779,8 +780,20 @@ class Client:
             # Get Request Json
             client_json = request.get_json()
 
+            # Get current connection - query_id & start_time
+            conn = self._connections.get(user['id'], client_json['connection'])
+            query_id = None if conn is None else conn.query_id
+            start_time = None if conn is None else conn.start_execution
+
             # Kill Query
             self._connections.kill(user['id'], client_json['connection'])
+
+            # Track query (stopped)
+            if query_id:
+                elapsed = "{0:.3f}".format(time.time() - start_time)
+                self._client.track_query_end(query_id=query_id, status='STOPPED', elapsed=elapsed)
+
+            # Return confirmation message
             return jsonify({'message': 'Query stopped'}), 200
 
         @client_blueprint.route('/client/rights', methods=['GET'])

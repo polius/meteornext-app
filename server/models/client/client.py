@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 class Client:
@@ -235,9 +236,24 @@ class Client:
             """
             return self._sql.execute(query, (folder['name'], user_id))[0]['exist']
 
-    def track_query(self, date, user_id, server_id, database, query, status, records=None, elapsed=None, error=None):
+    def track_query_start(self, user_id, server_id, database, query):
+        start_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query2 = """
-            INSERT INTO client_queries (`date`, `user_id`, `server_id`, `database`, `query`, `status`, `records`, `elapsed`, `error`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO client_queries (`user_id`, `server_id`, `database`, `query`, `status`, `start_date`)
+            VALUES (%s, %s, %s, %s, 'EXECUTING', %s)
         """
-        return self._sql.execute(query2, (date, user_id, server_id, database, query, status, records, elapsed, error))
+        return self._sql.execute(query2, (user_id, server_id, database, query, start_date))
+
+    def track_query_end(self, query_id, status, elapsed, records=None, error=None):
+        end_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        query2 = """
+            UPDATE client_queries
+            SET
+                status = %s,
+                end_date = %s,
+                records = %s,
+                elapsed = %s,
+                error = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query2, (status, end_date, records, elapsed, error, query_id))
