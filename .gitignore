@@ -6,6 +6,7 @@ __pycache__
 /server/files/*
 /server/build/*
 server.conf
+server.pid
 *.pyc
 .bash_history
 .cache/
