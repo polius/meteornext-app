@@ -159,6 +159,7 @@ import MFA from './../../mfa/MFA'
 export default {
   data: () => ({
     // Data Table
+    now: moment.utc(),
     filter: 'all',
     headers: [
       { text: 'Username', align: 'left', value: 'username' },
@@ -360,7 +361,7 @@ export default {
     },
     isOnline(last_ping) {
       if (last_ping == null) return false
-      return moment(last_ping).add(70,'seconds') >= moment.utc()
+      return moment(last_ping).add(70,'seconds') >= this.now
     },
     lastOnline(item) {
       if (item['last_login'] == null) return 'not logged in'
