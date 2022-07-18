@@ -162,11 +162,11 @@
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Start Date" value="start_date" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="End Date" value="end_date" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Elapsed" value="elapsed" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="User" value="user" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Elapsed" value="elapsed" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Records" value="records" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Query" value="query" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
@@ -232,11 +232,11 @@ export default {
       headers: [
         { text: 'Start Date', align: 'left', value: 'start_date' },
         { text: 'End Date', align: 'left', value: 'end_date' },
+        { text: 'Elapsed', align: 'left', value: 'elapsed' },
         { text: 'User', align: 'left', value: 'user' },
         { text: 'Server', align: 'left', value: 'server' },
         { text: 'Database', align: 'left', value: 'database' },
         { text: 'Status', align: 'left', value: 'status' },
-        { text: 'Elapsed', align: 'left', value: 'elapsed' },
         { text: 'Records', align: 'left', value: 'records' },
         { text: 'Query', align: 'left', value: 'query', sortable: false },
       ],
@@ -375,7 +375,7 @@ export default {
       else {
         const items = this.origin.filter(x =>
           x.start_date.includes(this.search) ||
-          x.end_date.includes(this.search) ||
+          (x.end_date != null && x.end_date.includes(this.search)) ||
           x.user.toLowerCase().includes(this.search.toLowerCase()) ||
           x.server.toLowerCase().includes(this.search.toLowerCase()) ||
           (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||

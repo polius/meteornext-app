@@ -485,7 +485,7 @@ export default {
     resizeTable() {
       setTimeout(() => {
         var allColumnIds = [];
-        this.columnApi.getAllColumns().forEach(function(column) {
+        this.columnApi.getColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
         })
         this.columnApi.autoSizeColumns(allColumnIds);
@@ -494,7 +494,7 @@ export default {
     resizeTable2() {
       setTimeout(() => {
         var allColumnIds = [];
-        this.columnApi2.getAllColumns().forEach(function(column) {
+        this.columnApi2.getColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
         })
         this.columnApi2.autoSizeColumns(allColumnIds);

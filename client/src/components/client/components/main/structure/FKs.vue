@@ -183,7 +183,7 @@ export default {
     },
     resizeTable() {
       var allColumnIds = [];
-      this.columnApi.structure.fks.getAllColumns().forEach(function(column) {
+      this.columnApi.structure.fks.getColumns().forEach(function(column) {
         allColumnIds.push(column.colId);
       });
       this.columnApi.structure.fks.autoSizeColumns(allColumnIds);

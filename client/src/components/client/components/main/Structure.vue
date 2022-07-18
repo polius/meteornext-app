@@ -20,10 +20,10 @@
       <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030">
         <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>
       </v-col>
-      <v-col v-if="loading"  cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+      <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
         <div class="body-2" style="height:100%; display:flex; align-items:center">{{ loadingText }}</div>
       </v-col>
-      <v-col v-if="loading"  cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+      <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
         <v-btn :loading="loading2" @click="cancelExecution()" style="margin:6px">CANCEL</v-btn>
       </v-col>
     </v-row>
@@ -97,7 +97,6 @@ export default {
       'structureState',
       'structureQueryStopped',
       'sidebarSelected',
-      'sidebarLoadingObject',
       'server',
       'database',
     ], { path: 'client/connection' }),
@@ -135,7 +134,6 @@ export default {
     },
     getStructure(refresh) {
       if (!refresh && this.structureState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
-      this.sidebarLoadingObject = true
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
@@ -153,7 +151,6 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
-        .finally(() => this.sidebarLoadingObject = false)
     },
     parseStructure(data) {
       // Parse Columns

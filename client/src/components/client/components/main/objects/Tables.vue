@@ -158,7 +158,7 @@ export default {
     },
     resizeTable() {
       var allColumnIds = [];
-      this.columnApi.objects.tables.getAllColumns().forEach(function(column) {
+      this.columnApi.objects.tables.getColumns().forEach(function(column) {
         allColumnIds.push(column.colId);
       });
       this.columnApi.objects.tables.autoSizeColumns(allColumnIds);

@@ -209,7 +209,7 @@ export default {
     },
     resizeTable() {
       var allColumnIds = [];
-      this.columnApi.structure.columns.getAllColumns().forEach(function(column) {
+      this.columnApi.structure.columns.getColumns().forEach(function(column) {
         allColumnIds.push(column.colId);
       });
       this.columnApi.structure.columns.autoSizeColumns(allColumnIds);

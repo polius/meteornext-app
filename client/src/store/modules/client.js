@@ -65,6 +65,7 @@ const connection = () => {
     contentItems: [],
     contentSortState: [],
     contentState: null,
+    contentExecuting: false,
 
     // Info
     infoHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },

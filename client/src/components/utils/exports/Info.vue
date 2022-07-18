@@ -215,7 +215,7 @@ export default {
     resizeTable() {
       setTimeout(() => {
         var allColumnIds = [];
-        this.columnApi.getAllColumns().forEach(function(column) {
+        this.columnApi.getColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
         })
         this.columnApi.autoSizeColumns(allColumnIds);
