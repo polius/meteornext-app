@@ -252,7 +252,7 @@ export default {
       }
       if (this.explainGridApi != null) {
         this.$nextTick(() => {
-          let allColumnIds = this.explainColumnApi.getAllColumns().map(v => v.colId)
+          let allColumnIds = this.explainColumnApi.getColumns().map(v => v.colId)
           this.explainColumnApi.autoSizeColumns(allColumnIds)
         })
       }
@@ -282,13 +282,13 @@ export default {
     onFirstExplainDataRendered() {
       if (this.explainGridApi != null) {
         // this.explainGridApi.sizeColumnsToFit()
-        let allColumnIds = this.explainColumnApi.getAllColumns().map(v => v.colId)
+        let allColumnIds = this.explainColumnApi.getColumns().map(v => v.colId)
         this.explainColumnApi.autoSizeColumns(allColumnIds)
       }
     },
     resizeTable() {
       if (this.gridApi != null) {
-        let allColumnIds = this.columnApi.getAllColumns().map(v => v.colId)
+        let allColumnIds = this.columnApi.getColumns().map(v => v.colId)
         this.columnApi.autoSizeColumns(allColumnIds)
       }
     },

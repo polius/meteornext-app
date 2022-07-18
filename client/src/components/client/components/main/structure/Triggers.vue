@@ -203,7 +203,7 @@ export default {
     },
     resizeTable() {
       var allColumnIds = [];
-      this.columnApi.structure.triggers.getAllColumns().forEach(function(column) {
+      this.columnApi.structure.triggers.getColumns().forEach(function(column) {
         allColumnIds.push(column.colId);
       });
       this.columnApi.structure.triggers.autoSizeColumns(allColumnIds);

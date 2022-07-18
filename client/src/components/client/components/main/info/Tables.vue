@@ -5,7 +5,7 @@
     <!------------>
     <div style="height:calc(100% - 46px)">
       <div style="width:100%; height:100%">
-        <v-data-table :loading="sidebarLoadingObject" :headers="infoHeaders.tables" :items="infoItems.tables" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);" mobile-breakpoint="0"></v-data-table>
+        <v-data-table :loading="loading" :headers="infoHeaders.tables" :items="infoItems.tables" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);" mobile-breakpoint="0"></v-data-table>
         <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
         <div style="height:calc(100% - 143px)">
           <div id="infoTablesEditor" style="float:left"></div>
@@ -34,6 +34,7 @@ import sqlFormatter from '@sqltools/formatter'
 export default {
   data() {
     return {
+      loading: false,
       editor: null
     }
   },
@@ -52,7 +53,6 @@ export default {
       'server',
       'database',
       'sidebarSelected',
-      'sidebarLoadingObject',
     ], { path: 'client/connection' }),
   },
   activated() {
@@ -95,7 +95,7 @@ export default {
     getInfo(refresh) {
       this.editor.setValue(this.infoEditor.tables, -1)
       if (!refresh && this.infoState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
-      this.sidebarLoadingObject = true
+      this.loading = true
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -111,7 +111,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
-      .finally(() => this.sidebarLoadingObject = false)
+        .finally(() => this.loading = false)
     },
     parseInfo(data) {
       var syntax = ''

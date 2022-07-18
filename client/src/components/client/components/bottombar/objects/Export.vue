@@ -280,7 +280,7 @@ export default {
       setTimeout(() => {
         if (this.columnApi[object] == null) return
         var allColumnIds = []
-        this.columnApi[object].getAllColumns().forEach(function(column) {
+        this.columnApi[object].getColumns().forEach(function(column) {
           allColumnIds.push(column.colId)
         })
         this.columnApi[object].autoSizeColumns(allColumnIds)

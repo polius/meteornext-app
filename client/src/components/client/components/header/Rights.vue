@@ -284,7 +284,7 @@ export default {
       this.$nextTick(() => {
         if (this.gridApi != null) {
           // this.gridApi.sizeColumnsToFit()
-          let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+          let allColIds = this.columnApi.getColumns().map(column => column.colId)
           this.columnApi.autoSizeColumns(allColIds)
         }
       })

@@ -980,6 +980,7 @@ export default {
       this.editor.completer.detach()
     },
     runQuery() {
+      if (this.clientExecuting != null) return
       this.clientExecuting = 'query'
       const payload = {
         origin: 'editor',
@@ -995,6 +996,7 @@ export default {
       else this.clientExecuting = null
     },
     explainQuery() {
+      if (this.clientExecuting != null) return
       this.clientExecuting = 'explain'
       const payload = {
         origin: 'explain',
@@ -1260,7 +1262,7 @@ export default {
       if (this.columnApi.client != null) this.resizeTable()
     },
     resizeTable() {
-      let allColumnIds = this.columnApi.client.getAllColumns().map(v => v.colId)
+      let allColumnIds = this.columnApi.client.getColumns().map(v => v.colId)
       this.columnApi.client.autoSizeColumns(allColumnIds)
     },
     parseClientBottomBar(data, current) {

@@ -103,7 +103,7 @@ export default {
         if (this.gridApi != null) {
           if (this.history.length == 0) this.gridApi.sizeColumnsToFit()
           else {
-            let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+            let allColIds = this.columnApi.getColumns().map(column => column.colId)
             this.columnApi.autoSizeColumns(allColIds)
           }
         }

@@ -29,7 +29,7 @@
               <v-text-field v-model="contentSearchFilterText2" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
             </v-col>
             <v-col sm="auto" justify="end">
-              <v-btn @click="filterClick" style="margin-top:4px; margin-left:6px; margin-right:5px;">Filter</v-btn>
+              <v-btn :loading="contentExecuting" @click="filterClick" style="margin-top:4px; margin-left:6px; margin-right:5px;">Filter</v-btn>
             </v-col>
           </v-row>
         </div>
@@ -54,11 +54,11 @@
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
       <v-row no-gutters style="flex-wrap: nowrap;">
         <v-col cols="auto">
-          <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+          <v-btn :disabled="contentExecuting" @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="addRow" :disabled="Object.keys(currentCellEditValues).length != 0" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+          <v-btn @click="addRow" :disabled="contentExecuting || Object.keys(currentCellEditValues).length != 0" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="removeRow" :disabled="!isRowSelected || Object.keys(currentCellEditValues).length != 0" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn @click="removeRow" :disabled="contentExecuting || !isRowSelected || Object.keys(currentCellEditValues).length != 0" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn :disabled="contentItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
@@ -73,12 +73,17 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-if="bottomBar.content['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:7px;">fas fa-spinner</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
             <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='stopped'" title="Stopped" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <span :title="bottomBar.content['text']">{{ bottomBar.content['text'] }}</span>
           </div>
         </v-col>
-        <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
+        <v-col v-if="contentExecuting" cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; padding-left:10px; padding-right:5px;">
+          <v-btn @click="stopQuery" small>STOP QUERY</v-btn>
+        </v-col>
+        <v-col v-else cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="text-align:right;">{{ bottomBar.content['info'] }}</div>
         </v-col>
       </v-row>
@@ -268,7 +273,7 @@ export default {
       'contentState',
       'contentSortState',
       'bottomBar',
-      'sidebarLoadingObject'
+      'contentExecuting',
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -454,11 +459,11 @@ export default {
       navigator.clipboard.writeText(json)
     },
     getContent(force) {
+      if (this.contentExecuting) return
       if (!force && this.contentState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
       if (force) this.contentSearchColumn = ''
-      this.sidebarLoadingObject = true
+      this.contentExecuting = true
       this.contentSortState = []
-      this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
         origin: 'content',
@@ -468,11 +473,19 @@ export default {
         table: this.sidebarSelected[0]['name'],
         queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '` LIMIT 1000;' ]
       }
+      this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
+      const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseContentExecution(JSON2.parse(response.data.data))
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
+          current.contentExecuting = false
         })
         .catch((error) => {
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
+          current.contentExecuting = false
           this.gridApi.content.hideOverlay()
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
@@ -481,7 +494,6 @@ export default {
             EventBus.$emit('send-notification', error, '#EF5354')
           }
         })
-        .finally(() => this.sidebarLoadingObject = false)
     },
     parseContentExecution(data) {
       // Build Data Table
@@ -546,7 +558,7 @@ export default {
       this.contentState = (this.database + '|' + this.sidebarSelected[0]['id'])
     },
     resizeTable() {
-      let allColumnIds = this.columnApi.content.getAllColumns().map(v => v.colId)
+      let allColumnIds = this.columnApi.content.getColumns().map(v => v.colId)
       this.columnApi.content.autoSizeColumns(allColumnIds)
     },
     addRow() {
@@ -611,6 +623,7 @@ export default {
       this.showDialog(dialogOptions)
     },
     removeRowSubmit() {
+      this.contentExecuting = true
       let nodes = this.gridApi.content.getSelectedNodes()
       var queries = []
       if (this.contentPks.length == 0) {
@@ -644,7 +657,9 @@ export default {
         database: this.database,
         queries: queries
       }
+      this.bottomBar.content = { status: 'executing', text: queries[queries.length - 1], info: '' }
       const server = this.server
+      const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
           // Get Response Data
@@ -653,6 +668,10 @@ export default {
           this.gridApi.content.applyTransaction({ remove: this.gridApi.content.getSelectedRows() })
           // Build BottomBar
           this.parseContentBottomBar(data)
+          // Mark contentExecuting to false
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
+          current.contentExecuting = false
           // Close Dialog
           this.dialog = false
           // Add execution to history
@@ -660,9 +679,12 @@ export default {
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
-          this.gridApi.content.hideOverlay()
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
+            current.contentExecuting = false
+            this.gridApi.content.hideOverlay()
             // Show error
             let data = JSON2.parse(error.response.data.data)
             let dialogOptions = {
@@ -793,6 +815,7 @@ export default {
           this.showDialog(dialogOptions)
           return
         }
+        this.contentExecuting = true
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
@@ -802,7 +825,9 @@ export default {
           database: this.database,
           queries: [query]
         }
+        this.bottomBar.content = { status: 'executing', text: query, info: '' }
         const server = this.server
+        const index = this.index
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()
@@ -813,6 +838,10 @@ export default {
             if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0 && data[0].lastRowId != 0) {
               node.setDataValue(this.contentPks[0], data[0].lastRowId)
             }
+            // Mark contentExecuting to false
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
+            current.contentExecuting = false
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
@@ -822,9 +851,13 @@ export default {
             this.currentCellEditValues = {}
           })
           .catch((error) => {
-            this.gridApi.content.hideOverlay()
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
+              // Mark contentExecuting to false
+              let current = this.connections.find(c => c['index'] == index)
+              if (current === undefined) return
+              current.contentExecuting = false
+              this.gridApi.content.hideOverlay()
               // Show error
               let data = JSON2.parse(error.response.data.data)
               let dialogOptions = {
@@ -898,6 +931,8 @@ export default {
       }, 100);
     },
     filterClick() {
+      if (this.contentExecuting) return
+      this.contentExecuting = true
       // Build query condition
       var condition = ''
       if (['BETWEEN','NOT BETWEEN'].includes(this.contentSearchFilter)) {
@@ -929,6 +964,7 @@ export default {
         table: this.sidebarSelected[0]['name'],
         queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '`' + condition + sort + pagination + ';' ]
       }
+      this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
       const server = this.server
       const index = this.index
       axios.post('/client/execute', payload)
@@ -939,11 +975,15 @@ export default {
           this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
+          current.contentExecuting = false
           this.parseContentExecution(data)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
+            current.contentExecuting = false
             this.gridApi.content.hideOverlay()
             // Show error
             let data = JSON2.parse(error.response.data.data)
@@ -1177,6 +1217,13 @@ export default {
       document.body.appendChild(element)
       element.click()
       document.body.removeChild(element)
+    },
+    stopQuery() {
+      const payload = { connection: this.id + '-shared' }
+      axios.post('/client/stop', payload)
+      .then(() => {
+        this.bottomBar.content['status'] = 'stopped'
+      })
     },
   },
 }

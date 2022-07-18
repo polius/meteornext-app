@@ -159,7 +159,7 @@ export default {
     },
     resizeTable() {
       var allColumnIds = [];
-      this.columnApi.structure.indexes.getAllColumns().forEach(function(column) {
+      this.columnApi.structure.indexes.getColumns().forEach(function(column) {
         allColumnIds.push(column.colId);
       });
       this.columnApi.structure.indexes.autoSizeColumns(allColumnIds);
