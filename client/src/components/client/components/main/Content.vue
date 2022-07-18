@@ -74,14 +74,14 @@
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             <v-icon v-if="bottomBar.content['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:7px;">fas fa-spinner</v-icon>
-            <v-icon v-else-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-times-circle</v-icon>
             <v-icon v-else-if="bottomBar.content['status']=='stopped'" title="Stopped" small style="color:#EF5354; padding-bottom:2px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <span :title="bottomBar.content['text']">{{ bottomBar.content['text'] }}</span>
           </div>
         </v-col>
         <v-col v-if="contentExecuting" cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; padding-left:10px; padding-right:5px;">
-          <v-btn @click="stopQuery" small>STOP QUERY</v-btn>
+          <v-btn :loading="loadingStop" @click="stopQuery" small>STOP QUERY</v-btn>
         </v-col>
         <v-col v-else cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="text-align:right;">{{ bottomBar.content['info'] }}</div>
@@ -207,6 +207,7 @@ export default {
     return {
       // Loading
       loading: false,
+      loadingStop: false,
       // AG Grid
       isRowSelected: false,
       currentCellEditMode: 'edit', // edit - new
@@ -1219,11 +1220,18 @@ export default {
       document.body.removeChild(element)
     },
     stopQuery() {
+      if (this.loadingStop) return
+      this.loadingStop = true
       const payload = { connection: this.id + '-shared' }
       axios.post('/client/stop', payload)
       .then(() => {
         this.bottomBar.content['status'] = 'stopped'
       })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else EventBus.$emit('send-notification', "An error occurred stopping the query. Please try again.", '#EF5354')
+      })
+      .finally(() => this.loadingStop = false)
     },
   },
 }
