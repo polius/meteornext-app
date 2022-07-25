@@ -1,4 +1,5 @@
 #!/bin/bash
+set -m
 cd /root/meteornext
 
 # Generate 'server.conf' file

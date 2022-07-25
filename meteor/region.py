@@ -145,6 +145,16 @@ class Region:
         # Paramiko Execute Local Command
         client = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        # Get stdout (streamed)
+        # stdout = []
+        # while True:
+        #     output = client.stdout.readline()
+        #     if client.poll() is not None and output == b'':
+        #         break
+        #     if output:
+        #         stdout.append(output)
+        #         print(output.strip())
+
         # Get stdout
         stdout = client.stdout.readlines()
 

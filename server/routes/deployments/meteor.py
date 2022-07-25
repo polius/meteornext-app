@@ -238,5 +238,4 @@ class blueprint:
         command = meteor_path + ["--path", execution_path, "--uri", deployment['uri'], f"--{execution_method}"]
 
         # Execute Meteor
-        # subprocess.Popen(command, shell=True)
         subprocess.Popen(command, stdout=subprocess.DEVNULL)
