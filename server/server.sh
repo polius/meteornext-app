@@ -1,3 +1,6 @@
+#!/bin/bash
+set -m
+
 deployments() {
     while true; do 
         sleep 10;
