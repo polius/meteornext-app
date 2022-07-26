@@ -918,6 +918,7 @@ export default {
       var start = 0
       var delimiter = ';'
       var first = true
+      var comment = ''
       for (var i = 0; i < text.length; ++i) {
         if (first && text.substring(i, i+10).toLowerCase() == 'delimiter ') {
           let found = false
@@ -935,7 +936,7 @@ export default {
         }
         if (first) {
           if ([' ','\n','\t',';'].includes(text[i])) { start = i + 1; continue; }
-          else first = false          
+          else first = false
         }
         if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0) {
           if (!text.substring(start, i).toLowerCase().startsWith('delimiter')) {
@@ -943,6 +944,31 @@ export default {
           }
           start = i + 1
           first = true
+        }
+        if (comment.length == 0) {
+          if (text[i] == '#') comment = '#'
+          else if (text.substring(i, i+2) == '--') comment = '--'
+          else if (text.substring(i, i+2) == '/*') comment = '/*'
+        }
+        else {
+          if (['#','--'].includes(comment) && text[i] == '\n') {
+            if (text.substring(i+1, text.length).trim().toLowerCase().startsWith('delimiter ')) {
+              queries.push({"begin": start, "end": i})
+              start = i + 1
+              first = true
+            }
+            comment = ''
+          }
+          else if (comment == '/*' && text.substring(i, i+2) == '*/') {
+            if (text.substring(i+2, text.length).trim().toLowerCase().startsWith('delimiter ')) {
+              let length = text[i+2] == '\n' ? 2 : 1
+              queries.push({"begin": start, "end": i + length})
+              i = i + 1
+              start = i + length
+              first = true
+            }
+            comment = ''
+          }
         }
       }
       if (i > start && !text.substring(start, i).trim().toLowerCase().startsWith('delimiter')) {
