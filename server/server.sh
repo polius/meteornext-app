@@ -26,5 +26,7 @@ monitoring &
 mpid=$!
 utils &
 upid=$!
-trap "kill -9 $dpid ; kill -9 $mpid ; kill -9 $upid" INT
 python3 server.py
+kill -9 $dpid
+kill -9 $mpid
+kill -9 $upid
