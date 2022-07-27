@@ -97,7 +97,7 @@ class Region:
     def sigint(self):
         command = "ps -U $USER -u $USER u | grep '{}' | grep '\--region' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
         if self._region['ssh']['enabled']:
-            self.__ssh(command, f"{self._args.path}/deployments/{self._region['id']}")
+            self.__ssh(command)
         else:
             self.__local(command)
 
