@@ -271,7 +271,7 @@ class Monitor:
                 self.__slack(slack=s, server=server, event='restarted', data=data)
 
         # Check parameters
-        if server['monitor']['available'] == 1 and server['monitor']['parameters'] and available:
+        if server['monitor']['parameters'] and available:
             origin = self.__str2dict(server['monitor']['parameters'])
             diff = { k : params[k] for k, _ in set(params.items()) - set(origin.items())}
             if len(diff) > 0 and not (len(diff) == 1 and 'innodb_thread_sleep_delay' in diff):
