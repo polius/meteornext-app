@@ -1709,7 +1709,7 @@
             else chars.push("'")
           }
         }
-        if (start < i) queries.push({"id": id, "query": this.query_dialog_code.substring(start, i).trim()})
+        if (start < i && this.query_dialog_code.substring(start, i).trim().length != 0) queries.push({"id": id, "query": this.query_dialog_code.substring(start, i).trim()})
         // Return parsed queries
         return queries
       },

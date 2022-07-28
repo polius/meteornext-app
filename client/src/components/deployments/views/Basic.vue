@@ -633,7 +633,7 @@ export default {
           else if (chars[chars.length-1] == "'") chars.pop()
         }
       }
-      if (start < i) queries.push({"id": id, "query": this.code.substring(start, i).trim()})
+      if (start < i && this.code.substring(start, i).trim().length != 0) queries.push({"id": id, "query": this.code.substring(start, i).trim()})
       // Return parsed queries
       return queries
     },
