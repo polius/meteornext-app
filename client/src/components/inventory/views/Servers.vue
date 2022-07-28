@@ -654,7 +654,7 @@ export default {
       }
     },
     readFileAsync(file) {
-      if (file == null || file === undefined || typeof file !== 'object') return null
+      if (file == null || typeof file !== 'object') return file
       return new Promise((resolve, reject) => {
         let reader = new FileReader()
         reader.onload = () => { resolve(reader.result)}
