@@ -488,7 +488,7 @@ export default {
       axios.post('/admin/inventory/auxiliary/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          this.testDialog = true
+          this.testDialog = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
