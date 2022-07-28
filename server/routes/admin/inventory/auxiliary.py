@@ -141,6 +141,12 @@ class Auxiliary:
             del auxiliary2['id']
         if self._auxiliary.exist(auxiliary2):
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
+        # Parse ssl
+        if auxiliary['ssl'] and (auxiliary['ssl_client_key'] == '<ssl_client_key>' or auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' or auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>'):
+            origin = self._auxiliary.get(user['id'], user['group_id'], auxiliary['id'])[0]
+            auxiliary['ssl_client_key'] = origin['ssl_client_key'] if auxiliary['ssl_client_key'] == '<ssl_client_key>' else auxiliary['ssl_client_key']
+            auxiliary['ssl_client_certificate'] = origin['ssl_client_certificate'] if auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' else auxiliary['ssl_client_certificate']
+            auxiliary['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>' else auxiliary['ssl_ca_certificate']
         # Add auxiliary
         self._auxiliary.post(user, auxiliary)
         return jsonify({'message': 'Auxiliary connection added'}), 200
