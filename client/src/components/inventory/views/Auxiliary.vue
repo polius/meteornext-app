@@ -359,10 +359,6 @@ export default {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
-      // Parse SSL
-      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
-      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
-      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Add item in the DB
       this.loading = true
       const payload = {...this.item, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
@@ -393,10 +389,6 @@ export default {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
-      // Parse SSL
-      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
-      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
-      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Edit item in the DB
       this.loading = true
       const payload = {...this.item, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
@@ -497,7 +489,7 @@ export default {
       else if (val == 'shared') this.items = this.auxiliary.filter(x => x.shared)
     },
     readFileAsync(file) {
-      if (file == null || typeof file !== 'object') return file
+      if (file == null || file === undefined || typeof file !== 'object') return null
       return new Promise((resolve, reject) => {
         let reader = new FileReader()
         reader.onload = () => { resolve(reader.result)}

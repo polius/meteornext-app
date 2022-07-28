@@ -242,7 +242,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false, secured: false },
+    item: { group_id: '', owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false, secured: false },
     mode: '',
     loading: true,
     engines: {
@@ -332,7 +332,7 @@ export default {
     newAuxiliary() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false, secured: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false, secured: false }
       if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true
@@ -381,10 +381,6 @@ export default {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
-      // Parse SSL
-      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
-      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
-      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Add item in the DB
       this.loading = true
       const payload = {...this.item, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
@@ -415,10 +411,6 @@ export default {
         this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
-      // Parse SSL
-      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
-      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
-      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Edit item in the DB
       this.loading = true
       const payload = {...this.item, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
@@ -549,7 +541,7 @@ export default {
       return date
     },
     readFileAsync(file) {
-      if (file == null || typeof file !== 'object') return file
+      if (file == null || file === undefined || typeof file !== 'object') return null
       return new Promise((resolve, reject) => {
         let reader = new FileReader()
         reader.onload = () => { resolve(reader.result)}
