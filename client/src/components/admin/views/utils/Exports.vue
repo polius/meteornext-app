@@ -449,7 +449,13 @@ export default {
       return pretty(size, {binary: true}).replace('i','')
     },
     infoExport() {
-      this.$router.push({ name: 'utils.exports.info', params: { uri: this.selected[0]['uri'] }})
+      for (let i = 0; i < this.selected.length; ++i) {
+        const route = this.$router.resolve({
+          name: "utils.exports.info",
+          params: { uri: this.selected[i]['uri'] },
+        });
+        window.open(route.href, "_blank")
+      }
     },
     getServer(server_id) {
       EventBus.$emit('utils-get-server', server_id)
