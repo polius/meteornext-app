@@ -126,6 +126,7 @@ export default {
       this.getCollations(this.server.defaults.encoding)
     },
     getCollations(encoding) {
+      if (encoding == null) return
       // Retrieve Databases
       this.loading = true
       const payload = {

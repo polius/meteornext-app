@@ -148,6 +148,7 @@ export default {
       }, []))
     },
     getCollations(encoding) {
+      if (encoding == null) return
       // Retrieve Databases
       this.loading = true
       const payload = {

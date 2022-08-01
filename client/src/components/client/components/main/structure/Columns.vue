@@ -169,6 +169,7 @@ export default {
       this.getCollations(item)
     },
     getCollations(encoding) {
+      if (encoding == null) return
       // Retrieve Databases
       this.loading = true
       const payload = {
