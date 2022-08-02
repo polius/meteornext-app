@@ -79,70 +79,59 @@ class deploy_blueprint:
             query_instance.close_sql_connection()
 
     def __main(self, server):
+        # Check thread execution status
+        current_thread = threading.current_thread()
+        if len(current_thread.critical) > 0 or not current_thread.alive:
+            return
+
+        # Get all server databases
+        conn_data = {"sql": server}
+        conn = connector(conn_data)
+        conn.start()
+        databases = conn.get_all_databases()
+        self._databases = [i for i in databases]
+        conn.stop()
+
+        # Deployment in Parallel
         try:
-            # Check thread execution status
-            current_thread = threading.current_thread()
-            if len(current_thread.critical) > 0 or not current_thread.alive:
-                return
+            threads = []
+            for i in range(int(self._imports.config['params']['threads'])):
+                t = threading.Thread(target=self.__execute_main_databases, args=(server,))
+                t.alive = current_thread.alive
+                t.error = False
+                t.critical = []
+                t.auxiliary = current_thread.auxiliary
+                t.start()
+                threads.append(t)
 
-            # Get all server databases
-            conn_data = {"sql": server}
-            conn = connector(conn_data)
-            conn.start()
-            databases = conn.get_all_databases()
-            self._databases = [i for i in databases]
-            conn.stop()
-
-            # Deployment in Parallel
-            try:
-                threads = []
-
-                for i in range(int(self._imports.config['params']['threads'])):
-                    t = threading.Thread(target=self.__execute_main_databases, args=(server,))
-                    t.alive = current_thread.alive
-                    t.error = False
-                    t.critical = []
-                    t.auxiliary = current_thread.auxiliary
-                    t.start()
-                    threads.append(t)
-
+            # Track progress
+            while any(t.is_alive() for t in threads):
+                # Check alive
+                if not current_thread.alive:
+                    for t in threads:
+                        t.alive = False
                 # Track progress
-                while any(t.is_alive() for t in threads):                        
-                    # Check alive
-                    if not current_thread.alive:
-                        for t in threads:
-                            t.alive = False
-                    # Track progress
-                    self.__track_execution_progress(server, databases)
-                    time.sleep(1)
-
-                # Check progress again
                 self.__track_execution_progress(server, databases)
+                time.sleep(1)
 
-                # Check critical errors
-                for t in threads:
-                    if len(t.critical) > 0:
-                        for i in t.critical:
-                            if i not in current_thread.critical:
-                                current_thread.critical.append(json.dumps(i)[1:-1])
+            # Check progress again
+            self.__track_execution_progress(server, databases)
 
-                # Check errors
-                current_thread.error = current_thread.error or any(t.error for t in threads)
+            # Check critical errors
+            for t in threads:
+                if len(t.critical) > 0:
+                    for i in t.critical:
+                        if i not in current_thread.critical:
+                            current_thread.critical.append(json.dumps(i)[1:-1])
 
-                # Append existing errors
-                if len(self._databases) > 0:
-                    current_thread.progress.append(self._databases[0])
+            # Check errors
+            current_thread.error = current_thread.error or any(t.error for t in threads)
 
-            except (Exception, KeyboardInterrupt):
-                for t in threads:
-                    t.alive = False
-                for t in threads:
-                    t.join()
-                raise
-
-        except Exception as e:
-            error_format = re.sub(' +',' ', str(e)).replace('\n', '')
-            current_thread.progress.append(error_format)
+        except (Exception, KeyboardInterrupt):
+            for t in threads:
+                t.alive = False
+            for t in threads:
+                t.join()
             raise
 
     def __after(self, server):

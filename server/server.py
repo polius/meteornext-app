@@ -64,6 +64,11 @@ class server:
         if data is None:
             return
 
+        # Init Sentry
+        if data['metadata']['sentry']:
+            import sentry_sdk
+            sentry_sdk.init(dsn=self._sentry_dsn, environment=data['conf']['license']['access_key'], traces_sample_rate=0)
+
         # Init License
         class License:
             def __init__(self, resources, sentry):
@@ -94,6 +99,11 @@ class server:
         if data is None:
             return
 
+        # Init Sentry
+        if data['metadata']['sentry']:
+            import sentry_sdk
+            sentry_sdk.init(dsn=self._sentry_dsn, environment=data['conf']['license']['access_key'], traces_sample_rate=0)
+
         # Init License
         class License:
             def __init__(self, resources):
@@ -115,6 +125,11 @@ class server:
         data = self.__check()
         if data is None:
             return
+
+        # Init Sentry
+        if data['metadata']['sentry']:
+            import sentry_sdk
+            sentry_sdk.init(dsn=self._sentry_dsn, environment=data['conf']['license']['access_key'], traces_sample_rate=0)
 
         # Init License
         class License:
