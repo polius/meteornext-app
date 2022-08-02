@@ -404,6 +404,12 @@ export default {
   watch: {
     tab(value) {
       this.selected = []
+      this.$nextTick(() => {
+        if (Object.keys(this.$route.query).length != 0) this.$router.replace({'query': null})
+        this.filter = {}
+        this.filterOrigin = {}
+        this.filterApplied = false
+      })
       this.getShared()
       if (value == 0) {
         this.headers.push({ text: 'Owner', align: 'left', value: 'owner' })
@@ -418,22 +424,34 @@ export default {
   },
   methods: {
     getShared() {
-      this.loading = true
-      var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      let filter = null
       if (this.filterApplied) {
+        filter = JSON.parse(JSON.stringify(this.filter))
+        if (JSON.stringify(this.$route.query) != JSON.stringify(filter)) this.$router.push({path: this.$route.path, query: filter})
+      }
+      else if (Object.keys(this.$route.query).length != 0) {
+        this.filter = filter = Object.keys(this.$route.query).reduce((acc, val) => {
+          if (['mode','method','status'].includes(val) && typeof this.$route.query[val] == 'string') acc[val] = [this.$route.query[val]]
+          else acc[val] = this.$route.query[val]
+          return acc
+        },{})
+        this.filterApplied = true
+      }
+      if (filter != null) {
         this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
         for (let i of ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
       }
-      if (filter != null) payload['filter'] = filter
       // Get Deployments Shared
+      this.loading = true
       const url = this.tab == 0 ? '/deployments/shared/you' : '/deployments/shared/others'
+      const payload = filter == null ? {} : {'filter': filter}
       axios.get(url, { params: payload })
         .then((response) => {
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.selected = []
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -559,6 +577,7 @@ export default {
       this.filterDialog = false
       this.filter = {}
       this.filterApplied = false
+      this.$router.push({path: this.$route.path, query: {}})
       this.getShared()
     },
     pinSharedDeployments() {
