@@ -69,7 +69,7 @@ monitoring() {
 utils() {
     while true; do 
         sleep 10;
-        ./init --utils
+        ./init --utils &
     done
 }
 

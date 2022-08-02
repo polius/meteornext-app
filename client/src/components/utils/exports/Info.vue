@@ -46,6 +46,7 @@
               <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
               <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
             </template>
           </v-data-table>
@@ -60,6 +61,7 @@
               <div v-else-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>Export in progress. Please wait...</div>
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px; margin-bottom:2px">fas fa-check</v-icon>Export successfully finished.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-times</v-icon>An error occurred while exporting the database.</div>
+              <div v-else-if="information_items[0].status == 'STOPPING'" class="text-body-1"><v-icon title="Stopping" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Stopping the execution...</div>
               <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Export successfully stopped.</div>
               <v-progress-linear v-if="progress != null" :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : information_items[0].status == 'SUCCESS' ? 100 : progress.value" style="margin-top:10px"></v-progress-linear>
               <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ information_items[0].status == 'SUCCESS' ? '100 %' : (progress.value + ' %') }}</span></div>
@@ -227,7 +229,7 @@ export default {
           this.information_items = [response.data.export].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           if (this.information_items[0]['mode'] == 'partial') this.objectsItems = JSON.parse(this.information_items[0]['tables'])['t']
           if (this.information_items[0]['progress'] != null) this.parseProgress(this.information_items[0]['progress'])
-          if (['QUEUED','STARTING','IN PROGRESS'].includes(this.information_items[0]['status'])) {
+          if (['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(this.information_items[0]['status'])) {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getExport, 1000)
           }

@@ -16,7 +16,7 @@ monitoring() {
 utils() {
     while true; do 
         sleep 10;
-        python3 server.py --utils
+        python3 server.py --utils &
     done
 }
 

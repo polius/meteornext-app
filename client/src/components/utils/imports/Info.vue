@@ -47,6 +47,7 @@
               <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
               <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
             </template>
           </v-data-table>
@@ -61,6 +62,7 @@
               <div v-else-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>{{ (information_items[0]['progress'] == null && information_items[0]['upload'] != null) ? "Transferring file to server's region. Please wait..." : 'Importing the file. Please wait...' }}</div>
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px; margin-bottom:2px">fas fa-check</v-icon>File successfully imported.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-times</v-icon>An error occurred while importing the file.</div>
+              <div v-else-if="information_items[0].status == 'STOPPING'" class="text-body-1"><v-icon title="Stopping" small style="color: #ff9800; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Stopping the execution...</div>
               <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>Import successfully stopped.</div>
               <v-progress-linear v-if="progress != null" :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
               <div v-if="progress != null && progress.value != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
@@ -267,7 +269,7 @@ export default {
           this.selectedItems = this.information_items[0]['selected']
           if (this.information_items[0]['upload'] != null) this.parseUpload(this.information_items[0]['upload'])
           if (this.information_items[0]['progress'] != null) this.parseProgress(this.information_items[0]['progress'])
-          if (['QUEUED','STARTING','IN PROGRESS'].includes(this.information_items[0]['status'])) {
+          if (['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(this.information_items[0]['status'])) {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getImport, 1000)
           }
