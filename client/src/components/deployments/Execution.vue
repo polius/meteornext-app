@@ -1027,9 +1027,8 @@
         }
       },
       goBack() {
-        if (this.prevRoute.path == '/admin/deployments') this.$router.push('/admin/deployments')
-        else if (this.prevRoute.path == '/deployments/shared') this.$router.push('/deployments/shared')
-        else this.$router.push('/deployments')
+        if (this.prevRoute == null) this.$router.push('/deployments')
+        else this.$router.back()
       },
       getCode() {
         axios.get('/deployments/blueprint')
