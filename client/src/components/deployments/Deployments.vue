@@ -361,7 +361,7 @@ export default {
       }
       // Get Deployments
       this.loading = true
-      let payload = filter == null ? {} : {'filter': filter}
+      const payload = filter == null ? {} : {'filter': filter}
       axios.get('/deployments', { params: payload })
         .then((response) => {
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
