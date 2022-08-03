@@ -118,7 +118,7 @@ class server:
         
     def __utils(self):
         # Import Dependencies
-        import connectors.base
+        import connectors.pool
         import routes.utils.utils
 
         # Check Execution
@@ -140,14 +140,11 @@ class server:
         license = License(data['metadata']['resources'])
 
         # Init SQL Connection
-        conn = connectors.base.Base({"sql": data['conf']['sql']})
+        conn = connectors.pool.Pool(data['conf']['sql'])
 
         # Check queued executions
-        try:
-            utils = routes.utils.utils.Utils(conn, license)
-            utils.check_queued()
-        finally:
-            conn.stop()
+        utils = routes.utils.utils.Utils(conn, license)
+        utils.check_queued()
 
     ####################
     # Internal Methods #
