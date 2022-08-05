@@ -56,7 +56,7 @@ class Monitoring:
                 if 'attached' in dfilter and dfilter['attached'] is not None:
                     attached = 'AND m.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND m.server_id IS NULL'
 
-            if dsort is not None:
+            if dsort is not None and dsort['column'] in ['user','server','attached','date']:
                 sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 

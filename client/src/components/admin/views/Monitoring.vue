@@ -12,7 +12,7 @@
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="id" show-select class="elevation-1" mobile-breakpoint="0">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" item-key="id" show-select class="elevation-1" mobile-breakpoint="0">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -240,6 +240,9 @@ export default {
       ],
       selected: [],
       options: null,
+      firstLoad: true,
+      sortBy: null,
+      sortDesc: null,
       total: 0,
       attached: null,
       search: '',
@@ -260,7 +263,8 @@ export default {
   watch: {
     options: {
       handler (newValue, oldValue) {
-        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+        if (oldValue == null || (!this.firstLoad && oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+          console.log("GOGO")
           this.getMonitoringServers()
         }
         else this.onSearch()
@@ -276,21 +280,45 @@ export default {
   },
   methods: {
     getMonitoringServers() {
-      this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
-      if (filter != null) payload['filter'] = filter
+      let filterKeys = Object.keys(this.$route.query).filter(x => !(['sortBy','sortDesc'].includes(x)))
+      if (!this.filterApplied && filterKeys.length != 0) {
+        this.filter = filterKeys.reduce((acc, val) => {
+          acc[val] = this.$route.query[val]
+          return acc
+        },{})
+        this.filterApplied = true
+      }
+      if (this.filterApplied) {
+        this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
+        payload['filter'] = this.filter
+      }
       // Build Sort
       const { sortBy, sortDesc } = this.options
-      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      if (sortBy.length > 0) {
+        payload['sort'] = { column: sortBy[0], desc: sortDesc[0] === undefined ? false : sortDesc[0] }
+      }
+      else if (this.firstLoad && 'sortBy' in this.$route.query && 'sortDesc' in this.$route.query) {
+        this.sortBy = this.$route.query['sortBy']
+        this.sortDesc = this.$route.query['sortDesc'] == 'true'
+        payload['sort'] = { column: this.sortBy, desc: this.sortDesc }
+      }
+      // Build URL Params
+      let query = {}
+      if ('filter' in payload) query = {...payload['filter']}
+      if ('sort' in payload) query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      let routeQuery = ('sortDesc' in this.$route.query) ? {...this.$route.query, "sortDesc": this.$route.query['sortDesc'] == 'true'} : this.$route.query
+      if (JSON.stringify(routeQuery) != JSON.stringify(query)) this.$router.replace({query: query})
       // Get Client Servers
+      this.loading = true
       axios.get('/admin/monitoring/servers', { params: payload })
         .then((response) => {
           this.origin = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.filterUsers = response.data.users_list
           this.filterServers = response.data.servers_list
           this.onSearch()
+          this.firstLoad = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -331,7 +359,11 @@ export default {
       this.filterDialog = false
       this.filterApplied = false
       this.filter = {}
-      this.getMonitoringServers()
+      this.firstLoad = true
+      this.sortBy = null
+      this.sortDesc = null
+      this.$router.replace({query: {}})
+      this.$nextTick(() => this.getMonitoringServers())
     },
     confirmDialogSubmit() {
       if (this.attached) this.submitDetachServers()

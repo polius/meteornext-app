@@ -56,7 +56,7 @@ class Imports:
                 deleted = ''
                 args['deleted'] = rfilter['deleted']
 
-        if rsort is not None:
+        if rsort is not None and rsort['column'] in ['user','mode','server','database','size','status','created','started','ended','overall','deleted']:
             sort_column = f"`{rsort['column']}`"
             sort_order = 'DESC' if rsort['desc'] else 'ASC'
 

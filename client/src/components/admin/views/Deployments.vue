@@ -5,7 +5,7 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium" style="font-size:0.9rem!important"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items style="padding-left:0px;">
-          <v-btn text :disabled="selected.length == 0" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
+          <v-btn text :disabled="selected.length != 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-bookmark</v-icon>DETAILS</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
@@ -15,7 +15,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" single-select :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-slot:[`item.name`]="{ item }">
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
@@ -293,6 +293,9 @@ export default {
     selected: [],
     search: '',
     options: null,
+    firstLoad: true,
+    sortBy: null,
+    sortDesc: null,
 
     // Inline Editing
     releasesItems: [],
@@ -338,7 +341,7 @@ export default {
   watch: {
     options: {
       handler (newValue, oldValue) {
-        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+        if (oldValue == null || (!this.firstLoad && oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
           this.getDeployments()
         }
         else this.onSearch()
@@ -351,26 +354,50 @@ export default {
   },
   methods: {
     getDeployments() {
-      this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      let filterKeys = Object.keys(this.$route.query).filter(x => !(['sortBy','sortDesc'].includes(x)))
+      if (!this.filterApplied && filterKeys.length != 0) {
+        this.filter = filterKeys.reduce((acc, val) => {
+          if (['mode','method','status'].includes(val) && typeof this.$route.query[val] == 'string') acc[val] = [this.$route.query[val]]
+          else acc[val] = this.$route.query[val]
+          return acc
+        },{})
+        this.filterApplied = true
+      }
       if (this.filterApplied) {
         this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
-        for (let i of ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
-          if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
-        }
+        payload['filter'] = Object.keys(this.filter).reduce((acc, val) => {
+          if (['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo'].includes(val)) acc[val] = moment(this.filter[val]).utc().format("YYYY-MM-DD HH:mm:ss")
+          else acc[val] = this.filter[val]
+          return acc
+        },{})
       }
-      if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options
-      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      if (sortBy.length > 0) {
+        payload['sort'] = { column: sortBy[0], desc: sortDesc[0] === undefined ? false : sortDesc[0] }
+      }
+      else if (this.firstLoad && 'sortBy' in this.$route.query && 'sortDesc' in this.$route.query) {
+        this.sortBy = this.$route.query['sortBy']
+        this.sortDesc = this.$route.query['sortDesc'] == 'true'
+        payload['sort'] = { column: this.sortBy, desc: this.sortDesc }
+      }
+      // Build URL Params
+      let query = {}
+      if ('filter' in payload) query = {...payload['filter']}
+      if ('sort' in payload) query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      let routeQuery = ('sortDesc' in this.$route.query) ? {...this.$route.query, "sortDesc": this.$route.query['sortDesc'] == 'true'} : this.$route.query
+      if (JSON.stringify(routeQuery) != JSON.stringify(query)) this.$router.replace({query: query})
       // Get Deployments
+      this.loading = true
       axios.get('/admin/deployments', { params: payload })
         .then((res) => {
           this.origin = res.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.filterUsers = res.data.users_list
+          this.selected = []
           this.onSearch()
+          this.firstLoad = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -431,16 +458,14 @@ export default {
       this.filterDialog = false
       this.filter = {}
       this.filterApplied = false
-      this.getDeployments()
+      this.firstLoad = true
+      this.sortBy = null
+      this.sortDesc = null
+      this.$router.replace({query: {}})
+      this.$nextTick(() => this.getDeployments())
     },
     infoDeployment() {
-      for (let i = 0; i < this.selected.length; ++i) {
-        const route = this.$router.resolve({
-          name: "deployments.execution",
-          params: { uri: this.selected[i]['uri'] },
-        });
-        window.open(route.href, "_blank")
-      }
+      this.$router.push({ name:'deployments.execution', params: { uri: this.selected[0]['uri'] }})
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field

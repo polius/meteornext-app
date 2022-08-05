@@ -343,7 +343,7 @@ export default {
       let filter = null
       if (this.filterApplied) {
         filter = JSON.parse(JSON.stringify(this.filter))
-        if (JSON.stringify(this.$route.query) != JSON.stringify(filter)) this.$router.push({path: this.$route.path, query: filter})
+        if (JSON.stringify(this.$route.query) != JSON.stringify(filter)) this.$router.replace({query: filter})
       }
       else if (Object.keys(this.$route.query).length != 0) {
         this.filter = filter = Object.keys(this.$route.query).reduce((acc, val) => {
@@ -518,7 +518,7 @@ export default {
       this.filterDialog = false
       this.filter = {}
       this.filterApplied = false
-      this.$router.push({path: this.$route.path, query: {}})
+      this.$router.replace({query: {}})
       this.getDeployments()
     },
     pinDeployments() {

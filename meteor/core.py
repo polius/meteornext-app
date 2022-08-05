@@ -397,11 +397,28 @@ class core:
         current_time = calendar.timegm(time.gmtime())
 
         # Queries
-        queries = "```"
-        for query in self._imports.blueprint.queries.values():
-            queries += re.sub(' +', ' ', query.replace("\t", " ")).strip().replace("\n ", "\n") + '\n'
-        queries = queries[:1990] + '...```' if len(queries) > 1990 else queries + '```'
-        queries = '' if queries == '``````' else queries
+        queries = []
+        def parse(data, queries):
+            if type(data) is dict:
+                for i in data.values():
+                    parse(i, queries)
+            elif type(data) in [list,set,tuple]:
+                for i in data:
+                    parse(i, queries)
+            else:
+                query = re.sub(' +', ' ', str(data).replace("\t", " ")).strip().replace("\n ", "\n")
+                if query not in queries:
+                    queries.append(query)
+        try:
+            data = self._imports.blueprint.queries
+        except AttributeError:
+            pass
+        else:
+            parse(data, queries)
+
+        parsed_queries = '```' + '\n---\n'.join([i for i in queries])
+        parsed_queries = parsed_queries[:1990] + '...```' if len(parsed_queries) > 1990 else parsed_queries + '```'
+        parsed_queries = '```---```' if parsed_queries == '``````' else parsed_queries
 
         # Overall Time
         overall_time = str(timedelta(seconds=time.time() - self._start_time))
@@ -445,7 +462,7 @@ class core:
                         },
                         {
                             "title": "Queries",
-                            "value": queries,
+                            "value": parsed_queries,
                             "short": False
                         },
                         {

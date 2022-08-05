@@ -59,7 +59,7 @@ class Deployments:
             if 'allExecutions' in dfilter and dfilter['allExecutions']:
                 all_executions = ''
 
-        if dsort is not None:
+        if dsort is not None and dsort['column'] in ['username','name','release','environment','mode','method','status','created','scheduled','started','ended','overall']:
             sort_column = f"`{dsort['column']}`"
             sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
