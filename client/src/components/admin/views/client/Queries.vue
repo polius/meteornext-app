@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1" mobile-breakpoint="0">
+    <v-data-table :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1" mobile-breakpoint="0">
       <template v-slot:[`item.start_date`]="{ item }">
         <span style="display:block; min-width:130px">{{ item.start_date }}</span>
       </template>
@@ -241,6 +241,9 @@ export default {
         { text: 'Query', align: 'left', value: 'query', sortable: false },
       ],
       options: null,
+      firstLoad: true,
+      sortBy: null,
+      sortDesc: null,
       total: 0,
       editor: null,
       expanded: [],
@@ -285,7 +288,7 @@ export default {
   watch: {
     options: {
       handler (newValue, oldValue) {
-        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+        if (oldValue == null || (!this.firstLoad && oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
           this.getQueries()
         }
         else this.onSearch()
@@ -335,25 +338,49 @@ export default {
   },
   methods: {
     getQueries() {
-      this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
-      if (this.filterApplied && 'startDateFrom' in filter) filter.startDateFrom = moment(this.filter.startDateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filterApplied && 'startDateTo' in filter) filter.startDateTo = moment(this.filter.startDateTo).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filterApplied && 'endDateFrom' in filter) filter.endDateFrom = moment(this.filter.endDateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filterApplied && 'endDateTo' in filter) filter.endDateTo = moment(this.filter.endDateTo).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (filter != null) payload['filter'] = filter
+      let filterKeys = Object.keys(this.$route.query).filter(x => !(['sortBy','sortDesc'].includes(x)))
+      if (!this.filterApplied && filterKeys.length != 0) {
+        this.filter = filterKeys.reduce((acc, val) => {
+          acc[val] = this.$route.query[val]
+          return acc
+        },{})
+        this.filterApplied = true
+      }
+      if (this.filterApplied) {
+        this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
+        payload['filter'] = Object.keys(this.filter).reduce((acc, val) => {
+          if (['startDateFrom','startDateTo','endDateFrom','endDateTo'].includes(val)) acc[val] = moment(this.filter[val]).utc().format("YYYY-MM-DD HH:mm:ss")
+          else acc[val] = this.filter[val]
+          return acc
+        },{})
+      }
       // Build Sort
       const { sortBy, sortDesc } = this.options
-      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      if (sortBy.length > 0) {
+        payload['sort'] = { column: sortBy[0], desc: sortDesc[0] === undefined ? false : sortDesc[0] }
+      }
+      else if (this.firstLoad && 'sortBy' in this.$route.query && 'sortDesc' in this.$route.query) {
+        this.sortBy = this.$route.query['sortBy']
+        this.sortDesc = this.$route.query['sortDesc'] == 'true'
+        payload['sort'] = { column: this.sortBy, desc: this.sortDesc }
+      }
+      // Build URL Params
+      let query = {}
+      if ('filter' in payload) query = {...payload['filter']}
+      if ('sort' in payload) query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      let routeQuery = ('sortDesc' in this.$route.query) ? {...this.$route.query, "sortDesc": this.$route.query['sortDesc'] == 'true'} : this.$route.query
+      if (JSON.stringify(routeQuery) != JSON.stringify(query)) this.$router.replace({query: query})
       // Get Client queries
+      this.loading = true
       axios.get('/admin/client/queries', { params: payload })
         .then((response) => {
           this.origin = response.data.queries.map(x => ({...x, start_date: this.dateFormat(x.start_date), end_date: this.dateFormat(x.end_date)}))
           this.filterUsers = response.data.users_list
           this.filterServers = response.data.servers_list
           this.onSearch()
+          this.firstLoad = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -458,7 +485,11 @@ export default {
       this.filter = {}
       EventBus.$emit('client-toggle-filter', { from: 'queries', value: false })
       this.filterApplied = false
-      this.getQueries()
+      this.firstLoad = true
+      this.sortBy = null
+      this.sortDesc = null
+      this.$router.replace({query: {}})
+      this.$nextTick(() => this.getQueries())
     },
     filterQueriesColumns() {
       this.columnsRaw = [...this.columns]

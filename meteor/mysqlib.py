@@ -1,5 +1,6 @@
 import time
 import pymysql
+import sqlparse
 import tempfile
 import paramiko
 import sshtunnel
@@ -119,7 +120,8 @@ class MySQL:
             cursor.execute(query, args)
 
             # Get the query results
-            query_result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+            is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower().startswith(('select','show'))
+            query_result = cursor.fetchall() if is_select else cursor.rowcount
 
         # Return query info
         query_data = {"query_result": query_result, "query_rows_affected": cursor.rowcount}

@@ -7,9 +7,9 @@
         <v-btn v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(information_items[0]['status'])" :disabled="stop || (information_items.length != 0 && information_items[0]['status'] == 'STOPPING')" text title="Stop Execution" @click="stopImport" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         <v-divider v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(information_items[0]['status'])" class="mx-3" inset vertical></v-divider>
         <div v-if="information_items.length != 0 && information_items[0]['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
-        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'STARTING' && !stop" class="subtitle-1">Starting the execution...</div>
-        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
-        <div v-if="(information_items.length != 0 && information_items[0]['status'] == 'STOPPING') || stop" class="subtitle-1">Stopping the execution...</div>
+        <div v-else-if="information_items.length != 0 && information_items[0]['status'] == 'STARTING' && !stop" class="subtitle-1">Starting the execution...</div>
+        <div v-else-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
+        <div v-else-if="information_items.length != 0 && (information_items[0]['status'] == 'STOPPING' || (information_items[0]['status'] != 'STOPPED' && stop))" class="subtitle-1">Stopping the execution...</div>
         <v-progress-circular v-if="information_items.length != 0 && ['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(information_items[0]['status'])" :size="22" indeterminate color="white" width="2" style="margin-left:20px"></v-progress-circular>
         <v-spacer></v-spacer>
         <div v-if="information_items.length != 0 && information_items[0]['updated'] != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(information_items[0]['updated']) }}</b></div>
@@ -336,7 +336,7 @@ export default {
     getProgressColor(status) {
       if (status == 'QUEUED') return '#2196f3'
       if (status == 'STARTING') return '#3498db'
-      if (status == 'IN PROGRESS') return '#ff9800'
+      if (['IN PROGRESS','STOPPING'].includes(status)) return '#ff9800'
       if (status == 'SUCCESS') return '#4caf50'
       if (['FAILED','STOPPED'].includes('FAILED')) return '#EF5354'
     },

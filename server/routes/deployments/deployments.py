@@ -724,21 +724,21 @@ class Deployments:
             return jsonify({'message': 'This deployment cannot be started.'}), 400
 
         # Check environment exists
-        environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=execution['environment_id'])
+        environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
         if len(environment) == 0:
             return jsonify({'message': 'The selected environment does not exist in your inventory'}), 400
 
         # Check environment contains at least one server
-        servers = self._servers.get_by_environment(authority['id'], authority['group_id'], execution['environment_id'])
+        servers = self._servers.get_by_environment(user['id'], user['group_id'], execution['environment_id'])
         if len(servers) == 0:
             return jsonify({'message': 'The selected environment does not contain servers'}), 400
 
         # Check if selected environment contains any disabled servers
-        if self._environments.is_disabled(authority['id'], authority['group_id'], execution['environment_id']):
+        if self._environments.is_disabled(user['id'], user['group_id'], execution['environment_id']):
             return jsonify({'message': 'The selected environment contains disabled servers.'}), 400
 
         # Get Group
-        group = self._groups.get(group_id=authority['group_id'])[0]
+        group = self._groups.get(group_id=user['group_id'])[0]
 
         # Get Deployment
         deployment = self._deployments.get(user_id=authority['id'], deployment_id=execution['deployment_id'])[0]

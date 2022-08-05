@@ -56,7 +56,7 @@ class Exports:
                 deleted = ''
                 args['deleted'] = efilter['deleted']
 
-        if esort is not None:
+        if esort is not None and esort['column'] in ['user','mode','server','database','size','status','created','started','ended','overall','deleted']:
             sort_column = f"`{esort['column']}`"
             sort_order = 'DESC' if esort['desc'] else 'ASC'
 

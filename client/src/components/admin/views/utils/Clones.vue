@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;" mobile-breakpoint="0">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -346,6 +346,9 @@ export default {
     total: 0,
     selected: [],
     options: null,
+    firstLoad: true,
+    sortBy: null,
+    sortDesc: null,
     loading: false,
 
     // Manage Dialog
@@ -384,7 +387,7 @@ export default {
   watch: {
     options: {
       handler (newValue, oldValue) {
-        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+        if (oldValue == null || (!this.firstLoad && oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
           this.getClone()
         }
         else this.onSearch()
@@ -410,26 +413,49 @@ export default {
   },
   methods: {
     getClone() {
-      this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      let filterKeys = Object.keys(this.$route.query).filter(x => !(['sortBy','sortDesc'].includes(x)))
+      if (!this.filterApplied && filterKeys.length != 0) {
+        this.filter = filterKeys.reduce((acc, val) => {
+          if (['mode','status'].includes(val) && typeof this.$route.query[val] == 'string') acc[val] = [this.$route.query[val]]
+          else acc[val] = this.$route.query[val]
+          return acc
+        },{})
+        this.filterApplied = true
+      }
       if (this.filterApplied) {
         this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
-        for (let i of ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
-          if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
-        }
+        payload['filter'] = Object.keys(this.filter).reduce((acc, val) => {
+          if (['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo'].includes(val)) acc[val] = moment(this.filter[val]).utc().format("YYYY-MM-DD HH:mm:ss")
+          else acc[val] = this.filter[val]
+          return acc
+        },{})
       }
-      if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options
-      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      if (sortBy.length > 0) {
+        payload['sort'] = { column: sortBy[0], desc: sortDesc[0] === undefined ? false : sortDesc[0] }
+      }
+      else if (this.firstLoad && 'sortBy' in this.$route.query && 'sortDesc' in this.$route.query) {
+        this.sortBy = this.$route.query['sortBy']
+        this.sortDesc = this.$route.query['sortDesc'] == 'true'
+        payload['sort'] = { column: this.sortBy, desc: this.sortDesc }
+      }
+      // Build URL Params
+      let query = {}
+      if ('filter' in payload) query = {...payload['filter']}
+      if ('sort' in payload) query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      let routeQuery = ('sortDesc' in this.$route.query) ? {...this.$route.query, "sortDesc": this.$route.query['sortDesc'] == 'true'} : this.$route.query
+      if (JSON.stringify(routeQuery) != JSON.stringify(query)) this.$router.replace({query: query})
       // Get Clones
+      this.loading = true
       axios.get('/admin/utils/clones', { params: payload })
         .then((response) => {
           this.origin = response.data.clones.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.filterUsers = response.data.users_list
           this.onSearch()
+          this.firstLoad = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -556,7 +582,11 @@ export default {
       this.filter = {}
       EventBus.$emit('utils-toggle-filter', { from: 'clone', value: false })
       this.filterApplied = false
-      this.getClone()
+      this.firstLoad = true
+      this.sortBy = null
+      this.sortDesc = null
+      this.$router.replace({query: {}})
+      this.$nextTick(() => this.getClone())
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field

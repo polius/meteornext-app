@@ -59,7 +59,7 @@ class Client:
                     start_date_to = 'AND cq.end_date <= %s'
                     args.append(dfilter['endDateTo'])
 
-            if dsort is not None:
+            if dsort is not None and dsort['column'] in ['start_date','end_date','elapsed','user','server','database','status','records']:
                 sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
@@ -141,7 +141,7 @@ class Client:
                 if 'attached' in dfilter and dfilter['attached'] is not None:
                     attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND cs.server_id IS NULL'
 
-            if dsort is not None:
+            if dsort is not None and dsort['column'] in ['user','server','attached','date','folder']:
                 sort_column = f"`{dsort['column']}`"
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
