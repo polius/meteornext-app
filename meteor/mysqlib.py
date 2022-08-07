@@ -120,8 +120,8 @@ class MySQL:
             cursor.execute(query, args)
 
             # Get the query results
-            is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower().startswith(('select','show'))
-            query_result = cursor.fetchall() if is_select else cursor.rowcount
+            query_parsed = sqlparse.format(query, strip_comments=True).strip()[:6].lower()
+            query_result = cursor.rowcount if query_parsed.startswith(('insert','update','delete')) else cursor.fetchall()
 
         # Return query info
         query_data = {"query_result": query_result, "query_rows_affected": cursor.rowcount}

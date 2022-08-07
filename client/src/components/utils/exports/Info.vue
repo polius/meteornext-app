@@ -233,7 +233,6 @@ export default {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getExport, 1000)
           }
-          this.parseOverall()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -249,11 +248,6 @@ export default {
         eta: progress.eta
       }
     },
-    parseOverall() {
-      if (this.information_items[0]['started'] == null) return null
-      let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
-      this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
-    },
     parseMetric(val) {
       for (let i = val.length; i >= 0; --i) {
         if (Number.isInteger(parseInt(val[i]))) {
@@ -263,8 +257,8 @@ export default {
       return val
     },
     goBack() {
-      if (this.prevRoute.path == '/admin/utils/exports') this.$router.push('/admin/utils/exports')
-      else this.$router.push('/utils/exports')
+      if (this.prevRoute == null) this.$router.push('/utils/exports')
+      else this.$router.back()
     },
     getServer(server_id) {
       EventBus.$emit('get-server', server_id)

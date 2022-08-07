@@ -285,6 +285,9 @@ export default {
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
+  destroyed() {
+    EventBus.$off()
+  },
   watch: {
     options: {
       handler (newValue, oldValue) {
@@ -451,7 +454,6 @@ export default {
       this.dateTimeDialog = true
     },
     dateTimeSubmit() {
-      console.log(this.dateTimeField)
       if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
       else {
         if (this.dateTimeField == 'startDateFrom') this.filter.startDateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time

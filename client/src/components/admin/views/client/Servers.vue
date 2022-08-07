@@ -150,6 +150,9 @@ export default {
     EventBus.$on('attach-client-servers', this.attachServers)
     EventBus.$on('detach-client-servers', this.detachServers)
   },
+  destroyed() {
+    EventBus.$off()
+  },
   watch: {
     options: {
       handler (newValue, oldValue) {

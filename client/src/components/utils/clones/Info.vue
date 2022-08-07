@@ -250,7 +250,6 @@ export default {
             clearTimeout(this.timer)
             this.timer = setTimeout(this.getClone, 1000)
           }
-          this.parseOverall()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -268,11 +267,6 @@ export default {
       }
       return data
     },
-    parseOverall() {
-      if (this.information_items[0]['started'] == null) return null
-      let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
-      this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
-    },
     parseMetric(val) {
       for (let i = val.length; i >= 0; --i) {
         if (Number.isInteger(parseInt(val[i]))) {
@@ -282,8 +276,8 @@ export default {
       return val
     },
     goBack() {
-      if (this.prevRoute.path == '/admin/utils/clones') this.$router.push('/admin/utils/clones')
-      else this.$router.push('/utils/clones')
+      if (this.prevRoute == null) this.$router.push('/utils/clones')
+      else this.$router.back()
     },
     getServer(server_id) {
       EventBus.$emit('get-server', server_id)

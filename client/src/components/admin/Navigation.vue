@@ -60,6 +60,9 @@ export default {
   mounted() {
     EventBus.$on('send-notification', this.notification)
   },
+  destroyed() {
+    EventBus.$off()
+  },
   methods: {
     changeTab(val) {
       if (val == 1) this.$router.push("/admin/settings")

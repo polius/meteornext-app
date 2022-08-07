@@ -202,6 +202,9 @@ export default {
     EventBus.$on('edit-environment', this.editEnvironment);
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
+  destroyed() {
+    EventBus.$off()
+  },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     treeviewFiltered: function() {

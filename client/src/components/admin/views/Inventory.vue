@@ -141,10 +141,8 @@ export default {
     this.getUsers()
   },
   mounted() {
-    EventBus.$on('init-columns', this.initColumns)
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
-    EventBus.$on('notification', this.notification)
     if (this.$route.path.startsWith('/admin/inventory/servers')) this.tab = 0
     else if (this.$route.path.startsWith('/admin/inventory/regions')) this.tab = 1
     else if (this.$route.path.startsWith('/admin/inventory/environments')) this.tab = 2
@@ -154,6 +152,9 @@ export default {
       this.$router.push('/admin/inventory/servers')
       this.tab = 0
     }
+  },
+  destroyed() {
+    EventBus.$off()
   },
   methods: {
     changeTab(val) {

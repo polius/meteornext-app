@@ -261,6 +261,9 @@ export default {
     EventBus.$on('edit-cloud', this.editCloud);
     EventBus.$on('delete-cloud', this.deleteCloud);
   },
+  destroyed() {
+    EventBus.$off()
+  },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
