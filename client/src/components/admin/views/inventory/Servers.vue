@@ -385,6 +385,9 @@ export default {
     EventBus.$on('edit-server', this.editServer);
     EventBus.$on('delete-server', this.deleteServer);
   },
+  destroyed() {
+    EventBus.$off()
+  },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     ssl_active: function() {

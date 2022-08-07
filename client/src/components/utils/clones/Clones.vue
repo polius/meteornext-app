@@ -180,7 +180,7 @@ export default {
       // Get Clones
       axios.get('/utils/clones')
         .then((response) => {
-          this.origin = response.data.clones.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.origin = response.data.clones.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.items = this.origin.slice(0)
         })
         .catch((error) => {
@@ -217,11 +217,6 @@ export default {
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
-    },
-    parseOverall(item) {
-      if (item['started'] == null) return null
-      let diff = (item['ended'] == null) ? moment.utc().diff(moment(item['started'])) : moment(item['ended']).diff(moment(item['started']))
-      return moment.utc(diff).format("HH:mm:ss")
     },
     onSearch() {
       if (this.search.length == 0) this.items = this.origin.slice(0)

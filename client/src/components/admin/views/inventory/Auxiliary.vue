@@ -275,6 +275,9 @@ export default {
     EventBus.$on('edit-auxiliary', this.editAuxiliary);
     EventBus.$on('delete-auxiliary', this.deleteAuxiliary);
   },
+  destroyed() {
+    EventBus.$off()
+  },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     ssl_active: function() {

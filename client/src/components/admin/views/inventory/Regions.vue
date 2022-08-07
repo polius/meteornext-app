@@ -213,6 +213,9 @@ export default {
     EventBus.$on('edit-region', this.editRegion);
     EventBus.$on('delete-region', this.deleteRegion);
   },
+  destroyed() {
+    EventBus.$off()
+  },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) }
   },

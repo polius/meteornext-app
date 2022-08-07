@@ -384,6 +384,9 @@ export default {
     EventBus.$on('refresh-utils-export', this.getExport)
     EventBus.$on('columns-utils-export', this.openColumnsDialog)
   },
+  destroyed() {
+    EventBus.$off()
+  },
   methods: {
     getExport() {
       var payload = {}
@@ -475,13 +478,7 @@ export default {
       return pretty(size, {binary: true}).replace('i','')
     },
     infoExport() {
-      for (let i = 0; i < this.selected.length; ++i) {
-        const route = this.$router.resolve({
-          name: "utils.exports.info",
-          params: { uri: this.selected[i]['uri'] },
-        });
-        window.open(route.href, "_blank")
-      }
+      this.$router.push({ name:'utils.exports.info', params: { uri: this.selected[0]['uri'] }})
     },
     getServer(server_id) {
       EventBus.$emit('utils-get-server', server_id)

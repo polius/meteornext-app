@@ -264,7 +264,6 @@ export default {
     options: {
       handler (newValue, oldValue) {
         if (oldValue == null || (!this.firstLoad && oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
-          console.log("GOGO")
           this.getMonitoringServers()
         }
         else this.onSearch()

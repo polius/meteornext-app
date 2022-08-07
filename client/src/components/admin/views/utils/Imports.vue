@@ -396,6 +396,9 @@ export default {
     EventBus.$on('refresh-utils-import', this.getImport)
     EventBus.$on('columns-utils-import', this.openColumnsDialog)
   },
+  destroyed() {
+    EventBus.$off()
+  },
   methods: {
     getImport() {
       var payload = {}
@@ -487,13 +490,7 @@ export default {
       return pretty(size, {binary: true}).replace('i','')
     },
     infoImport() {
-      for (let i = 0; i < this.selected.length; ++i) {
-        const route = this.$router.resolve({
-          name: "utils.imports.info",
-          params: { uri: this.selected[i]['uri'] },
-        });
-        window.open(route.href, "_blank")
-      }
+      this.$router.push({ name:'utils.imports.info', params: { uri: this.selected[0]['uri'] }})
     },
     getServer(server_id) {
       EventBus.$emit('utils-get-server', server_id)

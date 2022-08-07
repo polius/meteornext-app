@@ -6,7 +6,7 @@ class Imports:
     def get(self, user_id=None, import_uri=None):
         if import_uri:
             query = """
-                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 LEFT JOIN
@@ -33,7 +33,7 @@ class Imports:
             return self._sql.execute(query, (import_uri))
         else:
             query = """
-                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue
+                SELECT i.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
                 FROM imports i
                 JOIN servers s ON s.id = i.server_id
                 LEFT JOIN

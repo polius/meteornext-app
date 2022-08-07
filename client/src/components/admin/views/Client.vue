@@ -135,6 +135,9 @@ export default {
       return (this.filter['queries'] && this.tabs == 0) || (this.filter['servers'] && this.tabs == 1)
     },
   },
+  destroyed() {
+    EventBus.$off()
+  },
   methods: {
     changeTab(val) {
       if (val == 0) this.$router.push("/admin/client/queries")
