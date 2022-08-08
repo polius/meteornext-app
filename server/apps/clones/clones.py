@@ -206,10 +206,19 @@ class Clones:
             self.__slack(item, start_time, 2, clone['error'])
 
     def __check(self, core):
-        for command in ['curl --version', 'pv --version', 'mysqldump --version', 'aws --version']:
-            p = core.execute(command)
-            if len(p['stderr']) > 0:
-                raise Exception(p['stderr'])
+        # Check "curl"
+        if len(core.execute('curl --version')['stderr']) > 0:
+            raise Exception("[CHECK] curl is not installed in the server's region.")
+        # Check "pv"
+        if len(core.execute('pv --version')['stderr']) > 0:
+            raise Exception("[CHECK] pv is not installed in the server's region.")
+        # Check "mysqldump"
+        if len(core.execute('mysqldump --version')['stderr']) > 0:
+            raise Exception("[CHECK] mysqldump is not installed in the server's region.")
+        # Check "aws"
+        p = core.execute('aws --version')
+        if len(p['stderr']) > 0 or p['stdout'].startswith('aws-cli/1'):
+            raise Exception("[CHECK] AWS CLI v2 is not installed in the server's region.")
 
     def __create_database(self, item, server, region):
         # Build Connector Data

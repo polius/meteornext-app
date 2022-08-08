@@ -84,7 +84,10 @@
             <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">ERROR</div>
             <v-card style="margin-top:10px; margin-left:1px">
               <v-card-text style="padding:15px">
-                <div v-if="information_items[0].error != null" class="text-body-1">{{ information_items[0].error }}</div>
+                <div v-if="information_items[0].error != null" class="text-body-1">
+                  {{ information_items[0].error.startsWith('[CHECK]') ? information_items[0].error.slice(8) : information_items[0].error }}
+                  <span v-if="information_items[0].error.startsWith('[CHECK]')">See the <a href="https://docs.meteornext.io/guides/utils.html#requirements-2" target="_blank">requirements</a>.</span>
+                </div>
               </v-card-text>
             </v-card>
           </div>
