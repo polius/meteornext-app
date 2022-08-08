@@ -6,7 +6,7 @@ class Clones:
     def get(self, user_id=None, clone_uri=None):
         if clone_uri:
             query = """
-                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue, CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall'
+                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue, CONCAT(TIMEDIFF(IF(c.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), c.ended), c.started)) AS 'overall'
                 FROM clones c
                 JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server
@@ -34,7 +34,7 @@ class Clones:
             return self._sql.execute(query, (clone_uri))
         else:
             query = """
-                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue, CONCAT(TIMEDIFF(c.ended, c.started)) AS 'overall'
+                SELECT c.*, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', q.queue, CONCAT(TIMEDIFF(IF(c.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), c.ended), c.started)) AS 'overall'
                 FROM clones c
                 JOIN servers s ON s.id = c.source_server
                 JOIN servers s2 ON s2.id = c.destination_server

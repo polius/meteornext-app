@@ -6,7 +6,7 @@ class Exports:
     def get(self, user_id=None, export_uri=None):
         if export_uri:
             query = """
-                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall'
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 LEFT JOIN
@@ -33,7 +33,7 @@ class Exports:
             return self._sql.execute(query, (export_uri))
         else:
             query = """
-                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT e.*, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', q.queue, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall'
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 LEFT JOIN

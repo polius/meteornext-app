@@ -64,7 +64,7 @@ class Deployments:
             sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
         query = """
-                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', u.id AS 'user_id', u.username, e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', u.id AS 'user_id', u.username, e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall'
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id
                 JOIN users u ON u.id = d.user_id {0}

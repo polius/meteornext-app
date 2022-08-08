@@ -61,7 +61,7 @@ class Exports:
             sort_order = 'DESC' if esort['desc'] else 'ASC'
 
         query = """
-                SELECT e.id, e.mode, e.server_id, e.database, e.size, e.uri, e.status, e.created, e.started, e.ended, e.deleted, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', u.username, q.queue
+                SELECT e.id, e.mode, e.server_id, e.database, e.size, e.uri, e.status, e.created, e.started, e.ended, e.deleted, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', u.username, q.queue
                 FROM exports e
                 JOIN servers s ON s.id = e.server_id
                 JOIN users u ON u.id = e.user_id

@@ -6,7 +6,7 @@ class Executions:
 
     def get(self, uri):
         query = """
-            SELECT e.id, e.deployment_id, e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, es.schedule_type, es.schedule_value, es.schedule_rules, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, d.shared, e.pid
+            SELECT e.id, e.deployment_id, e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, es.schedule_type, es.schedule_value, es.schedule_rules, e.started, e.ended, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, d.shared, e.pid
             FROM executions e
             LEFT JOIN executions_scheduled es ON es.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id
