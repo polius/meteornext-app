@@ -146,10 +146,15 @@ class Imports:
             self.__slack(item, amazon_s3, start_time, 2, imp['error'])
 
     def __check(self, core):
-        for command in ['curl --version', 'pv --version', 'mysql --version']:
-            p = core.execute(command)
-            if len(p['stderr']) > 0:
-                raise Exception(p['stderr'])
+        # Check "curl"
+        if len(core.execute('curl --version')['stderr']) > 0:
+            raise Exception("[CHECK] curl is not installed in the server's region.")
+        # Check "pv"
+        if len(core.execute('pv --version')['stderr']) > 0:
+            raise Exception("[CHECK] pv is not installed in the server's region.")
+        # Check "mysqldump"
+        if len(core.execute('mysqldump --version')['stderr']) > 0:
+            raise Exception("[CHECK] mysqldump is not installed in the server's region.")
 
     def __create_database(self, item, server, region):
         # Build Connector Data
