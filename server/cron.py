@@ -164,7 +164,7 @@ class Cron:
                         # Update execution status and progres
                         progress = json.loads(i['progress'])
                         progress['error'] = "The execution has been interrupted. There is not enough memory available to run this deployment."
-                        conn.execute(query="UPDATE executions SET status = 'FAILED', error = 1, progress = %s WHERE id = %s", args=(json.dumps(progress), i['id']))
+                        conn.execute(query="UPDATE executions SET status = 'FAILED', error = 1, progress = %s, ended = %s WHERE id = %s", args=(json.dumps(progress), datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), i['id']))
         finally:
             # Close SQL Connection
             conn.stop()

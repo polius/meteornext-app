@@ -1181,12 +1181,6 @@
           // Parse Last Updated
           this.last_updated = this.deployment['progress']['updated']
 
-          // Calculate real-time overall
-          if (data['overall'] == null && this.deployment['ended'] == null) {
-            var diff = moment.utc().diff(moment(this.deployment['started']))
-            this.deployment['overall'] = moment.utc(diff).format("HH:mm:ss")   
-          }
-
           // Parse Validation
           this.parseValidation()
 
