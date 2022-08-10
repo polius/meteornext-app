@@ -725,13 +725,12 @@ export default {
       this.download('queries.csv', exportData)
     },
     download(filename, text) {
-      var element = document.createElement('a')
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
-      element.setAttribute('download', filename)
-      element.style.display = 'none'
-      document.body.appendChild(element)
-      element.click()
-      document.body.removeChild(element)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(new Blob([text]))
+      a.setAttribute('download', filename)
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
