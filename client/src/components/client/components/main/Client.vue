@@ -274,6 +274,7 @@ export default {
       if (val == 'client') {
         this.cellEditingDiscard()
         this.editor.renderer.updateFull()
+        this.editor.focus()
         this.$nextTick(() => this.resizeTable())
       }
     },
