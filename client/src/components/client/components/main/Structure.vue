@@ -234,8 +234,10 @@ export default {
         queries: [queries]
       }
       const server = this.server
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
+          const elapsed = (new Date() - startTime) / 1000
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           // Show Loading Overlay
@@ -245,7 +247,7 @@ export default {
           // Get Structure
           this.getStructure(true)
           // Build BottomBar
-          this.parseBottomBar(data, current)
+          this.parseBottomBar(data, current, elapsed)
           // Add execution to history
           const history = { section: 'structure', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
@@ -253,13 +255,14 @@ export default {
           resolve()
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let current = this.connections.find(c => c['index'] == index)
             if (current === undefined) return
             let data = JSON.parse(error.response.data.data)
             // Build BottomBar
-            this.parseBottomBar(data, current)
+            this.parseBottomBar(data, current, elapsed)
             // Show error
             if (!this.structureQueryStopped) {
               this.dialogText = data[0]['error']
@@ -274,18 +277,10 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    parseBottomBar(data, current) {
-      var elapsed = null
-      if (data[data.length-1]['time'] !== undefined) {
-        elapsed = 0
-        for (let i = 0; i < data.length; ++i) {
-          elapsed += parseFloat(data[i]['time'])
-        }
-        elapsed /= data.length
-      }
+    parseBottomBar(data, current, elapsed) {
       current.bottomBar.structure[current.tabStructureSelected]['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       current.bottomBar.structure[current.tabStructureSelected]['text'] = data[0]['query']
-      if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toFixed(3).toString() + 's elapsed'
+      current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toFixed(3).toString() + 's elapsed'
     },
     stopExecution(resolve, reject) {
       this.structureQueryStopped = true

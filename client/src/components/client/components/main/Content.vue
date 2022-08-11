@@ -475,28 +475,42 @@ export default {
         queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '` LIMIT 1000;' ]
       }
       this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
+      const server = this.server
       const index = this.index
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(JSON2.parse(response.data.data))
+          const elapsed = (new Date() - startTime) / 1000
+          let data = JSON2.parse(response.data.data)
+          this.parseContentExecution(data, elapsed)
+          // Add execution to history
+          const history = { section: 'content', server: server, queries: data }
+          this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           current.contentExecuting = false
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           current.contentExecuting = false
           this.gridApi.content.hideOverlay()
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
-            let data = JSON.parse(error.response.data.data)
+            // Show error
+            let data = JSON2.parse(error.response.data.data)
             error = data.find(x => 'error' in x)['error']
             EventBus.$emit('send-notification', error, '#EF5354')
+            // Build bottom bar
+            this.parseContentBottomBar(data, elapsed)
+            // Add execution to history
+            const history = { section: 'content', server: server, queries: data }
+            this.$store.dispatch('client/addHistory', history)
           }
         })
     },
-    parseContentExecution(data) {
+    parseContentExecution(data, elapsed) {
       // Build Data Table
       var headers = []
       var items = data[0]['data']
@@ -553,7 +567,7 @@ export default {
       this.isRowSelected = false
 
       // Build BottomBar
-      this.parseContentBottomBar(data)
+      this.parseContentBottomBar(data, elapsed)
 
       // Store the content state
       this.contentState = (this.database + '|' + this.sidebarSelected[0]['id'])
@@ -661,14 +675,16 @@ export default {
       this.bottomBar.content = { status: 'executing', text: queries[queries.length - 1], info: '' }
       const server = this.server
       const index = this.index
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
+          const elapsed = (new Date() - startTime) / 1000
           // Get Response Data
           let data = JSON2.parse(response.data.data)
           // Remove Frontend Rows
           this.gridApi.content.applyTransaction({ remove: this.gridApi.content.getSelectedRows() })
           // Build BottomBar
-          this.parseContentBottomBar(data)
+          this.parseContentBottomBar(data, elapsed)
           // Mark contentExecuting to false
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
@@ -680,6 +696,7 @@ export default {
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let current = this.connections.find(c => c['index'] == index)
@@ -699,7 +716,7 @@ export default {
             }
             this.showDialog(dialogOptions)
             // Build BottomBar
-            this.parseContentBottomBar(data)
+            this.parseContentBottomBar(data, elapsed)
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
@@ -829,12 +846,14 @@ export default {
         this.bottomBar.content = { status: 'executing', text: query, info: '' }
         const server = this.server
         const index = this.index
+        const startTime = new Date()
         axios.post('/client/execute', payload)
           .then((response) => {
+            const elapsed = (new Date() - startTime) / 1000
             this.gridApi.content.hideOverlay()
             let data = JSON2.parse(response.data.data)
             // Build BottomBar
-            this.parseContentBottomBar(data)
+            this.parseContentBottomBar(data, elapsed)
             // Check AUTO_INCREMENTs
             if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0 && data[0].lastRowId != 0) {
               node.setDataValue(this.contentPks[0], data[0].lastRowId)
@@ -852,6 +871,7 @@ export default {
             this.currentCellEditValues = {}
           })
           .catch((error) => {
+            const elapsed = (new Date() - startTime) / 1000
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
               // Mark contentExecuting to false
@@ -872,7 +892,7 @@ export default {
               }
               this.showDialog(dialogOptions)
               // Build BottomBar
-              this.parseContentBottomBar(data)
+              this.parseContentBottomBar(data, elapsed)
               // Import vars
               this.currentCellEditMode = mode
               this.currentCellEditNode = node
@@ -890,19 +910,11 @@ export default {
         this.currentCellEditValues = {}
       }
     },
-    parseContentBottomBar(data) {
-      var elapsed = null
-      if (data[data.length-1]['time'] !== undefined) {
-        elapsed = 0
-        for (let i = 0; i < data.length; ++i) {
-          elapsed += parseFloat(data[i]['time'])
-        }
-        elapsed /= data.length
-      }
+    parseContentBottomBar(data, elapsed) {
       this.bottomBar.content['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       this.bottomBar.content['text'] = data[0]['query']
-      this.bottomBar.content['info'] = data[0]['rowCount'] !== undefined ? data[0]['rowCount'] + ' records' : ''
-      if (elapsed != null) this.bottomBar.content['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
+      this.bottomBar.content['info'] = data[0]['rowCount'] !== undefined ? data[0]['rowCount'] + ' records' : ' 0 records'
+      this.bottomBar.content['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },
     cellEditingDiscard() {
       // Close Dialog
@@ -968,8 +980,10 @@ export default {
       this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
       const server = this.server
       const index = this.index
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
+          const elapsed = (new Date() - startTime) / 1000
           let data = JSON2.parse(response.data.data)
           // Add execution to history
           const history = { section: 'content', server: server, queries: data } 
@@ -977,9 +991,10 @@ export default {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           current.contentExecuting = false
-          this.parseContentExecution(data)
+          this.parseContentExecution(data, elapsed)
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let current = this.connections.find(c => c['index'] == index)
@@ -989,6 +1004,8 @@ export default {
             // Show error
             let data = JSON2.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
+            // Build bottom bar
+            this.parseContentBottomBar(data, elapsed)
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)

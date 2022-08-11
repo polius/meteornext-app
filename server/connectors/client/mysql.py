@@ -3,7 +3,6 @@ import time
 import tempfile
 import pymysql
 import paramiko
-import sqlparse
 import threading
 import sshtunnel
 import traceback
@@ -195,12 +194,12 @@ class MySQL:
 
         # Return query info
         if fetch:
-            rowcount = cursor.rowcount if sqlparse.format(query, strip_comments=True).strip().lower().startswith(('insert','update','delete')) else len(data)
+            rowcount = cursor.rowcount if query.lower().startswith(('insert','update','delete')) else len(data)
             query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": rowcount}
             return query_data
 
     def __timeout_query(self, query, query_id, timeout_type, timeout_value):
-        is_select = sqlparse.format(query, strip_comments=True).strip()[:6].lower() == 'select'
+        is_select = query[:6].lower() == 'select'
         condition = timeout_type == 'all' or (timeout_type == 'select' and is_select)
         i = 0
         while condition and self._query_uuid == query_id:

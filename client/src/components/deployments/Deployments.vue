@@ -446,7 +446,7 @@ export default {
       if (['CREATED','SUCCESS','WARNING'].includes(status)) return { name: 'fas fa-check', margin: '0px' }
       if (['SCHEDULED','QUEUED'].includes(status)) return { name: 'fas fa-clock', margin: '0px' }
       if (['STARTING','IN PROGRESS'].includes(status)) return { name: 'fas fa-spinner', margin: '0x' }
-      if (['FAILED'].includes(status)) return { name: 'fas fa-times', margin: '4px' }
+      if (['FAILED'].includes(status)) return { name: 'fas fa-times', margin: '2px' }
       if (['STOPPING','STOPPED'].includes(status)) return { name: 'fas fa-ban', margin: '0px' }
     },
     parseSchedule(type, value) {

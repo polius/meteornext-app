@@ -8,6 +8,7 @@ import re
 import csv
 import json
 import time
+import sqlparse
 from itertools import repeat
 import models.admin.users
 import models.admin.groups
@@ -286,7 +287,8 @@ class Client:
 
             for query in client_json['queries']:
                 try:
-                    start_time = time.time()
+                    # Parse query
+                    query = sqlparse.format(query, strip_comments=True).strip()
                     # Select database
                     if query.upper().startswith('USE '):
                         client_json['database'] = query[4:].strip()[1:-1] if query[4:].strip().startswith('`') and query[4:].strip().endswith('`') else query[4:].strip()
@@ -295,9 +297,11 @@ class Client:
                     if group['client_tracking'] and (group['client_tracking_mode'] == 1 or (query.strip()[:6].upper() != 'SELECT' and query.strip()[:4].upper() != 'SHOW' and query.strip()[:7].upper() != 'EXPLAIN' and query.strip()[:3].upper() != 'USE')):
                         conn.query_id = self._client.track_query_start(user_id=user['id'], server_id=client_json['server'], database=database, query=query)
                     # Execute query
+                    start_time = time.time()
                     result = conn.execute(query=query, database=database)
+                    # Append extra data
                     result['time'] = "{0:.3f}".format(time.time() - start_time)
-                    result['query'] = query
+                    result['query'] = query if len(query) < 1000 else f"{query[:1000]}..."
                     result['database'] = database
                     if client_json['origin'] == 'editor' and group['client_limits']:
                         result['limit'] = group['client_limits_rows']
@@ -314,7 +318,7 @@ class Client:
                         self._client.track_query_end(query_id = conn.query_id, status='SUCCESS', records=result['rowCount'], elapsed=result['time'])
                 except Exception as e:
                     errors = True
-                    result = {'query': query, 'database': database, 'error': str(e), 'time': "{0:.3f}".format(time.time() - start_time)}
+                    result = {'query': query if len(query) < 1000 else f"{query[:1000]}...", 'database': database, 'error': str(e), 'time': "{0:.3f}".format(time.time() - start_time)}
                     execution.append(result)
                     # Track query (end)
                     if conn.query_id:
@@ -788,7 +792,7 @@ class Client:
             self._connections.kill(user['id'], client_json['connection'])
 
             # Track query (stopped)
-            if conn.query_id:
+            if conn and conn.query_id:
                 elapsed = "{0:.3f}".format(time.time() - conn.start_execution)
                 self._client.track_query_end(query_id=conn.query_id, status='STOPPED', elapsed=elapsed)
                 conn.query_id = None

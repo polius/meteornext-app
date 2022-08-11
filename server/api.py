@@ -5,7 +5,6 @@ import hashlib
 import tarfile
 import datetime
 import gunicorn.app.base
-from gevent import monkey
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_compress import Compress
@@ -13,11 +12,6 @@ from flask_jwt_extended import (JWTManager, jwt_required)
 
 class Api:
     def __init__(self, version, license, sentry_dsn, node):
-        # Monkey Patch in Compiled Version (Gunicorn) & Sync License Class
-        bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-        license.get_status()
-        monkey.patch_all()
-
         # Instantiate Flask App
         app = Flask(__name__)
         app.config.from_object(__name__)
@@ -62,13 +56,22 @@ class Api:
         def version_method():
             return jsonify({'version': version})
 
-        if bin:
+        # Init the threads var
+        try:
+            threads = int(os.environ['MAX-REQUESTS']) if 'MAX-REQUESTS' in os.environ else 1000
+            print(f"- Max Concurrent Requests: {threads}")
+        except Exception:
+            print("- The 'MAX-REQUESTS' parameter is invalid. Setting threads=1000 (default).")
+            threads = 1000
+
+        # Init Api
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
             # Extract Meteor & Start Api
             with tarfile.open(f"{sys._MEIPASS}/apps/meteor.tar.gz") as tar:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
-            StandaloneApplication(app, {"worker_class": "gevent", "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": threads, "worker_connections": 1000000, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
         else:
-            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gevent", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": threads, "worker_connections": 1000000, "pidfile": "server.pid", "timeout": 3600}).run()
             # app.run(host='0.0.0.0', port='5000', debug=False)
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
