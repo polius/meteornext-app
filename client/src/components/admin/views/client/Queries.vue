@@ -43,6 +43,10 @@
             Error:
             <span style="margin-left:5px">{{ item.error }}</span>
           </div>
+          <div v-if="item.query.length > 1000 && item.query.endsWith('...')" style="margin-top:10px">
+            <v-icon small style="margin-left:2px; margin-right:3px; margin-bottom:3px; color: #ff9800">fas fa-exclamation-triangle</v-icon>
+            The query has been truncated due to excessive length.
+          </div>
           <div id="editor" style="width:calc(100vw - 70px); margin-top:10px; margin-bottom:15px"></div>
         </td>
       </template>
@@ -101,7 +105,19 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.status" :items="[{id: 1, name: 'Success'}, {id: 0, name: 'Failed'}]" item-value="id" item-text="name" label="Status" clearable required style="padding-top:0px" hide-details></v-select>
+                      <v-autocomplete v-model="filter.status" :items="queriesStatus" multiple label="Status" style="padding-top:0px;" hide-details>
+                        <template v-slot:item="{ item }">
+                          <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
+                          <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
+                        </template>
+                        <template v-slot:selection="{ item }">
+                          <v-chip label>
+                            <v-icon small :style="`color:${getStatusColor(item)}`">{{ getStatusIcon(item).name }}</v-icon>
+                            <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
+                          </v-chip>
+                        </template>
+                      </v-autocomplete>
+                      <!-- <v-select v-model="filter.status" :items="[{id: 1, name: 'Success'}, {id: 0, name: 'Failed'}]" item-value="id" item-text="name" label="Status" clearable required style="padding-top:0px" hide-details></v-select> -->
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -265,6 +281,7 @@ export default {
       dateTimeField: '',
       dateTimeMode: 'date',
       dateTimeValue: { date: null, time: null },
+      queriesStatus: ['RUNNING','SUCCESS','FAILED','STOPPED'],
       // Filter Columns Dialog
       columnsDialog: false,
       columns: ['start_date','user','server','database','status','query'],
@@ -506,6 +523,17 @@ export default {
     filterColumns() {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
+    },
+    getStatusColor(status) {
+      if (['RUNNING'].includes(status)) return '#ff9800'
+      if (['SUCCESS'].includes(status)) return '#4caf50'
+      if (['FAILED','STOPPED'].includes(status)) return '#EF5354'
+    },
+    getStatusIcon(status) {
+      if (['SUCCESS'].includes(status)) return { name: 'fas fa-check', margin: '0px' }
+      if (['RUNNING'].includes(status)) return { name: 'fas fa-spinner', margin: '0x' }
+      if (['FAILED'].includes(status)) return { name: 'fas fa-times', margin: '2px' }
+      if (['STOPPED'].includes(status)) return { name: 'fas fa-ban', margin: '0px' }
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

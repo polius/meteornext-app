@@ -477,14 +477,16 @@ export default {
           const index = this.index
           this.clientQueryStopped = false
           this.gridApi.client.showLoadingOverlay()
+          const startTime = new Date()
           axios.post('/client/execute', payload)
             .then((response) => {
+              const elapsed = (new Date() - startTime) / 1000
               let current = this.connections.find(c => c['index'] == index)
               if (current === undefined) return
               this.gridApi.client.hideOverlay()
               let data = JSON2.parse(response.data.data)
               // Build BottomBar
-              this.parseClientBottomBar(data, current)
+              this.parseClientBottomBar(data, current, elapsed)
               // Add execution to history
               const history = { section: 'client', server: server, queries: data } 
               this.$store.dispatch('client/addHistory', history)
@@ -493,6 +495,7 @@ export default {
               this.currentCellEditValues = {}
             })
             .catch((error) => {
+              const elapsed = (new Date() - startTime) / 1000
               this.gridApi.client.hideOverlay()
               let current = this.connections.find(c => c['index'] == index)
               if (current === undefined) return
@@ -511,7 +514,7 @@ export default {
                 }
                 if (!this.clientQueryStopped) this.showDialog(dialogOptions)
                 // Build BottomBar
-                this.parseClientBottomBar(data, current)
+                this.parseClientBottomBar(data, current, elapsed)
                 // Import vars
                 this.currentCellEditNode = node
                 this.currentCellEditValues = values
@@ -1114,8 +1117,10 @@ export default {
       // Execute queries
       const server = this.server
       const index = this.index
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
+          const elapsed = (new Date() - startTime) / 1000
           // Parse execution result
           let data = JSON2.parse(response.data.data)
           // Add execution to history
@@ -1123,8 +1128,8 @@ export default {
           this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          this.parseExecution(payload, data, current).finally(() => {
-            this.parseClientBottomBar(data, current)
+          this.parseExecution(data, current).finally(() => {
+            this.parseClientBottomBar(data, current, elapsed)
             // Focus Editor
             let cursor = this.editor.getCursorPosition()
             this.editor.focus()
@@ -1144,13 +1149,14 @@ export default {
           if (database != null) EventBus.$emit('change-database', database)
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('client/logout').then(() => this.$store.dispatch('app/logout').then(() => this.$router.push('/login')))
           else {
             // Get Response Data
             let data = JSON2.parse(error.response.data.data)
-            this.parseClientBottomBar(data, current)
+            this.parseClientBottomBar(data, current, elapsed)
             // Close Editor Completer
             this.editor.blur()
             // Show confirmation dialog
@@ -1184,9 +1190,10 @@ export default {
       else queries = this.analyzeQueries(selectedText).map(x => selectedText.substring(x.begin, x.end).trim())
       return queries
     },
-    async parseExecution(payload, data, current) {
+    async parseExecution(data, current) {
+      const queries = data.map(x => x['query'])
       // Determine if result can be edited and store current table
-      const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { linesBetweenQueries: 2 })
+      const beautified = sqlFormatter.format(queries.slice(-1)[0], { linesBetweenQueries: 2 })
       let editable = true
       let found = false
       for (let line of beautified.split('\n')) {
@@ -1268,7 +1275,7 @@ export default {
       current.clientItems = itemsToLoad
       current.clientLimit = 'limit' in data[data.length - 1] ? data[data.length - 1]['limit'] : null
       // Check if executed DROP DATABASE in the current DB
-      for (let query of payload.queries) {
+      for (let query of queries) {
         if (query.trim().toLowerCase().startsWith('drop database')) {
           let db = query.trim().split(" ").splice(-1)[0]
           db = db.endsWith(';') ? db.slice(0,-1) : db
@@ -1279,7 +1286,7 @@ export default {
       }
       // Check if the query needs to reload objects.
       let needReload = false
-      for (let query of payload.queries) {
+      for (let query of queries) {
         if (
           ['create','drop'].some(x => query.trim().toLowerCase().startsWith(x)) &&
           !(['create user','drop user'].some(x => query.trim().toLowerCase().startsWith(x)))
@@ -1301,20 +1308,12 @@ export default {
       let allColumnIds = this.columnApi.client.getColumns().map(v => v.colId)
       this.columnApi.client.autoSizeColumns(allColumnIds)
     },
-    parseClientBottomBar(data, current) {
-      var elapsed = null
-      if (data[data.length-1]['time'] !== undefined) {
-        elapsed = 0
-        for (let i = 0; i < data.length; ++i) {
-          elapsed += parseFloat(data[i]['time'])
-        }
-        elapsed /= data.length
-      }
+    parseClientBottomBar(data, current, elapsed) {
       current.bottomBar.client['status'] = this.clientQueryStopped ? 'stopped' : data[data.length-1]['error'] === undefined ? 'success' : 'failure'
       current.bottomBar.client['text'] = data[data.length-1]['query'].trim().endsWith(';') ? data[data.length-1]['query'].trim() : data[data.length-1]['query'].trim() + ';'
-      current.bottomBar.client['info'] = data[data.length-1]['rowCount'] !== undefined ? data[data.length-1]['rowCount'] + ' records | ' : ''
-      current.bottomBar.client['info'] += data.length + ' queries'
-      if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
+      current.bottomBar.client['info'] = data[data.length-1]['rowCount'] !== undefined ? data[data.length-1]['rowCount'] + ' records | ' : ' 0 records | '
+      current.bottomBar.client['info'] += data.length + (data.length == 1 ? ' query' : ' queries')
+      current.bottomBar.client['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },
     showDialog(options) {
       this.dialogMode = options.mode

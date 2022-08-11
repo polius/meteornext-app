@@ -18,7 +18,7 @@ RUN yum update -y && \
     python3 -m pip install --no-cache-dir flask_jwt_extended && \
     python3 -m pip install --no-cache-dir flask-compress && \
     python3 -m pip install --no-cache-dir schedule && \
-    python3 -m pip install --no-cache-dir gunicorn[gevent] && \
+    python3 -m pip install --no-cache-dir gunicorn[gthread] && \
     python3 -m pip install --no-cache-dir cython && \
     python3 -m pip install --no-cache-dir pyinstaller && \
     python3 -m pip install --no-cache-dir sentry-sdk[flask] && \
