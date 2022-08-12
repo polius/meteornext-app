@@ -56,23 +56,28 @@ class Api:
         def version_method():
             return jsonify({'version': version})
 
-        # Init the threads var
+        # Init gunicorn vars
+        MAX_THREADS = 1000000
         try:
-            threads = int(os.environ['MAX-REQUESTS']) if 'MAX-REQUESTS' in os.environ else 1000
-            print(f"- Max Concurrent Requests: {threads}")
+            THREADS = int(os.environ['MAX_REQUESTS']) if 'MAX_REQUESTS' in os.environ else 1000
+            if THREADS < 1:
+                THREADS = 1
+            elif THREADS > MAX_THREADS:
+                THREADS = MAX_THREADS
         except Exception:
-            print("- The 'MAX-REQUESTS' parameter is invalid. Setting threads=1000 (default).")
-            threads = 1000
+            THREADS = 1000
+            print("- The 'MAX_REQUESTS' parameter is invalid.")
+        finally:
+            print(f"- Max Concurrent Requests: {THREADS}")
 
-        # Init Api
+        # Start Api
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            # Extract Meteor & Start Api
+            # Extract Meteor
             with tarfile.open(f"{sys._MEIPASS}/apps/meteor.tar.gz") as tar:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
-            StandaloneApplication(app, {"worker_class": "gthread", "threads": threads, "worker_connections": 1000000, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
         else:
-            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": threads, "worker_connections": 1000000, "pidfile": "server.pid", "timeout": 3600}).run()
-            # app.run(host='0.0.0.0', port='5000', debug=False)
+            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "pidfile": "server.pid", "timeout": 3600}).run()
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def __init__(self, app, options=None):

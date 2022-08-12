@@ -664,6 +664,8 @@ export default {
       }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
+      // Close Dialog
+      this.dialog = false
       // Execute Query/ies
       const payload = {
         origin: 'content',
@@ -689,8 +691,6 @@ export default {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           current.contentExecuting = false
-          // Close Dialog
-          this.dialog = false
           // Add execution to history
           const history = { section: 'content', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
