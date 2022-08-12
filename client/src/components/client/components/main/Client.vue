@@ -1015,12 +1015,25 @@ export default {
       const queries = payload.queries.map(x => x.trim().endsWith(';') ? x : x + ';').join('\n')
       this.clientHeaders = []
       this.clientItems = []
-      this.bottomBar.client = { text: queries, status: 'executing', info: '' }   
       this.editor.completer.detach()
+
+      // Init bottom bar with interval
+      this.clientExecuting = payload.origin == 'explain' ? 'explain' : 'query'
+      this.bottomBar.client = { text: queries, status: 'executing', info: '' }
+      const index = this.index
+      const startTime = new Date()
+      const timer = setInterval(() => {
+        const current = this.connections.find(c => c['index'] == index)
+        if (current === undefined || current.clientExecuting == null) clearInterval(timer)
+        else {
+          const info = payload.queries.length + (payload.queries.length == 1 ? ' query' : ' queries')
+          const elapsed = (new Date() - startTime) / 1000
+          current.bottomBar.client['info'] = info + ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
+        }
+      }, 100)
     },
     runQuery() {
       if (this.clientExecuting != null) return
-      this.clientExecuting = 'query'
       const payload = {
         origin: 'editor',
         connection: this.id + '-main',
@@ -1032,11 +1045,9 @@ export default {
         this.initExecution(payload)
         this.executeQuery(payload)
       }
-      else this.clientExecuting = null
     },
     explainQuery() {
       if (this.clientExecuting != null) return
-      this.clientExecuting = 'explain'
       const payload = {
         origin: 'explain',
         connection: this.id + '-main',
@@ -1048,7 +1059,6 @@ export default {
         this.initExecution(payload)
         this.executeQuery(payload)
       }
-      else this.clientExecuting = null
     },
     beautifyQuery() {
       let query = ''
