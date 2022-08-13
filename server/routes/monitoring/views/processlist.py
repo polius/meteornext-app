@@ -6,11 +6,13 @@ import models.admin.users
 import models.monitoring.monitoring
 
 class Processlist:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.monitoring.monitoring.Monitoring(sql, license)
+        self._monitoring = models.monitoring.monitoring.Monitoring(sql, self._license)
 
     def blueprint(self):
         # Init blueprint

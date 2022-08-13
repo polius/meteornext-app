@@ -16,15 +16,17 @@ import models.utils.exports
 import apps.exports.exports
 
 class Exports:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
         self._regions = models.inventory.regions.Regions(sql)
-        self._export = models.utils.exports.Exports(sql, license)
+        self._export = models.utils.exports.Exports(sql, self._license)
         # Init core
         self._export_app = apps.exports.exports.Exports(sql)
         # Retrieve base path

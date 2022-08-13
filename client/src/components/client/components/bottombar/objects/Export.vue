@@ -492,7 +492,7 @@ export default {
           this.progressText = 'Export interrupted by user.'
           this.error = ''
         }
-        else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         reject()
       })
     },

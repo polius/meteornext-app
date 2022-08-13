@@ -367,7 +367,7 @@ export default {
         resolve(response.data.pks)
       })
       .catch((error) => {
-        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         reject()
       })
     },
@@ -499,7 +499,7 @@ export default {
               this.gridApi.client.hideOverlay()
               let current = this.connections.find(c => c['index'] == index)
               if (current === undefined) return
-              if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+              if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
               else {
                 // Show error
                 let data = JSON2.parse(error.response.data.data)
@@ -1162,7 +1162,7 @@ export default {
           const elapsed = (new Date() - startTime) / 1000
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('client/logout').then(() => this.$store.dispatch('app/logout').then(() => this.$router.push('/login')))
+          if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('client/logout').then(() => this.$store.dispatch('app/logout').then(() => this.$router.push('/login')))
           else {
             // Get Response Data
             let data = JSON2.parse(error.response.data.data)

@@ -54,8 +54,11 @@ class Setup:
         root_path = os.path.realpath(os.path.dirname(sys.argv[0]))
         setup_file = "{}/server.conf".format(root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
 
+        # Register blueprints
+        blueprints = self.register_blueprints()
+
         # Init Install blueprint
-        install = routes.install.Install(self._license, self._conf, self.register_blueprints)
+        install = routes.install.Install(self._license, self._conf, blueprints)
         self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
         # Check if Meteor is initiated with all required params.
@@ -75,54 +78,61 @@ class Setup:
             # Init sentry
             if self._license.get_status()['sentry']:
                 sentry_sdk.init(dsn=sentry_dsn, environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
-            # Register blueprints
-            self.register_blueprints(sql)
+            # Init blueprints
+            for k,v in blueprints.items():
+                if k == 'settings':
+                    v.init(sql, self._conf)
+                else:
+                    v.init(sql)
             print("- Meteor initiated from existing configuration.")
 
     ####################
     # Internal Methods #
     ####################
-    def register_blueprints(self, sql):
+    def register_blueprints(self):
         # Init all blueprints
-        login = routes.login.Login(sql, self._license)
-        profile = routes.profile.Profile(sql, self._license)
-        mfa = routes.mfa.MFA(sql, self._license)
-        notifications = routes.notifications.Notifications(sql, self._license)
-        settings = routes.admin.settings.Settings(sql, self._license, self._conf)
-        groups = routes.admin.groups.Groups(sql, self._license)
-        users = routes.admin.users.Users(sql, self._license)
-        admin_deployments = routes.admin.deployments.Deployments(sql, self._license)
-        admin_inventory = routes.admin.inventory.inventory.Inventory(sql, self._license)
-        admin_inventory_environments = routes.admin.inventory.environments.Environments(sql, self._license)
-        admin_inventory_regions = routes.admin.inventory.regions.Regions(sql, self._license)
-        admin_inventory_servers = routes.admin.inventory.servers.Servers(sql, self._license)
-        admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(sql, self._license)
-        admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(sql, self._license)
-        admin_utils_imports = routes.admin.utils.imports.Imports(sql, self._license)
-        admin_utils_exports = routes.admin.utils.exports.Exports(sql, self._license)
-        admin_utils_clones = routes.admin.utils.clones.Clones(sql, self._license)
-        admin_client = routes.admin.client.Client(sql, self._license)
-        admin_monitoring = routes.admin.monitoring.Monitoring(sql, self._license)
-        inventory = routes.inventory.inventory.Inventory(sql, self._license)
-        environments = routes.inventory.environments.Environments(sql, self._license)
-        regions = routes.inventory.regions.Regions(sql, self._license)
-        servers = routes.inventory.servers.Servers(sql, self._license)
-        auxiliary = routes.inventory.auxiliary.Auxiliary(sql, self._license)
-        cloud = routes.inventory.cloud.Cloud(sql, self._license)
-        releases = routes.deployments.releases.Releases(sql, self._license)
-        shared = routes.deployments.shared.Shared(sql, self._license)
-        deployments = routes.deployments.deployments.Deployments(sql, self._license)
-        monitoring = routes.monitoring.monitoring.Monitoring(sql, self._license)
-        monitoring_parameters = routes.monitoring.views.parameters.Parameters(sql, self._license)
-        monitoring_processlist = routes.monitoring.views.processlist.Processlist(sql, self._license)
-        monitoring_queries = routes.monitoring.views.queries.Queries(sql, self._license)
-        client = routes.client.client.Client(self._app, sql, self._license)
-        utils = routes.utils.utils.Utils(sql, self._license)
-        imports = routes.utils.imports.Imports(sql, self._license)
-        exports = routes.utils.exports.Exports(sql, self._license)
-        clones = routes.utils.clones.Clones(sql, self._license)
+        login = routes.login.Login(self._license)
+        profile = routes.profile.Profile(self._license)
+        mfa = routes.mfa.MFA(self._license)
+        notifications = routes.notifications.Notifications(self._license)
+        settings = routes.admin.settings.Settings(self._license)
+        groups = routes.admin.groups.Groups(self._license)
+        users = routes.admin.users.Users(self._license)
+        admin_deployments = routes.admin.deployments.Deployments(self._license)
+        admin_inventory = routes.admin.inventory.inventory.Inventory(self._license)
+        admin_inventory_environments = routes.admin.inventory.environments.Environments(self._license)
+        admin_inventory_regions = routes.admin.inventory.regions.Regions(self._license)
+        admin_inventory_servers = routes.admin.inventory.servers.Servers(self._license)
+        admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._license)
+        admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._license)
+        admin_utils_imports = routes.admin.utils.imports.Imports(self._license)
+        admin_utils_exports = routes.admin.utils.exports.Exports(self._license)
+        admin_utils_clones = routes.admin.utils.clones.Clones(self._license)
+        admin_client = routes.admin.client.Client(self._license)
+        admin_monitoring = routes.admin.monitoring.Monitoring(self._license)
+        inventory = routes.inventory.inventory.Inventory(self._license)
+        environments = routes.inventory.environments.Environments(self._license)
+        regions = routes.inventory.regions.Regions(self._license)
+        servers = routes.inventory.servers.Servers(self._license)
+        auxiliary = routes.inventory.auxiliary.Auxiliary(self._license)
+        cloud = routes.inventory.cloud.Cloud(self._license)
+        releases = routes.deployments.releases.Releases(self._license)
+        shared = routes.deployments.shared.Shared(self._license)
+        deployments = routes.deployments.deployments.Deployments(self._license)
+        monitoring = routes.monitoring.monitoring.Monitoring(self._license)
+        monitoring_parameters = routes.monitoring.views.parameters.Parameters(self._license)
+        monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._license)
+        monitoring_queries = routes.monitoring.views.queries.Queries(self._license)
+        client = routes.client.client.Client(self._license)
+        utils = routes.utils.utils.Utils(self._license)
+        imports = routes.utils.imports.Imports(self._license)
+        exports = routes.utils.exports.Exports(self._license)
+        clones = routes.utils.clones.Clones(self._license)
 
         # Register all blueprints
-        blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_imports, admin_utils_exports, admin_utils_clones, admin_client, admin_monitoring, inventory, environments, regions, servers, auxiliary, cloud, releases, shared, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, utils, client, imports, exports, clones]
-        for i in blueprints:
+        blueprints = {"login": login, "profile": profile, "mfa": mfa, "notifications": notifications, "settings": settings, "groups": groups, "users": users, "admin_deployments": admin_deployments, "admin_inventory": admin_inventory, "admin_inventory_environments": admin_inventory_environments, "admin_inventory_regions": admin_inventory_regions, "admin_inventory_servers": admin_inventory_servers, "admin_inventory_auxiliary": admin_inventory_auxiliary, "admin_inventory_cloud": admin_inventory_cloud, "admin_utils_imports": admin_utils_imports, "admin_utils_exports": admin_utils_exports, "admin_utils_clones": admin_utils_clones, "admin_client": admin_client, "admin_monitoring": admin_monitoring, "inventory": inventory, "environments": environments, "regions": regions, "servers": servers, "auxiliary": auxiliary, "cloud": cloud, "releases": releases, "shared": shared, "deployments": deployments, "monitoring": monitoring, "monitoring_parameters": monitoring_parameters, "monitoring_processlist": monitoring_processlist, "monitoring_queries": monitoring_queries, "utils": utils, "client": client, "imports": imports, "exports": exports, "clones": clones}
+        for i in blueprints.values():
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
+
+        # Return all blueprints
+        return blueprints

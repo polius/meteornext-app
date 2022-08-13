@@ -13,15 +13,17 @@ import routes.admin.settings
 import apps.imports.imports
 
 class Users:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._imports = models.utils.imports.Imports(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._imports = models.utils.imports.Imports(sql, self._license)
         # Init routes
-        self._settings_route = routes.admin.settings.Settings(sql, license)
+        self._settings_route = routes.admin.settings.Settings(self._license, sql)
         # Init apps
         self._import_app = apps.imports.imports.Imports(sql)
 

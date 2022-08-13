@@ -84,7 +84,7 @@ class server:
         conn = connectors.base.Base({"sql": data['conf']['sql']})
 
         # Check new scheduled & queued executions
-        deployments = routes.deployments.deployments.Deployments(conn, license)
+        deployments = routes.deployments.deployments.Deployments(license, conn)
         deployments.check_finished()
         deployments.check_recurring()
         deployments.check_scheduled()
@@ -143,7 +143,7 @@ class server:
         conn = connectors.pool.Pool(data['conf']['sql'])
 
         # Check queued executions
-        utils = routes.utils.utils.Utils(conn, license)
+        utils = routes.utils.utils.Utils(license, conn)
         utils.check_queued()
 
     ####################

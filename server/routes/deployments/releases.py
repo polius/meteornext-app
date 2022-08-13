@@ -7,8 +7,10 @@ import models.deployments.releases
 import models.deployments.deployments
 
 class Releases:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._releases = models.deployments.releases.Releases(sql)

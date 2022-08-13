@@ -8,14 +8,15 @@ import models.admin.monitoring
 import routes.admin.settings
 
 class Monitoring:
-    def __init__(self, sql, license):
-        self._sql = sql
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.admin.monitoring.Monitoring(sql, license)
+        self._monitoring = models.admin.monitoring.Monitoring(sql, self._license)
         # Init routes
-        self._settings = routes.admin.settings.Settings(sql, license)
+        self._settings = routes.admin.settings.Settings(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

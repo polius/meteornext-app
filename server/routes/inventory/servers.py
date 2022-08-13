@@ -10,12 +10,14 @@ import models.inventory.regions
 import models.inventory.servers
 
 class Servers:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._regions = models.inventory.regions.Regions(sql)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
 
     def blueprint(self):
         # Init blueprint

@@ -13,10 +13,10 @@ import connectors.base
 import models.admin.users
 
 class Install:
-    def __init__(self, license, conf, register_blueprints):
+    def __init__(self, license, conf, blueprints):
         self._license = license
         self._conf = conf
-        self._register_blueprints = register_blueprints
+        self._blueprints = blueprints
         self._available = None
         # Retrieve base path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
@@ -157,7 +157,7 @@ class Install:
 
             # Create group
             groups = models.admin.groups.Groups(sql)
-            group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_coins": 10, "deployments_execution_concurrent": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_expiration_days": 30, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_limit": None, "utils_concurrent": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_limits_rows": 1000, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
+            group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_coins": 10, "deployments_execution_concurrent": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_expiration_days": 30, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_concurrent": 1, "utils_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_limits_rows": 1000, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
             groups.post(1, group)
 
             # Create user
@@ -213,7 +213,11 @@ class Install:
         sql = connectors.pool.Pool(self._conf['sql'])
 
         # Init blueprints
-        self._register_blueprints(sql)
+        for k,v in self._blueprints.items():
+            if k == 'settings':
+                v.init(sql, self._conf)
+            else:
+                v.init(sql)
 
         # Set unique hardware id
         self._conf['license']['uuid'] = str(uuid.getnode())

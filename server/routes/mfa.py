@@ -26,13 +26,17 @@ import models.admin.user_mfa
 import routes.admin.settings
 
 class MFA:
-    def __init__(self, sql, license):
+    def __init__(self, license, sql=None):
         self._license = license
+        if sql:
+            self.init(sql)
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(sql, license)
+        self._settings = routes.admin.settings.Settings(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

@@ -8,8 +8,10 @@ import models.admin.users
 import models.inventory.cloud
 
 class Cloud:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)

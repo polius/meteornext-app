@@ -16,15 +16,17 @@ import models.utils.clones
 import apps.clones.clones
 
 class Clones:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
         self._regions = models.inventory.regions.Regions(sql)
-        self._clone = models.utils.clones.Clones(sql, license)
+        self._clone = models.utils.clones.Clones(sql, self._license)
         # Init core
         self._clone_app = apps.clones.clones.Clones(sql)
         # Retrieve base path
