@@ -6,8 +6,10 @@ import models.admin.users
 import models.notifications
 
 class Notifications:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._notifications = models.notifications.Notifications(sql)

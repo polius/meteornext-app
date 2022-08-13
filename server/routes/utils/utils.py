@@ -23,20 +23,24 @@ import apps.clones.clones
 import connectors.base
 
 class Utils:
-    def __init__(self, sql, license):
+    def __init__(self, license, sql=None):
         self._license = license
+        if sql:
+            self.init(sql)
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
-        self._utils = models.utils.utils.Utils(sql, license)
-        self._imports = models.utils.imports.Imports(sql, license)
-        self._exports = models.utils.exports.Exports(sql, license)
-        self._clones = models.utils.clones.Clones(sql, license)
-        self._utils_queued = models.utils.utils_queued.Utils_Queued(sql, license)
-        self._servers_admin = models.admin.inventory.servers.Servers(sql, license)
+        self._utils = models.utils.utils.Utils(sql, self._license)
+        self._imports = models.utils.imports.Imports(sql, self._license)
+        self._exports = models.utils.exports.Exports(sql, self._license)
+        self._clones = models.utils.clones.Clones(sql, self._license)
+        self._utils_queued = models.utils.utils_queued.Utils_Queued(sql, self._license)
+        self._servers_admin = models.admin.inventory.servers.Servers(sql, self._license)
         self._regions_admin = models.admin.inventory.regions.Regions(sql)
         # Init cores
         self._import_app = apps.imports.imports.Imports(sql)
@@ -45,7 +49,6 @@ class Utils:
         # Retrieve base path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.realpath(os.path.dirname(sys.executable)) if self._bin else os.path.realpath(os.path.dirname(sys.argv[0]))
-
 
     def blueprint(self):
         # Init blueprint

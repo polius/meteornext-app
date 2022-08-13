@@ -22,15 +22,17 @@ import apps.imports.imports
 import apps.imports.scan
 
 class Imports:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._imports = models.utils.imports.Imports(sql, license)
+        self._imports = models.utils.imports.Imports(sql, self._license)
         self._scans = models.utils.scans.Scans(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
         self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core

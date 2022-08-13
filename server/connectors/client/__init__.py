@@ -3,35 +3,9 @@ import threading
 from connectors.client.mysql import MySQL
 
 class Client:
-    def __init__(self, app):
+    def __init__(self):
         self._connections = {}
-
-        @app.before_first_request
-        def start():
-            ttl = 300
-            t = threading.Thread(target=self.__scheduler, args=(ttl,))
-            t.start()
-
-    def __scheduler(self, ttl):
-        while True:
-            self.__close_active_connections(ttl)
-            time.sleep(10)
-
-    def __close_active_connections(self, ttl):
-        now = time.time()
-        total = 0
-        collector = {k:[k2 for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and ((not v2.is_transaction and v2.last_execution + ttl < now) or (v2.is_transaction and v2.last_execution + 3600 < now)))] for k,v in self._connections.items()}
-        for user_id, connections in collector.items():
-            for conn_id in connections:
-                self._connections[user_id][conn_id].close()
-                self._connections[user_id].pop(conn_id, None)
-                total += 1
-        for user_id in collector.keys():
-            if len(self._connections[user_id]) == 0:
-                self._connections.pop(user_id, None)
-        if total > 0:
-            pass
-            # print("- [CLIENT] Connections closed: {}".format(total))
+        self._started = False
 
     def get(self, user_id, conn_id):
         try:
@@ -40,6 +14,12 @@ class Client:
             return None
 
     def connect(self, user_id, conn_id, server):
+        if not self._started:
+            self._started = True
+            t = threading.Thread(target=self.__close_active_connections)
+            t.daemon = True
+            t.start()
+
         user_id = int(user_id)
         conn_id = str(conn_id)
         if user_id not in self._connections or conn_id not in self._connections[user_id] or server['id'] != self._connections[user_id][conn_id].server['id']:
@@ -76,6 +56,22 @@ class Client:
             self._connections[user_id].pop(conn_id, None)
         except Exception:
             pass
+
+    def __close_active_connections(self):
+        ttl = 300
+        while True:
+            now = time.time()
+            total = 0
+            collector = {k:[k2 for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and ((not v2.is_transaction and v2.last_execution + ttl < now) or (v2.is_transaction and v2.last_execution + 3600 < now)))] for k,v in self._connections.items()}
+            for user_id, connections in collector.items():
+                for conn_id in connections:
+                    self._connections[user_id][conn_id].close()
+                    self._connections[user_id].pop(conn_id, None)
+                    total += 1
+            for user_id in collector.keys():
+                if len(self._connections[user_id]) == 0:
+                    self._connections.pop(user_id, None)
+            time.sleep(10)
 
 class Connection:
     def __init__(self, server):

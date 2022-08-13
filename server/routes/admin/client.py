@@ -8,14 +8,15 @@ import models.admin.client
 import routes.admin.settings
 
 class Client:
-    def __init__(self, sql, license):
-        self._sql = sql
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._client = models.admin.client.Client(sql, license)
+        self._client = models.admin.client.Client(sql, self._license)
         # Init routes
-        self._settings = routes.admin.settings.Settings(sql, license)
+        self._settings = routes.admin.settings.Settings(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

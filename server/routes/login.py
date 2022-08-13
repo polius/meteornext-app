@@ -14,16 +14,18 @@ import routes.profile
 import routes.mfa
 
 class Login:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
         # Init routes
-        self._settings_route = routes.admin.settings.Settings(sql, license)
-        self._profile_route = routes.profile.Profile(sql, license)
-        self._mfa = routes.mfa.MFA(sql, license)
+        self._settings_route = routes.admin.settings.Settings(self._license, sql)
+        self._profile_route = routes.profile.Profile(self._license, sql)
+        self._mfa = routes.mfa.MFA(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

@@ -16,14 +16,16 @@ import models.client.client
 import connectors.client
 
 class Client:
-    def __init__(self, app, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
-        self._client = models.client.client.Client(sql, license)
+        self._client = models.client.client.Client(sql, self._license)
         # Init connections
-        self._connections = connectors.client.Client(app)
+        self._connections = connectors.client.Client()
 
     def blueprint(self):
         # Init blueprint

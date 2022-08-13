@@ -9,11 +9,15 @@ import models.admin.users
 import models.admin.settings
 
 class Profile:
-    def __init__(self, sql, license):
+    def __init__(self, license, sql=None):
         self._license = license
+        if sql:
+            self.init(sql)
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
 
     def blueprint(self):
         # Init blueprint

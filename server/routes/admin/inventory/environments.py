@@ -9,14 +9,16 @@ import models.admin.inventory.environments
 import routes.admin.settings
 
 class Environments:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._environments = models.admin.inventory.environments.Environments(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(sql, license)
+        self._settings = routes.admin.settings.Settings(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

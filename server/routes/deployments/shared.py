@@ -7,8 +7,10 @@ import models.admin.users
 import models.deployments.deployments_shared
 
 class Shared:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._shared = models.deployments.deployments_shared.Deployments_Shared(sql)

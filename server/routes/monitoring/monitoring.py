@@ -11,11 +11,13 @@ import models.monitoring.monitoring
 import models.monitoring.monitoring_settings
 
 class Monitoring:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.monitoring.monitoring.Monitoring(sql, license)
+        self._monitoring = models.monitoring.monitoring.Monitoring(sql, self._license)
         self._monitoring_settings = models.monitoring.monitoring_settings.Monitoring_Settings(sql)
 
     def blueprint(self):

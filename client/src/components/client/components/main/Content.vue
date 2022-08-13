@@ -496,7 +496,7 @@ export default {
           if (current === undefined) return
           current.contentExecuting = false
           this.gridApi.content.hideOverlay()
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
             let data = JSON2.parse(error.response.data.data)
@@ -697,7 +697,7 @@ export default {
         })
         .catch((error) => {
           const elapsed = (new Date() - startTime) / 1000
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let current = this.connections.find(c => c['index'] == index)
             if (current === undefined) return
@@ -872,7 +872,7 @@ export default {
           })
           .catch((error) => {
             const elapsed = (new Date() - startTime) / 1000
-            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
               // Mark contentExecuting to false
               let current = this.connections.find(c => c['index'] == index)
@@ -995,7 +995,7 @@ export default {
         })
         .catch((error) => {
           const elapsed = (new Date() - startTime) / 1000
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let current = this.connections.find(c => c['index'] == index)
             if (current === undefined) return
@@ -1244,7 +1244,7 @@ export default {
         this.bottomBar.content['status'] = 'stopped'
       })
       .catch((error) => {
-        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else EventBus.$emit('send-notification', "An error occurred stopping the query. Please try again.", '#EF5354')
       })
       .finally(() => this.loadingStop = false)

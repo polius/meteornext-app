@@ -9,13 +9,15 @@ import models.monitoring.monitoring_settings
 import models.monitoring.monitoring_queries
 
 class Queries:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._monitoring = models.monitoring.monitoring.Monitoring(sql, license)
+        self._monitoring = models.monitoring.monitoring.Monitoring(sql, self._license)
         self._monitoring_settings = models.monitoring.monitoring_settings.Monitoring_Settings(sql)
-        self._monitoring_queries = models.monitoring.monitoring_queries.Monitoring_Queries(sql, license)
+        self._monitoring_queries = models.monitoring.monitoring_queries.Monitoring_Queries(sql, self._license)
 
     def blueprint(self):
         # Init blueprint

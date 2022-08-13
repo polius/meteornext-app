@@ -8,13 +8,15 @@ import models.admin.utils.clones
 import routes.admin.settings
 
 class Clones:
-    def __init__(self, sql, license):
+    def __init__(self, license):
         self._license = license
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._clone = models.admin.utils.clones.Clones(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(sql, license)
+        self._settings = routes.admin.settings.Settings(self._license, sql)
 
     def blueprint(self):
         # Init blueprint

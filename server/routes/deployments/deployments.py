@@ -30,8 +30,12 @@ import models.notifications
 import routes.deployments.meteor
 
 class Deployments:
-    def __init__(self, sql, license):
+    def __init__(self, license, sql=None):
         self._license = license
+        if sql:
+            self.init(sql)
+
+    def init(self, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
@@ -42,13 +46,13 @@ class Deployments:
         self._executions_queued = models.deployments.executions_queued.Executions_Queued(sql)
         self._executions_finished = models.deployments.executions_finished.Executions_Finished(sql)
         self._executions_scheduled = models.deployments.executions_scheduled.Executions_Scheduled(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
-        self._environments = models.inventory.environments.Environments(sql, license)
-        self._servers = models.inventory.servers.Servers(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
+        self._environments = models.inventory.environments.Environments(sql, self._license)
+        self._servers = models.inventory.servers.Servers(sql, self._license)
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(sql, license)
+        self._meteor = routes.deployments.meteor.Meteor(sql, self._license)
 
     def blueprint(self):
         # Init blueprint

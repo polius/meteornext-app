@@ -12,13 +12,16 @@ import models.admin.users
 import models.admin.settings
 
 class Settings:
-    def __init__(self, sql, license, settings=None):
-        self._sql = sql
+    def __init__(self, license, sql=None):
         self._license = license
-        self._settings_conf = settings
+        if sql:
+            self.init(sql)
+
+    def init(self, sql, conf=None):
+        self._settings_conf = conf
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._settings = models.admin.settings.Settings(sql, license)
+        self._settings = models.admin.settings.Settings(sql, self._license)
 
     def blueprint(self):
         # Init blueprint
