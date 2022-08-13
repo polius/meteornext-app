@@ -148,13 +148,12 @@ class Install:
             # Import SQL Schema
             sql.execute('DROP DATABASE IF EXISTS `{}`'.format(data['sql']['database']))
             sql.execute('CREATE DATABASE `{}`'.format(data['sql']['database']))
-            sql.use(data['sql']['database'])
             schema_file = f"{sys._MEIPASS}/models/schema.sql" if self._bin else f"{self._base_path}/models/schema"
             with open(schema_file) as file_open:
                 queries = file_open.read().split(';')
                 for q in queries:
                     if q.strip() != '':
-                        sql.execute(q)
+                        sql.execute(query=q, database=data['sql']['database'])
 
             # Create group
             groups = models.admin.groups.Groups(sql)
