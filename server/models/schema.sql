@@ -683,7 +683,6 @@ CREATE TABLE `clones` (
   KEY `destination_server` (`destination_server`),
   KEY `destination_database` (`destination_database`),
   KEY `create_database` (`create_database`),
-  KEY `drop_database` (`drop_database`),
   KEY `mode` (`mode`),
   KEY `tables` (`tables`(191)),
   KEY `export_schema` (`export_schema`),
