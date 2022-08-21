@@ -285,7 +285,7 @@
         events_dialog: false,
         events_headers: [
           { text: 'Server', align: 'left', value: 'server' },
-          { text: 'Event', align: 'left', value: 'event' },
+          { text: 'Event', align: 'left', value: 'event',  width: '250px' },
           { text: 'Message', align: 'left', value: 'message' },
           { text: 'Time', align: 'left', value: 'time' },
         ],
