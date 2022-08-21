@@ -501,47 +501,65 @@ class Client:
 
             # Get Info
             if request.args['object'] == 'table':
-                info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
-                    except Exception:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
+                        except Exception:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             elif request.args['object'] == 'view':
-                info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_view_syntax(db=request.args['database'], view=request.args['name'])
-                    except Exception as e:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_view_syntax(db=request.args['database'], view=request.args['name'])
+                        except Exception as e:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             elif request.args['object'] == 'trigger':
-                info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
-                    except Exception:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
+                        except Exception:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             elif request.args['object'] == 'function':
-                info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
-                    except Exception:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
+                        except Exception:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             elif request.args['object'] == 'procedure':
-                info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
-                    except Exception:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
+                        except Exception:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             elif request.args['object'] == 'event':
-                info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
-                if len(info) > 0:
-                    try:
-                        info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
-                    except Exception:
-                        info[0]['syntax'] = ''
+                try:
+                    info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
+                    if len(info) > 0:
+                        try:
+                            info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
+                        except Exception:
+                            info[0]['syntax'] = ''
+                except Exception as e:
+                    return jsonify({"message": str(e)}), 400
             return jsonify({'info': self.__json(info)}), 200
 
         @client_blueprint.route('/client/collations', methods=['GET'])
@@ -898,14 +916,19 @@ class Client:
             if cred is None:
                 return jsonify({"message": 'This server does not exist in your inventory'}), 400
 
+            # Get Server Connection
             try:
-                # Get Server Connection
                 conn = self._connections.connect(user['id'], request.args['connection'], cred)
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
 
             # Get Table PKs
-            pks = conn.get_table_pks(database=request.args['database'], table=request.args['table'])
+            try:
+                pks = conn.get_table_pks(database=request.args['database'], table=request.args['table'])
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
+
+            # Return Table PKs
             return jsonify({'pks': pks}), 200
 
         return client_blueprint
