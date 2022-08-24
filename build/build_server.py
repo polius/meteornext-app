@@ -7,6 +7,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
+# from PyInstaller.utils.hooks import collect_submodules
 
 if __name__ == '__main__':
     from build_server import build_server
@@ -46,7 +47,7 @@ class build_server:
         build_path = f"{self._pwd}/meteor"
         additional_files = ['version.txt']
         additional_binaries = []
-        hidden_imports = ['pymysql','uuid','requests','importlib','paramiko','boto3','sshtunnel','inspect','sentry_sdk','sqlparse']
+        hidden_imports = ['pymysql','requests','paramiko','boto3','sshtunnel','sentry_sdk','sqlparse','urllib3']
         binary_name = 'meteor'
         binary_path = f'{self._pwd}/server/apps'
 
@@ -57,7 +58,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = f"{self._pwd}/server"
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','secrets','csv','itertools','pyotp','flask_compress','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread']
+        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','pyotp','flask_compress','dbutils.pooled_db','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread']
         additional_binaries = []
         binary_name = 'server'
         binary_path = f'{self._pwd}/dist'
@@ -158,9 +159,11 @@ class build_server:
         subprocess.call("tar xvfJ /tmp/upx-3.96-amd64_linux.tar.xz -C /tmp", shell=True)
 
         # 11) Build pyinstaller command
-        command = f"cd '{cythonized}'; pyinstaller --clean --distpath '{binary_path}'"
+        command = f"cd '{cythonized}'; python3 -m PyInstaller --clean --distpath '{binary_path}'"
         for i in hidden_imports:
             command += f" --hidden-import={i}"
+            # for m in collect_submodules(i):
+            #     command += f" --hidden-import={m}"
         for b in binaries:
             command += f" -r '{b}'"
         for f in additional_files:
@@ -170,12 +173,6 @@ class build_server:
             command += f" --add-binary '{b[0]}:{b[1]}'"
 
         command += ' --upx-dir /tmp/upx-3.96-amd64_linux'
-
-        # if binary_name == 'server':
-        #     command += ' --onefile'
-        # else:
-        #     command += ' --onedir'
-        
         command += f'--onedir "{cythonized}/init.py"'
 
         # 12) Pack cythonized project using pyinstaller

@@ -18,17 +18,11 @@ class Exports:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, server, region, path, amazon_s3):
-        # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, server, region, path,amazon_s3,))
-        t.daemon = False
-        t.start()
-
-    def __core(self, user, item, server, region, paths, amazon_s3):
+    def start(self, user, item, server, region, paths, amazon_s3):
         try:
             start_time = time.time()
             core = apps.exports.core.Core(region)
-            self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
+            self.__core(start_time, core, user, item, server, region, paths, amazon_s3)
         except Exception as e:
             query = """
                 UPDATE `exports`
@@ -44,7 +38,7 @@ class Exports:
             self.__clean(core, region, item, paths)
             self.__slack(item, start_time, 2, str(e))
 
-    def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
+    def __core(self, start_time, core, user, item, server, region, paths, amazon_s3):
         # Check if export is already stopped
         if not self.__alive(item):
             return

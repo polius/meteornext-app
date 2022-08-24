@@ -1,8 +1,7 @@
-FROM amazonlinux:1
-RUN yum update -y && \
-    yum install gcc -y && \
-    yum install xz -y && \
-    yum install python38-devel -y && \
+FROM meteornextbase
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openssl/lib
+RUN echo "Building & Compiling Backend" && \
+    # Install Python dependencies
     python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \

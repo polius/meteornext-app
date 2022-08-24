@@ -21,18 +21,12 @@ class imports:
     # Internal Methods #
     ####################
     def __load_config(self):
-        try:
-            file_path = '{}/config.json'.format(self._args.path)
-            with open(file_path) as data_file:
-                data = json.load(data_file, object_pairs_hook=OrderedDict)
-                return data
-        except Exception:
-            sys.exit()
+        file_path = '{}/config.json'.format(self._args.path)
+        with open(file_path) as data_file:
+            data = json.load(data_file, object_pairs_hook=OrderedDict)
+            return data
 
     def __load_blueprint(self):
-        try:
-            file_path = "{}/blueprint.py".format(self._args.path)
-            blueprint = importlib.util.spec_from_file_location("blueprint", file_path).loader.load_module().blueprint()
-            return blueprint
-        except Exception:
-            sys.exit()
+        file_path = "{}/blueprint.py".format(self._args.path)
+        blueprint = importlib.util.spec_from_file_location("blueprint", file_path).loader.load_module().blueprint()
+        return blueprint

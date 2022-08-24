@@ -19,20 +19,14 @@ class Clones:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, servers, regions, path, amazon_s3):
-        # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, servers, regions, path, amazon_s3,))
-        t.daemon = False
-        t.start()
-
-    def __core(self, user, item, servers, regions, paths, amazon_s3):
+    def start(self, user, item, servers, regions, paths, amazon_s3):
         try:
             start_time = time.time()
             core = {
                 "source": apps.clones.core.Core(regions['source']),
                 "destination": apps.clones.core.Core(regions['destination'])
             }
-            self.__core2(start_time, core, user, item, servers, regions, paths, amazon_s3)
+            self.__core(start_time, core, user, item, servers, regions, paths, amazon_s3)
         except Exception as e:
             query = """
                 UPDATE `clones`
@@ -50,7 +44,7 @@ class Clones:
             self.__clean(core['source'], regions['source'], item, paths)
             self.__clean(core['destination'], regions['destination'], item, paths)
 
-    def __core2(self, start_time, core, user, item, servers, regions, paths, amazon_s3):
+    def __core(self, start_time, core, user, item, servers, regions, paths, amazon_s3):
         # Check if clone is already stopped
         if not self.__alive(item):
             return
