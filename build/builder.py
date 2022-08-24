@@ -18,6 +18,8 @@ class builder:
         print("|         - BUILDER -         |")
         print("+=============================+")
         start_time = time.time()
+        # Clean old dist
+        subprocess.call(f"sudo rm -rf {self._pwd}/dist/meteornext.tar.gz", shell=True)
         # Clean Temp Files
         self.__clean_docker()
         # Build Server
@@ -26,7 +28,7 @@ class builder:
         self.__build_client()
         # Build Docker
         subprocess.call("docker pull nginx:latest", shell=True)
-        subprocess.call(f"cd {self._pwd} ; docker buildx build -t meteornext:latest -f build/docker.dockerfile --no-cache --platform linux/amd64 --load .", shell=True)
+        subprocess.call(f"cd {self._pwd} ; docker buildx build -t meteornext:latest -f build/dist.dockerfile --no-cache --platform linux/amd64 --load .", shell=True)
         subprocess.call(f"docker save meteornext | gzip -9 > {self._pwd}/dist/meteornext.tar.gz", shell=True)
         self.__clean_docker()
         print(f"\n- Build Path: {self._pwd}/dist/meteornext.tar.gz")
@@ -36,13 +38,13 @@ class builder:
     # Internal Methods #
     ####################
     def __build_server(self):
-        subprocess.call(f"sudo rm -rf {self._pwd}/dist/meteornext.tar.gz", shell=True)
-        subprocess.call(f"sudo rm -rf {self._pwd}/dist/server", shell=True)
-        subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull amazonlinux:1", shell=True)
         # One Time: create a new builder instance to be able to build for multiplatform
         # docker buildx create --use
-        subprocess.call("docker buildx build -t meteornextbuild:latest --no-cache --platform linux/amd64 --load - < server.dockerfile", shell=True)
+        # Uncomment the next two lines to re-build the meteorbase image.
+        # subprocess.call("docker rmi meteornextbase:latest >/dev/null 2>&1", shell=True)
+        # subprocess.call("docker buildx build -t meteornextbase:latest --no-cache --platform linux/amd64 --load - < base.dockerfile", shell=True)
+        subprocess.call("docker buildx build -t meteornextbuild:latest --no-cache --platform linux/amd64 --load - < build.dockerfile", shell=True)
         subprocess.call(f"docker run --rm -it -v {self._pwd}:/root/ meteornextbuild:latest", shell=True)
         subprocess.call("docker rmi meteornextbuild:latest", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
@@ -63,4 +65,5 @@ class builder:
         subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)

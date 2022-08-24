@@ -1,5 +1,4 @@
 import builtins
-import importlib
 import inspect
 import sys
 
@@ -7,11 +6,12 @@ class firewall:
     def __init__(self):
         self._exec = builtins.exec
         self._open = builtins.open
+        self._import = builtins.__import__
         builtins.exec = self.__exec
         builtins.__import__ = self.__import
         builtins.open = self.__open
 
-    def __import(self, name, globals=None, locals=None, fromlist=(), level=0):
+    def __import(self, name, *args, **kwargs):
         f1 = None
         f2 = None
         try:
@@ -25,7 +25,7 @@ class firewall:
 
         if (f1 is not None and f1 == 'blueprint') or (f2 is not None and f2 == 'blueprint'):
             whitelist = ['blueprint','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale','boto3','hashlib','itertools']
-            frommodule = globals['__name__'] if globals else None
+            frommodule = kwargs['globals']['__name__'] if 'globals' in kwargs else None
             if frommodule is None or frommodule in ['__main__','blueprint']:
                 if name not in whitelist:
                     raise Exception(f"Module '{name}' is restricted.")
@@ -36,7 +36,7 @@ class firewall:
                         raise Exception(f"Module '{split[0]}' is restricted.")
                 elif frommodule not in whitelist:
                     raise Exception(f"Module '{frommodule}' is restricted.")
-        return importlib.__import__(name, globals, locals, fromlist, level)
+        return self._import(name, *args, **kwargs)
 
     def __exec(self, name, globals=None, locals=None):
         if inspect.currentframe().f_globals['__file__'].endswith('/blueprint.py') or (inspect.currentframe().f_back is not None and inspect.currentframe().f_back.f_globals['__file__'].endswith('/blueprint.py')):
