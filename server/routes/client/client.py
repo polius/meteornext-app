@@ -36,7 +36,7 @@ class Client:
         def client_servers_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -93,7 +93,7 @@ class Client:
         def client_servers_unassigned_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -121,7 +121,7 @@ class Client:
         def client_databases_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -165,7 +165,7 @@ class Client:
         def client_objects_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -211,7 +211,7 @@ class Client:
         def client_variables_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -244,7 +244,7 @@ class Client:
         def client_execute_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -338,7 +338,7 @@ class Client:
         def client_processlist_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -370,7 +370,7 @@ class Client:
         def client_explain_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -406,7 +406,7 @@ class Client:
         def client_structure_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -442,7 +442,7 @@ class Client:
         def client_structure_columns_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -475,7 +475,7 @@ class Client:
         def client_info_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -567,7 +567,7 @@ class Client:
         def client_collations_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -600,7 +600,7 @@ class Client:
         def client_import_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -646,7 +646,7 @@ class Client:
         def client_export_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -686,7 +686,7 @@ class Client:
         def client_clone_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -725,7 +725,7 @@ class Client:
         def client_saved_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -759,7 +759,7 @@ class Client:
         def client_settings_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -789,7 +789,7 @@ class Client:
         def client_stop_query_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -825,7 +825,7 @@ class Client:
         def client_rights_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -873,7 +873,7 @@ class Client:
         def client_close_connection_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -898,7 +898,7 @@ class Client:
         def client_pks_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:

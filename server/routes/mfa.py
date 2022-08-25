@@ -47,7 +47,7 @@ class MFA:
         def mfa_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get request data
             data = request.args if request.method == 'GET' else request.get_json()
@@ -84,7 +84,7 @@ class MFA:
         def mfa_2fa_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
             
             # Get request data
             data = request.args if request.method == 'GET' else request.get_json()
@@ -114,7 +114,7 @@ class MFA:
         def mfa_webauthn_register_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
             
             # Get request data
             data = request.args if request.method == 'GET' else request.get_json()

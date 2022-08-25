@@ -13,7 +13,8 @@ import connectors.base
 import models.admin.users
 
 class Install:
-    def __init__(self, license, conf, blueprints):
+    def __init__(self, app, license, conf, blueprints):
+        self._app = app
         self._license = license
         self._conf = conf
         self._blueprints = blueprints
@@ -46,7 +47,7 @@ class Install:
             data = request.get_json()
 
             # Set unique hardware id
-            data['uuid'] = str(uuid.getnode())
+            data['uuid'] =self._app.config['JWT_SECRET_KEY'] # str(uuid.getnode())
 
             # Check License
             self._license.set_license(data)
@@ -220,7 +221,7 @@ class Install:
                 v.init(sql)
 
         # Set unique hardware id
-        self._conf['license']['uuid'] = str(uuid.getnode())
+        self._conf['license']['uuid'] = self._app.config['JWT_SECRET_KEY'] # str(uuid.getnode())
 
         # Disable Install
         self._available = False

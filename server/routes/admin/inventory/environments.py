@@ -29,7 +29,7 @@ class Environments:
         def admin_environments_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():
@@ -60,7 +60,7 @@ class Environments:
         def admin_environment_servers_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():

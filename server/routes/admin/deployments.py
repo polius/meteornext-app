@@ -29,7 +29,7 @@ class Deployments:
         def admin_deployments_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():
@@ -65,7 +65,7 @@ class Deployments:
         def admin_deployments_releases_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -86,7 +86,7 @@ class Deployments:
         def admin_deployments_search_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
