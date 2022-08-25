@@ -25,7 +25,7 @@ class Releases:
         def releases_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -52,7 +52,7 @@ class Releases:
         def releases_active_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:

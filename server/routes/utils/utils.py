@@ -59,7 +59,7 @@ class Utils:
         def utils_servers_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -82,7 +82,7 @@ class Utils:
         def utils_servers_test_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get User
             try:
@@ -110,7 +110,7 @@ class Utils:
         def utils_databases_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -150,7 +150,7 @@ class Utils:
         def utils_database_size_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -190,7 +190,7 @@ class Utils:
         def utils_tables_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:

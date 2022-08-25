@@ -27,7 +27,7 @@ class Inventory:
         def admin_inventory_groups_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():
@@ -52,7 +52,7 @@ class Inventory:
         def admin_inventory_users_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():

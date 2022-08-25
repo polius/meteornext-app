@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-import uuid
+# import uuid
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
@@ -58,8 +58,8 @@ class Setup:
         blueprints = self.register_blueprints()
 
         # Init Install blueprint
-        install = routes.install.Install(self._license, self._conf, blueprints)
-        self._app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
+        install = routes.install.Install(app, self._license, self._conf, blueprints)
+        app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
         # Check if Meteor is initiated with all required params.
         try:
@@ -69,7 +69,7 @@ class Setup:
             print("- Meteor initiated. No configuration detected. Install is required.")
         else:
             # Set unique hardware id
-            self._conf['license']['uuid'] = str(uuid.getnode())
+            self._conf['license']['uuid'] = app.config['JWT_SECRET_KEY'] # str(uuid.getnode())
             # Init sql pool
             sql = connectors.pool.Pool(self._conf['sql'])
             # Init license

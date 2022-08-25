@@ -1,9 +1,10 @@
 import os
 import sys
-import uuid
+# import uuid
 import hashlib
 import tarfile
 import datetime
+import subprocess
 import gunicorn.app.base
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -17,8 +18,11 @@ class Api:
         app.config.from_object(__name__)
         app.config['JSON_SORT_KEYS'] = False
 
+        # Get unique hardware MAC address
+        p = subprocess.Popen("cat /sys/class/net/eth0/address", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         # JWT Config
-        app.config['JWT_SECRET_KEY'] = hashlib.sha256(str(uuid.getnode()).encode()).hexdigest()
+        app.config['JWT_SECRET_KEY'] = hashlib.md5(p.stdout.readlines()[0].strip()).hexdigest() # hashlib.sha256(str(uuid.getnode()).encode()).hexdigest()
         app.secret_key = app.config['JWT_SECRET_KEY']
         app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
         app.config['JWT_TOKEN_LOCATION'] = ['cookies']

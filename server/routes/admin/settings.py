@@ -32,7 +32,7 @@ class Settings:
         def settings_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -59,7 +59,7 @@ class Settings:
         def settings_license_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -103,7 +103,7 @@ class Settings:
         def settings_license_usage_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():
@@ -129,7 +129,7 @@ class Settings:
         def settings_files_test_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Check Security (Administration URL)
             if not self.check_url():

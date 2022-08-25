@@ -63,7 +63,7 @@ class Deployments:
         def deployments_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -88,7 +88,7 @@ class Deployments:
         def deployments_code():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -111,7 +111,7 @@ class Deployments:
         def deployments_start():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -131,7 +131,7 @@ class Deployments:
         def deployments_stop():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -151,7 +151,7 @@ class Deployments:
         def deployments_results_method():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get Request Json URI
             uri = request.args.get('uri')
@@ -214,7 +214,7 @@ class Deployments:
         def deployments_executions():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -234,7 +234,7 @@ class Deployments:
         def deployments_shared():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
@@ -254,7 +254,7 @@ class Deployments:
         def deployments_pinned():
             # Check license
             if not self._license.is_validated():
-                return jsonify({"message": self._license.get_status()['response']}), 401
+                return jsonify({"message": "The license is not valid"}), 401
 
             # Get user data
             try:
