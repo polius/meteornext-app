@@ -712,7 +712,7 @@ export default {
       }
       else if (this.sidebarMode == 'objects') {
         if (item == 'Copy Database') {
-          navigator.clipboard.writeText(this.database)
+          this.copyToClipboard(this.database)
         }
         else if (this.contextMenuItem.type == 'Table') {
           if (item == 'Show Table Objects') this.showObjectsTab('tables')
@@ -806,6 +806,21 @@ export default {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }

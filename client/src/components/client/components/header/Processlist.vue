@@ -295,13 +295,14 @@ export default {
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         // Copy value
-        navigator.clipboard.writeText(e.value)
-        // Apply effect
-        this.gridApi.flashCells({
-          rowNodes: this.gridApi.getSelectedNodes(),
-          columns: [this.gridApi.getFocusedCell().column.colId],
-          flashDelay: 200,
-          fadeDelay: 200,
+        this.copyToClipboard(e.value).then(() => {
+          // Apply effect
+          this.gridApi.flashCells({
+            rowNodes: this.gridApi.getSelectedNodes(),
+            columns: [this.gridApi.getFocusedCell().column.colId],
+            flashDelay: 200,
+            fadeDelay: 200,
+          })
         })
       }
       else if (e.event.key == 'Backspace' && e.event.metaKey) this.killQuery()
@@ -527,7 +528,22 @@ export default {
             else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
           .finally(() => { this.loading = false; this.killDialog = false })
-    }
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
+    },
   }
 }
 </script>

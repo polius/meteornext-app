@@ -346,7 +346,7 @@ RETURN (customerLevel);
     },
     copyFunctionNameSubmit() {
       const name = this.contextMenuItem.name
-      navigator.clipboard.writeText(name)
+      this.copyToClipboard(name)
       EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
     },
     copyFunctionSyntaxSubmit() {
@@ -358,10 +358,25 @@ RETURN (customerLevel);
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
         if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the function syntax", '#EF5354')
         else {
-          navigator.clipboard.writeText(syntax + ';')
+          this.copyToClipboard(syntax + ';')
           EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
         }
       }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }

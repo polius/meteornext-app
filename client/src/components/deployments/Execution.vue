@@ -1710,8 +1710,23 @@
       // SHARE DEPLOYMENT
       // -------------------------------------
       copyClipboard(text) {
-        navigator.clipboard.writeText(text)
+        this.copyToClipboard(text)
         this.notification('Link copied to clipboard', '#00b16a', Number(2000))
+      },
+      copyToClipboard(textToCopy) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+        else {
+          let textArea = document.createElement("textarea")
+          textArea.value = textToCopy
+          textArea.style.position = "absolute"
+          textArea.style.opacity = 0
+          document.body.appendChild(textArea)
+          textArea.select()
+          return new Promise((res, rej) => {
+            document.execCommand('copy') ? res() : rej()
+            textArea.remove()
+          })
+        }
       },
       shareDeployment() {
         // Build parameters

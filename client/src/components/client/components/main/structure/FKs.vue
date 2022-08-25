@@ -195,7 +195,7 @@ export default {
           // Copy values
           let header = Object.keys(selectedRows[0])
           let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
-          navigator.clipboard.writeText(value)
+          this.copyToClipboard(value)
           // Apply effect
           // this.gridApi.structure.fks.flashCells({
           //   rowNodes: this.gridApi.structure.fks.getSelectedNodes(),
@@ -205,13 +205,14 @@ export default {
         }
         else {
           // Copy value
-          navigator.clipboard.writeText(e.value)
-          // Apply effect
-          this.gridApi.structure.fks.flashCells({
-            rowNodes: this.gridApi.structure.fks.getSelectedNodes(),
-            columns: [this.gridApi.structure.fks.getFocusedCell().column.colId],
-            flashDelay: 200,
-            fadeDelay: 200,
+          this.copyToClipboard(e.value).then(() => {
+            // Apply effect
+            this.gridApi.structure.fks.flashCells({
+              rowNodes: this.gridApi.structure.fks.getSelectedNodes(),
+              columns: [this.gridApi.structure.fks.getFocusedCell().column.colId],
+              flashDelay: 200,
+              fadeDelay: 200,
+            })
           })
         }
       }
@@ -324,6 +325,21 @@ export default {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }

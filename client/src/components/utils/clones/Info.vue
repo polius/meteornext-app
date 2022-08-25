@@ -304,9 +304,9 @@ export default {
       .finally(() => this.loading = false)
     },
     copyClipboard(text) {
-        navigator.clipboard.writeText(text)
-        EventBus.$emit('send-notification', 'Link copied to clipboard', '#00b16a', Number(2000))
-      },
+      this.copyToClipboard(text)
+      EventBus.$emit('send-notification', 'Link copied to clipboard', '#00b16a', Number(2000))
+    },
     getProgressColor(status) {
       if (status == 'QUEUED') return '#2196f3'
       if (status == 'STARTING') return '#3498db'
@@ -321,6 +321,21 @@ export default {
     formatBytes(size) {
       if (size == null) return null
       return pretty(size, {binary: true}).replace('i','')
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   },
 }

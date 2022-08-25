@@ -158,13 +158,14 @@ export default {
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         // Copy value
-        navigator.clipboard.writeText(e.value)
-        // Apply effect
-        this.gridApi.flashCells({
-          rowNodes: this.gridApi.getSelectedNodes(),
-          columns: [this.gridApi.getFocusedCell().column.colId],
-          flashDelay: 200,
-          fadeDelay: 200,
+        this.copyToClipboard(e.value).then(() => {
+          // Apply effect
+          this.gridApi.flashCells({
+            rowNodes: this.gridApi.getSelectedNodes(),
+            columns: [this.gridApi.getFocusedCell().column.colId],
+            flashDelay: 200,
+            fadeDelay: 200,
+          })
         })
       }
     },
@@ -197,6 +198,21 @@ export default {
     confirmDialogCancel() {
       this.currentCellEditNode.setDataValue('value', this.currentCellValues['current'])
       this.confirmDialog = false
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }
