@@ -318,7 +318,7 @@ export default {
     },
     copyViewNameSubmit() {
       const name = this.contextMenuItem.name
-      navigator.clipboard.writeText(name)
+      this.copyToClipboard(name)
       EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
     },
     copyViewSyntaxSubmit() {
@@ -328,9 +328,24 @@ export default {
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create View'] + ';'
-        navigator.clipboard.writeText(syntax)
+        this.copyToClipboard(syntax)
         EventBus.$emit('send-notification', 'Copied to clipboard.', '#00b16a', 1)
       }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }

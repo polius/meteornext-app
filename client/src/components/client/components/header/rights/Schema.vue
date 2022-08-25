@@ -203,13 +203,14 @@ export default {
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         // Copy value
-        navigator.clipboard.writeText(e.value)
-        // Apply effect
-        this.gridApi.flashCells({
-          rowNodes: this.gridApi.getSelectedNodes(),
-          columns: [this.gridApi.getFocusedCell().column.colId],
-          flashDelay: 200,
-          fadeDelay: 200,
+        this.copyToClipboard(e.value).then(() => {
+          // Apply effect
+          this.gridApi.flashCells({
+            rowNodes: this.gridApi.getSelectedNodes(),
+            columns: [this.gridApi.getFocusedCell().column.colId],
+            flashDelay: 200,
+            fadeDelay: 200,
+          })
         })
       }
       else if (e.event.key == "Enter") this.editRights(e.data, e.rowIndex)
@@ -387,7 +388,22 @@ export default {
     deselectAllRights() {
       const rights = ['select','insert','update','delete','show_view','create_view','create_routine','alter_routine','execute','create','drop','alter','index','trigger','event','references','create_temporary_tables','lock_tables']
       rights.forEach((item) => { this.dialogOptions.item.rights[item] = false })
-    }
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
+    },
   }
 }
 </script>

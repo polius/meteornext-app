@@ -116,7 +116,7 @@ export default {
           // Copy values
           let header = Object.keys(selectedRows[0])
           let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
-          navigator.clipboard.writeText(value)
+          this.copyToClipboard(value)
           // Apply effect
           // this.gridApi.flashCells({
           //   rowNodes: this.gridApi.getSelectedNodes(),
@@ -126,13 +126,14 @@ export default {
         }
         else {
           // Copy value
-          navigator.clipboard.writeText(e.value)
-          // Apply effect
-          this.gridApi.flashCells({
-            rowNodes: this.gridApi.getSelectedNodes(),
-            columns: [this.gridApi.getFocusedCell().column.colId],
-            flashDelay: 200,
-            fadeDelay: 200,
+          this.copyToClipboard(e.value).then(() => {
+            // Apply effect
+            this.gridApi.flashCells({
+              rowNodes: this.gridApi.getSelectedNodes(),
+              columns: [this.gridApi.getFocusedCell().column.colId],
+              flashDelay: 200,
+              fadeDelay: 200,
+            })
           })
         }
       }
@@ -165,6 +166,21 @@ export default {
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   },
 }

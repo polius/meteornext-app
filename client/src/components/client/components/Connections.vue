@@ -248,7 +248,22 @@ export default {
     },
     contextMenuClicked(item) {
       if (item == 'Copy Hostname') {
-        navigator.clipboard.writeText(this.contextMenuItem['hostname'])
+        this.copyToClipboard(this.contextMenuItem['hostname'])
+      }
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
       }
     },
   },

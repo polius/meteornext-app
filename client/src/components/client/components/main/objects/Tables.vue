@@ -170,7 +170,7 @@ export default {
           // Copy values
           let header = Object.keys(selectedRows[0])
           let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
-          navigator.clipboard.writeText(value)
+          this.copyToClipboard(value)
           // Apply effect
           // this.gridApi.objects.tables.flashCells({
           //   rowNodes: this.gridApi.objects.tables.getSelectedNodes(),
@@ -180,13 +180,14 @@ export default {
         }
         else {
           // Copy value
-          navigator.clipboard.writeText(e.value)
-          // Apply effect
-          this.gridApi.objects.tables.flashCells({
-            rowNodes: this.gridApi.objects.tables.getSelectedNodes(),
-            columns: [this.gridApi.objects.tables.getFocusedCell().column.colId],
-            flashDelay: 200,
-            fadeDelay: 200,
+          this.copyToClipboard(e.value).then(() => {
+            // Apply effect
+            this.gridApi.objects.tables.flashCells({
+              rowNodes: this.gridApi.objects.tables.getSelectedNodes(),
+              columns: [this.gridApi.objects.tables.getFocusedCell().column.colId],
+              flashDelay: 200,
+              fadeDelay: 200,
+            })
           })
         }
       }
@@ -226,7 +227,7 @@ export default {
       }
       rawQuery += values.slice(0,-2) + ';'
       let query = SqlString.format(rawQuery, args)
-      navigator.clipboard.writeText(query)
+      this.copyToClipboard(query)
     },
     copyCSV() {
       let selectedRows = this.gridApi.objects.tables.getSelectedRows()
@@ -235,12 +236,12 @@ export default {
       let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
       csv.unshift(header.join(','))
       csv = csv.join('\r\n')
-      navigator.clipboard.writeText(csv)
+      this.copyToClipboard(csv)
     },
     copyJSON() {
       let selectedRows = this.gridApi.objects.tables.getSelectedRows()
       let json = JSON.stringify(selectedRows)
-      navigator.clipboard.writeText(json)
+      this.copyToClipboard(json)
     },
     refresh() {
       new Promise((resolve, reject) => {
@@ -297,6 +298,21 @@ export default {
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
+    },
+    copyToClipboard(textToCopy) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(textToCopy)
+      else {
+        let textArea = document.createElement("textarea")
+        textArea.value = textToCopy
+        textArea.style.position = "absolute"
+        textArea.style.opacity = 0
+        document.body.appendChild(textArea)
+        textArea.select()
+        return new Promise((res, rej) => {
+          document.execCommand('copy') ? res() : rej()
+          textArea.remove()
+        })
+      }
     },
   }
 }
