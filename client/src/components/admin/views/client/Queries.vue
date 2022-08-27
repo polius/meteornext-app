@@ -7,6 +7,9 @@
       <template v-slot:[`item.end_date`]="{ item }">
         <span style="display:block; min-width:130px">{{ item.end_date }}</span>
       </template>
+      <template v-slot:[`item.elapsed`]="{ item }">
+        {{ item.elapsed + 's' }}
+      </template>
       <template v-slot:[`item.user`]="{ item }">
         <span style="display:block; min-width:44px">{{ item.user }}</span>
       </template>
