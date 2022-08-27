@@ -102,7 +102,6 @@ class Login:
             access_token = create_access_token(identity=user['username'])
 
             # Update user data
-            # ip = request.headers.getlist("X-Forwarded-For") + '|' + request.remote_addr
             ip = request.headers.getlist("X-Forwarded-For")[0].split(',')[0] if request.headers.getlist("X-Forwarded-For") else request.remote_addr
             user_agent = request.user_agent.string
             self._users.put_last_login({"username": login_json['username'], "ip": ip, "user_agent": user_agent})

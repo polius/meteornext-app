@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-# import uuid
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
@@ -69,7 +68,7 @@ class Setup:
             print("- Meteor initiated. No configuration detected. Install is required.")
         else:
             # Set unique hardware id
-            self._conf['license']['uuid'] = app.config['JWT_SECRET_KEY'] # str(uuid.getnode())
+            self._conf['license']['uuid'] = app.config['JWT_SECRET_KEY']
             # Init sql pool
             sql = connectors.pool.Pool(self._conf['sql'])
             # Init license
