@@ -255,5 +255,6 @@ class Client:
                 elapsed = %s,
                 error = %s
             WHERE id = %s
+            AND status = 'RUNNING'
         """
         self._sql.execute(query2, (status, end_date, records, elapsed, error, query_id))
