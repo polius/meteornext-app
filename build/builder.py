@@ -25,9 +25,9 @@ class builder:
         # Clean Temp Files
         self.__clean()
         # Build Base Image
-        self.__build_base()
+        # self.__build_base()
         # Build Meteor
-        self.__build_meteor()
+        # self.__build_meteor()
         # Build Image
         self.__build_image()
         # Upload Image
@@ -41,7 +41,6 @@ class builder:
     # Internal Methods #
     ####################
     def __build_base(self):
-        return
         for arch in self._archs:
             docker_from = 'amazonlinux:1' if arch == 'amd64' else 'amazonlinux:2'
             subprocess.call(f"docker rmi meteornextbase:{arch} >/dev/null 2>&1", shell=True)
@@ -58,19 +57,18 @@ class builder:
             subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
 
     def __build_image(self):
-        for arch in self._archs:
-            # Clean previous builds
-            subprocess.call(f"sudo rm -rf {self._pwd}/dist/client.tar.gz", shell=True)
-            subprocess.call(f"sudo rm -rf {self._pwd}/dist/server", shell=True)
-            # Build backend & frontend
-            subprocess.call(f"docker buildx build -t meteornextbuild:latest --build-arg FROM='meteornextbase:{arch}' --no-cache --platform linux/{arch} --load - < build.dockerfile", shell=True)
-            subprocess.call(f"docker run --rm -it -v {self._pwd}:/root/ -e TARGET=image meteornextbuild:latest", shell=True)
-            subprocess.call("docker rmi meteornextbuild:latest", shell=True)
-            subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
-            # Build dist image
-            subprocess.call("docker pull nginx:latest", shell=True)
-            subprocess.call(f"cd {self._pwd} ; docker buildx build -t meteornext:latest -f build/dist.dockerfile --no-cache --platform linux/{arch} --load .", shell=True)
-            subprocess.call(f"docker save meteornext:latest | gzip -9 > {self._pwd}/dist/meteornext.tar.gz", shell=True)
+        # Clean previous builds
+        subprocess.call(f"sudo rm -rf {self._pwd}/dist/client.tar.gz", shell=True)
+        subprocess.call(f"sudo rm -rf {self._pwd}/dist/server", shell=True)
+        # Build backend & frontend
+        subprocess.call(f"docker buildx build -t meteornextbuild:latest --build-arg --no-cache --platform linux/amd64 --load - < build.dockerfile", shell=True)
+        subprocess.call(f"docker run --rm -it -v {self._pwd}:/root/ -e TARGET=image meteornextbuild:latest", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest", shell=True)
+        subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
+        # Build dist image
+        subprocess.call("docker pull nginx:latest", shell=True)
+        subprocess.call(f"cd {self._pwd} ; docker buildx build -t meteornext:latest -f build/dist.dockerfile --no-cache --platform linux/amd64 --load .", shell=True)
+        subprocess.call(f"docker save meteornext:latest | gzip -9 > {self._pwd}/dist/meteornext.tar.gz", shell=True)
 
     def __merge_images(self):
         subprocess.call("docker manifest create meteornext/meteornext:latest --amend meteornext/meteornext:amd64 --amend meteornext/meteornext:arm64", shell=True)
