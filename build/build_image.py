@@ -10,17 +10,27 @@ from Cython.Build import cythonize
 # from PyInstaller.utils.hooks import collect_submodules
 
 if __name__ == '__main__':
-    from build_server import build_server
-    build_server()
+    from build_image import build_image
+    build_image()
 
-class build_server:
+class build_image:
     def __init__(self):
         # Project Base Path
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
 
         if len(sys.argv) == 1:
-            subprocess.call("python3 build_server.py build_ext meteor", shell=True)
-            subprocess.call("python3 build_server.py build_ext server", shell=True)
+            if os.environ['TARGET'] == 'meteor':
+                # Build meteor
+                subprocess.call("python3 build_image.py build_ext meteor", shell=True)
+            elif os.environ['TARGET'] == 'image':
+                # Build backend
+                subprocess.call("python3 build_image.py build_ext server", shell=True)
+                # Build frontend
+                subprocess.call("rm -rf /root/dist/client.tar.gz", shell=True)
+                subprocess.call("cd /root/client ; npm run build", shell=True)
+                subprocess.call("mv /root/client/dist /root/dist/client", shell=True)
+                subprocess.call("cd /root/dist/ ; tar -czvf client.tar.gz client ; rm -rf client", shell=True)
+                subprocess.call("rm -rf /root/.config", shell=True)
 
         elif 'meteor' in sys.argv:
             sys.argv.append("build_ext")
@@ -58,7 +68,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = f"{self._pwd}/server"
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','pyotp','flask_compress','dbutils.pooled_db','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread']
+        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','pyotp','flask_compress','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread']
         additional_binaries = []
         binary_name = 'server'
         binary_path = f'{self._pwd}/dist'

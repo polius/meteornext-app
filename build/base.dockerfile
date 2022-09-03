@@ -1,4 +1,5 @@
-FROM amazonlinux:1
+ARG FROM
+FROM ${FROM}
 RUN echo "Building Base Docker" && \
     # Install dependencies
     yum install gcc -y && \
@@ -7,6 +8,13 @@ RUN echo "Building Base Docker" && \
     yum install libffi-devel -y && \
     yum install zlib-devel -y && \
     yum install xz -y && \
+    yum install tar -y && \
+    yum install gzip -y && \
+    yum install make -y && \
+
+    # Install Node
+    curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
+    yum install nodejs -y && \
 
     # Install OpenSSL 1.1.1 (required by Python 3.10)
     cd /opt && \
