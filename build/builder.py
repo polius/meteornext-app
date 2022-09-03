@@ -81,7 +81,7 @@ class builder:
         subprocess.call(f"docker tag meteornext:latest meteornext/meteornext:latest", shell=True)
         subprocess.call(f"docker tag meteornext:latest meteornext/meteornext:{self._version}", shell=True)
         subprocess.call(f"docker login --username meteornext --password-stdin < ~/.docker/auth.txt", shell=True)
-        subprocess.call(f"docker push meteornext/meteornext", shell=True)
+        subprocess.call(f"docker push --all-tags meteornext/meteornext", shell=True)
 
     def __clean(self):
         subprocess.call(f"sudo rm -rf {self._pwd}/.cache", shell=True)
