@@ -20,9 +20,10 @@ class build_image:
 
         if len(sys.argv) == 1:
             if os.environ['TARGET'] == 'meteor':
+                pass
+            elif os.environ['TARGET'] == 'image':
                 # Build meteor
                 subprocess.call("python3 build_image.py build_ext meteor", shell=True)
-            elif os.environ['TARGET'] == 'image':
                 # Build backend
                 subprocess.call("python3 build_image.py build_ext server", shell=True)
                 # Build frontend
