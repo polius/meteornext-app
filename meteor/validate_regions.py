@@ -59,8 +59,8 @@ class validate_regions:
         current_thread.progress = progress
 
     def __validate_ssh(self):
-        # Validate glibc version
-        self._Region.check_glibc()
+        # Validate requirements
+        self._Region.check_requirements()
 
         # Validate SSH Meteor Version
         updated = self._Region.check_version()

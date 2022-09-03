@@ -18,8 +18,22 @@ class Region:
         # Get UUID from path
         self._uuid = self._args.path[self._args.path.rfind('/')+1:]
 
-    def check_glibc(self):
-        # Get glibc version
+    def check_requirements(self):
+        # Check tar
+        tar_version = self.__ssh("tar --version | head -1 | awk '{print $NF}'")
+        try:
+            tar_version = float(tar_version)
+        except Exception:
+            raise Exception("The remote SSH server does not have the tar installed.")
+
+        # Check gzip
+        gzip_version = self.__ssh("gzip --version | head -1 | awk '{print $NF}'")
+        try:
+            gzip_version = float(gzip_version)
+        except Exception:
+            raise Exception("The remote SSH server does not have the gzip installed.")
+
+        # Check glibc version
         glibc_version = self.__ssh("ldd --version | head -1 | awk '{print $NF}'")
         try:
             glibc_version = float(glibc_version)
