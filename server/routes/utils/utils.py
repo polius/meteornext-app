@@ -4,6 +4,7 @@ from sentry_sdk import set_user
 import os
 import sys
 import json
+import threading
 
 import models.admin.users
 import models.admin.settings
@@ -303,12 +304,20 @@ class Utils:
         # Get Amazon S3 credentials
         amazon_s3 = json.loads(self._settings.get(setting_name='AMAZON'))
 
-        # Process imports
-        self.__process_queued_imports(executions['import'])
-        self.__process_queued_exports(executions['export'], amazon_s3)
-        self.__process_queued_clones(executions['clone'], amazon_s3)
+        # Process queued imports, exports, clones
+        imports = self.__process_queued_imports(executions['import'])
+        exports = self.__process_queued_exports(executions['export'], amazon_s3)
+        clones = self.__process_queued_clones(executions['clone'], amazon_s3)
+
+        # Start executions
+        threads = imports + exports + clones
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
 
     def __process_queued_imports(self, executions):
+        threads = []
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -371,11 +380,18 @@ class Utils:
                 "slack_url": execution['slack_url']
             }
 
-            # Start import process
+            # Change import status
             self._imports.update_status(user, execution['id'], 'STARTING')
-            self._import_app.start(user, item, server, region, path, amazon_s3)
+
+            # Build thread
+            t = threading.Thread(target=self._import_app.start, args=(user, item, server, region, path, amazon_s3,))
+            threads.append(t)
+
+        # Return threads
+        return threads
 
     def __process_queued_exports(self, executions, amazon_s3):
+        threads = []
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -430,11 +446,18 @@ class Utils:
                 "slack_url": execution['slack_url']
             }
 
-            # Start export process
+            # Change export status
             self._exports.update_status(user, execution['id'], 'STARTING')
-            self._export_app.start(user, item, server, region, path, amazon_s3)
+
+            # Build thread
+            t = threading.Thread(target=self._export_app.start, args=(user, item, server, region, path, amazon_s3,))
+            threads.append(t)
+
+        # Return threads
+        return threads
 
     def __process_queued_clones(self, executions, amazon_s3):
+        threads = []
         for execution in executions:
             # Build user
             user = {"id": execution['user_id']}
@@ -512,6 +535,12 @@ class Utils:
                 "slack_url": execution['slack_url']
             }
 
-            # Start clone process
+            # Change clone status
             self._clones.update_status(user, execution['id'], 'STARTING')
-            self._clone_app.start(user, item, servers, regions, path, amazon_s3)
+
+            # Build thread
+            t = threading.Thread(target=self._clone_app.start, args=(user, item, servers, regions, path, amazon_s3,))
+            threads.append(t)
+
+        # Return threads
+        return threads

@@ -9,7 +9,6 @@ if __name__ == '__main__':
 class builder:
     def __init__(self):
         self._version = '1.0.0'
-        self._archs = ["amd64"] # arm64
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         self.build_docker()
 
@@ -26,8 +25,6 @@ class builder:
         self.__clean()
         # Build Base Image
         # self.__build_base()
-        # Build Meteor
-        # self.__build_meteor()
         # Build Image
         self.__build_image()
         # Upload Image
@@ -41,27 +38,17 @@ class builder:
     # Internal Methods #
     ####################
     def __build_base(self):
-        for arch in self._archs:
-            docker_from = 'amazonlinux:1' if arch == 'amd64' else 'amazonlinux:2'
-            subprocess.call(f"docker rmi meteornextbase:{arch} >/dev/null 2>&1", shell=True)
-            subprocess.call(f"docker buildx build -t meteornextbase:{arch} --build-arg FROM='{docker_from}' --no-cache --platform linux/{arch} --load - < base.dockerfile", shell=True)
-
-    def __build_meteor(self):
-        for arch in self._archs:
-            # Clean existing meteor build
-            subprocess.call(f"sudo rm -rf {self._pwd}/dist/meteor-{arch}.tar.gz", shell=True)
-            # Build new meteor
-            subprocess.call(f"docker buildx build -t meteornextbuild:latest --build-arg FROM='meteornextbase:{arch}' --no-cache --platform linux/{arch} --load - < build.dockerfile", shell=True)
-            subprocess.call(f"docker run --rm -it -v {self._pwd}:/root/ -e TARGET=meteor meteornextbuild:latest", shell=True)
-            subprocess.call("docker rmi meteornextbuild:latest", shell=True)
-            subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
+        arch = 'amd64'
+        docker_from = 'amazonlinux:1' if arch == 'amd64' else 'amazonlinux:2'
+        subprocess.call(f"docker rmi meteornextbase >/dev/null 2>&1", shell=True)
+        subprocess.call(f"docker buildx build -t meteornextbase --build-arg FROM='{docker_from}' --no-cache --platform linux/{arch} --load - < base.dockerfile", shell=True)
 
     def __build_image(self):
         # Clean previous builds
         subprocess.call(f"sudo rm -rf {self._pwd}/dist/client.tar.gz", shell=True)
         subprocess.call(f"sudo rm -rf {self._pwd}/dist/server", shell=True)
         # Build backend & frontend
-        subprocess.call(f"docker buildx build -t meteornextbuild:latest --build-arg --no-cache --platform linux/amd64 --load - < build.dockerfile", shell=True)
+        subprocess.call(f"docker buildx build -t meteornextbuild:latest --build-arg FROM='meteornextbase' --no-cache --platform linux/amd64 --load - < build.dockerfile", shell=True)
         subprocess.call(f"docker run --rm -it -v {self._pwd}:/root/ -e TARGET=image meteornextbuild:latest", shell=True)
         subprocess.call("docker rmi meteornextbuild:latest", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)
@@ -71,7 +58,8 @@ class builder:
         subprocess.call(f"docker save meteornext:latest | gzip -9 > {self._pwd}/dist/meteornext.tar.gz", shell=True)
 
     def __merge_images(self):
-        subprocess.call("docker manifest create meteornext/meteornext:latest --amend meteornext/meteornext:amd64 --amend meteornext/meteornext:arm64", shell=True)
+        pass
+        # subprocess.call("docker manifest create meteornext/meteornext:latest --amend meteornext/meteornext:amd64 --amend meteornext/meteornext:arm64", shell=True)
         # docker manifest push --purge meteornext/meteornext:latest
 
     def __upload_image(self):

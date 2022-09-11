@@ -18,17 +18,11 @@ class Imports:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, server, region, path, amazon_s3):
-        # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, server, region, path, amazon_s3,))
-        t.daemon = False
-        t.start()
-
-    def __core(self, user, item, server, region, paths, amazon_s3):
+    def start(self, user, item, server, region, paths, amazon_s3):
         try:
             start_time = time.time()
             core = apps.imports.core.Core(self._sql, item['id'], region)
-            self.__core2(start_time, core, user, item, server, region, paths, amazon_s3)
+            self.__core(start_time, core, user, item, server, region, paths, amazon_s3)
         except Exception as e:
             query = """
                 UPDATE `imports`
@@ -44,7 +38,7 @@ class Imports:
             self.__clean(core, region, item, paths)
             self.__slack(item, amazon_s3, start_time, 2, str(e))
 
-    def __core2(self, start_time, core, user, item, server, region, paths, amazon_s3):
+    def __core(self, start_time, core, user, item, server, region, paths, amazon_s3):
         # Check if import is already stopped
         if not self.__alive(item):
             return
@@ -71,7 +65,6 @@ class Imports:
             core.execute(f"mkdir -p {os.path.join(paths['remote'], item['uri'])}")
             if item['mode'] == 'file':
                 t = threading.Thread(target=self.__upload, args=(core, item, paths,))
-                t.daemon = True
                 t.exception = None
                 t.start()
                 while t.is_alive():
@@ -89,7 +82,6 @@ class Imports:
 
         # Start Import
         t = threading.Thread(target=self.__import, args=(core, item, server, path, amazon_s3))
-        t.daemon = True
         t.start()
 
         # Start Monitor

@@ -82,7 +82,6 @@ class Clones:
         # Start Clone (Export)
         proceed = True
         t = threading.Thread(target=self.__export, args=(core['source'], item, servers['source'], path['source'], amazon_s3,))
-        t.daemon = True
         t.start()
 
         # Start Monitor (Export)
@@ -143,7 +142,6 @@ class Clones:
             # Start Clone (Import)
             import_status = [None]
             t = threading.Thread(target=self.__import, args=(core['destination'], item, servers['destination'], path['destination'], amazon_s3, url, import_status,))
-            t.daemon = True
             t.error = None
             t.start()
 

@@ -22,19 +22,16 @@ RUN echo "Building Base Docker" && \
     mkdir /opt/openssl && \
     tar xfvz openssl-1.1.1q.tar.gz --directory /opt/openssl && \
     cd /opt/openssl/openssl-1.1.1q/ && \
-    ./config --prefix=/opt/openssl --openssldir=/opt/openssl/ssl && \
+    ./config --prefix=/opt/openssl no-shared && \
     make && \
-    make install && \
+    make install_sw && \
 
-    # Add openssl lib path to the library (required by the Python install)
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openssl/lib && \
-
-    # Install Python 3.10.6
+    # Install Python 3.10.7
     cd /opt && \
-    curl -O https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz && \
-    tar -xzf Python-3.10.6.tgz && \
-    cd Python-3.10.6 && \
-    ./configure --enable-optimizations --enable-shared --prefix=/opt/python LDFLAGS=-Wl,-rpath=/opt/python/lib --with-openssl=/opt/openssl --with-openssl-rpath=auto && \
+    curl -O https://www.python.org/ftp/python/3.10.7/Python-3.10.7.tgz && \
+    tar -xzf Python-3.10.7.tgz && \
+    cd Python-3.10.7 && \
+    ./configure --enable-optimizations --enable-shared --prefix=/opt/python LDFLAGS=-Wl,-rpath=/opt/python/lib --with-openssl=/opt/openssl && \
     make -j$(nproc) altinstall && \
     ln -s /opt/python/bin/python3.10 /usr/local/bin/python3 && \
 
