@@ -65,7 +65,6 @@ class Exports:
 
         # Start export
         t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3,))
-        t.daemon = True
         t.start()
 
         # Start Monitor
