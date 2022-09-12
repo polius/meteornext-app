@@ -77,34 +77,44 @@ class Imports:
                 if t.exception is not None:
                     raise t.exception
 
-        # Define new path
-        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
-
         # Start Import
-        t = threading.Thread(target=self.__import, args=(core, item, server, path, amazon_s3))
+        t = threading.Thread(target=self.__import, args=(core, item, server, region, paths, amazon_s3))
+        t.exception = None
         t.start()
 
         # Start Monitor
         monitor_status = [None]
         alive = True
         while t.is_alive() and alive:
-            alive = self.__monitor(core, item, path, monitor_status)
+            alive = self.__monitor(core, item, region, paths, monitor_status)
             time.sleep(1)
         if alive:
-            self.__monitor(core, item, path, monitor_status)
+            self.__monitor(core, item, region, paths, monitor_status)
 
         # Update import status
-        status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
-        query = """
-            UPDATE `imports`
-            SET
-                `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                `ended` = %s,
-                `updated` = %s
-            WHERE `id` = %s
-        """
         now = self.__utcnow()
-        self._sql.execute(query, args=(status, now, now, item['id']))
+        if t.exception:
+            query = """
+                UPDATE `imports`
+                SET
+                    `status` = 'FAILED',
+                    `error` = %s,
+                    `ended` = %s,
+                    `updated` = %s
+                WHERE `id` = %s
+            """
+            self._sql.execute(query, args=(str(t.exception), now, now, item['id']))
+        else:
+            status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
+            query = """
+                UPDATE `imports`
+                SET
+                    `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
+                    `ended` = %s,
+                    `updated` = %s
+                WHERE `id` = %s
+            """
+            self._sql.execute(query, args=(status, now, now, item['id']))
 
         # Clean files
         self.__clean(core, region, item, paths)
@@ -159,44 +169,68 @@ class Imports:
             connector.execute(f"DROP DATABASE IF EXISTS `{item['database']}`")
         connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['database']}`")
 
-    def __import(self, core, item, server, path, amazon_s3):
-        # Build paths
-        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
-        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
-        error_gunzip2_path = os.path.join(path, item['uri'], 'error_gunzip2.txt')
-        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
-        progress_path = os.path.join(path, item['uri'], 'progress.txt')
-        file_path = os.path.join(path, item['uri'], item['source'])
+    def __import(self, core, item, server, region, paths, amazon_s3):
+        current_thread = threading.current_thread()
+        try:
+            # Define path
+            path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
-        # Check compressed file
-        gunzip = ''
-        if item['source'].endswith('.tar') or item['format'] == '.tar':
-            gunzip = f"| tar --warning=none -xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.tar.gz') or item['format'] == '.tar.gz':
-            gunzip = f"| tar --warning=none -zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
-        elif item['source'].endswith('.gz') or item['format'] == '.gz':
-            gunzip = f"| zcat -q 2> {error_gunzip_path}"
-        if item['selected'] and item['selected'][0].endswith('.gz'):
-            gunzip += f" | zcat -q 2> {error_gunzip2_path}"
+            # Build paths
+            error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+            error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+            error_gunzip2_path = os.path.join(path, item['uri'], 'error_gunzip2.txt')
+            error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+            progress_path = os.path.join(path, item['uri'], 'progress.txt')
+            file_path = os.path.join(path, item['uri'], item['source'])
 
-        # Build options
-        options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
+            # Check compressed file
+            gunzip = ''
+            if item['source'].endswith('.tar') or item['format'] == '.tar':
+                gunzip = f"| tar --warning=none -xO {' '.join(item['selected'])} 2> {error_gunzip_path}"
+            elif item['source'].endswith('.tar.gz') or item['format'] == '.tar.gz':
+                gunzip = f"| tar --warning=none -zxO {' '.join(item['selected'])} 2> {error_gunzip_path}"
+            elif item['source'].endswith('.gz') or item['format'] == '.gz':
+                gunzip = f"| zcat -q 2> {error_gunzip_path}"
+            if item['selected'] and item['selected'][0].endswith('.gz'):
+                gunzip += f" | zcat -q 2> {error_gunzip2_path}"
 
-        if item['mode'] == 'cloud':
-            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+            # Build options
+            options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
 
-        # MySQL & Amazon Aurora (MySQL) engines
-        if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
-            if item['mode'] == 'file':
-                command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
-            elif item['mode'] in ['url','cloud']:
-                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
-                command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+            # Check SSL
+            ssl = ''
+            if server['ssl']:
+                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                if server['ssl_client_key']:
+                    core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
+                    ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
+                if server['ssl_client_certificate']:
+                    core.execute(f"echo '{server['ssl_client_certificate']}' > {os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}")
+                    ssl += f" --ssl-cert={os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}"
+                if server['ssl_ca_certificate']:
+                    core.execute(f"echo '{server['ssl_ca_certificate']}' > {os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}")
+                    ssl += f" --ssl-ca={os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}"
 
-        # Start Import process
-        core.execute(command)
+            if item['mode'] == 'cloud':
+                client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
 
-    def __monitor(self, core, item, path, status):
+            # MySQL & Amazon Aurora (MySQL) engines
+            if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
+                if item['mode'] == 'file':
+                    command = f"echo 'IMPORT.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql {options} {ssl} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+                elif item['mode'] in ['url','cloud']:
+                    source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
+                    command = f"echo 'IMPORT.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_curl_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql {options} {ssl} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" 2> {error_sql_path}"
+
+            # Start Import process
+            core.execute(command)
+        except Exception as e:
+            current_thread.exception = e
+
+    def __monitor(self, core, item, region, paths, status):
+        # Define path
+        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
+
         # Check if a stop it's been requested
         if not self.__alive(item):
             # SIGKILL
@@ -356,7 +390,7 @@ class Imports:
         return p
 
     def __parse_error(self, string):
-        if len(string) == 0:
+        if len(string) == 0 or string.lower().startswith('warning'):
             return None
         return string.strip()
 

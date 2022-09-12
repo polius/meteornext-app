@@ -97,7 +97,7 @@ class MySQL:
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, client_flag=CLIENT.MULTI_STATEMENTS, ssl=ssl)
                 self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
                 return
 
@@ -249,43 +249,42 @@ class MySQL:
             self._sql.kill(connection_id)
         except Exception:
             pass
-        # if self._server['sql']['engine'] == 'Amazon Aurora (MySQL)':
-        #     self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
-        # elif self._server['sql']['engine'] == 'MySQL':
-        #     self.execute('KILL QUERY {}'.format(connection_id))
 
     def explain(self, query, database=None):
         return self.execute('EXPLAIN {}'.format(query), database=database)['data']
 
     def __get_ssl(self):
-        ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
         if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
-            return ssl
+            return None
+        ssl = {}
         # Generate CA Certificate
         if self._server['sql']['ssl_ca_certificate']:
             ssl['ssl_ca_file'] = tempfile.NamedTemporaryFile()
             ssl['ssl_ca_file'].write(self._server['sql']['ssl_ca_certificate'].encode())
             ssl['ssl_ca_file'].flush()
-            ssl['ssl_ca'] = ssl['ssl_ca_file'].name
+            ssl['ca'] = ssl['ssl_ca_file'].name
         # Generate Client Certificate
         if self._server['sql']['ssl_client_certificate']:
             ssl['ssl_cert_file'] = tempfile.NamedTemporaryFile()
             ssl['ssl_cert_file'].write(self._server['sql']['ssl_client_certificate'].encode())
             ssl['ssl_cert_file'].flush()
-            ssl['ssl_cert'] = ssl['ssl_cert_file'].name
+            ssl['cert'] = ssl['ssl_cert_file'].name
         # Generate Client Key
         if self._server['sql']['ssl_client_key']:
             ssl['ssl_key_file'] = tempfile.NamedTemporaryFile()
             ssl['ssl_key_file'].write(self._server['sql']['ssl_client_key'].encode())
             ssl['ssl_key_file'].flush()
-            ssl['ssl_key'] = ssl['ssl_key_file'].name
+            ssl['key'] = ssl['ssl_key_file'].name
         # Add optional parameters
-        ssl['ssl_verify_cert'] = self._server['sql']['ssl_verify_ca'] == 1
-        ssl['ssl_verify_identity'] = self._server['sql']['ssl_verify_ca'] == 1
+        ssl['cipher'] = 'DEFAULT:!EDH:!DHE'
+        ssl['check_hostname'] = self._server['sql']['ssl_verify_ca'] == 1
+        ssl['verify_mode'] = ssl['check_hostname'] is True
         # Return SSL Data
         return ssl
 
     def __close_ssl(self, ssl):
+        if ssl is None:
+            return
         if 'ssl_ca_file' in ssl:
             ssl['ssl_ca_file'].close()
         if 'ssl_cert_file' in ssl:
