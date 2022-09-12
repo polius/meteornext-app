@@ -56,28 +56,27 @@ class Exports:
         # Check requirements
         self.__check(core)
 
-        # Define new path
-        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
-
         # Make remote export directory
         if region['ssh_tunnel']:
-            core.execute(f"mkdir -p {os.path.join(path, item['uri'])}")
+            core.execute(f"mkdir -p {os.path.join(paths['remote'], item['uri'])}")
 
         # Start export
-        t = threading.Thread(target=self.__export, args=(core, item, server, path, amazon_s3,))
+        t = threading.Thread(target=self.__export, args=(core, item, server, region, paths, amazon_s3,))
+        t.exception = None
         t.start()
 
         # Start Monitor
         monitor_status = [None]
         alive = True
         while t.is_alive() and alive:
-            alive = self.__monitor(core, item, path, monitor_status)
+            alive = self.__monitor(core, item, region, paths, monitor_status)
             time.sleep(1)
         if alive:
-            self.__monitor(core, item, path, monitor_status)
+            self.__monitor(core, item, region, paths, monitor_status)
 
         # Generated Presigned URL 
         client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+        now = self.__utcnow()
         try:
             url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"exports/{item['uri']}.sql.gz"}, ExpiresIn=604800)
         except Exception as e:
@@ -91,22 +90,32 @@ class Exports:
                     `updated` = %s
                 WHERE `id` = %s
             """
-            now = self.__utcnow()
             self._sql.execute(query, args=(str(e), now, now, item['id']))
         else:
             # Update export status
-            status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
-            query = """
-                UPDATE `exports`
-                SET
-                    `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
-                    `ended` = %s,
-                    `updated` = %s,
-                    `url` = %s
-                WHERE `id` = %s
-            """
-            now = self.__utcnow()
-            self._sql.execute(query, args=(status, now, now, url, item['id']))
+            if t.exception:
+                query = """
+                    UPDATE `exports`
+                    SET
+                        `status` = 'FAILED',
+                        `error` = %s,
+                        `ended` = %s,
+                        `updated` = %s
+                    WHERE `id` = %s
+                """
+                self._sql.execute(query, args=(str(t.exception), now, now, item['id']))
+            else:
+                status = 'SUCCESS' if not monitor_status[0] else 'FAILED'
+                query = """
+                    UPDATE `exports`
+                    SET
+                        `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
+                        `ended` = %s,
+                        `updated` = %s,
+                        `url` = %s
+                    WHERE `id` = %s
+                """
+                self._sql.execute(query, args=(status, now, now, url, item['id']))
 
         # Clean files
         self.__clean(core, region, item, paths)
@@ -154,48 +163,72 @@ class Exports:
         if len(p['stderr']) > 0 or p['stdout'].startswith('aws-cli/1'):
             raise Exception("[CHECK] AWS CLI v2 is not installed in the server's region.")
 
-    def __export(self, core, item, server, path, amazon_s3):
-        # Build paths
-        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
-        error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
-        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+    def __export(self, core, item, server, region, paths, amazon_s3):
+        current_thread = threading.current_thread()
+        try:
+            # Define path
+            path = paths['remote'] if region['ssh_tunnel'] else paths['local']
 
-        # Check mysqldump version
-        p = core.execute('mysqldump --version')
-        is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
+            # Build paths
+            error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+            error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
+            progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
-        # Build options
-        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
-        if not is_mariadb:
-            options += ' --set-gtid-purged=OFF'
-        if not item['export_schema']:
-            options += ' --no-create-info'
-        elif item['add_drop_table']:
-            options += ' --add-drop-table'
-        if not item['export_data']:
-            options += ' --no-data'
-        if item['mode'] == 'partial':
-            if not item['export_triggers']:
-                options += ' --skip-triggers'
-            if item['export_routines']:
-                options += ' --routines'
-            if item['export_events']:
-                options += ' --events'
+            # Check mysqldump version
+            p = core.execute('mysqldump --version')
+            is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
 
-        # Build tables
-        tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in json.loads(item['tables'])['t']])
+            # Build options
+            options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
+            if not is_mariadb:
+                options += ' --set-gtid-purged=OFF'
+            if not item['export_schema']:
+                options += ' --no-create-info'
+            elif item['add_drop_table']:
+                options += ' --add-drop-table'
+            if not item['export_data']:
+                options += ' --no-data'
+            if item['mode'] == 'partial':
+                if not item['export_triggers']:
+                    options += ' --skip-triggers'
+                if item['export_routines']:
+                    options += ' --routines'
+                if item['export_events']:
+                    options += ' --events'
 
-        # Remove definers
-        remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
+            # Build tables
+            tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in json.loads(item['tables'])['t']])
 
-        # MySQL & Amazon Aurora (MySQL) engines
-        if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
-            command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
+            # Remove definers
+            remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
 
-        # Start Export process
-        core.execute(command)
+            # Check SSL
+            ssl = ''
+            if server['ssl']:
+                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                if server['ssl_client_key']:
+                    core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
+                    ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
+                if server['ssl_client_certificate']:
+                    core.execute(f"echo '{server['ssl_client_certificate']}' > {os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}")
+                    ssl += f" --ssl-cert={os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}"
+                if server['ssl_ca_certificate']:
+                    core.execute(f"echo '{server['ssl_ca_certificate']}' > {os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}")
+                    ssl += f" --ssl-ca={os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}"
 
-    def __monitor(self, core, item, path, status):
+            # MySQL & Amazon Aurora (MySQL) engines
+            if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
+                command = f"echo 'EXPORT.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} {ssl} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/exports/{item['uri']}.sql.gz 2> {error_aws_path}"
+
+            # Start Export process
+            core.execute(command)
+        except Exception as e:
+            current_thread.exception = e
+
+    def __monitor(self, core, item, region, paths, status):
+        # Define path
+        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
+
         # Check if a stop it's been requested
         if not self.__alive(item):
             # SIGKILL
@@ -336,7 +369,7 @@ class Exports:
         return p
 
     def __parse_error(self, string):
-        if len(string) == 0:
+        if len(string) == 0 or string.lower().startswith('warning'):
             return None
         return string.strip()
 

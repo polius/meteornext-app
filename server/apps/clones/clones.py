@@ -224,45 +224,63 @@ class Clones:
         connector.execute(f"CREATE DATABASE IF NOT EXISTS `{item['destination_database']}`")
 
     def __export(self, core, item, server, path, amazon_s3):
-        # Build paths
-        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
-        error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
-        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+        current_thread = threading.current_thread()
+        try:
+            # Build paths
+            error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+            error_aws_path = os.path.join(path, item['uri'], 'error_aws.txt')
+            progress_path = os.path.join(path, item['uri'], 'progress.txt')
 
-        # Check mysqldump version
-        p = core.execute('mysqldump --version')
-        is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
+            # Check mysqldump version
+            p = core.execute('mysqldump --version')
+            is_mariadb = True if 'mariadb' in p['stdout'].lower() else False
 
-        # Build options
-        options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
-        if not is_mariadb:
-            options += ' --set-gtid-purged=OFF'
-        if not item['export_schema']:
-            options += ' --no-create-info'
-        elif item['add_drop_table']:
-            options += ' --add-drop-table'
-        if not item['export_data']:
-            options += ' --no-data'
-        if item['mode'] == 'partial':
-            if not item['export_triggers']:
-                options += ' --skip-triggers'
-            if item['export_routines']:
-                options += ' --routines'
-            if item['export_events']:
-                options += ' --events'
+            # Build options
+            options = '--single-transaction --no-tablespaces --max-allowed-packet=1024M --default-character-set=utf8mb4'
+            if not is_mariadb:
+                options += ' --set-gtid-purged=OFF'
+            if not item['export_schema']:
+                options += ' --no-create-info'
+            elif item['add_drop_table']:
+                options += ' --add-drop-table'
+            if not item['export_data']:
+                options += ' --no-data'
+            if item['mode'] == 'partial':
+                if not item['export_triggers']:
+                    options += ' --skip-triggers'
+                if item['export_routines']:
+                    options += ' --routines'
+                if item['export_events']:
+                    options += ' --events'
 
-        # Build tables
-        tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in json.loads(item['tables'])['t']])
+            # Build tables
+            tables = '' if item['mode'] == 'full' else ' '.join(['"' + i['n'].replace('"','\\"') + '"' for i in json.loads(item['tables'])['t']])
 
-        # Remove definers
-        remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
+            # Remove definers
+            remove_definers = "perl -pe 's/^(?!INSERT)(?:(\w+|\/\*[^\*]+\*\/)[ ]*)*((\/\*![[:digit:]]+)?[ ]*DEFINER[ ]*=[ ]*[^ ]*([^*]*\*\/)?)/$1/'"
 
-        # MySQL & Amazon Aurora (MySQL) engines
-        if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
-            command = f"echo 'CLONE.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['source_database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/clones/{item['uri']}.sql.gz 2> {error_aws_path}"
+            # Check SSL
+            ssl = ''
+            if server['ssl']:
+                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                if server['ssl_client_key']:
+                    core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
+                    ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
+                if server['ssl_client_certificate']:
+                    core.execute(f"echo '{server['ssl_client_certificate']}' > {os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}")
+                    ssl += f" --ssl-cert={os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}"
+                if server['ssl_ca_certificate']:
+                    core.execute(f"echo '{server['ssl_ca_certificate']}' > {os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}")
+                    ssl += f" --ssl-ca={os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}"
 
-        # Start Clone process
-        p = core.execute(command)
+            # MySQL & Amazon Aurora (MySQL) engines
+            if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
+                command = f"echo 'CLONE.{item['uri']}' && export AWS_ACCESS_KEY_ID={amazon_s3['aws_access_key']} && export AWS_SECRET_ACCESS_KEY={amazon_s3['aws_secret_access_key']} && export MYSQL_PWD={server['password']} && mysqldump {options} {ssl} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['source_database']}\" {tables} 2> {error_sql_path} | {remove_definers} | pv -f --size {math.ceil(item['size'] * 1.25)} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gzip -9 | aws s3 cp - s3://{amazon_s3['bucket']}/clones/{item['uri']}.sql.gz 2> {error_aws_path}"
+
+            # Start Clone process
+            p = core.execute(command)
+        except Exception as e:
+            current_thread.exception = e
 
     def __monitor_export(self, core, item, path, status):
         # Check if a stop it's been requested
@@ -306,34 +324,47 @@ class Clones:
         return True
 
     def __import(self, core, item, server, path, amazon_s3, url, status):
-        t = threading.current_thread()
-
-        # Build paths
-        progress_path = os.path.join(path, item['uri'], 'progress.txt')
-        error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
-        error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
-        error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
-
+        current_thread = threading.current_thread()
         try:
+            # Build paths
+            progress_path = os.path.join(path, item['uri'], 'progress.txt')
+            error_curl_path = os.path.join(path, item['uri'], 'error_curl.txt')
+            error_gunzip_path = os.path.join(path, item['uri'], 'error_gunzip.txt')
+            error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
+
             # Get file size
             client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
             response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
             size = response['ContentLength']
-        except Exception as e:
-            t.error = str(e)
-        else:
+
             # Build options
             options = '--max-allowed-packet=1024M --default-character-set=utf8mb4'
 
+            # Check SSL
+            ssl = ''
+            if server['ssl']:
+                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                if server['ssl_client_key']:
+                    core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
+                    ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
+                if server['ssl_client_certificate']:
+                    core.execute(f"echo '{server['ssl_client_certificate']}' > {os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}")
+                    ssl += f" --ssl-cert={os.path.join(path, item['uri'], 'ssl_client_certificate.pem')}"
+                if server['ssl_ca_certificate']:
+                    core.execute(f"echo '{server['ssl_ca_certificate']}' > {os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}")
+                    ssl += f" --ssl-ca={os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}"
+
             # MySQL & Amazon Aurora (MySQL) engines
             if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):
-                command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql {options} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
+                command = f"echo 'CLONE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{url}' 2> {error_curl_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | gunzip 2> {error_gunzip_path} | mysql {options} {ssl} -h{server['hostname']} -P {server['port']} -u{server['username']} \"{item['destination_database']}\" 2> {error_sql_path}"
 
             # Start Import process
             p = core.execute(command)
 
             # Check if subprocess command has been killed (= stopped by user).
             status[0] = len(p['stderr']) > 0
+        except Exception as e:
+            current_thread.error = e
 
     def __monitor_import(self, core, item, path, status):
         # Check if a stop it's been requested
@@ -491,7 +522,7 @@ class Clones:
         return p
 
     def __parse_error(self, string):
-        if len(string) == 0:
+        if len(string) == 0 or string.lower().startswith('warning'):
             return None
         return string.strip()
 
