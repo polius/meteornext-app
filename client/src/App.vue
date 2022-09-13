@@ -6,25 +6,15 @@
       </router-link>
       <v-divider class="mx-3" inset vertical></v-divider>
       <!-- DEPLOYMENTS -->
-      <router-link v-if="deployments_enabled" class="nav-link" to="/deployments" style="margin-right:10px;">
-        <v-btn color="#EF5354"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
-      </router-link>
+      <v-btn @click="() => $router.push('/deployments').catch(() => {})" :disabled="!deployments_enabled" color="#EF5354" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       <!-- MONITORING -->
-      <router-link v-if="monitoring_enabled" class="nav-link" to="/monitoring" style="margin-right:10px;">
-        <v-btn color="#fa8231"><v-icon small style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
-      </router-link>
+      <v-btn @click="() => $router.push('/monitoring').catch(() => {})" :disabled="!monitoring_enabled" color="#fa8231" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       <!-- UTILS -->
-      <router-link v-if="utils_enabled" class="nav-link" to="/utils" style="margin-right:10px;">
-        <v-btn color="#00b16a"><v-icon small style="margin-right:10px">fas fa-database</v-icon>Utils</v-btn>
-      </router-link>
+      <v-btn @click="() => $router.push('/utils').catch(() => {})" :disabled="!utils_enabled" color="#00b16a" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-database</v-icon>Utils</v-btn>
       <!-- CLIENT -->
-      <router-link v-if="client_enabled" class="nav-link" to="/client">
-        <v-btn color="#8e44ad"><v-icon small style="margin-right:10px">fas fa-bolt</v-icon>Client</v-btn>
-      </router-link>
+      <v-btn @click="() => $router.push('/client').catch(() => {})" :disabled="!client_enabled" color="#8e44ad" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       <!-- VAULT -->
-      <!-- <router-link class="nav-link" to="/vault" style="margin-left:10px;">
-        <v-btn color="#1b72f5"><v-icon small style="margin-right:10px">fas fa-dice-d6</v-icon>Vault</v-btn>
-      </router-link> -->
+      <!-- <v-btn @click="() => $router.push('/vault').catch(() => {})" color="#1b72f5" style="margin-right:10px"><v-icon small style="margin-right:10px">fas fa-dice-d6</v-icon>Vault</v-btn> -->
       <!-- COINS -->
       <v-spacer></v-spacer>
       <v-chip @click="getCoins()" class="subtitle-1 font-weight-medium" style="margin-right:5px;">
