@@ -4,45 +4,43 @@
       <v-container grid-list-xl text-center style="height:100%; display:flex; justify-content:center; align-items:center;">
         <v-layout row wrap align-center style="max-width:500px;">
           <v-flex>
-            <v-slide-y-transition mode="out-in">
-              <v-card style="border-radius:5px;">
-                <v-card-text>
-                  <v-avatar :size="100" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
-                  <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px;"><span style="font-weight:500">Meteor</span> Next</div>
-                  <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">LOGIN</div>
-                  <v-divider></v-divider>
-                  <v-alert v-if="showInstall" dense color="#fb8c00">
-                    <v-row align="center">
-                      <v-col align="left"><v-icon small style="margin-bottom:2px; margin-right:12px">fas fa-exclamation-triangle</v-icon>A setup is required before login</v-col>
-                      <v-col class="shrink">
-                        <v-btn @click="install" color="#00b16a">INSTALL</v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-alert>
-                  <v-form ref="form" @submit.prevent style="margin-top:20px">
-                    <div v-if="mfa == '2fa'">
-                      <v-text-field ref="2fa" filled v-model="twoFactor['value']" label="2FA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                    </div>
-                    <div v-else-if="mfa == 'webauthn'">
-                      <v-card>
-                        <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-                        <v-card-text>
-                          <div class="text-h5 font-weight-light white--text" style="text-align:center; font-size:1.4rem !important">Verify your identity</div>
-                          <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : webauthn.status == 'ko' ? '#ff5252' : '#fa8131'}`" size="55">fas fa-fingerprint</v-icon>
-                          <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ ['init','validating'].includes(webauthn.status) ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
-                        </v-card-text>
-                      </v-card>
-                    </div>
-                    <div v-else>
-                      <v-text-field :disabled="showInstall" ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                      <v-text-field :disabled="showInstall" ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                    </div>
-                  </v-form>
-                  <v-btn v-if="!(mfa == 'webauthn')" :disabled="showInstall" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
-                  <v-checkbox :disabled="showInstall" v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
-                </v-card-text>
-              </v-card>
-            </v-slide-y-transition>
+            <v-card style="border-radius:5px;">
+              <v-card-text>
+                <v-avatar :size="100" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
+                <div class="display-2" style="color:rgba(255,255,255,.9); margin-top:10px;"><span style="font-weight:500">Meteor</span> Next</div>
+                <div class="headline" style="color:rgba(255,255,255,.9); margin-top:10px; margin-bottom:20px">LOGIN</div>
+                <v-divider></v-divider>
+                <v-alert v-if="showInstall" dense color="#fb8c00">
+                  <v-row align="center">
+                    <v-col align="left"><v-icon small style="margin-bottom:2px; margin-right:12px">fas fa-exclamation-triangle</v-icon>A setup is required before login</v-col>
+                    <v-col class="shrink">
+                      <v-btn @click="install" color="#00b16a">INSTALL</v-btn>
+                    </v-col>
+                  </v-row>
+                </v-alert>
+                <v-form ref="form" @submit.prevent style="margin-top:20px">
+                  <div v-if="mfa == '2fa'">
+                    <v-text-field ref="2fa" filled v-model="twoFactor['value']" label="2FA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                  </div>
+                  <div v-else-if="mfa == 'webauthn'">
+                    <v-card>
+                      <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
+                      <v-card-text>
+                        <div class="text-h5 font-weight-light white--text" style="text-align:center; font-size:1.4rem !important">Verify your identity</div>
+                        <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : webauthn.status == 'ko' ? '#ff5252' : '#fa8131'}`" size="55">fas fa-fingerprint</v-icon>
+                        <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ ['init','validating'].includes(webauthn.status) ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
+                      </v-card-text>
+                    </v-card>
+                  </div>
+                  <div v-else>
+                    <v-text-field :disabled="showInstall" ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                    <v-text-field :disabled="showInstall" ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                  </div>
+                </v-form>
+                <v-btn v-if="!(mfa == 'webauthn')" :disabled="showInstall" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
+                <v-checkbox :disabled="showInstall" v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
+              </v-card-text>
+            </v-card>
           </v-flex>
         </v-layout>
       </v-container>

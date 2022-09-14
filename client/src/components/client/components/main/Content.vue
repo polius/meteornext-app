@@ -485,7 +485,7 @@ export default {
           let data = JSON2.parse(response.data.data)
           this.parseContentExecution(data, elapsed)
           // Add execution to history
-          const history = { section: 'content', server: server, queries: data }
+          const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
@@ -500,13 +500,15 @@ export default {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
-            let data = JSON2.parse(error.response.data.data)
+            let data = ''
+            if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+            else data = JSON2.parse(error.response.data.data)
             error = data.find(x => 'error' in x)['error']
             EventBus.$emit('send-notification', error, '#EF5354')
             // Build bottom bar
             this.parseContentBottomBar(data, elapsed)
             // Add execution to history
-            const history = { section: 'content', server: server, queries: data }
+            const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
           }
         })
@@ -693,7 +695,7 @@ export default {
           if (current === undefined) return
           current.contentExecuting = false
           // Add execution to history
-          const history = { section: 'content', server: server, queries: data } 
+          const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
@@ -705,7 +707,9 @@ export default {
             current.contentExecuting = false
             this.gridApi.content.hideOverlay()
             // Show error
-            let data = JSON2.parse(error.response.data.data)
+            let data = ''
+            if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+            else data = JSON2.parse(error.response.data.data)
             let dialogOptions = {
               'mode': 'info',
               'icon': 'fas fa-exclamation-triangle',
@@ -719,7 +723,7 @@ export default {
             // Build BottomBar
             this.parseContentBottomBar(data, elapsed)
             // Add execution to history
-            const history = { section: 'content', server: server, queries: data } 
+            const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
           }
         })
@@ -864,7 +868,7 @@ export default {
             if (current === undefined) return
             current.contentExecuting = false
             // Add execution to history
-            const history = { section: 'content', server: server, queries: data } 
+            const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
             // Clean vars
             this.currentCellEditMode = 'edit'
@@ -881,7 +885,9 @@ export default {
               current.contentExecuting = false
               this.gridApi.content.hideOverlay()
               // Show error
-              let data = JSON2.parse(error.response.data.data)
+              let data = ''
+              if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+              else data = JSON2.parse(error.response.data.data)
               let dialogOptions = {
                 'mode': 'cellEditingError',
                 'icon': 'fas fa-exclamation-triangle',
@@ -899,7 +905,7 @@ export default {
               this.currentCellEditNode = node
               this.currentCellEditValues = values
               // Add execution to history
-              const history = { section: 'content', server: server, queries: data } 
+              const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
               this.$store.dispatch('client/addHistory', history)
             }
           })
@@ -987,7 +993,7 @@ export default {
           const elapsed = (new Date() - startTime) / 1000
           let data = JSON2.parse(response.data.data)
           // Add execution to history
-          const history = { section: 'content', server: server, queries: data } 
+          const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
@@ -1003,12 +1009,14 @@ export default {
             current.contentExecuting = false
             this.gridApi.content.hideOverlay()
             // Show error
-            let data = JSON2.parse(error.response.data.data)
+            let data = ''
+            if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+            else data = JSON2.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
             // Build bottom bar
             this.parseContentBottomBar(data, elapsed)
             // Add execution to history
-            const history = { section: 'content', server: server, queries: data } 
+            const history = { section: 'content', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
           }
         })

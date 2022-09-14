@@ -767,11 +767,13 @@ export default {
         queries: queries
       }
       const server = this.server
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
           // Add execution to history
+          const elapsed = (new Date() - startTime) / 1000
           let data = JSON.parse(response.data.data)
-          const history = { section: 'sidebar', server: server, queries: data } 
+          const history = { section: 'sidebar', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
           resolve(response.data)
         })
@@ -779,8 +781,11 @@ export default {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Add execution to history
-            let data = JSON.parse(error.response.data.data)
-            const history = { section: 'sidebar', server: server, queries: data } 
+            const elapsed = (new Date() - startTime) / 1000
+            let data = ''
+            if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+            else data = JSON.parse(error.response.data.data)
+            const history = { section: 'sidebar', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
             // Show error
             this.dialogTitle = 'Unable to apply changes'
