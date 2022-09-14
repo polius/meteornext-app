@@ -26,7 +26,6 @@ class Api:
         # JWT Config
         app.config['JWT_SECRET_KEY'] = hashlib.md5(p.stdout.readlines()[0].strip()).hexdigest()
         app.secret_key = app.config['JWT_SECRET_KEY']
-        app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
         app.config['JWT_TOKEN_LOCATION'] = ['cookies']
         app.config['JWT_COOKIE_SECURE'] = 'SECURE' in os.environ and os.environ['SECURE'] == 'True'
         app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
