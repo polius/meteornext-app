@@ -515,12 +515,14 @@ export default {
         queries,
       }
       const server = this.server
+      const startTime = new Date()
       axios.post('/client/execute', payload)
         .then((response) => {
+          const elapsed = (new Date() - startTime) / 1000
           let data = JSON.parse(response.data.data)
           this.checkDialog = false
           // Add execution to history
-          const history = { section: 'rights', server: server, queries: data } 
+          const history = { section: 'rights', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
           // Get rights
           if (queries[0].startsWith('DROP USER')) {
@@ -545,8 +547,11 @@ export default {
           resolve()
         })
         .catch((error) => {
+          const elapsed = (new Date() - startTime) / 1000
           this.checkDialog = false
-          let data = JSON.parse(error.response.data.data)
+          let data = ''
+          if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+          else data = JSON.parse(error.response.data.data)
           if (queries[0].startsWith('DROP USER')) EventBus.$emit('send-notification', data[0].error, '#EF5354')
           else {
             // Build error dialog
@@ -559,7 +564,7 @@ export default {
             }
             this.errorDialog = true
             // Add execution to history
-            const history = { section: 'rights', server: server, queries: data } 
+            const history = { section: 'rights', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
           }
         })

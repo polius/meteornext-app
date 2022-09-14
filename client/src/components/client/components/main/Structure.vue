@@ -249,7 +249,7 @@ export default {
           // Build BottomBar
           this.parseBottomBar(data, current, elapsed)
           // Add execution to history
-          const history = { section: 'structure', server: server, queries: data } 
+          const history = { section: 'structure', server: server, queries: data, elapsed: elapsed }
           this.$store.dispatch('client/addHistory', history)
           // Resolve promise
           resolve()
@@ -260,7 +260,9 @@ export default {
           else {
             let current = this.connections.find(c => c['index'] == index)
             if (current === undefined) return
-            let data = JSON.parse(error.response.data.data)
+            let data = ''
+            if ([502,504].includes(error.response.status)) data = [{"query": payload['queries'][0], "database": payload['database'], "error": "The request has been interrupted by the proxy server. If you are using a reverse proxy please increase the timeout value 'proxy_read_timeout' in Nginx or 'ProxyTimeout' in Apache."}]
+            else data = JSON.parse(error.response.data.data)
             // Build BottomBar
             this.parseBottomBar(data, current, elapsed)
             // Show error
@@ -269,7 +271,7 @@ export default {
               this.dialog = true
             }
             // Add execution to history
-            const history = { section: 'structure', server: server, queries: data } 
+            const history = { section: 'structure', server: server, queries: data, elapsed: elapsed }
             this.$store.dispatch('client/addHistory', history)
             // Reject promise
             reject()

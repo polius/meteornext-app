@@ -97,9 +97,9 @@ class Api:
             # Extract Meteor
             with tarfile.open(f"{sys._MEIPASS}/apps/meteor.tar.gz") as tar:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
-            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 0}).run()
         else:
-            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "pidfile": "server.pid", "timeout": 0}).run()
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def __init__(self, app, options=None):

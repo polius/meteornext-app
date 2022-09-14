@@ -19,9 +19,7 @@
     </div>
     <v-container fluid style="padding:10px!important">
       <v-main style="padding-top:0px;">
-        <v-slide-y-transition mode="out-in">
-          <router-view/>
-        </v-slide-y-transition>
+        <router-view/>
       </v-main>
     </v-container>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
