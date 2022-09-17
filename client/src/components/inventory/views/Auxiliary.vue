@@ -135,7 +135,7 @@
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="openTest()">Test Connection</v-btn>
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="openTest(true)">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -337,7 +337,7 @@ export default {
     },
     testAuxiliary() {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.openTest()
+      this.openTest(false)
     },
     submitAuxiliary() {
       if (['new','clone'].includes(this.mode)) this.newAuxiliarySubmit()
@@ -423,9 +423,9 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    openTest() {
+    openTest(check) {
       // Check if all fields are filled
-      if (this.$refs.form !== undefined && !this.$refs.form.validate()) {
+      if (check && this.$refs.form !== undefined && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }

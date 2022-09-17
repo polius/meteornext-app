@@ -147,7 +147,7 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <v-checkbox v-if="item.ssl" :readonly="readonly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
+                    <!-- <v-checkbox v-if="item.ssl" :readonly="readonly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox> -->
                     <v-select outlined v-model="item.usage" :items="usage" :readonly="readonly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
@@ -176,7 +176,7 @@
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection(true)">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -482,7 +482,7 @@ export default {
     },
     testServer() {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.testConnection()
+      this.testConnection(false)
     },
     submitServer(check=true) {
       this.confirm_dialog = false
@@ -575,9 +575,9 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    async testConnection() {
+    async testConnection(check) {
       // Check if all fields are filled
-      if (this.$refs.form !== undefined && !this.$refs.form.validate()) {
+      if (check && this.$refs.form !== undefined && !this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
