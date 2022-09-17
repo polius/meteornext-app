@@ -170,7 +170,7 @@ class MySQL:
             ssl['ssl_key_file'].flush()
             ssl['key'] = ssl['ssl_key_file'].name
         # Add optional parameters
-        # ssl['cipher'] = 'DEFAULT:!EDH:!DHE'
+        ssl['cipher'] = 'DEFAULT:!EDH:!DHE'
         ssl['check_hostname'] = self._server['sql']['ssl_verify_ca'] == 1
         ssl['verify_mode'] = ssl['check_hostname'] is True
         # Return SSL Data
