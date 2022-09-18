@@ -147,7 +147,6 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <!-- <v-checkbox v-if="item.ssl" :readonly="readonly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox> -->
                     <v-select outlined v-model="item.usage" :items="usage" :readonly="readonly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
@@ -355,7 +354,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [] },
+    item: { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, client_disabled: false, shared: false, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -452,7 +451,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [...this.usage] }
+      this.item = { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, client_disabled: false, shared: false, usage: [...this.usage] }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true
     },
@@ -593,7 +592,7 @@ export default {
       this.loading = true
       const payload = {
         region: this.item.region_id,
-        server: this.item.secured ? this.item.id : { id: this.item.id, engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password, ssl: this.item.ssl, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
+        server: this.item.secured ? this.item.id : { id: this.item.id, engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password, ssl: this.item.ssl, ssl_client_key, ssl_client_certificate, ssl_ca_certificate }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {

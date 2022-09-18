@@ -135,7 +135,6 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <!-- <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox> -->
                     <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
@@ -347,7 +346,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: null, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [], secured: false },
+    item: { group_id: null, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, client_disabled: false, shared: false, usage: [], secured: false },
     mode: '',
     loading: true,
     engines: {
@@ -505,7 +504,7 @@ export default {
       this.users = []
       this.regions = []
       this.usage = []
-      this.item = { group_id: this.filter.group, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, secured: false, usage: [...this.usage] }
+      this.item = { group_id: this.filter.group, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, client_disabled: false, shared: false, secured: false, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); this.buildUsage(); }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true
@@ -647,7 +646,7 @@ export default {
       this.loading = true
       const payload = {
         region_id: this.item.region_id,
-        server: { ...this.item, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
+        server: { ...this.item, ssl_client_key, ssl_client_certificate, ssl_ca_certificate }
       }
       axios.post('/admin/inventory/servers/test', payload)
         .then((response) => {

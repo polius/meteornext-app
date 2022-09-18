@@ -176,6 +176,9 @@ export default {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
+      this.$store.dispatch('app/logout').finally(() => this.loginSubmit())
+    },
+    async loginSubmit() {
       this.loading = true
       this.webauthn = { status: 'init' }
       var payload = {

@@ -91,8 +91,7 @@ class Meteor:
                         "port": int(server['port']),
                         "ssl_ca_certificate": server['ssl_ca_certificate'],
                         "ssl_client_certificate": server['ssl_client_certificate'],
-                        "ssl_client_key": server['ssl_client_key'],
-                        "ssl_verify_ca": server['ssl_verify_ca'] == 1
+                        "ssl_client_key": server['ssl_client_key']
                     })
 
             # Add region data to the credentials
@@ -112,8 +111,7 @@ class Meteor:
                         "port": int(aux['port']),
                         "ssl_ca_certificate": aux['ssl_ca_certificate'],
                         "ssl_client_certificate": aux['ssl_client_certificate'],
-                        "ssl_client_key": aux['ssl_client_key'],
-                        "ssl_verify_ca": aux['ssl_verify_ca']
+                        "ssl_client_key": aux['ssl_client_key']
                     }
                 }
 
@@ -170,8 +168,7 @@ class Meteor:
             "database": next_credentials['sql']['database'],
             "ssl_ca_certificate": None,
             "ssl_client_certificate": None,
-            "ssl_client_key": None,
-            "ssl_verify_ca": None
+            "ssl_client_key": None
         }
 
         # Compile Meteor Next Params

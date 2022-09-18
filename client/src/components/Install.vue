@@ -38,7 +38,6 @@
                       <v-file-input v-model="sql.ssl_client_key" label="Client Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
                       <v-file-input v-model="sql.ssl_client_certificate" label="Client Certificate" prepend-icon="" hide-details style="margin-top:10px"></v-file-input>
                       <v-file-input v-model="sql.ssl_ca_certificate" label="CA Certificate" prepend-icon="" hide-details style="margin-top:10px"></v-file-input>
-                      <v-checkbox v-model="sql.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                     </div>
                     -->
                   </v-form>
@@ -153,7 +152,7 @@
     data: () => ({
       // Install Form
       license: { access_key: '', secret_key: '' },
-      sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteornext', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false },
+      sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteornext', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null },
       amazon: { enabled: false, aws_access_key: '', aws_secret_access_key: '', region: '', bucket: '' },
       account: { username: '', password: '' },
       installPart: 'license',

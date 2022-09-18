@@ -108,7 +108,6 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <v-checkbox v-if="item.ssl" :readonly="readonly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                   </div>
                 </v-form>
                 <div v-else>
@@ -243,7 +242,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false },
+    item: { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, shared: false },
     mode: '',
     loading: true,
     engines: {
@@ -309,7 +308,7 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false }
+      this.item = { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, shared: false }
       this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true
     },

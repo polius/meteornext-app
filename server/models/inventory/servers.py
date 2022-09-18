@@ -9,7 +9,7 @@ class Servers:
         if server_id is None:
             query = """
                 SELECT 
-                    s.id, s.name, s.group_id, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.`usage`, s.shared, s.owner_id, s.secured, s.created_by, s.created_at,
+                    s.id, s.name, s.group_id, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.`usage`, s.shared, s.owner_id, s.secured, s.created_by, s.created_at,
                     t.id IS NOT NULL AS 'active',
                     r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', r.ssh_tunnel AS 'ssh'
                 FROM servers s
@@ -31,7 +31,7 @@ class Servers:
         else:
             query = """
                 SELECT 
-                    s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca, s.`usage`, s.shared, s.owner_id, s.secured, u.username AS 'owner', s.created_by, s.created_at,
+                    s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.`usage`, s.shared, s.owner_id, s.secured, u.username AS 'owner', s.created_by, s.created_at,
                     t.id IS NOT NULL AS 'active',
                     r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', r.ssh_tunnel AS 'ssh'
                 FROM servers s
@@ -55,10 +55,10 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, `usage`, shared, owner_id, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
+            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `usage`, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_verify_ca'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, server):
         if 'D' not in server['usage']:
@@ -88,7 +88,6 @@ class Servers:
                 `ssl_client_key` = IF(%s = '<ssl_client_key>', `ssl_client_key`, %s),
                 `ssl_client_certificate` = IF(%s = '<ssl_client_certificate>', `ssl_client_certificate`, %s),
                 `ssl_ca_certificate` = IF(%s = '<ssl_ca_certificate>', `ssl_ca_certificate`, %s),
-                `ssl_verify_ca` = %s,
                 `usage` = %s,
                 `shared` = %s,
                 `owner_id` = IF(%s = 1, NULL, %s),
@@ -96,7 +95,7 @@ class Servers:
                 `updated_at` = %s
             WHERE `id` = %s
         """
-        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_ca_certificate'], server['ssl_verify_ca'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_ca_certificate'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, user_id, group_id, server_id):
         # Delete from 'monitoring'

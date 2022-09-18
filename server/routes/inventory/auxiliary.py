@@ -82,9 +82,9 @@ class Auxiliary:
                 aux = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['auxiliary'])
                 if len(aux) == 0:
                     return jsonify({'message': "Can't test the connection. Invalid auxiliary provided."}), 400
-                sql = {"engine": aux[0]['engine'], "hostname": aux[0]['hostname'], "port": aux[0]['port'], "username": aux[0]['username'], "password": aux[0]['password'], 'ssl': aux[0]['ssl'], 'ssl_client_key': aux[0]['ssl_client_key'], 'ssl_client_certificate': aux[0]['ssl_client_certificate'], 'ssl_ca_certificate': aux[0]['ssl_ca_certificate'], 'ssl_verify_ca': aux[0]['ssl_verify_ca']}
+                sql = {"engine": aux[0]['engine'], "hostname": aux[0]['hostname'], "port": aux[0]['port'], "username": aux[0]['username'], "password": aux[0]['password'], 'ssl': aux[0]['ssl'], 'ssl_client_key': aux[0]['ssl_client_key'], 'ssl_client_certificate': aux[0]['ssl_client_certificate'], 'ssl_ca_certificate': aux[0]['ssl_ca_certificate']}
             else:
-                sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password'], "ssl": auxiliary_json['ssl'], "ssl_client_key": auxiliary_json['ssl_client_key'], "ssl_client_certificate": auxiliary_json['ssl_client_certificate'], "ssl_ca_certificate": auxiliary_json['ssl_ca_certificate'], 'ssl_verify_ca': auxiliary_json['ssl_verify_ca']}
+                sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password'], "ssl": auxiliary_json['ssl'], "ssl_client_key": auxiliary_json['ssl_client_key'], "ssl_client_certificate": auxiliary_json['ssl_client_certificate'], "ssl_ca_certificate": auxiliary_json['ssl_ca_certificate']}
                 if 'id' in auxiliary_json:
                     auxiliary_origin = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['id'])
                     sql['ssl_client_key'] = auxiliary_origin[0]['ssl_client_key'] if sql['ssl_client_key'] == '<ssl_client_key>' else sql['ssl_client_key']

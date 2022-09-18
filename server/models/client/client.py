@@ -68,7 +68,7 @@ class Client:
         query = """
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
-                s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
+                s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate,
                 t.id IS NOT NULL AS 'active',
                 r.ssh_tunnel AS 'rtunnel', r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key AS 'rkey'
             FROM servers s
@@ -109,8 +109,7 @@ class Client:
                 'ssl': result[0]['ssl'],
                 'ssl_client_key': result[0]['ssl_client_key'],
                 'ssl_client_certificate': result[0]['ssl_client_certificate'],
-                'ssl_ca_certificate': result[0]['ssl_ca_certificate'],
-                'ssl_verify_ca': result[0]['ssl_verify_ca']
+                'ssl_ca_certificate': result[0]['ssl_ca_certificate']
             }
         }
         return credentials

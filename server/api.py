@@ -10,7 +10,7 @@ import gunicorn.app.base
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_compress import Compress
-from flask_jwt_extended import (JWTManager, jwt_required, get_jwt_identity)
+from flask_jwt_extended import (JWTManager, jwt_required, get_jwt_identity, unset_access_cookies)
 from logging.handlers import RotatingFileHandler
 
 class Api:

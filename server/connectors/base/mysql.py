@@ -4,6 +4,7 @@ import paramiko
 import sshtunnel
 import logging
 from io import StringIO
+from ssl import CERT_REQUIRED
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -171,8 +172,8 @@ class MySQL:
             ssl['key'] = ssl['ssl_key_file'].name
         # Add optional parameters
         ssl['cipher'] = 'DEFAULT:!EDH:!DHE'
-        ssl['check_hostname'] = self._server['sql']['ssl_verify_ca'] == 1
-        ssl['verify_mode'] = ssl['check_hostname'] is True
+        ssl['check_hostname'] = True
+        ssl['verify_mode'] = CERT_REQUIRED
         # Return SSL Data
         return ssl
 
