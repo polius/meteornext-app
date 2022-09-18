@@ -73,4 +73,4 @@ class License:
                 self._license_status = {"code": response_code, "response": response_text, "account": account, "resources": resources, "sentry": sentry}
         except Exception:
             if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
-                self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
+                self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established."}

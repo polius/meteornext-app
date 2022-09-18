@@ -124,7 +124,7 @@ const actions = {
   },
   logout({ commit, getters }) {
     return new Promise((resolve) => {
-      axios.post('/logout').finally(() => {
+      axios.get('/logout').finally(() => {
         commit('logout')
         // Remove variables from the local storage
         if (!getters.remember) localStorage.removeItem('username')

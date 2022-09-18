@@ -192,8 +192,7 @@ class Install:
             "database": data['sql']['database'],
             "ssl_client_key": None,
             "ssl_client_certificate": None,
-            "ssl_ca_certificate": None,
-            "ssl_verify_ca": data['sql']['ssl_verify_ca']
+            "ssl_ca_certificate": None
         }
         if data['sql']['ssl_client_key']:
             with open(f"{keys_path}/ssl_key.pem", 'w') as outfile:

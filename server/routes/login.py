@@ -124,10 +124,10 @@ class Login:
                 'client_enabled': user['client_enabled']
             }
             resp = jsonify({'data': data})
-            set_access_cookies(resp, access_token, 12*60*60-1)
+            set_access_cookies(resp, access_token, 12*60*60)
             return resp, 200
 
-        @login_blueprint.route('/logout', methods=['POST'])
+        @login_blueprint.route('/logout', methods=['GET','POST'])
         def logout_check():
             resp = jsonify({'message': 'Bye'})
             unset_access_cookies(resp)

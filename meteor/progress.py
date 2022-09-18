@@ -145,7 +145,6 @@ class progress:
             "autocommit": True,
             "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
             "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
-            "ssl_client_key": self._config['meteor_next']['ssl_client_key'],
-            "ssl_verify_ca": self._config['meteor_next']['ssl_verify_ca']
+            "ssl_client_key": self._config['meteor_next']['ssl_client_key']
         }
         return connector({"ssh": ssh, "sql": sql})

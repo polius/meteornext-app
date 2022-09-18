@@ -95,7 +95,7 @@ class Servers:
             try:
                 conf = {}
                 conf['ssh'] = {'enabled': region['ssh_tunnel'], 'hostname': region['hostname'], 'port': region['port'], 'username': region['username'], 'password': region['password'], 'key': region['key']}
-                conf['sql'] = {'engine': server['engine'], 'hostname': server['hostname'], 'port': server['port'], 'username': server['username'], 'password': server['password'], 'ssl': server['ssl'], 'ssl_client_key': server['ssl_client_key'], 'ssl_client_certificate': server['ssl_client_certificate'], 'ssl_ca_certificate': server['ssl_ca_certificate'], 'ssl_verify_ca': server['ssl_verify_ca']}
+                conf['sql'] = {'engine': server['engine'], 'hostname': server['hostname'], 'port': server['port'], 'username': server['username'], 'password': server['password'], 'ssl': server['ssl'], 'ssl_client_key': server['ssl_client_key'], 'ssl_client_certificate': server['ssl_client_certificate'], 'ssl_ca_certificate': server['ssl_ca_certificate']}
                 sql = connectors.base.Base(conf)
                 sql.test_sql()
             except Exception as e:

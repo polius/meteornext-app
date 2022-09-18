@@ -99,7 +99,7 @@ class Auxiliary:
 
             # Build Auxiliary Data
             ssh = {'enabled': region[0]['ssh_tunnel'], 'hostname': region[0]['hostname'], 'port': region[0]['port'], 'username': region[0]['username'], 'password': region[0]['password'], 'key': region[0]['key']}
-            sql = {"engine": auxiliary['engine'], "hostname": auxiliary['hostname'], "port": auxiliary['port'], "username": auxiliary['username'], "password": auxiliary['password'], "ssl": auxiliary['ssl'], "ssl_client_key": auxiliary['ssl_client_key'], "ssl_client_certificate": auxiliary['ssl_client_certificate'], "ssl_ca_certificate": auxiliary['ssl_ca_certificate'], "ssl_verify_ca": auxiliary['ssl_verify_ca']}
+            sql = {"engine": auxiliary['engine'], "hostname": auxiliary['hostname'], "port": auxiliary['port'], "username": auxiliary['username'], "password": auxiliary['password'], "ssl": auxiliary['ssl'], "ssl_client_key": auxiliary['ssl_client_key'], "ssl_client_certificate": auxiliary['ssl_client_certificate'], "ssl_ca_certificate": auxiliary['ssl_ca_certificate']}
 
             # Check SQL Connection
             try:

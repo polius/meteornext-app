@@ -7,7 +7,7 @@ class Auxiliary:
     def get(self, user_id, group_id, auxiliary_id=None):
         if auxiliary_id is None:
             query = """
-                SELECT a.id, a.name, a.group_id, a.engine, a.version, a.hostname, a.port, a.username, a.password, a.`ssl`, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, a.secured, a.created_by, a.created_at
+                SELECT a.id, a.name, a.group_id, a.engine, a.version, a.hostname, a.port, a.username, a.password, a.`ssl`, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.shared, a.owner_id, a.secured, a.created_by, a.created_at
                 FROM auxiliary a
                 WHERE a.group_id = %(group_id)s
                 AND (a.shared = 1 OR a.owner_id = %(user_id)s)
@@ -16,7 +16,7 @@ class Auxiliary:
             return self._sql.execute(query, {"group_id": group_id, "user_id": user_id})
         else:
             query = """
-                SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca, shared, owner_id, secured, created_by, created_at
+                SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, shared, owner_id, secured, created_by, created_at
                 FROM auxiliary
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
@@ -26,10 +26,10 @@ class Auxiliary:
 
     def post(self, user_id, group_id, auxiliary):
         query = """
-            INSERT INTO auxiliary (name, group_id, engine, version, hostname, port, username, password, `ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, shared, owner_id, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
+            INSERT INTO auxiliary (name, group_id, engine, version, hostname, port, username, password, `ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_verify_ca'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, auxiliary):
         query = """
@@ -45,7 +45,6 @@ class Auxiliary:
                 `ssl_client_key` = IF(%s = '<ssl_client_key>', `ssl_client_key`, %s),
                 `ssl_client_certificate` = IF(%s = '<ssl_client_certificate>', `ssl_client_certificate`, %s),
                 `ssl_ca_certificate` = IF(%s = '<ssl_ca_certificate>', `ssl_ca_certificate`, %s),
-                `ssl_verify_ca` = %s,
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
@@ -53,7 +52,7 @@ class Auxiliary:
             WHERE id = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (auxiliary['name'], auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_verify_ca'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id'], group_id))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id'], group_id))
 
     def delete(self, user_id, group_id, auxiliary_id):
         query = """

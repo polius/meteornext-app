@@ -99,7 +99,6 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                   </div>
                 </v-form>
                 <div v-else>
@@ -242,7 +241,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false, secured: false },
+    item: { group_id: '', owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, shared: false, secured: false },
     mode: '',
     loading: true,
     engines: {
@@ -335,7 +334,7 @@ export default {
     newAuxiliary() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, shared: false, secured: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, shared: false, secured: false }
       if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true

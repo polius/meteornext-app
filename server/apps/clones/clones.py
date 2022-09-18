@@ -262,7 +262,7 @@ class Clones:
             # Check SSL
             ssl = ''
             if server['ssl']:
-                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                ssl += "--ssl-mode=VERIFY_IDENTITY"
                 if server['ssl_client_key']:
                     core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
                     ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
@@ -343,7 +343,7 @@ class Clones:
             # Check SSL
             ssl = ''
             if server['ssl']:
-                ssl += "--ssl-mode=VERIFY_IDENTITY" if server['ssl_verify_ca'] else "--ssl-mode=REQUIRED"
+                ssl += "--ssl-mode=VERIFY_IDENTITY"
                 if server['ssl_client_key']:
                     core.execute(f"echo '{server['ssl_client_key']}' > {os.path.join(path, item['uri'], 'ssl_client_key.pem')}")
                     ssl += f" --ssl-key={os.path.join(path, item['uri'], 'ssl_client_key.pem')}"
