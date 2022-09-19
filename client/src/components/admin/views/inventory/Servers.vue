@@ -67,23 +67,28 @@
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" @change="ownerChanged" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="6" style="padding-right:10px">
-                      <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                    </v-col>
-                    <v-col cols="6" style="padding-left:10px">
-                      <v-autocomplete :disabled="item.group_id == null" v-model="item.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="regions" label="Region" required>
-                        <template v-slot:[`selection`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ item.name }}
-                        </template>
-                        <template v-slot:[`item`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ item.name }}
-                        </template>
-                      </v-autocomplete>
-                    </v-col>
-                  </v-row>
+                  <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-autocomplete :disabled="item.group_id == null" v-model="item.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px">
+                    <template v-slot:[`selection`]="{ item }">
+                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      {{ item.name }}
+                    </template>
+                    <template v-slot:[`item`]="{ item }">
+                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      {{ item.name }}
+                    </template>
+                  </v-autocomplete>
+                  <!-- SSH -->
+                  <v-card v-if="regions.some(x => x.id == item.region_id && x.ssh_tunnel == 1)" style="height:52px; margin-top:-5px; margin-bottom:25px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#2196f3" style="font-size:16px; margin-top:4px">fas fa-terminal</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
                       <v-select v-model="item.engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
@@ -410,6 +415,7 @@ export default {
       this.item.usage = []
       requestAnimationFrame(() => {
         if (!this.item.shared) this.$refs.owner_id.focus()
+        this.$refs.form.resetValidation()
       })
       if (this.item.group_id != null) {
         this.getRegions()
@@ -469,7 +475,7 @@ export default {
       const payload = this.item.shared ? { group_id: this.item.group_id } : { group_id: this.item.group_id, owner_id: this.item.owner_id }
       axios.get('/admin/inventory/regions', { params: payload})
         .then((response) => {
-          this.regions = response.data.regions.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
+          this.regions = response.data.regions
         })
         .catch((error) => {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

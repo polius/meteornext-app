@@ -76,25 +76,30 @@
               <v-flex xs12>
                 <v-alert v-if="mode != 'delete' && !owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px">
-                  <v-row no-gutters style="margin-top:15px">
-                    <v-col cols="6" style="padding-right:10px">
-                      <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px; margin-top:0px"></v-text-field>
-                    </v-col>
-                    <v-col cols="6" style="padding-left:10px">
-                      <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readonly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px; margin-top:0px">
-                        <template v-slot:[`selection`]="{ item }">
-                          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
-                          {{ item.name }}
-                        </template>
-                        <template v-slot:[`item`]="{ item }">
-                          <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
-                          {{ item.name }}
-                        </template>
-                      </v-autocomplete>
-                    </v-col>
-                  </v-row>
+                  <v-text-field ref="field" v-model="item.name" :readonly="readonly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px; margin-top:0px"></v-text-field>
+                  <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readonly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px">
+                    <template v-slot:[`selection`]="{ item }">
+                      <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+                      {{ item.name }}
+                    </template>
+                    <template v-slot:[`item`]="{ item }">
+                      <v-icon small :title="item.shared ? item.secured ? 'Shared (Secured)' : 'Shared' : item.secured ? 'Personal (Secured)' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" :style="`margin-bottom:2px; ${!item.secured ? 'padding-right:8px' : ''}`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      <v-icon v-if="item.secured" :title="item.shared ? 'Shared (Secured)' : 'Personal (Secured)'" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-left:2px; padding-top:2px; padding-right:8px">fas fa-lock</v-icon>
+                      {{ item.name }}
+                    </template>
+                  </v-autocomplete>
+                  <!-- SSH -->
+                  <v-card v-if="regions.some(x => x.id == item.region_id && x.ssh_tunnel == 1)" style="height:52px; margin-top:-5px; margin-bottom:25px">
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#2196f3" style="font-size:16px; margin-top:4px">fas fa-terminal</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
                       <v-select v-model="item.engine" :readonly="readonly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
