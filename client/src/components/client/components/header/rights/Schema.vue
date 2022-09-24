@@ -173,7 +173,7 @@ export default {
       })
     },
     tab(value) {
-      if (value == 2) this.resizeTable()
+      if (value == 2) setTimeout(() => this.resizeTable(), 0)
     }
   },
   methods: {
