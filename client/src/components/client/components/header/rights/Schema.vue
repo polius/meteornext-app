@@ -172,8 +172,8 @@ export default {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
     },
-    tab(value) {
-      if (value == 2) setTimeout(() => this.resizeTable(), 0)
+    tab() {
+      setTimeout(() => this.resizeTable(), 0)
     }
   },
   methods: {
@@ -184,12 +184,14 @@ export default {
         this.rights['schema'] = []
         this.computeDiff()
       }
+      setTimeout(() => this.resizeTable(), 0)
     },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
     },
     resizeTable() {
+      if (this.tab != 2) return
       this.$nextTick(() => {
         if (this.gridApi != null) {
           if (this.rights['schema'].length == 0) this.gridApi.sizeColumnsToFit()
