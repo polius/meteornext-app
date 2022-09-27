@@ -20,7 +20,7 @@
           </div>
           <div v-else-if="item.mode == 'cloud'">
             <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:18px; margin-right:5px; margin-bottom:3px">fas fa-cloud</v-icon>
-            Cloud Key
+            Cloud
           </div>
         </template>
         <template v-slot:[`item.server_id`]="{ item }">
@@ -196,7 +196,7 @@
                         <template v-slot:item="{ item }">
                           <div v-if="item == 'file'"><v-icon small color="#23cba7" style="margin-left:6px; margin-right:18px">fas fa-file</v-icon>File</div>
                           <div v-else-if="item == 'url'"><v-icon small color="#ff9800" style="margin-left:3px; margin-right:14px">fas fa-link</v-icon>URL</div>
-                          <div v-else-if="item == 'cloud'"><v-icon size="18" color="#19b5fe" style="margin-right:10px">fas fa-cloud</v-icon>Cloud Key</div>
+                          <div v-else-if="item == 'cloud'"><v-icon size="18" color="#19b5fe" style="margin-right:10px">fas fa-cloud</v-icon>Cloud</div>
                         </template>
                         <template v-slot:selection="{ item }">
                           <v-chip v-if="item == 'file'" label>
@@ -209,7 +209,7 @@
                           </v-chip>
                           <v-chip v-else-if="item == 'cloud'" label>
                             <v-icon size="18" color="#19b5fe" style="margin-top:2px; margin-left:2px; margin-right:12px">fas fa-cloud</v-icon>
-                            Cloud Key
+                            Cloud
                           </v-chip>
                         </template>
                       </v-autocomplete>

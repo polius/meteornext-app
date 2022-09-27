@@ -32,7 +32,7 @@
                         <v-radio value="cloud">
                           <template v-slot:label>
                             <v-icon color="#19b5fe" style="font-size:18px; margin-left:3px; margin-right:8px">fas fa-cloud</v-icon>
-                            Cloud Key
+                            Cloud
                           </template>
                         </v-radio>
                       </v-radio-group>
@@ -119,22 +119,12 @@
                           </v-card>
                           <!-- OBJECTS -->
                           <div v-else>
-                            <v-card style="margin-bottom:10px">
-                              <v-row no-gutters align="center" justify="center">
-                                <v-col cols="auto" style="display:flex; margin:15px">
-                                  <v-icon size="18" color="#ff9900" style="margin-bottom:2px">fas fa-star</v-icon>
-                                </v-col>
-                                <v-col>
-                                  <div class="text-body-1" style="color:#e2e2e2">If you do not find an object press enter after your search to make a new request to Amazon S3.</div>
-                                </v-col>
-                              </v-row>
-                            </v-card>
                             <v-card>
                               <v-card-text style="padding:0px">
                                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                                  <v-text-field @keyup.enter="getAWSObjects(true)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
+                                  <v-text-field @keyup="getAWSObjects(true, $event)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
                                 </v-toolbar>
-                                <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
+                                <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1" mobile-breakpoint="0">
                                   <template v-slot:item="{ item }">
                                     <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                       <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" :style="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus))) ? 'cursor:not-allowed' : 'cursor:pointer'">
@@ -285,7 +275,7 @@
                         <v-radio value="cloud">
                           <template v-slot:label>
                             <v-icon color="#19b5fe" style="font-size:18px; margin-left:3px; margin-right:8px">fas fa-cloud</v-icon>
-                            Cloud Key
+                            Cloud
                           </template>
                         </v-radio>
                       </v-radio-group>
@@ -653,6 +643,7 @@ export default {
       axios.get('/utils/imports/s3/buckets', { params: payload })
         .then((response) => {
           this.parseAWSBuckets(response.data.buckets)
+          this.cloudKeysSearch = ''
         })
         .catch((error) => {
           this.cloudKeysSelected = []
@@ -665,9 +656,10 @@ export default {
       this.awsBucketsItems = buckets
       this.cloudPath = ['Cloud Keys', this.cloudKeysSelected[0].type == 'aws' ? 'Amazon S3' : 'Google Cloud']
     },
-    getAWSObjects(search) {
-      // Test Connection
-      this.loading = true
+    getAWSObjects(search, event) {
+      if (event !== undefined && event.key.length > 1 && !(['Backspace','Delete'].includes(event.key))) return
+      if (event === undefined) this.loading = true
+      this.awsObjectsItems = []
       const payload = { 
         key: this.cloudKeysSelected[0]['id'],
         bucket: this.cloudPath.length > 3 ? this.cloudPath[2] : this.awsBucketsSelected[0]['name'],
@@ -677,6 +669,8 @@ export default {
       axios.get('/utils/imports/s3/objects', { params: payload })
         .then((response) => {
           this.parseAWSObjects(response.data.objects, search)
+          this.awsBucketsSearch = ''
+          if (event === undefined) this.awsObjectsSearch = ''
         })
         .catch((error) => {
           if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
