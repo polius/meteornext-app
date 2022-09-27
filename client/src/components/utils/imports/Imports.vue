@@ -35,7 +35,7 @@
           </div>
           <div v-else-if="item.mode == 'cloud'">
             <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:18px; margin-right:5px; margin-bottom:3px">fas fa-cloud</v-icon>
-            Cloud Key
+            Cloud
           </div>
         </template>
         <template v-slot:[`item.server_id`]="{ item }">
