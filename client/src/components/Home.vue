@@ -6,7 +6,7 @@
     <transition appear appear-active-class="title-transition">
       <div class="text-h2" style="margin:20px; font-size:3.2rem!important; font-weight:400">Meteor Next<span class="text-body-1 font-weight-light" style="margin-top:10px; margin-left:10px">{{ version }}</span></div>
     </transition>
-    <!-- <div class="font-weight-light" style="position:fixed; bottom:0; width:100%; margin-bottom:2vh; font-size:14px">Meteor Next is a registered trademark of <a style="color: white" href="https://www.poliuscorp.com" target="_blank">PoliusCorp</a>.</div> -->
+    <div class="font-weight-light" style="position:fixed; bottom:0; width:100%; margin-bottom:2vh; font-size:14px"><a style="color: white" href="https://www.meteornext.io" target="_blank">Meteor Next</a> is a registered trademark of <a style="color: white" href="https://www.poliuscorp.com" target="_blank">PoliusCorp, Inc</a>.</div>
   </div>
 </template>
 
