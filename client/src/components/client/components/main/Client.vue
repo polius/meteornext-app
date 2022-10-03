@@ -393,8 +393,13 @@ export default {
         }
         // Store row node
         this.currentCellEditNode = event.node
-        // If the cell includes an special character (\n or \t) or the value length >= 50 chars, ... then open the extended editor
-        if (event.value.toString().length >= 50 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+        // If the cell includes an special character (\n or \t) or is a json representation or the value length >= 50 chars, ... then open the extended editor
+        let isJSON = false
+        try {
+          JSON2.parse(event.value.toString())
+          isJSON = true
+        } catch { 1 == 1 }
+        if (isJSON || event.value.toString().length >= 50 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
           else this.editDialogOpen(event.colDef.headerName, event.value.toString())
         }
@@ -945,7 +950,7 @@ export default {
           if ([' ','\n','\t',';'].includes(text[i])) { start = i + 1; continue; }
           else first = false
         }
-        if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0) {
+        if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0 && comment.length == 0) {
           if (!text.substring(start, i).toLowerCase().startsWith('delimiter')) {
             queries.push({"begin": start, "end": i-delimiter.length+1})
           }
