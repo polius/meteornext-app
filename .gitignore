@@ -15,3 +15,4 @@ server.log*
 /server/apps/monitor.tar.gz
 /meteor/version.txt
 /license/dist/
+/client/package-lock.json

@@ -463,7 +463,7 @@ export default {
     getContent(force) {
       if (this.contentExecuting) return
       if (!force && this.contentState == (this.database + '|' + this.sidebarSelected[0]['id'])) return
-      if (force) this.contentSearchColumn = ''
+      if (force) { this.contentSearchColumn = ''; this.contentSearchFilter = '='; this.contentSearchFilterText = ''; this.contentSearchFilterText2 = ''; }
       this.contentExecuting = true
       this.contentSortState = []
       this.gridApi.content.showLoadingOverlay()
@@ -649,7 +649,10 @@ export default {
           let where = []
           for (let [key, value] of Object.entries(nodes[i].data)) {
             if (value == null) where.push(key + ' IS NULL')
-            else where.push(key + " = " + JSON.stringify(value))
+            else {
+              let binary = (this.contentColumnsType[key] == 'json') ? 'BINARY ' : ''
+              where.push(binary + key + " = " + JSON.stringify(value))
+            }
           }
           queries.push('DELETE FROM `' + this.sidebarSelected[0]['name'] + '` WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
@@ -751,7 +754,7 @@ export default {
         this.currentCellEditNode = event.node
         // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
         let columnType = this.contentColumnsType[event.colDef.colId]
-        if (['text','mediumtext','longtext','blob','mediumblob','longblob'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+        if (['text','mediumtext','longtext','blob','mediumblob','longblob','json'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
           else this.editDialogOpen(event.column.colId, columnType.toUpperCase(), event.value)
         }
@@ -813,7 +816,10 @@ export default {
         if (this.contentPks.length == 0) {
           for (let i = 0; i < keys.length; ++i) {
             if (values[keys[i]]['old'] == null) where.push('`' + keys[i] + '` IS NULL')
-            else where.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
+            else {
+              let binary = (this.contentColumnsType[keys[i]] == 'json') ? 'BINARY ' : ''
+              where.push(binary + '`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
+            }
           }
           query = "UPDATE `" + this.sidebarSelected[0]['name'] + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
@@ -953,21 +959,23 @@ export default {
     filterClick() {
       if (this.contentExecuting) return
       this.contentExecuting = true
+      // Check if column name is a JSON
+      let binary = (this.contentColumnsType[this.contentSearchColumn] == 'json') ? ' BINARY ' : ''
       // Build query condition
       var condition = ''
       if (['BETWEEN','NOT BETWEEN'].includes(this.contentSearchFilter)) {
-        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
+        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE' + binary + '`' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
       }
       else if (['IS NULL','IS NOT NULL'].includes(this.contentSearchFilter)) {
         condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter
       }
       else if (['IN','NOT IN'].includes(this.contentSearchFilter) && this.contentSearchFilterText.length != 0) {
-        condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " ("
+        condition = ' WHERE' + binary + '`' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " ("
         let elements = this.contentSearchFilterText.split(',')
         for (let i = 0; i < elements.length; ++i) condition += "'" + elements[i] + "',"
         condition = condition.substring(0, condition.length - 1) + ")"
       }
-      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE' + binary + '`' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
       // Build pagination
       var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT 1000 OFFSET ' + (this.page-1) * 1000
       // Build sort
@@ -1051,6 +1059,7 @@ export default {
       this.dialog = false
     },
     editDialogOpen(columnName, columnType, text) {
+      text = (this.currentCellEditMode == 'new') ? '' : text
       this.editDialogColumnName = columnName
       this.editDialogColumnType = columnType
       this.editDialog = true
@@ -1084,21 +1093,21 @@ export default {
         })
       }
       this.$nextTick(() => {
-        this.editDialogEditor.focus()
         this.editDialogEditor.setValue(text, -1)
-        this.editDialogDetectFormat()
+        this.editDialogDetectFormat(columnType, text)
+        setTimeout(() => this.editDialogEditor.focus(), 0)
       })
     },
     editDialogWrapChange(val) {
       this.editDialogEditor.getSession().setUseWrapMode(val)
     },
-    editDialogDetectFormat() {
+    editDialogDetectFormat(columnType, text) {
       // Detect JSON and parse it
       try {
-        let parsed = JSON2.parse(this.editDialogEditor.getValue())
+        let value = (columnType != 'JSON' || text.length != 0) ? JSON2.stringify(JSON2.parse(text), null, '\t') : text
         this.editDialogEditor.session.setMode("ace/mode/json")
         this.editDialogEditor.session.setTabSize(2)
-        this.editDialogEditor.setValue(JSON2.stringify(parsed, null, '\t'), 1)
+        this.editDialogEditor.setValue(value, 1)
         this.editDialogFormat = 'JSON'
       } catch { 
         this.editDialogFormat = 'Text'
@@ -1178,6 +1187,7 @@ export default {
       })
     },
     editDialogCancel() {
+      if (this.currentCellEditMode == 'new') this.cellEditingDiscard()
       this.editDialog = false
       this.editDialogEditor.setValue('')
     },
