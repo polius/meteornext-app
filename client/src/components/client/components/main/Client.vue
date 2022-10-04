@@ -950,6 +950,10 @@ export default {
           if ([' ','\n','\t',';'].includes(text[i])) { start = i + 1; continue; }
           else first = false
         }
+        if (comment.length == 0 && ["'",'"','`'].includes(text[i]) && (i == 0 || (text[i-1] != '\\' || text[i-2] == '\\'))) {
+          if (chars.length == 0) chars.push(text[i])
+          else if (chars[chars.length-1] == text[i]) chars.pop()
+        }
         if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0 && comment.length == 0) {
           if (!text.substring(start, i).toLowerCase().startsWith('delimiter')) {
             queries.push({"begin": start, "end": i-delimiter.length+1})
@@ -1094,13 +1098,18 @@ export default {
       let range = null
       const selectedText = this.editor.getSelectedText()
       // Get editor query (+ range)
-      if (selectedText.length == 0) {
-        query = minify(this.removeQueryComments(this.clientQuery['query']))
-        range = this.clientQuery['range']
-      }
-      else {
-        query = minify(this.removeQueryComments(selectedText))
-        range = this.editor.selection.getRange()
+      try {
+        if (selectedText.length == 0) {
+          query = minify(this.removeQueryComments(this.clientQuery['query']))
+          range = this.clientQuery['range']
+        }
+        else {
+          query = minify(this.removeQueryComments(selectedText))
+          range = this.editor.selection.getRange()
+        }
+      } catch {
+        EventBus.$emit('send-notification', "The SQL statement cannot be minified due to syntax errors.", '#EF5354')
+        return
       }
       // Replace selected queries with beautified format
       this.editor.session.replace(range, query)
@@ -1308,7 +1317,7 @@ export default {
       let needReload = false
       for (let query of queries) {
         if (
-          ['create','drop'].some(x => query.trim().toLowerCase().startsWith(x)) &&
+          ['create','drop','rename'].some(x => query.trim().toLowerCase().startsWith(x)) &&
           !(['create user','drop user'].some(x => query.trim().toLowerCase().startsWith(x)))
         ) {
           needReload = true
