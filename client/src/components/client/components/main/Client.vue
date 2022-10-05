@@ -1317,8 +1317,9 @@ export default {
       let needReload = false
       for (let query of queries) {
         if (
-          ['create','drop','rename'].some(x => query.trim().toLowerCase().startsWith(x)) &&
-          !(['create user','drop user'].some(x => query.trim().toLowerCase().startsWith(x)))
+          (['create','drop','rename'].some(x => query.trim().toLowerCase().startsWith(x)) &&
+          !(['create user','drop user'].some(x => query.trim().toLowerCase().startsWith(x)))) ||
+          (query.trim().toLowerCase().startsWith('alter table') && query.toLowerCase().includes(' rename to '))
         ) {
           needReload = true
           break

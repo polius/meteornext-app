@@ -256,7 +256,7 @@ export default {
     renameViewSubmit() {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
-      let query = "RENAME TABLE " + currentName + " TO " + newName + ";"
+      let query = "RENAME TABLE `" + currentName + "` TO `" + newName + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
