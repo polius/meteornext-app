@@ -657,7 +657,7 @@ export default {
       this.cloudPath = ['Cloud Keys', this.cloudKeysSelected[0].type == 'aws' ? 'Amazon S3' : 'Google Cloud']
     },
     getAWSObjects(search, event) {
-      if (event !== undefined && event.key.length > 1 && !(['Backspace','Delete'].includes(event.key))) return
+      if (event !== undefined && event.key.length > 1 && !(['Backspace','Delete','Meta','Control','Enter'].includes(event.key))) return
       if (event === undefined) this.loading = true
       this.awsObjectsItems = []
       const payload = { 
