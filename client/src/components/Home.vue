@@ -1,12 +1,14 @@
 <template>
-  <div style="display:grid; height:100vh; align-content:center; text-align:center">
-    <transition appear appear-active-class="logo-transition">
-      <v-avatar size="100" style="margin-left:auto; margin-right:auto"><v-img src="../assets/logo.png"></v-img></v-avatar>
-    </transition>
-    <transition appear appear-active-class="title-transition">
-      <div class="text-h2" style="margin:20px; font-size:3.2rem!important; font-weight:400">Meteor Next<span class="text-body-1 font-weight-light" style="margin-top:10px; margin-left:10px">{{ version }}</span></div>
-    </transition>
-    <div class="font-weight-light" style="position:fixed; bottom:0; width:100%; margin-bottom:2vh; font-size:14px"><a style="color: white" href="https://www.meteornext.io" target="_blank">Meteor Next</a> is a registered trademark of <a style="color: white" href="https://www.poliuscorp.com" target="_blank">PoliusCorp, Inc</a>.</div>
+  <div>
+    <div style="position:fixed; top:50%; left: 50%; transform: translate(-50%, -50%); width:100%">
+      <transition appear appear-active-class="logo-transition">
+        <v-avatar size="100" style="margin-left:auto; margin-right:auto; display:inherit"><v-img src="../assets/logo.png"></v-img></v-avatar>
+      </transition>
+      <transition appear appear-active-class="title-transition">
+        <div class="text-h2" style="margin:20px; font-size:3.2rem!important; font-weight:400; text-align:center">Meteor Next<span class="text-body-1 font-weight-light" style="margin-top:10px; margin-left:10px">{{ version }}</span></div>
+      </transition>
+    </div>
+    <div class="font-weight-light" style="position:fixed; bottom:0; width:100%; margin-bottom:2vh; font-size:14px; text-align:center">Copyright © {{ new Date().getFullYear() }} <a style="color: white" href="https://www.meteornext.io" target="_blank">Meteor Next</a></div>
   </div>
 </template>
 

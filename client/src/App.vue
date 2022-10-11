@@ -1,6 +1,6 @@
 <template>
   <v-app style="overflow-x:auto">
-    <v-app-bar app absolute v-show="isLoggedIn && showTopNavbar()">
+    <v-app-bar app absolute v-show="isLoggedIn && showTopNavbar()" height="64">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
@@ -228,7 +228,7 @@ export default {
     checkStyle() {
       var element = document.getElementsByClassName('v-application--wrap');
       if (element.length > 0) {
-        if (this.$store.getters['app/isLoggedIn']) element[0].style.minWidth = 'max(calc(100vw - 20px),1330px)'
+        if (this.$store.getters['app/isLoggedIn']) element[0].style.minWidth = 'max(calc(100vw - 20px),1280px)'
         else element[0].style.minWidth = ''
       }
     },
