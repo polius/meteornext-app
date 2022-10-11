@@ -297,7 +297,7 @@
                       </v-row>
                     </template>
                     <template v-slot:selection="{ item }" >
-                      <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="`${item.secured ? 'margin-right:2px' : 'margin-right:8px'}; cursor:default`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      <v-icon v-if="item.shared != null" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EF5354' : 'warning'" :style="`${item.secured ? 'margin-right:2px' : 'margin-right:8px'}; cursor:default`">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                       <v-icon v-if="item.secured" title="Secured" :color="item.shared ? '#EB5F5D' : 'warning'" style="font-size:12px; padding-top:4px; padding-right:8px; cursor:default">fas fa-lock</v-icon>
                       <span style="margin-right:5px">{{ item.name }}</span>
                     </template>
