@@ -769,7 +769,6 @@ export default {
       data.append('createDatabase', !this.databaseItems.includes(this.databaseSearch))
       data.append('recreateDatabase', this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false)
       data.append('dropDatabase', this.dropDatabase)
-      data.append('url', window.location.protocol + '//' + window.location.host)
       // Build request options
       const CancelToken = axios.CancelToken;
       this.cancelToken = CancelToken.source();
@@ -886,8 +885,7 @@ export default {
         database: this.database,
         createDatabase: !this.databaseItems.includes(this.databaseSearch),
         recreateDatabase: this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false,
-        dropDatabase: this.dropDatabase,
-        url: window.location.protocol + '//' + window.location.host
+        dropDatabase: this.dropDatabase
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
@@ -915,8 +913,7 @@ export default {
         database: this.database,
         createDatabase: !this.databaseItems.includes(this.databaseSearch),
         recreateDatabase: this.databaseItems.includes(this.databaseSearch) ? this.recreateDatabase : false,
-        dropDatabase: this.dropDatabase,
-        url: window.location.protocol + '//' + window.location.host
+        dropDatabase: this.dropDatabase
       }
       axios.post('/utils/imports', payload)
       .then((response) => {
