@@ -167,7 +167,7 @@ class Clones:
                 WHERE `id` = %s
             """
             now = self.__utcnow()
-            self._sql.execute(query, args=(status, url[0], t.error, now, now, item['id']))
+            self._sql.execute(query, args=(status, url, t.error, now, now, item['id']))
 
         # Get clones details
         query = """
