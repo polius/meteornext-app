@@ -309,6 +309,7 @@ class Imports:
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = os.path.getsize(f"{self._base_path}/files/imports/{uri}/{secure_filename(file.filename)}")
             selected = ''
+            url = data['url']
             create_database = json.loads(data['createDatabase'])
             recreate_database = json.loads(data['recreateDatabase'])
 
@@ -317,6 +318,7 @@ class Imports:
             format = data['format']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
+            url = data['url']
             create_database = data['createDatabase']
             recreate_database = data['recreateDatabase']
 
@@ -334,6 +336,7 @@ class Imports:
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             details = {"cloud": data['cloud'], "bucket": data['bucket'], "object": data['object']}
+            url = data['url']
             create_database = data['createDatabase']
             recreate_database = data['recreateDatabase']
 
@@ -361,7 +364,8 @@ class Imports:
             'uri': uri,
             'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None,
             'slack_enabled': group['utils_slack_enabled'],
-            'slack_url': group['utils_slack_url']
+            'slack_url': group['utils_slack_url'],
+            'url': url
         }
         self._imports.post(user, item)
 

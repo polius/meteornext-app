@@ -407,7 +407,8 @@ export default {
         export_triggers: this.exportTriggers,
         export_routines: this.exportRoutines,
         export_events: this.exportEvents,
-        size: this.mode == 'full' ? this.databaseSize : this.tableSize
+        size: this.mode == 'full' ? this.databaseSize : this.tableSize,
+        url: window.location.protocol + '//' + window.location.host
       }
       axios.post('/utils/exports', payload)
       .then((response) => {

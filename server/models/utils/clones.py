@@ -65,10 +65,10 @@ class Clones:
 
     def post(self, user, data):
         query = """
-            INSERT INTO clones (`source_server`, `source_database`, `destination_server`, `destination_database`, `create_database`, `recreate_database`, `mode`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `created`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO clones (`source_server`, `source_database`, `destination_server`, `destination_database`, `create_database`, `recreate_database`, `mode`, `tables`, `export_schema`, `export_data`, `add_drop_table`, `export_triggers`, `export_routines`, `export_events`, `size`, `status`, `created`, `url`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['source_server'], data['source_database'], data['destination_server'], data['destination_database'], data['create_database'], data['recreate_database'], data['mode'], data['tables'], data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['created'], data['uri'], user['id']))
+        return self._sql.execute(query, (data['source_server'], data['source_database'], data['destination_server'], data['destination_database'], data['create_database'], data['recreate_database'], data['mode'], data['tables'], data['export_schema'], data['export_data'], data['add_drop_table'], data['export_triggers'], data['export_routines'], data['export_events'], data['size'], data['status'], data['created'], data['url'], data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """

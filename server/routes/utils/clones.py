@@ -198,7 +198,8 @@ class Clones:
             'created': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'slack_enabled': group['utils_slack_enabled'],
-            'slack_url': group['utils_slack_url']
+            'slack_url': group['utils_slack_url'],
+            'url': data['url']
         }
         self._clone.post(user, item)
 
