@@ -1226,11 +1226,11 @@ export default {
       }
       else if (this.dialogSelect == 'SQL') {
         var SqlString = require('sqlstring');
-        let rawQuery = 'INSERT INTO `<table>` (' + this.contentHeaders.map(x => '`' + x.headerName.trim() + '`').join() + ')\nVALUES\n'
+        let rawQuery = 'INSERT INTO `' + this.sidebarSelected[0]['name'] + '` (' + this.contentHeaders.map(x => '`' + x.headerName.trim() + '`').join() + ')\nVALUES\n'
         let values = ''
         let args = []
         for (let row of this.contentItems) {
-          let rowVal = Object.values(row)
+          let rowVal = Object.values(row).map(x => x.toString())
           args = [...args, ...rowVal];
           values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
         }
