@@ -428,7 +428,11 @@ class Cron:
             # Restart worker
             if advanced['memory_enabled'] and current_day in advanced['memory_days'] and advanced['memory_time'] == current_time:
                 with open(f'{self._base_path}/server.pid', 'r') as fopen:
-                    os.kill(int(fopen.read()), SIGHUP)
+                    pid = int(fopen.read())
+                    # Kill zombie workers
+                    os.system(f"kill -9 $(ps --ppid {pid} --sort=start | grep 'init\|python' | awk '{{print $1}}' | head -n -1)")
+                    # Spawn a new worker and close the old one
+                    os.kill(pid, SIGHUP)
 
         finally:
             # Close SQL Connection

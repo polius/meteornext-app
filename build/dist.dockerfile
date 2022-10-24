@@ -15,6 +15,7 @@ COPY build/start.sh /root/
 
 # Run additional commands
 RUN apt update -qq && \
+    apt install procps -y && \
     apt install jq -y && \
     apt install pv -y && \
     apt install default-mysql-client -y && \
