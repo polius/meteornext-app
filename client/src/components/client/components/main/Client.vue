@@ -397,7 +397,7 @@ export default {
         let isJSON = false
         try {
           JSON2.parse(event.value.toString())
-          isJSON = true
+          isJSON = event.value.toString().trim().startsWith('{') && event.value.toString().trim().endsWith('}')
         } catch { 1 == 1 }
         if (isJSON || event.value.toString().length >= 50 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
