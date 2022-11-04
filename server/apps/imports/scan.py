@@ -61,7 +61,7 @@ class Scan:
             self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
         finally:
             # Remove execution folder from disk
-            shutil.rmtree(os.path.join(base_path, item['uri']))
+            shutil.rmtree(base_path)
 
     def __core2(self, item, base_path):
         # Start Import
@@ -76,8 +76,8 @@ class Scan:
         self.__monitor(item, base_path)
 
         # Update import status
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
-        data_path = os.path.join(base_path, item['uri'], 'data.txt')
+        error_path = os.path.join(base_path, 'error.txt')
+        data_path = os.path.join(base_path, 'data.txt')
 
         # Read data log
         data = None
@@ -100,9 +100,9 @@ class Scan:
 
     def __scan(self, item, base_path):
         # Build 'progress_path' & 'error_path'
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
-        progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
-        data_path = os.path.join(base_path, item['uri'], 'data.txt')
+        error_path = os.path.join(base_path, 'error.txt')
+        progress_path = os.path.join(base_path, 'progress.txt')
+        data_path = os.path.join(base_path, 'data.txt')
         size = item['metadata']['size']
 
         # Build sources
@@ -145,9 +145,9 @@ class Scan:
 
     def __monitor(self, item, base_path):
         # Init path vars
-        progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
-        data_path = os.path.join(base_path, item['uri'], 'data.txt')
+        progress_path = os.path.join(base_path, 'progress.txt')
+        error_path = os.path.join(base_path, 'error.txt')
+        data_path = os.path.join(base_path, 'data.txt')
 
         # Read progress log
         progress = None

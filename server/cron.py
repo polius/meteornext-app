@@ -430,7 +430,7 @@ class Cron:
                 with open(f'{self._base_path}/server.pid', 'r') as fopen:
                     pid = int(fopen.read())
                     # Kill zombie workers
-                    os.system(f"kill -9 $(ps --ppid {pid} --sort=start | grep 'init\|python' | awk '{{print $1}}' | head -n -1)")
+                    os.system(f"for i in $(ps -p $(pgrep -d, -u $(whoami) -P {pid}) --sort=start | grep 'init\|python' | awk '{{print $1}}' | head -n -1); do kill -9 $i; done")
                     # Spawn a new worker and close the old one
                     os.kill(pid, SIGHUP)
 

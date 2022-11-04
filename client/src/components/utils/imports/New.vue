@@ -176,12 +176,12 @@
                             <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                               <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                             </v-toolbar>
-                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1" mobile-breakpoint="0">
+                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" @current-items="(items) => scanCurrentItems = items" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1" mobile-breakpoint="0">
                               <template v-ripple v-slot:[`header.data-table-select`]="{}">
                                 <v-simple-checkbox
                                   :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
                                   :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
-                                  @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = [...scanItems]">
+                                  @click="scanCheckboxClick">
                                 </v-simple-checkbox>
                               </template>
                               <template v-slot:[`item.size`]="{ item }">
@@ -427,6 +427,7 @@ export default {
       scanID: null,
       scanStatus: '',
       scanProgress: null,
+      scanCurrentItems: [],
       scanItems: [],
       scanHeaders: [
         { text: 'File', value: 'file',  width: '50%' },
@@ -962,6 +963,14 @@ export default {
     },
     databaseKeyEnter() {
       this.$refs.database.blur()
+    },
+    scanCheckboxClick() {
+      if (this.scanSearch.trim().length == 0) this.scanSelected.length == this.scanItems.length ? this.scanSelected = [] : this.scanSelected = [...this.scanItems]
+      else {
+        const allSelected = this.scanCurrentItems.every(x => this.scanSelected.find(y => y.file == x.file))
+        if (allSelected) this.scanSelected = this.scanSelected.filter(x => !this.scanCurrentItems.find(y => y.file == x.file))
+        else this.scanSelected = this.scanSelected.filter(x => !this.scanCurrentItems.find(y => y.file == x.file)).concat(this.scanCurrentItems)
+      }
     },
   }
 }

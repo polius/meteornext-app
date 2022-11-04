@@ -1,11 +1,11 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;" mobile-breakpoint="0">
+    <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" @current-items="(items) => current = items" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;" mobile-breakpoint="0">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
           :indeterminate="selected.length > 0 && selected.length != items.length"
-          @click="selected.length == items.length ? selected = [] : selected = [...items]">
+          @click="checkboxClick">
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.name`]="{ item }">
@@ -239,6 +239,7 @@ export default {
     ],
     auxiliary: [],
     items: [],
+    current: [],
     selected: [],
     search: '',
     item: { group_id: '', owner_id: '', name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, shared: false, secured: false },
@@ -565,7 +566,15 @@ export default {
     },
     notification(message, color, persistent=false) {
       EventBus.$emit('notification', message, color, persistent)
-    }
+    },
+    checkboxClick() {
+      if (this.filter.search.trim().length == 0) this.selected.length == this.items.length ? this.selected = [] : this.selected = [...this.items]
+      else {
+        const allSelected = this.current.every(x => this.selected.find(y => y.id == x.id))
+        if (allSelected) this.selected = this.selected.filter(x => !this.current.find(y => y.id == x.id))
+        else this.selected = this.selected.filter(x => !this.current.find(y => y.id == x.id)).concat(this.current)
+      }
+    },
   },
   watch: {
     dialog (val) {

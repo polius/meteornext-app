@@ -168,7 +168,7 @@
                         </v-tabs>
                       </div>
                       <div style="height:50vh">
-                        <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady2" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="tablesHeaders" :defaultColDef="defaultColDef2" :rowData="tablesSelected"></ag-grid-vue>
+                        <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection oncontextmenu="return false" @grid-ready="onGridReady2" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="tablesHeadersSummary" :defaultColDef="defaultColDef2" :rowData="tablesSelected"></ag-grid-vue>
                       </div>
                       <div class="text-body-1" style="margin-top:15px">Size: <span class="white--text" style="font-weight:500">{{ `${formatBytes(tableSize)} / ${formatBytes(databaseSize)}` }}</span></div>
                       <div class="text-body-1 white--text" style="margin-top:15px">OPTIONS</div>
@@ -248,6 +248,7 @@ export default {
         minWidth: 100,
         resizable: true,
       },
+      tablesHeadersSummary: [],
       // Previous Route
       prevRoute: null
     }
@@ -341,19 +342,28 @@ export default {
         .finally(() => this.loading = false)
     },
     parseTables(tables) {
-      this.tablesHeaders = []
+      var tablesHeaders = []
       this.tablesItems = []
       if (tables.length > 0) {
         for (let [key] of Object.entries(tables[0])) {
-          let column = { headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false }
+          let column = { headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false, suppressMovable: true }
           if (['data_length','index_length','total_length'].includes(key)) {
             column.valueFormatter = (params) => {
               return this.formatBytes(params.data[params.colDef.field])
             }
             column.comparator = this.compareValues
           }
-          this.tablesHeaders.push(column)
+          tablesHeaders.push(column)
         }
+        this.tablesHeadersSummary = JSON.parse(JSON.stringify(tablesHeaders))
+        this.tablesHeaders = tablesHeaders.map(x => {
+          if (x.colId == 'name') {
+            x['headerCheckboxSelection'] = true
+            x['headerCheckboxSelectionFilteredOnly'] = true
+            x['checkboxSelection'] = true
+          }
+          return x
+        })
         this.tablesItems = tables
       }
     },
