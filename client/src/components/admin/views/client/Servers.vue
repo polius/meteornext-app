@@ -1,11 +1,11 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" item-key="id" show-select class="elevation-1" mobile-breakpoint="0">
+    <v-data-table v-model="selected" :headers="headers" :items="items" @current-items="(items) => current = items" :options.sync="options" :server-items-length="total" :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :loading="loading" item-key="id" show-select class="elevation-1" mobile-breakpoint="0">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
           :indeterminate="selected.length > 0 && selected.length != items.length"
-          @click="selected.length == items.length ? selected = [] : selected = [...items]">
+          @click="checkboxClick">
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.server`]="{ item }">
@@ -116,6 +116,7 @@ export default {
       loading: true,
       origin: [],
       items: [],
+      current: [],
       headers: [
         { text: 'User', align: 'left', value: 'user' },
         { text: 'Server', align: 'left', value: 'server' },
@@ -320,6 +321,14 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    checkboxClick() {
+      if (this.search.trim().length == 0) this.selected.length == this.items.length ? this.selected = [] : this.selected = [...this.items]
+      else {
+        const allSelected = this.current.every(x => this.selected.find(y => y.id == x.id))
+        if (allSelected) this.selected = this.selected.filter(x => !this.current.find(y => y.id == x.id))
+        else this.selected = this.selected.filter(x => !this.current.find(y => y.id == x.id)).concat(this.current)
+      }
     },
   },
 }
