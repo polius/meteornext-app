@@ -153,7 +153,7 @@ class Monitor:
                         conn.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
             # Monitoring Alarms
-            if server['monitor']['monitor_enabled'] == 1:
+            if server['monitor']['monitor_enabled']:
                 self.__monitor_alarms(conn, available=True, server=server, summary=summary, params=params, processlist=processlist)
 
             # Parse Variables
@@ -185,7 +185,7 @@ class Monitor:
                 conn = connectors.base.Base(self._sql)
 
                 # Monitoring Alarms
-                if server['monitor']['monitor_enabled'] == 1:
+                if server['monitor']['monitor_enabled']:
                     self.__monitor_alarms(conn, available=False, server=server, error=str(e))
 
                 # Set server unavailable with error
@@ -209,7 +209,7 @@ class Monitor:
         slack = None
 
         # Check 'Unavailable'
-        if (server['monitor']['available'] is None and error is not None) or (server['monitor']['available'] is not None and int(server['monitor']['available']) == 1 and not available):
+        if (server['monitor']['available'] is None and error is not None) or (server['monitor']['available'] and not available):
             notification = {
                 'name': f"Server '{server['sql']['name']}' has become unavailable.",
                 'status': 'ERROR',
@@ -298,7 +298,7 @@ class Monitor:
 
         # Check connections
         connections = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['connections']
-        if server['monitor']['available'] == 1 and available:
+        if server['monitor']['available'] and available:
             last_event = self.__get_last_event(conn, server['id'])
             queries = [int(i['TIME']) for i in processlist if i['COMMAND'] in ['Query','Execute']]
             queries.sort(reverse=True)
