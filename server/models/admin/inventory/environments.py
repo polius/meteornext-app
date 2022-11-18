@@ -73,13 +73,14 @@ class Environments:
         query = """
             UPDATE environments 
             SET name = %s,
+                group_id = %s,
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s, 
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
+        self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
 
         # Fill environment servers
         if len(environment['servers']) > 0:

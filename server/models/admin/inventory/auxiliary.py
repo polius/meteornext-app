@@ -61,6 +61,7 @@ class Auxiliary:
         query = """
             UPDATE auxiliary
             SET name = %s,
+                group_id = %s,
                 engine = %s,
                 version = %s,
                 hostname = %s, 
@@ -78,7 +79,7 @@ class Auxiliary:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (auxiliary['name'], auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['shared'], auxiliary['shared'], auxiliary['owner_id'], auxiliary['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id']))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['ssl_client_key'], auxiliary['ssl_client_key'], auxiliary['ssl_client_certificate'], auxiliary['ssl_client_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['ssl_ca_certificate'], auxiliary['shared'], auxiliary['shared'], auxiliary['owner_id'], auxiliary['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id']))
 
     def delete(self, auxiliary_id):
         query = "DELETE FROM auxiliary WHERE id = %s"

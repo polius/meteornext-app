@@ -60,6 +60,7 @@ class Cloud:
         query = """
             UPDATE cloud
             SET name = %s,
+                group_id = %s,
                 type = %s,
                 access_key = %s,
                 secret_key = IF(%s = '<secret_key>', `secret_key`, %s),
@@ -71,7 +72,7 @@ class Cloud:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (cloud['name'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['secret_key'], cloud['buckets'], cloud['shared'], cloud['shared'], cloud['owner_id'], cloud['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id']))
+        self._sql.execute(query, (cloud['name'], cloud['group_id'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['secret_key'], cloud['buckets'], cloud['shared'], cloud['shared'], cloud['owner_id'], cloud['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id']))
 
     def delete(self, cloud_id):
         query = "DELETE FROM cloud WHERE id = %s"
