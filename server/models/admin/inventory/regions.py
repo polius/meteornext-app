@@ -64,6 +64,7 @@ class Regions:
         query = """
             UPDATE regions
             SET name = %s,
+                group_id = %s,
                 ssh_tunnel = %s,
                 hostname = %s,
                 port = %s,
@@ -77,7 +78,7 @@ class Regions:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['key'], region['shared'], region['shared'], region['owner_id'], region['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (region['name'], region['group_id'], region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['key'], region['shared'], region['shared'], region['owner_id'], region['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, region_id):
         query = "DELETE FROM regions WHERE id = %s"

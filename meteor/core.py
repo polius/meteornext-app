@@ -417,7 +417,7 @@ class core:
             parse(data, queries)
 
         parsed_queries = '```' + '\n---\n'.join([i for i in queries])
-        parsed_queries = parsed_queries[:1990] + '...```' if len(parsed_queries) > 1990 else parsed_queries + '```'
+        parsed_queries = parsed_queries[:1500] + '...```' if len(parsed_queries) > 1500 else parsed_queries + '```'
         parsed_queries = '```---```' if parsed_queries == '``````' else parsed_queries
 
         # Overall Time

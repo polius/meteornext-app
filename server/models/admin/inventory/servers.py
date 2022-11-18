@@ -88,6 +88,7 @@ class Servers:
         query = """
             UPDATE servers
             SET `name` = %s,
+                `group_id` = %s,
                 `region_id` = %s,
                 `engine` = %s,
                 `version` = %s,
@@ -107,7 +108,7 @@ class Servers:
                 `updated_at` = %s
             WHERE `id` = %s
         """
-        self._sql.execute(query, (server['name'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_ca_certificate'], server['usage'], server['shared'], server['shared'], server['owner_id'], server['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_ca_certificate'], server['usage'], server['shared'], server['shared'], server['owner_id'], server['secured'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, server_id):
         # Delete from 'monitoring'
