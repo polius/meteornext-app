@@ -177,14 +177,22 @@ class Deployments:
             if not results['shared'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
+            # Parse execution data
+            progress = json.loads(results['progress'])
+            queries = progress['queries'] if 'queries' in progress else None
+            error = progress['error'] if 'error' in progress else None
+            method = results['method'].lower()
+
             # Get Execution Results File
             if results['logs'] == 'local':
                 # Check if exists
                 bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
                 base_path = os.path.realpath(os.path.dirname(sys.executable)) if bin else os.path.realpath(os.path.dirname(sys.argv[0]))
-                if not os.path.exists(f"{base_path}/files/deployments/{uri}.json"):
+                if not os.path.exists(f"{base_path}/files/deployments/{uri}.csv"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                return send_from_directory(f"{base_path}/files/deployments", f"{uri}.json")
+                with open(f"{base_path}/files/deployments/{uri}.csv") as fopen:
+                    data = fopen.read()
+                return jsonify({"data": data, "method": method, "queries": queries, "error": error}), 200
 
             elif results['logs'] == 'amazon_s3':
                 amazon = json.loads(self._settings.get(setting_name='AMAZON'))
@@ -198,9 +206,9 @@ class Deployments:
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.json.gz'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.csv.gz'.format(uri))
                     with gzip.open(obj['Body'], 'rb') as fopen:
-                        return jsonify(json.load(fopen)), 200
+                        return jsonify({"data": fopen.read(), "method": method, "queries": queries, "error": error}), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
                         return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400

@@ -232,7 +232,7 @@ class blueprint:
         execution_method = deployment['method'].lower()
 
         # Build Meteor Command
-        command = meteor_path + ["--path", execution_path, "--uri", deployment['uri'], f"--{execution_method}"]
+        command = meteor_path + ["--path", execution_path, f"--{execution_method}"]
 
         # Execute Meteor
         subprocess.Popen(command, stdout=subprocess.DEVNULL)

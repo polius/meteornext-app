@@ -157,7 +157,7 @@
                   <div v-if="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
                     <div id="dialogQueryEditorContent" style="height:256px"></div>
                   </div>
-                  <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
+                  <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -1208,11 +1208,7 @@ export default {
     exportRowsSubmit() {
       this.loading = true
       const name = this.sidebarSelected[0]['name']
-      if (this.dialogSelect == 'Meteor') {
-        let exportData = '{"DATA":' + JSON.stringify(this.contentItems) + ',' + '"COLUMNS":' + JSON.stringify(this.contentHeaders.map(x => x.headerName.trim())) + '}'
-        this.download(name + '.json', exportData)
-      }
-      else if (this.dialogSelect == 'JSON') {
+      if (this.dialogSelect == 'JSON') {
         let exportData = JSON.stringify(this.contentItems)
         this.download(name + '.json', exportData)
       }

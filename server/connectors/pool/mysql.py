@@ -1,11 +1,7 @@
 import pymysql
 import time
 import dbutils.pooled_db
-from collections import OrderedDict
-from pymysql.cursors import DictCursorMixin, Cursor
-
-class OrderedDictCursor(DictCursorMixin, Cursor):
-    dict_type = OrderedDict
+from pymysql.cursors import DictCursor
 
 class MySQL:
     def __init__(self, config):
@@ -17,7 +13,7 @@ class MySQL:
             "user": config['username'],
             "charset": "utf8mb4",
             "use_unicode": True,
-            "cursorclass": OrderedDictCursor,
+            "cursorclass": DictCursor,
             "autocommit": True,
             "ssl_ca":  'keys/' + config['ssl_ca_certificate'] if 'ssl_ca_certificate' in config and config['ssl_ca_certificate'] else None,
             "ssl_cert": 'keys/' + config['ssl_client_certificate'] if 'ssl_client_certificate' in config and config['ssl_client_certificate'] else None,
@@ -46,7 +42,7 @@ class MySQL:
                 with self._pool.dedicated_connection() as connection:
                     if database:
                         connection.select_db(database)
-                    with connection.cursor(OrderedDictCursor) as cursor:
+                    with connection.cursor(DictCursor) as cursor:
                         cursor.execute(query, args)
                         result = cursor.fetchall() if query.strip().lower().startswith(('select','show')) else cursor.lastrowid # if cursor.lastrowid is None else cursor.lastrowid
                 return result
@@ -57,7 +53,7 @@ class MySQL:
 
     def mogrify(self, query, args=None):
         with self._pool.dedicated_connection() as connection:
-            with connection.cursor(OrderedDictCursor) as cursor:
+            with connection.cursor(DictCursor) as cursor:
                 result = cursor.mogrify(query, args)
         return result
 
@@ -65,5 +61,5 @@ class MySQL:
         connection = self._pool.dedicated_connection()
         if transaction:
             connection.begin()
-        cursor = connection.cursor(OrderedDictCursor)
+        cursor = connection.cursor(DictCursor)
         return [connection, cursor]

@@ -21,7 +21,6 @@ var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_t
 // | IMPORT |
 // +--------+
 // Global Import File Variable
-var IMPORT_FILE;
 var DATA;
 var COLUMNS;
 var INFO;
@@ -85,26 +84,7 @@ function init() {
   $("#quickFilterInput").val('');
 
   // Export Modal - Set Default Dropdown Value
-  $("#export-format").val('meteor');
-}
-
-function check_uri() {
-  var current_url = new URL(window.location.href);
-  var uri = current_url.searchParams.get("uri");
-  if (uri != null) {
-    resource_url = (resource_url[resource_url.length - 1] == '/') ? resource_url : resource_url + '/'
-    $("#loading").append("<p>- Retrieving Data URI ...</p>");
-    $.getScript(resource_url + uri + '.js')
-      .done(function () {
-        init_meteor();
-      })
-      .fail(function () {
-        var error_title = "Invalid Uniform Resource Identifier";
-        var error_message = "The URI provided is not valid";
-        $("#loading").html('');
-        show_error(error_title, error_message, '');
-      });
-  }
+  $("#export-format").val('csv');
 }
 
 // ##############################################################################################
@@ -147,10 +127,10 @@ function build_columns() {
           if (typeof meteor_status !== 'undefined') {
             meteor_status = (meteor_status == '""') ? '' : meteor_status.replace(/"/g, '');
             if (meteor_status == '1') {
-              if (INFO['mode'] == 'deploy' || (INFO['mode'] == 'test' && params.data.meteor_query.toLowerCase().startsWith("select"))) {
+              if (typeof INFO === 'undefined' || INFO['method'] == 'deploy' || (INFO['method'] == 'test' && params.data.meteor_query.toLowerCase().startsWith("select"))) {
                 return 'Query successfully executed';
               }
-              else if (INFO['mode'] == 'test') return 'Test succeeded';
+              else if (INFO['method'] == 'test') return 'Test succeeded';
             }
             else if (meteor_status == '2') return 'A rollback has been executed'
             else return params.data.meteor_response;
@@ -294,7 +274,7 @@ function onFirstDataRendered(params) {
         $("#quickFilterInput").attr("disabled", false);
         $("#delete-button").attr("disabled", false);
         $("#theme-button").attr("disabled", false);
-        $("#info-button").attr("disabled", (typeof INFO == 'undefined' || !('total_queries' in INFO)));
+        $("#info-button").attr("disabled", (typeof INFO == 'undefined' || !('total' in INFO.queries)));
         $("#settings-button").attr("disabled", false);
         $("#filter-button").attr("disabled", false);
         $("#transformation-button").attr("disabled", !COLUMNS.includes('meteor_query') || !COLUMNS.includes('meteor_output'));
@@ -375,82 +355,6 @@ function removeSelectedRows() {
   autoSizeAll();
 }
 
-// ##############################################################################################
-// IMPORT
-// ##############################################################################################
-var imported_file_name;
-
-$("#import-button").click(function () {
-  // Open File Import Dialog 
-  $("#import-file").trigger("click");
-});
-
-function updateProgress(evt) {
-  // evt is an ProgressEvent.
-  if (evt.lengthComputable) {
-    var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
-    $("#loading").append("<p>- [" + percentLoaded.toString() + " %] Uploading file '" + imported_file_name + "' ...</p>");
-  }
-}
-
-$("#import-file").change(function (event) {
-  $("#import-button").addClass("is-loading");
-  $("#loading").html('');
-
-  var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
-  var error_code = `{<br>
-    &nbsp "DATA": [["row1_col1", "row1_col2"],["row2_col1", "row2_col2"]],<br>
-    &nbsp "COLUMNS": ["column1", "column2"]<br>
-  }`;
-  var file = event.target.files[0];
-  if (typeof file == 'undefined') {
-    $("#import-button").removeClass("is-loading");
-    return;
-  }
-  var extension = file['name'].substr((file['name'].lastIndexOf('.') + 1));
-  if (extension != 'json') show_error(error_title, error_message, error_code);
-  else {
-    // Re-Init Components
-    init()
-    // If Grid is Loaded then Destroy it and show the loading page again
-    if (typeof gridOptions != 'undefined') {
-      $("#bestHtml5Grid").hide();
-      $("#rowCount").hide();
-      $("#footer").hide();
-      $("#loading").show();
-      gridOptions.api.destroy();
-    }
-    $("#theme-button").attr("disabled", true);
-    $("#loading").append("<p><b>" + file['name'] + " (" + (file['size'] / 1024 / 1024).toFixed(2) + " MB)</b></p>");
-    imported_file_name = file['name'];
-
-    var reader = new FileReader();
-    reader.readAsText(file);
-    reader.onprogress = updateProgress;
-    reader.onload = function (e) {
-      try {
-        $("#loading").append("<p>- File Uploaded Successfully</p>");
-        $("#loading").append("<p>- Processing File ...</p>");
-        // Convert String to Executable Javascript Code
-        IMPORT_FILE = JSON.parse(e.target.result);
-        // Check Errors
-        var valid_file = false;
-        if (!('DATA' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
-        else if (!('COLUMNS' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
-        else valid_file = true;
-      }
-      catch (err) {
-        show_error(error_title, error_message, error_code);
-      }
-      if (valid_file) {
-        // Init Meteor Core 
-        setTimeout(function () { init_meteor(); }, 100);
-      }
-    };
-  }
-});
-
 function init_meteor() {
   // Compile Several Data File Meteor Values.
   $("#loading").append("<p>- Compiling Data ...</p>");
@@ -483,16 +387,6 @@ function init_meteor() {
 }
 
 function compile_meteor() {
-  // Compile columns
-  COLUMNS = IMPORT_FILE.COLUMNS;
-  // Compile data
-  DATA = IMPORT_FILE.DATA
-  // Compile info
-  if ('INFO' in IMPORT_FILE) INFO = IMPORT_FILE.INFO
-  // Compile errors
-  if ('ERROR' in IMPORT_FILE) ERROR = IMPORT_FILE.ERROR
-  // Clean IMPORT_FILE
-  IMPORT_FILE = null
   // Get the Custom Columns
   for (var i = 0; i < COLUMNS.length; ++i) {
     if (!SUMMARY_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) FILTER_CUSTOM_COLUMNS.push(COLUMNS[i]);
@@ -662,6 +556,101 @@ function enable_settings_modal(option) {
 }
 
 // ##############################################################################################
+// IMPORT MODAL
+// ##############################################################################################
+var imported_file;
+
+$("#import-button").click(function () {
+  imported_file = undefined;
+  $("#import-modal-file-name").html('No file selected.');
+  $("#import-modal-save").attr("disabled", true);
+  $("#import-modal").addClass("is-active");
+});
+
+$("#import-modal-close").click(function () {
+  close_import_modal();
+});
+
+$("#import-modal-cancel").click(function () {
+  close_import_modal();
+});
+
+function close_import_modal() {
+  $("#import-modal").removeClass('fadeIn');
+  $("#import-modal").addClass('fadeOut');
+  setTimeout(function () {
+    $("#import-modal").removeClass("is-active");
+    $("#import-modal").removeClass('fadeOut');
+    $("#import-modal").addClass('fadeIn');
+  }, 300);
+}
+
+function pretty_size(size) {
+  if (size / 1024 < 1) return size + ' B'
+  if (size / 1024 / 1024 < 1) return (size / 1024).toFixed(2) + ' KB'
+  if (size / 1024 / 1024 / 1024 < 1) return (size / 1024 / 1024).toFixed(2) + ' MB'
+  return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+}
+
+$("#import-file").change(function (event) {
+  imported_file = event.target.files[0];
+  $("#import-modal-file-name").html(imported_file['name'] + " (" + pretty_size(imported_file['size']) + ")");
+  $("#import-modal-save").attr("disabled", false);
+})
+
+$("#import-modal-save").click(function () {
+  close_import_modal();
+  $("#import-button").addClass("is-loading");
+  $("#loading").html('');
+
+  var error_title = "Invalid File Type";
+  var error_message = "Please use a <b>CSV</b> file format. Example of a <b>meteor.csv</b> file:<br><br>";
+  var error_code = `col1,col2,col3<br>
+    val1,val2,val3<br>
+    val4,val5,val6`;
+  if (typeof imported_file == 'undefined') {
+    $("#import-button").removeClass("is-loading");
+    return;
+  }
+  var extension = imported_file['name'].substr((imported_file['name'].lastIndexOf('.') + 1));
+  if (extension != 'csv') show_error(error_title, error_message, error_code);
+  else {
+    // Re-Init Components
+    init()
+    // If Grid is Loaded then Destroy it and show the loading page again
+    if (typeof gridOptions != 'undefined') {
+      $("#bestHtml5Grid").hide();
+      $("#rowCount").hide();
+      $("#footer").hide();
+      $("#loading").show();
+      gridOptions.api.destroy();
+    }
+    $("#theme-button").attr("disabled", true);
+    $("#loading").append("<p><b>" + imported_file['name'] + " (" + pretty_size(imported_file['size']) + ")</b></p>");
+
+    DATA = []
+    Papa.parse(imported_file, {
+      skipEmptyLines: true,
+      worker: true,
+      header: true,
+      step: function(results) {
+        try {
+          results.data.meteor_output = JSON.parse(results.data.meteor_output)
+        } catch (error) {}
+        DATA.push(results.data)
+      },
+      complete: function() {
+        COLUMNS = Object.keys(DATA[0])
+        setTimeout(function () { init_meteor(); }, 100);
+      },
+      error: function() {
+        show_error(error_title, error_message, error_code);
+      }
+    });
+  }
+});
+
+// ##############################################################################################
 // INFORMATION MODAL
 // ##############################################################################################
 
@@ -688,77 +677,89 @@ function close_info_modal() {
 }
 
 function init_info_modal() {
-  if (typeof INFO == 'undefined' || !('total_queries' in INFO)) return;
+  if (typeof INFO == 'undefined' || !('total' in INFO.queries)) return;
   // +------+
   // | TEST |
   // +------+
-  if (INFO['mode'] == 'test') {
+  if (INFO['method'] == 'test') {
     // Queries Tested
-    $("#info-modal-fields").prepend('<span id="info-queries" class="tag is-info" style="font-size:1.1rem; font-weight:500; width:100%;">Total Queries: <b style="margin-left:5px;">' + INFO['total_queries'] + '</b></span>');
+    $("#info-modal-fields").prepend('<span id="info-queries" class="tag is-info" style="font-size:1.1rem; font-weight:500; width:100%;">Total Queries: <b style="margin-left:5px;">' + INFO.queries.total + '</b></span>');
     $("#info-execution-title").text('TEST EXECUTION');
+
     // Queries Passed the Test Execution
-    var info_execution_checks_successful_value = INFO['total_queries'] - INFO['queries_failed'];
+    var info_execution_checks_successful_value = INFO.queries.succeeded.t;
     var info_execution_checks_successful_percentage = 0.0;
-    if (INFO['total_queries'] != 0) {
-      info_execution_checks_successful_percentage = (Number.parseFloat(INFO['total_queries'] - INFO['queries_failed']) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+    if (INFO.queries.total != 0) {
+      info_execution_checks_successful_percentage = INFO.queries.succeeded.p;
     }
     $("#info-modal-fields").append('<div style="margin-top:10px;"><span id="info-execution-checks-successful" class="tag is-success" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#00c4a7;">Queries Succeeded: <b style="margin-left:5px;">' + info_execution_checks_successful_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + info_execution_checks_successful_percentage + '%)</span></span></div>');
 
     // Queries Failed the Test Execution
-    var execution_checks_failed_value = INFO['queries_failed'];
+    var execution_checks_failed_value = INFO.queries.failed.t;
     var execution_checks_failed_percentage = 0.0;
-    if (INFO['total_queries'] != 0) {
-      execution_checks_failed_percentage = (Number.parseFloat(INFO['queries_failed']) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+    if (INFO.queries.total != 0) {
+      execution_checks_failed_percentage = INFO.queries.failed.p;
     }
-    $("#info-modal-fields").append('<div><span id="info-execution-checks-failed" class="tag" style="font-size:1.1rem; font-weight:500; width:100%; background-color:#ff6961;">Queries Failed: <b style="margin-left:5px;">' + execution_checks_failed_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + execution_checks_failed_percentage + '%)</span></span></div>');
-    if (INFO['queries_failed'] == 0) $("#info-execution-checks-failed").addClass("is-success");
+    $("#info-modal-fields").append('<div><span id="info-execution-checks-failed" class="tag" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#ff6961;">Queries Failed: <b style="margin-left:5px;">' + execution_checks_failed_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + execution_checks_failed_percentage + '%)</span></span></div>');
+    if (INFO.queries.failed.t == 0) $("#info-execution-checks-failed").addClass("is-success");
     else $("#info-execution-checks-failed").addClass("is-danger");
+
+    // Queries Rollback'd the Test Execution
+    var execution_checks_rollback_value = INFO.queries.rollback.t;
+    var execution_checks_rollback_percentage = 0.0;
+    if (INFO.queries.rollback != 0) {
+      execution_checks_rollback_percentage = INFO.queries.rollback.p;
+    }
+    $("#info-modal-fields").append('<div><span id="info-execution-checks-rollback" class="tag" style="font-size:1.1rem; font-weight:500; width:100%; background-color:#fa8131; color:white">Queries Rollback: <b style="margin-left:5px;">' + execution_checks_rollback_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + execution_checks_rollback_percentage + '%)</span></span></div>');
   }
 
   // +--------+
   // | DEPLOY |
   // +--------+
-  else if (INFO['mode'] == 'deploy') {
+  else if (INFO['method'] == 'deploy') {
     // Queries Executed
-    $("#info-modal-fields").prepend('<span id="info-queries" class="tag is-info" style="font-size:1.1rem; font-weight:500; width:100%;">Queries Executed: <b style="margin-left:5px;">' + INFO['total_queries'] + '</b></span>');
+    $("#info-modal-fields").prepend('<span id="info-queries" class="tag is-info" style="font-size:1.1rem; font-weight:500; width:100%;">Queries Executed: <b style="margin-left:5px;">' + INFO.queries.total + '</b></span>');
     $("#info-execution-title").text('DEPLOYMENT');
     // Queries Succeeded
-    var info_queries_succeeded_value = INFO['total_queries'] - INFO['queries_failed'];
+    var info_queries_succeeded_value = INFO.queries.succeeded.t;
     var info_queries_succeeded_percentage = 0.0;
-    if (INFO['total_queries'] != 0) {
-      info_queries_succeeded_percentage = (Number.parseFloat(Number.parseInt(INFO['total_queries']) - Number.parseInt(INFO['queries_failed'])) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+    if (INFO.queries.total != 0) {
+      info_queries_succeeded_percentage = INFO.queries.succeeded.p;
     }
     $("#info-modal-fields").append('<div style="margin-top:10px;"><span id="info-queries-succeeded" class="tag" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#00c4a7; color:#fff;">Queries Succeeded: <b style="margin-left:5px;">' + info_queries_succeeded_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + info_queries_succeeded_percentage + '%)</span></span></div>');
 
     // Queries Failed
-    var info_queries_failed_value = INFO['queries_failed'];
+    var info_queries_failed_value = INFO.queries.failed.t;
     var queries_failed_percentage = 0.0;
-    if (INFO['total_queries'] != 0) {
-      queries_failed_percentage = (Number.parseFloat(INFO['queries_failed']) / Number.parseFloat(INFO['total_queries']) * 100).toFixed(2);
+    if (INFO.queries.total != 0) {
+      queries_failed_percentage = INFO.queries.failed.p;
     }
     $("#info-modal-fields").append('<div><span id="info-queries-failed" class="tag" style="font-size:1.1rem; font-weight:500; margin-bottom: 0.25rem; width:100%; background-color:#ff6961; color:#fff;">Queries Failed: <b style="margin-left:5px;">' + info_queries_failed_value + '</b> <span style="font-weight:400; margin-left:5px;">(~' + queries_failed_percentage + '%)</span></span></div>');
+  
+     // Queries Rollback'd
+     var info_queries_rollback_value = INFO.queries.rollback.t;
+     var queries_rollback_percentage = 0.0;
+     if (INFO.queries.rollback != 0) {
+        queries_rollback_percentage = INFO.queries.rollback.p;
+     }
+     $("#info-modal-fields").append('<div><span id="info-queries-rollback" class="tag" style="font-size:1.1rem; font-weight:500; width:100%; background-color:#fa8131; color:white">Queries Rollback: <b style="margin-left:5px;">' + info_queries_rollback_value + '</b><span style="font-weight:400; margin-left:5px;">(~' + queries_rollback_percentage + '%)</span></span></div>');
   }
 
   // +--------+
   // | ERRORS |
   // +--------+
   if (typeof ERROR == 'undefined') {
-    var test_execution = ('queries_failed' in INFO) ? 'Test ' : ''
-    if (('queries_failed' in INFO && INFO['queries_failed'] > 0) || ('queries_failed' in INFO && INFO['queries_failed'] > 0)) {
+    var test_execution = INFO.method == 'test' ? 'Test ' : ''
+    if ('queries' in INFO && INFO.queries.failed > 0) {
       $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; text-size:0.9rem;">' + test_execution + 'Execution Finished With Errors</h3>');
     }
     else {
       $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; text-size:0.9rem;">' + test_execution + 'Execution Finished Successfully</h3>');
     }
   }
-  else if (ERROR == '') {
-    // Execution Interrupted
-    $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; margin-bottom: 1.0rem;">Execution Interrupted</h3>');
-  }
   else {
-    // Execution Failed
     $("#info-modal-fields").append('<h3 class="is-info" style="margin-top: 1.0rem; margin-bottom: 1.0rem;">Execution Failed. An error occurred.</h3>');
-    $("#info-modal-fields").append('<h3 class="tag is-danger" style="background-color:#ef5353; padding-top:5px; padding-bottom: 5px; height: auto; font-size:0.95rem; white-space: pre-wrap; width:100%">' + ERROR + '</h3>');
+    $("#info-modal-fields").append('<h3 class="tag is-danger" style="background-color:#424242; padding-top:5px; padding-bottom: 5px; height: auto; font-size:0.95rem; white-space: pre-wrap; width:100%">' + ERROR + '</h3>');
   }
 }
 
@@ -1489,19 +1490,9 @@ function export_data() {
   var nrows = rows_to_export.length;
   if (nrows == 0) show_error('No Rows', 'There are no rows to export. Please change your filter settings.', '');
   else {
-    if (export_value == "meteor") export_meteor(rows_to_export, columns_to_export);
+    if (export_value == "csv") export_csv(rows_to_export);
     else if (export_value == "json") export_json(rows_to_export);
-    else if (export_value == "csv") export_csv(rows_to_export);
   }
-}
-
-function export_meteor(rows_to_export, columns_to_export) {
-  // Generate Meteor Download File
-  let export_data = {"DATA":{},"COLUMNS":{}}
-  export_data['DATA'] = rows_to_export
-  export_data['COLUMNS'] = columns_to_export
-  if (INFO !== undefined) export_data['INFO'] = INFO
-  download('meteor.json', JSON.stringify(export_data))
 }
 
 function export_json(rows_to_export) {
@@ -1510,13 +1501,16 @@ function export_json(rows_to_export) {
 }
 
 function export_csv(rows_to_export) {
+  // Parse rows
+  if ("meteor_output" in rows_to_export[0]) {
+    for (let i = 0; i < rows_to_export.length; ++i) {
+      if (rows_to_export[i]['meteor_output'].length > 0) {
+        rows_to_export[i]['meteor_output'] = JSON.stringify(rows_to_export[i]['meteor_output'])
+      }
+    }
+  }
   // Generate CSV Download File
-  const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values here
-  const header = Object.keys(rows_to_export[0]);
-  let csv = rows_to_export.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
-  csv.unshift(header.join(','));
-  csv = csv.join('\r\n');
-  download('meteor.csv', csv);
+  download('meteor.csv', Papa.unparse(rows_to_export))
 }
 
 function download(filename, text) {
@@ -1961,26 +1955,34 @@ function showError(title, description) {
   show_error(title_message, error_message, '');
 }
 function loadMeteorNext(data) {
-  try {
-    // Init variables
-    var error_title = "Invalid File Type";
-    var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
-    var error_code = `{<br>
-      &nbsp "DATA": [["row1_col1", "row1_col2"],["row2_col1", "row2_col2"]],<br>
-      &nbsp "COLUMNS": ["column1", "column2"]<br>
-    }`;
-    IMPORT_FILE = data
-    // Check Errors
-    var valid_file = false;
-    if (!('DATA' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
-    else if (!('COLUMNS' in IMPORT_FILE)) show_error(error_title, error_message, error_code);
-    else valid_file = true;
-  }
-  catch (err) {
-    show_error(error_title, error_message, error_code);
-  }
-  if (valid_file) {
-    // Init Meteor Core 
-    setTimeout(function () { init_meteor(); }, 100);
-  }
+  // Init variables
+  var error_title = "Invalid File Type";
+  var error_message = "Please use a <b>CSV</b> file format. Example of a <b>meteor.csv</b> file:<br><br>";
+  var error_code = `col1,col2,col3<br>
+  val1,val2,val3<br>
+  val4,val5,val6`;
+  DATA = []
+
+  Papa.parse(data.data, {
+    skipEmptyLines: true,
+    worker: true,
+    header: true,
+    quoteChar: "'",
+	  escapeChar: "'",
+    step: function(results) {
+      try {
+        results.data.meteor_output = JSON.parse(results.data.meteor_output)
+      } catch (error) {}
+      DATA.push(results.data)
+    },
+    complete: function() {
+      COLUMNS = Object.keys(DATA[0])
+      INFO = {"method": data.method, "queries": data.queries}
+      if (data.error) ERROR = data.error
+      setTimeout(function () { init_meteor(); }, 100);
+    },
+    error: function() {
+      show_error(error_title, error_message, error_code);
+    }
+  });
 }

@@ -7,6 +7,7 @@
   <script src="js/jquery.min.js"></script>
   <script src="js/ag-grid-community.min.js"></script>
   <script src="js/select2.full.min.js"></script>
+  <script src="js/papaparse.min.js"></script>
   <!-- CSS -->
   <link rel="stylesheet" href="css/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
@@ -40,8 +41,8 @@
     }
 
     .cell-warning {
-      background-color: #ffcc33;
-      color: #ffcc33;
+      background-color: #fa8131;
+      color: #fa8131;
     }
 
     .delete-button {
@@ -159,7 +160,6 @@
               style="color:white; width: 50px; height: 36px;" data-modal-id="#settings-modal"><i
                 class="fas fa-file-upload"></i></button>
           </div>
-          <input id="import-file" type="file" style="display:none;" name="file" />
           <div id="import-div-separator" class="column" style="padding-left: 0em; flex-grow: 0;">
             <p style="background-color:grey; height: 36px; width:1px; margin-left:1px; margin-right:1px;"></p>
           </div>
@@ -202,6 +202,41 @@
             <button id="export-button" class="button is-info" disabled title="Export"
               style="color:white; width:50px; height: 36px;" data-modal-id="#export-modal"><i
                 class="fas fa-file-download"></i></button>
+          </div>
+        </div>
+
+        <!-- IMPORT MODAL-->
+        <div id="import-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Import</p>
+              <button id="import-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body" style="width:100%;">
+              <div id="import-modal-fields" style="width:100%">
+                <div class="file has-name is-fullwidth">
+                  <label class="file-label" style="margin:0">
+                    <input id="import-file" class="file-input" type="file" name="resume">
+                    <span class="file-cta">
+                      <span class="file-icon">
+                        <i class="fas fa-upload"></i>
+                      </span>
+                      <span class="file-label">
+                        Choose a file…
+                      </span>
+                    </span>
+                    <span id="import-modal-file-name" class="file-name">
+                      No file selected.
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="import-modal-save" class="button button-green" disabled>Import file</button>
+              <button id="import-modal-cancel" class="button">Cancel</button>
+            </footer>
           </div>
         </div>
 
@@ -387,9 +422,8 @@
                 </div>
                 <div style="width:80%; float:left;">
                   <select id="export-format" class="js-example-basic-single" name="state" style="width:50%;left:300px;">
-                    <option value="meteor">Meteor</option>
-                    <option value="json">JSON</option>
                     <option value="csv">CSV</option>
+                    <option value="json">JSON</option>
                   </select>
                 </div>
               </div>
@@ -423,7 +457,7 @@
 
         <!-- LOADING -->
         <div id="loading" style="width:100%; height:calc(100vh - 90px); border:1px solid #ced4da; background-color:white; padding-left:5px;padding-top:2px;">
-          <p style="height:100%; justify-content:center; display:flex; align-items:center;">Click the Import button to import a Meteor file.</p>
+          <p style="height:100%; justify-content:center; display:flex; align-items:center;">Click the Import button to load a CSV file.</p>
         </div>
 
         <!-- GRID TABLE -->

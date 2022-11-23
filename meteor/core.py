@@ -1,4 +1,5 @@
 import os
+import csv
 import sys
 import time
 import shutil
@@ -9,13 +10,11 @@ import signal
 import json
 import threading
 import sentry_sdk
-from collections import OrderedDict
 from datetime import timedelta
 
 from firewall import firewall
 from imports import imports
 from progress import progress
-from logs import logs
 from amazon_s3 import amazon_s3
 from validation import validation
 from deployment import deployment
@@ -35,7 +34,6 @@ class core:
         # Init Classes
         self._imports = imports(self._args)
         self._progress = progress(self._args, self._imports)
-        self._logs = logs(self._args, self._imports, self._progress)
         self._amazon_s3 = amazon_s3(self._args, self._imports, self._progress)
         self._validation = validation(self._args, self._imports, self._progress)
         self._deployment = deployment(self._args, self._imports, self._progress)
@@ -131,13 +129,13 @@ class core:
             if error.__class__ == KeyboardInterrupt:
                 self.__kill_queries()
             # Get Logs
-            logs = self.__get_logs()
+            self.__get_logs()
+            # Merge Logs
+            self.__merge_logs()
             # Get Summary
-            summary = self.__summary(logs)
+            summary = self.__compute_summary()
             # Check Execution Integrity
             error = self.__check_execution(error)
-            # Compile Logs
-            self._logs.compile(logs, summary, error)
             # Upload Logs to S3
             self._amazon_s3.upload()
             # Clean Environments
@@ -217,9 +215,10 @@ class core:
             self._progress.track_logs(value={'status': 'failed'})
             raise
 
+    def __merge_logs(self):
         # If current environment has no regions / servers
         try:
-            execution_logs_path = "{}/execution".format(self._args.path)
+            execution_logs_path = f"{self._args.path}/execution"
             region_items = os.listdir(execution_logs_path)
         except FileNotFoundError:
             return []
@@ -227,105 +226,113 @@ class core:
         # Merge Logs
         try:
             for region_item in region_items:
-                if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
+                if os.path.isdir(f"{execution_logs_path}/{region_item}"):
                     region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
                     status_msg = f"- Merging {region_name}..."
                     self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                    server_items = os.listdir(f"{execution_logs_path}/{region_item}")
 
                     # Merging Server Logs
                     for server_item in server_items:
-                        if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
-                            server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
-                            server_logs = []
-                            for server_file in server_files:
-                                # Merging Database Logs
-                                with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
-                                    try:
-                                        json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
-                                        server_logs.extend(json_decoded['output'])
-                                    except Exception:
-                                        pass
+                        if os.path.isdir(f"{execution_logs_path}/{region_item}/{server_item}"):
+                            with open(f"{execution_logs_path}/{region_item}/{server_item}.csv", 'w', newline='', encoding='utf-8') as fwrite:
+                                writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
 
-                            # Write Server File
-                            with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
-                                json.dump({"output": server_logs}, f, separators=(',', ':'))
+                                server_files = [i for i in os.listdir(f"{execution_logs_path}/{region_item}/{server_item}") if not i.endswith('_tx.csv')]
+                                for server_file in server_files:
+                                    # Merging Database Logs
+                                    database_file = f"{execution_logs_path}/{region_item}/{server_item}/{server_file}"
+                                    with open(database_file, 'r', newline='', encoding='utf-8') as fread:
+                                        reader = csv.DictReader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL, fieldnames=('meteor_timestamp','meteor_environment','meteor_region','meteor_server','meteor_database','meteor_query','meteor_status','meteor_response','meteor_execution_time','meteor_execution_rows','meteor_output'))
+                                        # Get transactions
+                                        transactions = {}
+                                        if os.path.exists(database_file[:-4] + '_tx.csv'):
+                                            with open(database_file[:-4] + '_tx.csv', 'r', newline='', encoding='utf-8') as ftxread:
+                                                transactions = {i[0]: i[1] for i in list(csv.reader(ftxread))}
+                                        # Compile server logs
+                                        for row in reader:
+                                            if row['meteor_status'].startswith('tx_'):
+                                                row['meteor_status'] = 1 if row['meteor_status'] in transactions and int(transactions[row['meteor_status']]) == 1 else 2
+                                            writer.writerow([row['meteor_timestamp'], row['meteor_environment'], row['meteor_region'], row['meteor_server'], row['meteor_database'], row['meteor_query'], row['meteor_status'], row['meteor_response'], row['meteor_execution_time'], row['meteor_execution_rows'], row['meteor_output']])
 
                     # Merging Region Logs
-                    region_logs = []
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
-                    for server_item in server_items:
-                        if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
-                            with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
-                                json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
-                                region_logs.extend(json_decoded['output'])
-
-                    # Write Region Logs
-                    with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
-                        json.dump({"output": region_logs}, f, separators=(',', ':'))
+                    with open(f"{execution_logs_path}/{region_item}.csv", 'w', newline='', encoding='utf-8') as fwrite:
+                        writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+                        server_items = os.listdir(f"{execution_logs_path}/{region_item}")
+                        for server_item in server_items:
+                            if os.path.isfile(f"{execution_logs_path}/{region_item}/{server_item}") and server_item != 'progress.json':
+                                with open(f"{execution_logs_path}/{region_item}/{server_item}", 'r', newline='', encoding='utf-8') as fread:
+                                    reader = csv.reader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+                                    for row in reader:
+                                        writer.writerow(row)
                     self._progress.track_logs(value={'status': 'success'})
-
         except Exception:
             self._progress.track_logs(value={'status': 'failed'})
             raise
 
         # Merging Environment Logs
         try:
-            environment_logs = []
+            print("gogogogo")
             status_msg = "- Generating a Single Log File..."
             self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-            region_items = os.listdir(execution_logs_path)
-            for region_item in region_items:
-                if region_item.endswith('.json'):
-                    with open("{}/{}".format(execution_logs_path, region_item)) as f:
-                        json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
-                        environment_logs.extend(json_decoded['output'])
-
+            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.csv" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.csv"
+            with open(file_path, 'w', newline='', encoding='utf-8') as fwrite:
+                writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['meteor_timestamp','meteor_environment','meteor_region','meteor_server','meteor_database','meteor_query','meteor_status','meteor_response','meteor_execution_time','meteor_execution_rows','meteor_output'])
+                region_items = os.listdir(execution_logs_path)
+                for region_item in region_items:
+                    if region_item.endswith('.csv'):
+                        with open(f"{execution_logs_path}/{region_item}", 'r', newline='', encoding='utf-8') as fread:
+                            reader = csv.reader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+                            for row in reader:
+                                writer.writerow(row)
         except Exception:
             self._progress.track_logs(value={'status': 'failed'})
             raise
 
-        # Return All Logs
-        return environment_logs
+    def __compute_summary(self):
+        try:
+            # Get logs file path
+            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.csv" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.csv"
 
-    def __summary(self, data):
-        # Init summary
-        summary = {}
-        summary['total_queries'] = len(data)
+            # Init vars
+            summary = {'queries_failed': 0, 'queries_success': 0, 'queries_rollback': 0}
+            queries = {}
+            with open(file_path, 'r', newline='', encoding='utf-8') as fread:
+                reader = csv.DictReader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+                n = 0
+                for row in reader:
+                    # Count Query Errors
+                    summary['queries_failed'] += 1 if int(row['meteor_status']) == 0 else 0
+                    # Count Query Success
+                    summary['queries_success'] += 1 if int(row['meteor_status']) == 1 else 0
+                    # Count Query Rollback
+                    summary['queries_rollback'] += 1 if int(row['meteor_status']) == 2 else 0
+                    # Sum total rows
+                    n += 1
 
-        # Init queries progress
-        queries = {}
+            summary['total_queries'] = n
 
-        # Analyze Test Execution Logs 
-        summary['queries_failed'] = 0
-        summary['queries_success'] = 0
-        summary['queries_rollback'] = 0
+            # Compute summary
+            queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_success']) / float(summary['total_queries']) * 100, 2)
+            queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
+            queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_rollback']) / float(summary['total_queries']) * 100, 2)
 
-        for d in data:
-            # Count Query Errors
-            summary['queries_failed'] += 1 if int(d['meteor_status']) == 0 else 0
-            # Count Query Success
-            summary['queries_success'] += 1 if int(d['meteor_status']) == 1 else 0
-            # Count Query Rollback
-            summary['queries_rollback'] += 1 if int(d['meteor_status']) == 2 else 0
+            # Track progress
+            queries['total'] = summary['total_queries']
+            queries['succeeded'] = {'t': summary['queries_success'], 'p': float(queries_succeeded_value)}
+            queries['failed'] = {'t': summary['queries_failed'], 'p': float(queries_failed_value)}
+            queries['rollback'] = {'t': summary['queries_rollback'], 'p': float(queries_rollback_value)}
 
-        # Compute summary
-        queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_success']) / float(summary['total_queries']) * 100, 2)
-        queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
-        queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_rollback']) / float(summary['total_queries']) * 100, 2)
+            # Write Progress
+            self._progress.track_queries(value=queries)
+            self._progress.track_logs(value={'status': 'success'})
+            return summary
 
-        # Track progress
-        queries['total'] = summary['total_queries']
-        queries['succeeded'] = {'t': summary['queries_success'], 'p': float(queries_succeeded_value)}
-        queries['failed'] = {'t': summary['queries_failed'], 'p': float(queries_failed_value)}
-        queries['rollback'] = {'t': summary['queries_rollback'], 'p': float(queries_rollback_value)}
-
-        # Write Progress
-        self._progress.track_queries(value=queries)
-
-        # Return Summary
-        return summary
+        except Exception:
+            print("heree")
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
 
     def __check_execution(self, error):
         if error is None:
@@ -368,6 +375,7 @@ class core:
             self._progress.track_tasks(value={'status': 'success'})
 
         # Delete Deployment Folder
+        return
         if os.path.exists(self._args.path):
             if os.path.isdir(self._args.path):
                 shutil.rmtree(self._args.path)
@@ -390,8 +398,8 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_information = f"{self._imports.config['params']['url']}/deployments/{self._args.uri}"
-        logs_results = f"{self._imports.config['params']['url']}/results/{self._args.uri}"
+        logs_information = f"{self._imports.config['params']['url']}/deployments/{self._args.path.split('/')[-1]}"
+        logs_results = f"{self._imports.config['params']['url']}/results/{self._args.path.split('/')[-1]}"
 
         # Current Time
         current_time = calendar.timegm(time.gmtime())

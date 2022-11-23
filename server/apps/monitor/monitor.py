@@ -6,7 +6,6 @@ import requests
 import threading
 from datetime import datetime, timedelta
 from statistics import median
-from collections import OrderedDict
 
 import connectors.base
 import models.notifications
@@ -449,7 +448,7 @@ class Monitor:
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
-        return json.loads(data, object_pairs_hook=OrderedDict)
+        return json.loads(data)
 
     def __utcnow(self):
         # Get current timestamp in utc

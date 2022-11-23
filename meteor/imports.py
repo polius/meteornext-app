@@ -1,7 +1,5 @@
-import sys
 import json
 import importlib.util
-from collections import OrderedDict
 
 class imports:
     def __init__(self, args):
@@ -23,7 +21,7 @@ class imports:
     def __load_config(self):
         file_path = '{}/config.json'.format(self._args.path)
         with open(file_path) as data_file:
-            data = json.load(data_file, object_pairs_hook=OrderedDict)
+            data = json.load(data_file)
             return data
 
     def __load_blueprint(self):
