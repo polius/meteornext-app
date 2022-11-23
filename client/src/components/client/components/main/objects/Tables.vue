@@ -47,7 +47,7 @@
               <div class="text-h6" style="font-weight:400;">Export Rows</div>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                  <v-select outlined v-model="exportFormat" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
+                  <v-select outlined v-model="exportFormat" :items="['JSON','CSV','SQL']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -93,7 +93,7 @@ export default {
       loading: false,
       // Export Dialog
       exportDialog: false,
-      exportFormat: 'Meteor',
+      exportFormat: 'JSON',
       // Context Menu
       contextMenu: false,
       contextMenuModel: null,
@@ -254,16 +254,12 @@ export default {
       })
     },
     exportRows() {
-      this.exportFormat = 'Meteor'
+      this.exportFormat = 'JSON'
       this.exportDialog = true
     },
     exportRowsSubmit() {
       this.loading = true
-      if (this.exportFormat == 'Meteor') {
-        let exportData = 'var DATA = ' + JSON.stringify(this.objectsItems.tables) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.objectsHeaders.tables.map(x => x.colId)) + ';'
-        this.download('export.js', exportData)
-      }
-      else if (this.exportFormat == 'JSON') {
+      if (this.exportFormat == 'JSON') {
         let exportData = JSON.stringify(this.objectsItems.tables)
         this.download('export.json', exportData)
       }

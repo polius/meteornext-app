@@ -5,11 +5,7 @@ import sshtunnel
 import logging
 from io import StringIO
 from ssl import CERT_REQUIRED
-from collections import OrderedDict
-from pymysql.cursors import DictCursorMixin, Cursor
-
-class OrderedDictCursor(DictCursorMixin, Cursor):
-    dict_type = OrderedDict
+from pymysql.cursors import DictCursor
 
 class MySQL:
     def __init__(self, server):
@@ -79,7 +75,7 @@ class MySQL:
             self._sql.select_db(database)
 
         # Prepare the cursor
-        with self._sql.cursor(OrderedDictCursor) as cursor:
+        with self._sql.cursor(DictCursor) as cursor:
             # Execute the SQL query
             cursor.execute(query, args)
 
@@ -91,7 +87,7 @@ class MySQL:
 
     def mogrify(self, query, args=None, retry=True):
         try:
-            with self._sql.cursor(OrderedDictCursor) as cursor:
+            with self._sql.cursor(DictCursor) as cursor:
                 return cursor.mogrify(query, args)
         except Exception as e:
             if retry:

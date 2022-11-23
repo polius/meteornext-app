@@ -6,11 +6,7 @@ import paramiko
 import sshtunnel
 import threading
 from ssl import CERT_REQUIRED
-from collections import OrderedDict
-from pymysql.cursors import DictCursorMixin, Cursor
-
-class OrderedDictCursor(DictCursorMixin, Cursor):
-    dict_type = OrderedDict
+from pymysql.cursors import DictCursor
 
 class MySQL:
     def __init__(self, server):
@@ -55,7 +51,7 @@ class MySQL:
                 port = port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 timeout = None if 'timeout' not in self._server['sql'] else self._server['sql']['timeout']
-                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=self._server['sql'].get('autocommit', False), read_timeout=timeout, write_timeout=timeout, ssl=ssl)
+                self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, read_timeout=timeout, write_timeout=timeout, ssl=ssl)
                 return
 
             except Exception as e:
@@ -95,7 +91,7 @@ class MySQL:
             self._last_execution_time = "{0:.3f}".format(time.time() - start_time)
 
     def mogrify(self, query, args=None):
-        with self._sql.cursor(OrderedDictCursor) as cursor:
+        with self._sql.cursor(DictCursor) as cursor:
             return cursor.mogrify(query, args)
 
     def begin(self):
@@ -116,7 +112,7 @@ class MySQL:
             self._sql.select_db(database)
 
         # Prepare the cursor
-        with self._sql.cursor(OrderedDictCursor) as cursor:
+        with self._sql.cursor(DictCursor) as cursor:
             # Execute the SQL query
             cursor.execute(query, args)
 

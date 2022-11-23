@@ -171,6 +171,7 @@ class Region:
 
         # Get stdout
         stdout = client.stdout.readlines()
+        # print(stdout)
 
         # Return Execution Output
         return stdout[0] if len(stdout) > 0 else ''
@@ -192,6 +193,8 @@ class Region:
                 # Get output
                 _stdout = stdout.readlines()
                 _stderr = stderr.readlines()
+                # print(f"OUT: {_stdout}")
+                # print(f"ERR: {_stderr}")
 
                 # Return Execution Output
                 return _stdout[0].strip() if len(_stdout) > 0 else ''

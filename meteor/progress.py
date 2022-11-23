@@ -142,7 +142,6 @@ class progress:
             "username": self._config['meteor_next']['username'],
             "password": self._config['meteor_next']['password'],
             "database": self._config['meteor_next']['database'],
-            "autocommit": True,
             "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
             "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
             "ssl_client_key": self._config['meteor_next']['ssl_client_key']

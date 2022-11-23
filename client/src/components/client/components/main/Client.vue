@@ -74,7 +74,7 @@
                   <div v-if="dialogMode == 'cellEditingConfirm'" style="margin-top:15px">
                     <div id="dialogQueryEditorClient" style="height:256px"></div>
                   </div>
-                  <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
+                  <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON']" label="Format" hide-details></v-select>
                 </v-form>
                 <div v-if="dialogSubmitText.length > 0 || dialogCancelText.length > 0">
                   <v-divider style="margin-top:15px"></v-divider>
@@ -1382,11 +1382,7 @@ export default {
     },
     exportRowsSubmit() {
       this.loading = true
-      if (this.dialogSelect == 'Meteor') {
-        let exportData = '{"DATA":' + JSON.stringify(this.clientItems) + ',' + '"COLUMNS":' + JSON.stringify(this.clientHeaders.map(x => x.headerName.trim())) + '}'
-        this.download('export.json', exportData)
-      }
-      else if (this.dialogSelect == 'JSON') {
+      if (this.dialogSelect == 'JSON') {
         let exportData = JSON.stringify(this.clientItems)
         this.download('export.json', exportData)
       }

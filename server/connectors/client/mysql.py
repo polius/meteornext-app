@@ -9,14 +9,10 @@ import traceback
 import logging
 from io import StringIO
 from ssl import CERT_REQUIRED
-from collections import OrderedDict
-from pymysql.cursors import DictCursorMixin, SSCursor
+from pymysql.cursors import DictCursor
 from pymysql.constants import CLIENT
 
 import connectors.base
-
-class OrderedDictCursor(DictCursorMixin, SSCursor):
-    dict_type = OrderedDict
 
 class MySQL:
     def __init__(self, server):
@@ -183,14 +179,14 @@ class MySQL:
 
         # Prepare the cursor
         if fetch:
-            with self._sql.cursor(OrderedDictCursor) as cursor:
+            with self._sql.cursor(DictCursor) as cursor:
                 # Execute the SQL query
                 cursor.execute(query, args)
 
                 # Get the query results
                 data = cursor.fetchmany(execution_rows) if execution_rows else cursor.fetchall()
         else:
-            self._cursor = self._sql.cursor(OrderedDictCursor)
+            self._cursor = self._sql.cursor(DictCursor)
             self._cursor.execute(query, args)
 
         # Return query info
@@ -242,7 +238,7 @@ class MySQL:
             pass
 
     def mogrify(self, query, args):
-        with self._sql.cursor(OrderedDictCursor) as cursor:    
+        with self._sql.cursor(DictCursor) as cursor:    
             return cursor.mogrify(query, args)
     
     def kill(self, connection_id):

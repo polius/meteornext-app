@@ -126,7 +126,7 @@ class Deployments:
 
     def getResults(self, uri):
         query = """
-            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.logs, d.shared
+            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, e.method, e.progress, e.logs, d.shared
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             WHERE e.uri = %(uri)s

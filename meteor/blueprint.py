@@ -2,7 +2,6 @@
 # Usage: https://docs.meteornext.io/guides/deployments/pro #
 ############################################################
 import json
-from collections import OrderedDict
 
 class blueprint:
     def __init__(self):
@@ -37,7 +36,7 @@ class blueprint:
 
     def str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
-        return json.loads(data, object_pairs_hook=OrderedDict)
+        return json.loads(data)
 
     def dict2str(self, data):
         # Convert a dictionary to a string

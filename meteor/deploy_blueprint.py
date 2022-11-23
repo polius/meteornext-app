@@ -48,23 +48,13 @@ class deploy_blueprint:
 
         # Start Deploy
         try:
-            query_instance = deploy_queries(self._args, self._imports, self._region)
-            query_instance.start_sql_connection(server)
+            query_instance = deploy_queries(self._args, self._imports, self._region, server, 'before', 'b')
+            query_instance.start_sql_connection()
 
             # Execute Before
             self._blueprint.before(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'])
 
-            # Commit queries
-            if not query_instance.transaction:
-                query_instance.commit()
-
-            # Store Logs
-            self.__store_logs(server, None, query_instance, False, 'before')
-
         except Exception as e:
-            # Store Logs
-            self.__store_logs(server, None, query_instance, True, 'before')
-
             # Build error message
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
@@ -96,7 +86,7 @@ class deploy_blueprint:
         try:
             threads = []
             for i in range(int(self._imports.config['params']['threads'])):
-                t = threading.Thread(target=self.__execute_main_databases, args=(server,))
+                t = threading.Thread(target=self.__execute_main_databases, args=(server,i+1,))
                 t.alive = current_thread.alive
                 t.error = False
                 t.critical = []
@@ -142,23 +132,13 @@ class deploy_blueprint:
 
         # Start Deploy
         try:
-            query_instance = deploy_queries(self._args, self._imports, self._region)
-            query_instance.start_sql_connection(server)
+            query_instance = deploy_queries(self._args, self._imports, self._region, server, 'after', 'a')
+            query_instance.start_sql_connection()
 
             # Execute After
             self._blueprint.after(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'])
 
-            # Commit queries
-            if not query_instance.transaction:
-                query_instance.commit()
-
-            # Store Logs
-            self.__store_logs(server, None, query_instance, False, 'after')
-
         except Exception as e:
-            # Store Logs
-            self.__store_logs(server, None, query_instance, True, 'after')
-
             # Build error message
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
@@ -179,12 +159,12 @@ class deploy_blueprint:
         item = {"id": server['id'], "name": server['name'], "shared": server['shared'], "p": float('%.2f' % progress), "d": d, "t": len(databases)}
         current_thread.progress.append(item)
 
-    def __execute_main_databases(self, server):
+    def __execute_main_databases(self, server, i):
         current_thread = threading.current_thread()
 
         # Set SQL Connection
-        query_instance = deploy_queries(self._args, self._imports, self._region)
-        query_instance.start_sql_connection(server)
+        query_instance = deploy_queries(self._args, self._imports, self._region, server, 'main', i)
+        query_instance.start_sql_connection()
 
         while len(self._databases) > 0:
             try:
@@ -195,19 +175,14 @@ class deploy_blueprint:
                 # Pick the next database to perform the execution
                 try:
                     database = self._databases.pop(0)
+                    query_instance.database = database
                 except IndexError:
                     break
 
                 # Perform the execution to the Database
                 self._blueprint.main(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'], database)
 
-                # Store Logs
-                self.__store_logs(server, database, query_instance, False, 'main')
-
             except Exception as e:
-                # Store Logs
-                self.__store_logs(server, database, query_instance, True, 'main')
-
                 # Build error message
                 if e.__class__.__name__ == 'InterfaceError':
                     current_thread.critical.append("Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname']))
@@ -228,38 +203,3 @@ class deploy_blueprint:
 
         # Close SQL Connection
         query_instance.close_sql_connection()
-
-    def __store_logs(self, server, database, query_instance, error, mode):
-        current_thread = threading.current_thread()
-
-        # Commit/Rollback queries
-        try:
-            if error or query_instance.transaction:
-                query_instance.rollback()
-            else:
-                query_instance.commit()
-        except Exception:
-            pass
-
-        # Store Logs
-        if mode == 'main':
-            execution_log_path = f"{self._args.path}/execution/{self._region['id']}/{server['id']}/{database}.json"
-        else:
-            execution_log_path = f"{self._args.path}/execution/{self._region['id']}/{server['id']}_{mode}.json"
-
-        if len(query_instance.execution_log['output']) > 0:
-            with open(execution_log_path, 'w') as outfile:
-                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
-        # Check Errors
-        for log in query_instance.execution_log['output']:
-            if log['meteor_status'] == '0':
-                current_thread.error = True
-                break
-
-        # Clear Log
-        query_instance.clear_execution_log()
-
-    # Parse JSON objects
-    def __dtSerializer(self, obj):
-        return obj.__str__()

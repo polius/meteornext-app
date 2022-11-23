@@ -121,6 +121,7 @@ let router = new VueRouter({
     {
       path: '/results/:uri?',
       name: 'results',
+      alias: ['/viewer'],
       component: () => import('../components/deployments/Results'),
       meta: { requiresAuth: true }
     },
