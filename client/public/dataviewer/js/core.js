@@ -1490,7 +1490,7 @@ function export_data() {
   var nrows = rows_to_export.length;
   if (nrows == 0) show_error('No Rows', 'There are no rows to export. Please change your filter settings.', '');
   else {
-    if (export_value == "csv") export_csv(rows_to_export);
+    if (export_value == "csv") export_csv(JSON.parse(JSON.stringify(rows_to_export)));
     else if (export_value == "json") export_json(rows_to_export);
   }
 }
