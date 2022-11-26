@@ -208,13 +208,13 @@ class Deployments:
                     s3 = session.resource('s3')
                     obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.csv.gz'.format(uri))
                     with gzip.open(obj['Body'], 'rb') as fopen:
-                        return jsonify({"data": fopen.read(), "method": method, "queries": queries, "error": error}), 200
+                        return jsonify({"data": fopen.read().decode('utf-8'), "method": method, "queries": queries, "error": error}), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
                         return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400
-                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
-                except Exception:
-                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.', 'error': str(e)}), 400
+                except Exception as e:
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.', 'error': str(e)}), 400
             return jsonify({'title': 'Unknown deployment', 'description': 'This deployment does not currently exist' }), 400
 
         @deployments_blueprint.route('/deployments/executions', methods=['GET'])
