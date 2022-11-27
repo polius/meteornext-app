@@ -213,12 +213,8 @@ class core:
             raise
 
     def __merge_logs(self):
-        # If current environment has no regions / servers
-        try:
-            execution_logs_path = f"{self._args.path}/execution"
-            region_items = os.listdir(execution_logs_path)
-        except FileNotFoundError:
-            return []
+        # Get execution logs path
+        execution_logs_path = f"{self._args.path}/execution"
 
         # Init base summary
         summary = {'queries_failed': 0, 'queries_success': 0, 'queries_rollback': 0}
@@ -229,9 +225,10 @@ class core:
             first = True
             with open(file_path, 'w', encoding='utf-8') as fwrite:
                 fwrite.write('[')
+                region_items = [i for i in os.listdir(execution_logs_path) if not i.endswith('.tar.gz')]
                 for region_item in region_items:
                     region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
-                    status_msg = f"- Processing Logss from '{region_name}'"
+                    status_msg = f"- Processing Logs from '{region_name}'"
                     self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
                     if os.path.isdir(f"{execution_logs_path}/{region_item}"):
                         server_items = os.listdir(f"{execution_logs_path}/{region_item}")
