@@ -157,7 +157,7 @@ class Cron:
 
             if len(recheck) > 0:
                 # Wait some time to double verify
-                time.sleep(60)
+                time.sleep(300)
                 result = conn.execute(query=f"SELECT id, pid, progress FROM executions WHERE status IN ('IN PROGRESS','STOPPING') AND id IN({','.join(['%s'] * len(recheck))})", args=(recheck))
                 for i in result:
                     if not os.path.exists(f"/proc/{i['pid']}"):

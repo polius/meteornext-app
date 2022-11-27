@@ -188,9 +188,9 @@ class Deployments:
                 # Check if exists
                 bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
                 base_path = os.path.realpath(os.path.dirname(sys.executable)) if bin else os.path.realpath(os.path.dirname(sys.argv[0]))
-                if not os.path.exists(f"{base_path}/files/deployments/{uri}.csv"):
+                if not os.path.exists(f"{base_path}/files/deployments/{uri}.json"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                with open(f"{base_path}/files/deployments/{uri}.csv") as fopen:
+                with open(f"{base_path}/files/deployments/{uri}.json") as fopen:
                     data = fopen.read()
                 return jsonify({"data": data, "method": method, "queries": queries, "error": error}), 200
 
@@ -206,7 +206,7 @@ class Deployments:
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.csv.gz'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.json.gz'.format(uri))
                     with gzip.open(obj['Body'], 'rb') as fopen:
                         return jsonify({"data": fopen.read().decode('utf-8'), "method": method, "queries": queries, "error": error}), 200
                 except botocore.exceptions.ClientError as e:

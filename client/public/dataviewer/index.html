@@ -214,6 +214,10 @@
               <button id="import-modal-close" class="delete" aria-label="close"></button>
             </header>
             <section class="modal-card-body" style="width:100%;">
+              <label style="width:100%">Choose the file type to import.</label>
+              <button id="import-json" class="button is-info" style="margin-right:3px;">JSON</button>
+              <button id="import-csv" class="button">CSV</button>
+              <label style="width:100%; margin-top:15px">Select the file.</label>
               <div id="import-modal-fields" style="width:100%">
                 <div class="file has-name is-fullwidth">
                   <label class="file-label" style="margin:0">
@@ -231,6 +235,10 @@
                     </span>
                   </label>
                 </div>
+              </div>
+              <label style="width:100%; margin-top:15px">Sample file:</label>
+              <div id="import-box" class="box" style="width:100%; padding:1rem; background-color:rgba(1,1,1,0.2); color:rgb(220, 220, 222);">
+                [{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]
               </div>
             </section>
             <footer class="modal-card-foot">
@@ -457,7 +465,7 @@
 
         <!-- LOADING -->
         <div id="loading" style="width:100%; height:calc(100vh - 90px); border:1px solid #ced4da; background-color:white; padding-left:5px;padding-top:2px;">
-          <p style="height:100%; justify-content:center; display:flex; align-items:center;">Click the Import button to load a CSV file.</p>
+          <p style="height:100%; justify-content:center; display:flex; align-items:center;">Click the Import button to load a file.</p>
         </div>
 
         <!-- GRID TABLE -->

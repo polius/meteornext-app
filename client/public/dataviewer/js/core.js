@@ -559,9 +559,12 @@ function enable_settings_modal(option) {
 // IMPORT MODAL
 // ##############################################################################################
 var imported_file;
+var imported_file_name;
+var imported_file_format = 'json';
 
 $("#import-button").click(function () {
   imported_file = undefined;
+  $('#import-file').val('');
   $("#import-modal-file-name").html('No file selected.');
   $("#import-modal-save").attr("disabled", true);
   $("#import-modal").addClass("is-active");
@@ -573,6 +576,20 @@ $("#import-modal-close").click(function () {
 
 $("#import-modal-cancel").click(function () {
   close_import_modal();
+});
+
+$("#import-json").click(function () {
+  imported_file_format = 'json'
+  $("#import-json").addClass("is-info")
+  $("#import-csv").removeClass("is-info")
+  $("#import-box").html('[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]')
+});
+
+$("#import-csv").click(function () {
+  imported_file_format = 'csv'
+  $("#import-csv").addClass("is-info")
+  $("#import-json").removeClass("is-info")
+  $("#import-box").html('id,name,age<br>1,John,25<br>2,Sophia,28')
 });
 
 function close_import_modal() {
@@ -598,22 +615,30 @@ $("#import-file").change(function (event) {
   $("#import-modal-save").attr("disabled", false);
 })
 
+function updateProgress(event) {
+  if (event.lengthComputable) {
+    var percentLoaded = Math.round((event.loaded / event.total) * 100);
+    $("#loading").append("<p>- [" + percentLoaded.toString() + " %] Uploading file '" + imported_file_name + "' ...</p>");
+  }
+}
+
 $("#import-modal-save").click(function () {
   close_import_modal();
   $("#import-button").addClass("is-loading");
   $("#loading").html('');
 
   var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>CSV</b> file format. Example of a <b>meteor.csv</b> file:<br><br>";
-  var error_code = `col1,col2,col3<br>
-    val1,val2,val3<br>
-    val4,val5,val6`;
+  var error_message = "Please use a <b>" + imported_file_format.toUpperCase() + "</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
+  var error_code;
+
   if (typeof imported_file == 'undefined') {
     $("#import-button").removeClass("is-loading");
     return;
   }
-  var extension = imported_file['name'].substr((imported_file['name'].lastIndexOf('.') + 1));
-  if (extension != 'csv') show_error(error_title, error_message, error_code);
+  imported_file_name = imported_file['name'];
+  var extension = imported_file_name.substr((imported_file_name.lastIndexOf('.') + 1));
+  // if (imported_file_format != extension) show_error(error_title, error_message, error_code);
+  if (1 == 0) show_error(error_title, error_message, error_code);
   else {
     // Re-Init Components
     init()
@@ -626,27 +651,46 @@ $("#import-modal-save").click(function () {
       gridOptions.api.destroy();
     }
     $("#theme-button").attr("disabled", true);
-    $("#loading").append("<p><b>" + imported_file['name'] + " (" + pretty_size(imported_file['size']) + ")</b></p>");
+    $("#loading").append("<p><b>" + imported_file_name + " (" + pretty_size(imported_file['size']) + ")</b></p>");
 
-    DATA = []
-    Papa.parse(imported_file, {
-      skipEmptyLines: true,
-      worker: true,
-      header: true,
-      step: function(results) {
+    if (imported_file_format == 'json') {
+      var reader = new FileReader();
+      reader.readAsText(imported_file);
+      // reader.onprogress = updateProgress;
+      reader.onload = function(e) {
         try {
-          results.data.meteor_output = JSON.parse(results.data.meteor_output)
-        } catch (error) {}
-        DATA.push(results.data)
-      },
-      complete: function() {
-        COLUMNS = Object.keys(DATA[0])
-        setTimeout(function () { init_meteor(); }, 100);
-      },
-      error: function() {
-        show_error(error_title, error_message, error_code);
+          $("#loading").append("<p>- File Uploaded Successfully</p>"); 
+          $("#loading").append("<p>- Processing File ...</p>");
+          DATA = JSON.parse(e.target.result);
+          COLUMNS = Object.keys(DATA[0]);
+          setTimeout(function () { init_meteor(); }, 100);
+        } catch (error) {
+          error_code = '[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]';
+          show_error(error_title, error_message, error_code);
+        }
       }
-    });
+    }
+    else if (imported_file_format == 'csv') {
+      DATA = []
+      Papa.parse(imported_file, {
+        skipEmptyLines: true,
+        header: true,
+        worker: true,
+        step: function(results) {
+          if ('meteor_output' in results.data) results.data['meteor_output'] = JSON.parse(results.data['meteor_output'])
+          DATA.push(results.data)
+        },
+        complete: function() {
+          try {
+            COLUMNS = Object.keys(DATA[0]);
+            setTimeout(function () { init_meteor(); }, 100);
+          } catch (error) {
+            error_code = 'id,name,age<br>1,John,25<br>2,Sophia,28'
+            show_error(error_title, error_message, error_code);
+          }
+        }
+      });
+    }
   }
 });
 
@@ -1211,7 +1255,7 @@ function compile_query(data) {
         let has_values = Object.values(data[i]['meteor_output'][j]).some(x => x != null && x.toString().trim().length > 0)
         if (!transformation_checkbox_checked || has_values) {
           let expand = columns.reduce((acc, val) => {
-            acc[val] = data[i]['meteor_output'][j][val]
+            acc[val] = typeof data[i]['meteor_output'][j][val] == 'object' ? JSON.stringify(data[i]['meteor_output'][j][val]) : data[i]['meteor_output'][j][val]
             return acc
           },{})
           new_data.push({...data[i], meteor_output:[], ...expand});
@@ -1957,32 +2001,16 @@ function showError(title, description) {
 function loadMeteorNext(data) {
   // Init variables
   var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>CSV</b> file format. Example of a <b>meteor.csv</b> file:<br><br>";
-  var error_code = `col1,col2,col3<br>
-  val1,val2,val3<br>
-  val4,val5,val6`;
-  DATA = []
+  var error_message = "Please use a <b>JSON</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
+  var error_code = '[{"col1": "row1_val1", "col2": "row1_val2"},{"col1": "row2_val1", "col2", "row2_val2"}]';
 
-  Papa.parse(data.data, {
-    skipEmptyLines: true,
-    worker: true,
-    header: true,
-    quoteChar: "'",
-	  escapeChar: "'",
-    step: function(results) {
-      try {
-        results.data.meteor_output = JSON.parse(results.data.meteor_output)
-      } catch (error) {}
-      DATA.push(results.data)
-    },
-    complete: function() {
-      COLUMNS = Object.keys(DATA[0])
-      INFO = {"method": data.method, "queries": data.queries}
-      if (data.error) ERROR = data.error
-      setTimeout(function () { init_meteor(); }, 100);
-    },
-    error: function() {
-      show_error(error_title, error_message, error_code);
-    }
-  });
+  try {
+    DATA = JSON.parse(data.data);
+    COLUMNS = Object.keys(DATA[0]);
+    INFO = {"method": data.method, "queries": data.queries};
+    if (data.error) ERROR = data.error;
+    setTimeout(function () { init_meteor(); }, 100);
+  } catch (error) {
+    show_error(error_title, error_message, error_code);
+  }
 }

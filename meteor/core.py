@@ -1,5 +1,4 @@
 import os
-import csv
 import sys
 import time
 import shutil
@@ -131,9 +130,7 @@ class core:
             # Get Logs
             self.__get_logs()
             # Merge Logs
-            self.__merge_logs()
-            # Get Summary
-            summary = self.__compute_summary()
+            summary = self.__merge_logs()
             # Check Execution Integrity
             error = self.__check_execution(error)
             # Upload Logs to S3
@@ -199,7 +196,7 @@ class core:
         try:
             ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
             if len(ssh_regions) > 0:
-                status_msg = "- Downloading Logs from Regions..."
+                status_msg = "- Downloading Logs from Regions"
                 self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
                 threads = []
                 for region in ssh_regions:
@@ -223,102 +220,59 @@ class core:
         except FileNotFoundError:
             return []
 
+        # Init base summary
+        summary = {'queries_failed': 0, 'queries_success': 0, 'queries_rollback': 0}
+
         # Merge Logs
         try:
-            for region_item in region_items:
-                if os.path.isdir(f"{execution_logs_path}/{region_item}"):
+            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.json" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.json"
+            first = True
+            with open(file_path, 'w', encoding='utf-8') as fwrite:
+                fwrite.write('[')
+                for region_item in region_items:
                     region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
-                    status_msg = f"- Merging {region_name}..."
+                    status_msg = f"- Processing Logss from '{region_name}'"
                     self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-                    server_items = os.listdir(f"{execution_logs_path}/{region_item}")
-
-                    # Merging Server Logs
-                    for server_item in server_items:
-                        if os.path.isdir(f"{execution_logs_path}/{region_item}/{server_item}"):
-                            with open(f"{execution_logs_path}/{region_item}/{server_item}.csv", 'w', newline='', encoding='utf-8') as fwrite:
-                                writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-
-                                server_files = [i for i in os.listdir(f"{execution_logs_path}/{region_item}/{server_item}") if not i.endswith('_tx.csv')]
+                    if os.path.isdir(f"{execution_logs_path}/{region_item}"):
+                        server_items = os.listdir(f"{execution_logs_path}/{region_item}")
+                        # Merging Server Logs
+                        for server_item in server_items:
+                            if os.path.isdir(f"{execution_logs_path}/{region_item}/{server_item}"):
+                                server_files = [i for i in os.listdir(f"{execution_logs_path}/{region_item}/{server_item}") if not i.endswith('_tx.jsonl')]
                                 for server_file in server_files:
                                     # Merging Database Logs
                                     database_file = f"{execution_logs_path}/{region_item}/{server_item}/{server_file}"
-                                    with open(database_file, 'r', newline='', encoding='utf-8') as fread:
-                                        reader = csv.DictReader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL, fieldnames=('meteor_timestamp','meteor_environment','meteor_region','meteor_server','meteor_database','meteor_query','meteor_status','meteor_response','meteor_execution_time','meteor_execution_rows','meteor_output'))
+                                    with open(database_file, 'r', encoding='utf-8') as fread:
                                         # Get transactions
                                         transactions = {}
-                                        if os.path.exists(database_file[:-4] + '_tx.csv'):
-                                            with open(database_file[:-4] + '_tx.csv', 'r', newline='', encoding='utf-8') as ftxread:
-                                                transactions = {i[0]: i[1] for i in list(csv.reader(ftxread))}
+                                        if os.path.exists(database_file[:-4] + '_tx.jsonl'):
+                                            with open(database_file[:-4] + '_tx.jsonl', 'r', encoding='utf-8') as ftxread:
+                                                transactions = {i['id']: i['status'] for i in [json.loads(i) for i in ftxread.read().splitlines()]}
                                         # Compile server logs
-                                        for row in reader:
+                                        for i in fread:
+                                            row = json.loads(i.rstrip('\n|\r'))
+                                            # Check transactions
                                             if row['meteor_status'].startswith('tx_'):
                                                 row['meteor_status'] = 1 if row['meteor_status'] in transactions and int(transactions[row['meteor_status']]) == 1 else 2
-                                            writer.writerow([row['meteor_timestamp'], row['meteor_environment'], row['meteor_region'], row['meteor_server'], row['meteor_database'], row['meteor_query'], row['meteor_status'], row['meteor_response'], row['meteor_execution_time'], row['meteor_execution_rows'], row['meteor_output']])
-
-                    # Merging Region Logs
-                    with open(f"{execution_logs_path}/{region_item}.csv", 'w', newline='', encoding='utf-8') as fwrite:
-                        writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-                        server_items = os.listdir(f"{execution_logs_path}/{region_item}")
-                        for server_item in server_items:
-                            if os.path.isfile(f"{execution_logs_path}/{region_item}/{server_item}") and server_item != 'progress.json':
-                                with open(f"{execution_logs_path}/{region_item}/{server_item}", 'r', newline='', encoding='utf-8') as fread:
-                                    reader = csv.reader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-                                    for row in reader:
-                                        writer.writerow(row)
+                                            # Compute summary
+                                            summary['queries_failed'] += 1 if int(row['meteor_status']) == 0 else 0
+                                            summary['queries_success'] += 1 if int(row['meteor_status']) == 1 else 0
+                                            summary['queries_rollback'] += 1 if int(row['meteor_status']) == 2 else 0
+                                            # Write row to the log
+                                            comma = ',' if not first else ''
+                                            fwrite.write(comma + json.dumps(row, default=self.__serializer, separators=(',',':')))
+                                            first = False
                     self._progress.track_logs(value={'status': 'success'})
-        except Exception:
-            self._progress.track_logs(value={'status': 'failed'})
-            raise
-
-        # Merging Environment Logs
-        try:
-            print("gogogogo")
-            status_msg = "- Generating a Single Log File..."
-            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
-            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.csv" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.csv"
-            with open(file_path, 'w', newline='', encoding='utf-8') as fwrite:
-                writer = csv.writer(fwrite, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(['meteor_timestamp','meteor_environment','meteor_region','meteor_server','meteor_database','meteor_query','meteor_status','meteor_response','meteor_execution_time','meteor_execution_rows','meteor_output'])
-                region_items = os.listdir(execution_logs_path)
-                for region_item in region_items:
-                    if region_item.endswith('.csv'):
-                        with open(f"{execution_logs_path}/{region_item}", 'r', newline='', encoding='utf-8') as fread:
-                            reader = csv.reader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-                            for row in reader:
-                                writer.writerow(row)
-        except Exception:
-            self._progress.track_logs(value={'status': 'failed'})
-            raise
-
-    def __compute_summary(self):
-        try:
-            # Get logs file path
-            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.csv" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.csv"
-
-            # Init vars
-            summary = {'queries_failed': 0, 'queries_success': 0, 'queries_rollback': 0}
-            queries = {}
-            with open(file_path, 'r', newline='', encoding='utf-8') as fread:
-                reader = csv.DictReader(fread, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-                n = 0
-                for row in reader:
-                    # Count Query Errors
-                    summary['queries_failed'] += 1 if int(row['meteor_status']) == 0 else 0
-                    # Count Query Success
-                    summary['queries_success'] += 1 if int(row['meteor_status']) == 1 else 0
-                    # Count Query Rollback
-                    summary['queries_rollback'] += 1 if int(row['meteor_status']) == 2 else 0
-                    # Sum total rows
-                    n += 1
-
-            summary['total_queries'] = n
+                fwrite.write(']')
 
             # Compute summary
+            summary['total_queries'] = summary['queries_failed'] + summary['queries_success'] + summary['queries_rollback']
             queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_success']) / float(summary['total_queries']) * 100, 2)
             queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
             queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_rollback']) / float(summary['total_queries']) * 100, 2)
 
             # Track progress
+            queries = {}
             queries['total'] = summary['total_queries']
             queries['succeeded'] = {'t': summary['queries_success'], 'p': float(queries_succeeded_value)}
             queries['failed'] = {'t': summary['queries_failed'], 'p': float(queries_failed_value)}
@@ -326,13 +280,16 @@ class core:
 
             # Write Progress
             self._progress.track_queries(value=queries)
-            self._progress.track_logs(value={'status': 'success'})
+
+            # Return summary
             return summary
 
         except Exception:
-            print("heree")
             self._progress.track_logs(value={'status': 'failed'})
             raise
+
+    def __serializer(self, obj):
+        return obj.__str__()
 
     def __check_execution(self, error):
         if error is None:
@@ -348,7 +305,7 @@ class core:
         return error
 
     def clean(self):
-        status_msg = "- Cleaning Regions..."
+        status_msg = "- Cleaning Regions"
         self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Delete SSH Deployment Logs
@@ -384,7 +341,7 @@ class core:
         if not self._imports.config['slack']['enabled']:
             return
 
-        status_msg = "- Sending Slack to '#{}'...".format(self._imports.config['slack']['channel_name'])
+        status_msg = "- Sending Slack to #{}".format(self._imports.config['slack']['channel_name'])
         self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Get Webhook Data
