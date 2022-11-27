@@ -438,7 +438,7 @@ export default {
       let values = ''
       let args = []
       for (let row of selectedRows) {
-        let rowVal = Object.values(row)
+        let rowVal = Object.values(row).map(x => x == null ? null : x.toString())
         args = [...args, ...rowVal];
         values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
       }
@@ -1226,7 +1226,7 @@ export default {
         let values = ''
         let args = []
         for (let row of this.contentItems) {
-          let rowVal = Object.values(row).map(x => x.toString())
+          let rowVal = Object.values(row).map(x => x == null ? null : x.toString())
           args = [...args, ...rowVal];
           values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
         }

@@ -1,5 +1,4 @@
 import re
-import csv
 import json
 import threading
 from time import time
@@ -121,7 +120,6 @@ class deploy_queries:
 
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
-                execution_row['meteor_output'] = json.dumps(execution_row['meteor_output'], default=self.__serializer, separators=(',',':'))
 
                 if not output:
                     execution_row['meteor_output'] = '-'
@@ -159,14 +157,14 @@ class deploy_queries:
     def __store_query(self, query):
         # Get execution path
         if self.__mode == 'main':
-            execution_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}.csv"
+            execution_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}.jsonl"
         else:
-            execution_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}.csv"
+            execution_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}.jsonl"
 
         # Store query
-        with open(execution_log_path, 'a+', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter=',', quotechar="'", escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([query['meteor_timestamp'], query['meteor_environment'], query['meteor_region'], query['meteor_server'], query['meteor_database'], query['meteor_query'], query['meteor_status'], query['meteor_response'], query['meteor_execution_time'], query['meteor_execution_rows'], query['meteor_output']])
+        with open(execution_log_path, 'a+', encoding='utf-8') as f:
+            query_json = json.dumps(query, default=self.__serializer, separators=(',',':'))
+            f.write(query_json + '\n')
 
     def begin(self):
         # End the current transaction
@@ -197,14 +195,14 @@ class deploy_queries:
 
         # Get transaction log path
         if self.__mode == 'main':
-            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}_tx.csv"
+            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}_tx.jsonl"
         else:
-            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}_tx.csv"
+            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}_tx.jsonl"
 
         # Store transaction
-        with open(transaction_log_path, 'a+', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([self.__tx_id, 1])
+        with open(transaction_log_path, 'a+', encoding='utf-8') as f:
+            query_json = json.dumps({"id": self.__tx_id, "status": 1}, default=self.__serializer, separators=(',',':'))
+            f.write(query_json + '\n')
 
         # Clear current transaction & query error
         self.__tx_id = None
@@ -221,14 +219,14 @@ class deploy_queries:
 
         # Get transaction log path
         if self.__mode == 'main':
-            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}_tx.csv"
+            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}/{self.__database}_tx.jsonl"
         else:
-            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}_tx.csv"
+            transaction_log_path = f"{self.__args.path}/execution/{self.__region['id']}/{self.__server['id']}_{self.__mode}_tx.jsonl"
 
         # Store transaction
-        with open(transaction_log_path, 'a+', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([self.__tx_id, 0])
+        with open(transaction_log_path, 'a+', encoding='utf-8') as f:
+            query_json = json.dumps({"id": self.__tx_id, "status": 0}, default=self.__serializer, separators=(',',':'))
+            f.write(query_json + '\n')
 
         # Clear current transaction & query error
         self.__tx_id = None
