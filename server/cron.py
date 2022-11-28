@@ -232,8 +232,8 @@ class Cron:
             for i in expired:
                 # DISK
                 path = f"{self._base_path}/files/deployments/{i['uri']}"
-                if os.path.isfile(path + '.json'):
-                    os.remove(path + '.json')
+                if os.path.isfile(path + '.json.gz'):
+                    os.remove(path + '.json.gz')
                 # SQL
                 conn.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
         finally:

@@ -188,10 +188,10 @@ class Deployments:
                 # Check if exists
                 bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
                 base_path = os.path.realpath(os.path.dirname(sys.executable)) if bin else os.path.realpath(os.path.dirname(sys.argv[0]))
-                if not os.path.exists(f"{base_path}/files/deployments/{uri}.json"):
+                if not os.path.exists(f"{base_path}/files/deployments/{uri}.json.gz"):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                with open(f"{base_path}/files/deployments/{uri}.json") as fopen:
-                    data = fopen.read()
+                with gzip.open(f"{base_path}/files/deployments/{uri}.json.gz", 'rb') as fopen:
+                    data = fopen.read().decode('utf-8')
                 return jsonify({"data": data, "method": method, "queries": queries, "error": error}), 200
 
             elif results['logs'] == 'amazon_s3':
@@ -199,16 +199,10 @@ class Deployments:
                 # Check Amazon S3 credentials are setup
                 if not amazon['enabled'] or len(amazon['aws_access_key']) == 0 or len(amazon['aws_secret_access_key']) == 0:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the Amazon S3 credentials in the Admin Panel.' }), 400
-                session = boto3.Session(
-                    aws_access_key_id=amazon['aws_access_key'],
-                    aws_secret_access_key=amazon['aws_secret_access_key'],
-                    region_name=amazon['region']
-                )
                 try:
-                    s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=amazon['bucket'], Key='deployments/{}.json.gz'.format(uri))
-                    with gzip.open(obj['Body'], 'rb') as fopen:
-                        return jsonify({"data": fopen.read().decode('utf-8'), "method": method, "queries": queries, "error": error}), 200
+                    client = boto3.client('s3', aws_access_key_id=amazon['aws_access_key'], aws_secret_access_key=amazon['aws_secret_access_key'], region_name=amazon['region'])
+                    url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon['bucket'], 'Key': f'deployments/{uri}.json.gz'}, ExpiresIn=30)
+                    return jsonify({"url": url, "method": method, "queries": queries, "error": error}), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
                         return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400
