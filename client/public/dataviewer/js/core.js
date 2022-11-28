@@ -618,7 +618,7 @@ $("#import-file").change(function (event) {
 function updateProgress(event) {
   if (event.lengthComputable) {
     var percentLoaded = Math.round((event.loaded / event.total) * 100);
-    $("#loading").append("<p>- [" + percentLoaded.toString() + " %] Uploading file '" + imported_file_name + "' ...</p>");
+    $("#loading").append("<p>- [" + percentLoaded.toString() + " %] Loading file '" + imported_file_name + "' ...</p>");
   }
 }
 
@@ -637,8 +637,7 @@ $("#import-modal-save").click(function () {
   }
   imported_file_name = imported_file['name'];
   var extension = imported_file_name.substr((imported_file_name.lastIndexOf('.') + 1));
-  // if (imported_file_format != extension) show_error(error_title, error_message, error_code);
-  if (1 == 0) show_error(error_title, error_message, error_code);
+  if (imported_file_format != extension) show_error(error_title, error_message, error_code);
   else {
     // Re-Init Components
     init()
@@ -656,7 +655,7 @@ $("#import-modal-save").click(function () {
     if (imported_file_format == 'json') {
       var reader = new FileReader();
       reader.readAsText(imported_file);
-      // reader.onprogress = updateProgress;
+      reader.onprogress = updateProgress;
       reader.onload = function(e) {
         try {
           $("#loading").append("<p>- File Uploaded Successfully</p>"); 
@@ -1998,19 +1997,44 @@ function showError(title, description) {
   var error_message = description // "The URL provided is private"
   show_error(title_message, error_message, '');
 }
-function loadMeteorNext(data) {
-  // Init variables
-  var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>JSON</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
-  var error_code = '[{"col1": "row1_val1", "col2": "row1_val2"},{"col1": "row2_val1", "col2", "row2_val2"}]';
-
+async function loadMeteorNext(data) {
   try {
-    DATA = JSON.parse(data.data);
-    COLUMNS = Object.keys(DATA[0]);
-    INFO = {"method": data.method, "queries": data.queries};
-    if (data.error) ERROR = data.error;
-    setTimeout(function () { init_meteor(); }, 100);
-  } catch (error) {
-    show_error(error_title, error_message, error_code);
+    if ('url' in data) {
+      // Get data from url
+      let response;
+      try {
+        response = await fetch(data.url);
+      }
+      catch(error) {
+        show_error('An error occurred', 'Unable to fetch the deployment results.<br>Make sure that the Amazon S3 bucket has the cross-origin resource sharing (CORS) setup and the GET method is allowed for the current origin.', '');
+        return;
+      }
+      let result = new Uint8Array(0);
+      const reader = response.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const newResult = new Uint8Array(result.length + value.length);
+        newResult.set(result)
+        newResult.set(value, result.length);
+        result = newResult;
+      }
+      // Process data
+      DATA = JSON.parse(pako.ungzip(result, { to: 'string' }));
+      COLUMNS = Object.keys(DATA[0]);
+      INFO = {"method": data.method, "queries": data.queries};
+      if (data.error) ERROR = data.error;
+      setTimeout(() => init_meteor(), 100);
+    }
+    else if ('data' in data) {
+      DATA = JSON.parse(data.data);
+      COLUMNS = Object.keys(DATA[0]);
+      INFO = {"method": data.method, "queries": data.queries};
+      if (data.error) ERROR = data.error;
+      setTimeout(() => init_meteor(), 100);
+    }
+  }
+  catch(error) {
+    show_error('An error occurred', error, '');
   }
 }

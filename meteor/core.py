@@ -4,6 +4,7 @@ import time
 import shutil
 import calendar
 import requests
+import gzip
 import re
 import signal
 import json
@@ -131,6 +132,8 @@ class core:
             self.__get_logs()
             # Merge Logs
             summary = self.__merge_logs()
+            # Compress Logs
+            self.__compress_logs()
             # Check Execution Integrity
             error = self.__check_execution(error)
             # Upload Logs to S3
@@ -196,8 +199,7 @@ class core:
         try:
             ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
             if len(ssh_regions) > 0:
-                status_msg = "- Downloading Logs from Regions"
-                self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+                self._progress.track_logs(value={'status': 'progress', 'message': 'Downloading Logs from Regions'})
                 threads = []
                 for region in ssh_regions:
                     r = Region(self._args, region)
@@ -221,15 +223,13 @@ class core:
 
         # Merge Logs
         try:
-            file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.json" if self._imports.config['amazon_s3']['enabled'] else f"{self._args.path}/../{self._args.path.split('/')[-1]}.json"
             first = True
-            with open(file_path, 'w', encoding='utf-8') as fwrite:
+            with open(f"{self._args.path}.json", 'w', encoding='utf-8') as fwrite:
                 fwrite.write('[')
                 region_items = [i for i in os.listdir(execution_logs_path) if not i.endswith('.tar.gz')]
                 for region_item in region_items:
                     region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
-                    status_msg = f"- Processing Logs from '{region_name}'"
-                    self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
+                    self._progress.track_logs(value={'status': 'progress', 'message': f"Processing Logs from '{region_name}'"})
                     if os.path.isdir(f"{execution_logs_path}/{region_item}"):
                         server_items = os.listdir(f"{execution_logs_path}/{region_item}")
                         # Merging Server Logs
@@ -288,6 +288,18 @@ class core:
     def __serializer(self, obj):
         return obj.__str__()
 
+    def __compress_logs(self):
+        try:
+            self._progress.track_logs(value={'status': 'progress', 'message': 'Compressing Logs'})
+            file_path = f"{self._args.path}.json"
+            with open(file_path, 'rb') as f_in:
+                with gzip.open(file_path + '.gz', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            self._progress.track_logs(value={'status': 'success'})
+        except Exception:
+            self._progress.track_logs(value={'status': 'failed'})
+            raise
+
     def __check_execution(self, error):
         if error is None:
             result = self._progress.get()
@@ -302,8 +314,7 @@ class core:
         return error
 
     def clean(self):
-        status_msg = "- Cleaning Regions"
-        self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
+        self._progress.track_tasks(value={'status': 'progress', 'message': 'Cleaning Regions'})
 
         # Delete SSH Deployment Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
@@ -325,21 +336,27 @@ class core:
                 break
         if error:
             self._progress.track_tasks(value={'status': 'failed'})
-        else:
-            self._progress.track_tasks(value={'status': 'success'})
 
         # Delete Deployment Folder
         if os.path.exists(self._args.path):
             if os.path.isdir(self._args.path):
                 shutil.rmtree(self._args.path)
 
+        # Delete Deployment Logs
+        logs_path = f"{self._args.path}.json"
+        if os.path.exists(logs_path):
+            os.remove(logs_path)
+        if self._imports.config['amazon_s3']['enabled'] and os.path.exists(logs_path + '.gz'):
+            os.remove(logs_path + '.gz')
+
+        self._progress.track_tasks(value={'status': 'success'})
+
     def slack(self, status, summary, error=None):
         # Send Slack Message if it's enabled
         if not self._imports.config['slack']['enabled']:
             return
 
-        status_msg = "- Sending Slack to #{}".format(self._imports.config['slack']['channel_name'])
-        self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
+        self._progress.track_tasks(value={'status': 'progress', 'message': f"Sending Slack to #{self._imports.config['slack']['channel_name']}"})
 
         # Get Webhook Data
         webhook_url = self._imports.config['slack']['webhook_url']

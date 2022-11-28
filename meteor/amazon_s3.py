@@ -1,6 +1,4 @@
-import gzip
 import boto3
-import shutil
 
 class amazon_s3:
     def __init__(self, args, imports, progress):
@@ -20,19 +18,12 @@ class amazon_s3:
         # Upload Logs to S3
         if self._config['amazon_s3']['enabled']:
             try:
-                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3"})
-                # Compress Deployment
-                with open(f"{self._args.path}/{self._args.path.split('/')[-1]}.json", 'rb') as f_in:
-                    with gzip.open(f"{self._args.path}/{self._args.path.split('/')[-1]}.json.gz", 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-
                 # Upload Deployment to S3
-                file_path = f"{self._args.path}/{self._args.path.split('/')[-1]}.json.gz"
+                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3"})
+                file_path = f"{self._args.path}.json.gz"
                 bucket_name = self._config['amazon_s3']['bucket_name']
                 s3_path = f"deployments/{self._args.path.split('/')[-1]}.json.gz"
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
-
-                # Update Progress
                 self._progress.track_tasks(value={'status': 'success'})
             except Exception:
                 self._progress.track_tasks(value={'status': 'failed'})
