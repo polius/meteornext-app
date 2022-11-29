@@ -199,7 +199,7 @@ class core:
         try:
             ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
             if len(ssh_regions) > 0:
-                self._progress.track_logs(value={'status': 'progress', 'message': 'Downloading Logs from Regions'})
+                self._progress.track_logs(value={'status': 'progress', 'message': 'Downloading Logs from Regions...'})
                 threads = []
                 for region in ssh_regions:
                     r = Region(self._args, region)
@@ -229,7 +229,7 @@ class core:
                 region_items = [i for i in os.listdir(execution_logs_path) if not i.endswith('.tar.gz')]
                 for region_item in region_items:
                     region_name = next(item for item in self._imports.config['regions'] if item["id"] == int(region_item))['name']
-                    self._progress.track_logs(value={'status': 'progress', 'message': f"Processing Logs from '{region_name}'"})
+                    self._progress.track_logs(value={'status': 'progress', 'message': f"Merging {region_name}..."})
                     if os.path.isdir(f"{execution_logs_path}/{region_item}"):
                         server_items = os.listdir(f"{execution_logs_path}/{region_item}")
                         # Merging Server Logs
@@ -290,7 +290,7 @@ class core:
 
     def __compress_logs(self):
         try:
-            self._progress.track_logs(value={'status': 'progress', 'message': 'Compressing Logs'})
+            self._progress.track_logs(value={'status': 'progress', 'message': 'Generating a Single Log File...'})
             file_path = f"{self._args.path}.json"
             with open(file_path, 'rb') as f_in:
                 with gzip.open(file_path + '.gz', 'wb') as f_out:
@@ -314,7 +314,7 @@ class core:
         return error
 
     def clean(self):
-        self._progress.track_tasks(value={'status': 'progress', 'message': 'Cleaning Regions'})
+        self._progress.track_tasks(value={'status': 'progress', 'message': 'Cleaning Regions...'})
 
         # Delete SSH Deployment Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
@@ -356,7 +356,7 @@ class core:
         if not self._imports.config['slack']['enabled']:
             return
 
-        self._progress.track_tasks(value={'status': 'progress', 'message': f"Sending Slack to #{self._imports.config['slack']['channel_name']}"})
+        self._progress.track_tasks(value={'status': 'progress', 'message': f"Sending Slack to #{self._imports.config['slack']['channel_name']}..."})
 
         # Get Webhook Data
         webhook_url = self._imports.config['slack']['webhook_url']

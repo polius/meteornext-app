@@ -19,7 +19,7 @@ class amazon_s3:
         if self._config['amazon_s3']['enabled']:
             try:
                 # Upload Deployment to S3
-                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3"})
+                self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Deployment to Amazon S3..."})
                 file_path = f"{self._args.path}.json.gz"
                 bucket_name = self._config['amazon_s3']['bucket_name']
                 s3_path = f"deployments/{self._args.path.split('/')[-1]}.json.gz"
