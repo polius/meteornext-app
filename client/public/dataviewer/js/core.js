@@ -560,7 +560,7 @@ function enable_settings_modal(option) {
 // ##############################################################################################
 var imported_file;
 var imported_file_name;
-var imported_file_format = 'json';
+var imported_file_format = 'csv';
 
 $("#import-button").click(function () {
   imported_file = undefined;
@@ -676,7 +676,7 @@ $("#import-modal-save").click(function () {
         header: true,
         worker: true,
         step: function(results) {
-          if ('meteor_output' in results.data) results.data['meteor_output'] = JSON.parse(results.data['meteor_output'])
+          if ('meteor_output' in results.data && results.data['meteor_output'].length > 0) results.data['meteor_output'] = JSON.parse(results.data['meteor_output'])
           DATA.push(results.data)
         },
         complete: function() {
