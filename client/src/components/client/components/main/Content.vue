@@ -197,6 +197,7 @@ import axios from 'axios'
 
 import ace from 'ace-builds';
 import sqlFormatter from '@sqltools/formatter'
+import papaparse from 'papaparse'
 
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
@@ -448,11 +449,7 @@ export default {
     },
     copyCSV() {
       let selectedRows = this.gridApi.content.getSelectedRows()
-      let replacer = (key, value) => value === null ? undefined : value
-      let header = Object.keys(selectedRows[0])
-      let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
-      csv.unshift(header.join(','))
-      csv = csv.join('\r\n')
+      let csv = papaparse.unparse(selectedRows)
       this.copyToClipboard(csv)
     },
     copyJSON() {
@@ -1213,12 +1210,8 @@ export default {
         this.download(name + '.json', exportData)
       }
       else if (this.dialogSelect == 'CSV') {
-        let replacer = (key, value) => value === null ? undefined : value
-        let header = Object.keys(this.contentItems[0])
-        let exportData = this.contentItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
-        exportData.unshift(header.join(','))
-        exportData = exportData.join('\r\n')
-        this.download(name + '.csv', exportData)
+        let csv = papaparse.unparse(this.contentItems)
+        this.download(name + '.csv', csv)
       }
       else if (this.dialogSelect == 'SQL') {
         var SqlString = require('sqlstring');

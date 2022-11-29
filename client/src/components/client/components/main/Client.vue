@@ -174,6 +174,7 @@ import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
 import sqlFormatter from '@sqltools/formatter'
+import papaparse from 'papaparse'
 
 export default {
   data() {
@@ -731,11 +732,7 @@ export default {
     },
     copyCSV() {
       let selectedRows = this.gridApi.client.getSelectedRows()
-      let replacer = (key, value) => value === null ? undefined : value
-      let header = Object.keys(selectedRows[0])
-      let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
-      csv.unshift(header.join(','))
-      csv = csv.join('\r\n')
+      let csv = papaparse.unparse(selectedRows)
       this.copyToClipboard(csv)
     },
     copyJSON() {
@@ -1387,12 +1384,8 @@ export default {
         this.download('export.json', exportData)
       }
       else if (this.dialogSelect == 'CSV') {
-        let replacer = (key, value) => value === null ? undefined : value
-        let header = Object.keys(this.clientItems[0])
-        let exportData = this.clientItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
-        exportData.unshift(header.join(','))
-        exportData = exportData.join('\r\n')
-        this.download('export.csv', exportData)
+        let csv = papaparse.unparse(this.clientItems)
+        this.download('export.csv', csv)
       }
       else if (this.dialogSelect == 'SQL') {
         var SqlString = require('sqlstring');
