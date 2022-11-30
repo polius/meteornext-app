@@ -133,7 +133,7 @@ class Monitor:
             # Store Queries
             if server['monitor']['queries_enabled']:
                 for i in processlist:
-                    if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
+                    if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute'] and i['INFO'] is not None:
                         db = '' if i['DB'] is None else i['DB']
                         query = """
                             INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
