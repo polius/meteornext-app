@@ -10,7 +10,7 @@ deployments() {
 monitoring() {
     while true; do 
         sleep 10;
-        python3 server.py --monitoring
+        timeout 600 python3 server.py --monitoring
     done
 }
 utils() {

@@ -76,7 +76,7 @@ class Monitor:
         # Wait Threads to Finish
         try:
             for t in threads:
-                t.join(300)
+                t.join()
         except KeyboardInterrupt:
             pass
 

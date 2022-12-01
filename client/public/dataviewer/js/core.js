@@ -628,68 +628,67 @@ $("#import-modal-save").click(function () {
   $("#loading").html('');
 
   var error_title = "Invalid File Type";
-  var error_message = "Please use a <b>" + imported_file_format.toUpperCase() + "</b> file format. Example of a <b>meteor.json</b> file:<br><br>";
-  var error_code;
+  var error_message = "Please use a <b>" + imported_file_format.toUpperCase() + "</b> file format. Example of a <b>meteor." + imported_file_format.toLowerCase() + "</b> file:<br><br>";
+  var error_code = ""
 
   if (typeof imported_file == 'undefined') {
     $("#import-button").removeClass("is-loading");
     return;
   }
   imported_file_name = imported_file['name'];
-  var extension = imported_file_name.substr((imported_file_name.lastIndexOf('.') + 1));
-  if (imported_file_format != extension) show_error(error_title, error_message, error_code);
-  else {
-    // Re-Init Components
-    init()
-    // If Grid is Loaded then Destroy it and show the loading page again
-    if (typeof gridOptions != 'undefined') {
-      $("#bestHtml5Grid").hide();
-      $("#rowCount").hide();
-      $("#footer").hide();
-      $("#loading").show();
-      gridOptions.api.destroy();
-    }
-    $("#theme-button").attr("disabled", true);
-    $("#loading").append("<p><b>" + imported_file_name + " (" + pretty_size(imported_file['size']) + ")</b></p>");
 
-    if (imported_file_format == 'json') {
-      var reader = new FileReader();
-      reader.readAsText(imported_file);
-      reader.onprogress = updateProgress;
-      reader.onload = function(e) {
+  // Re-Init Components
+  init()
+
+  // If Grid is Loaded then Destroy it and show the loading page again
+  if (typeof gridOptions != 'undefined') {
+    $("#bestHtml5Grid").hide();
+    $("#rowCount").hide();
+    $("#footer").hide();
+    $("#loading").show();
+    if (gridOptions.api != null) gridOptions.api.destroy();
+  }
+  $("#theme-button").attr("disabled", true);
+  $("#loading").append("<p><b>" + imported_file_name + " (" + pretty_size(imported_file['size']) + ")</b></p>");
+
+  // Load file
+  if (imported_file_format == 'json') {
+    var reader = new FileReader();
+    reader.readAsText(imported_file);
+    reader.onprogress = updateProgress;
+    reader.onload = function(e) {
+      try {
+        $("#loading").append("<p>- File Uploaded Successfully</p>"); 
+        $("#loading").append("<p>- Processing File ...</p>");
+        DATA = JSON.parse(e.target.result);
+        COLUMNS = Object.keys(DATA[0]);
+        setTimeout(function () { init_meteor(); }, 100);
+      } catch (error) {
+        error_code = '[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]';
+        show_error(error_title, error_message, error_code);
+      }
+    }
+  }
+  else if (imported_file_format == 'csv') {
+    DATA = []
+    Papa.parse(imported_file, {
+      skipEmptyLines: true,
+      header: true,
+      worker: true,
+      step: function(results) {
+        if ('meteor_output' in results.data && results.data['meteor_output'].length > 0) results.data['meteor_output'] = JSON.parse(results.data['meteor_output'])
+        DATA.push(results.data)
+      },
+      complete: function() {
         try {
-          $("#loading").append("<p>- File Uploaded Successfully</p>"); 
-          $("#loading").append("<p>- Processing File ...</p>");
-          DATA = JSON.parse(e.target.result);
           COLUMNS = Object.keys(DATA[0]);
           setTimeout(function () { init_meteor(); }, 100);
         } catch (error) {
-          error_code = '[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]';
+          error_code = 'id,name,age<br>1,John,25<br>2,Sophia,28'
           show_error(error_title, error_message, error_code);
         }
       }
-    }
-    else if (imported_file_format == 'csv') {
-      DATA = []
-      Papa.parse(imported_file, {
-        skipEmptyLines: true,
-        header: true,
-        worker: true,
-        step: function(results) {
-          if ('meteor_output' in results.data && results.data['meteor_output'].length > 0) results.data['meteor_output'] = JSON.parse(results.data['meteor_output'])
-          DATA.push(results.data)
-        },
-        complete: function() {
-          try {
-            COLUMNS = Object.keys(DATA[0]);
-            setTimeout(function () { init_meteor(); }, 100);
-          } catch (error) {
-            error_code = 'id,name,age<br>1,John,25<br>2,Sophia,28'
-            show_error(error_title, error_message, error_code);
-          }
-        }
-      });
-    }
+    });
   }
 });
 
