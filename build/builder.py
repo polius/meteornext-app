@@ -63,7 +63,6 @@ class builder:
         # docker manifest push --purge meteornext/meteornext:latest
 
     def __upload_image(self):
-        return
         subprocess.call(f"docker tag meteornext:latest meteornext/meteornext:latest", shell=True)
         subprocess.call(f"docker tag meteornext:latest meteornext/meteornext:{self._version}", shell=True)
         subprocess.call(f"docker login --username meteornext --password-stdin < ~/.docker/auth.txt", shell=True)
