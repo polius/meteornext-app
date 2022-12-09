@@ -15,11 +15,15 @@ COPY build/start.sh /root/
 
 # Run additional commands
 RUN apt update -qq && \
+    apt install unzip -y && \
     apt install procps -y && \
     apt install jq -y && \
     apt install pv -y && \
     apt install default-mysql-client -y && \
-    apt install awscli -y && \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install -i /usr/bin/aws-cli -b /usr/bin && \
+    rm -rf awscliv2.zip aws && \
     apt clean -qq && \
     tar -zxf /usr/share/nginx/html/client.tar.gz -C /usr/share/nginx/html/ && \
     mv /usr/share/nginx/html/client/* /usr/share/nginx/html/ && \

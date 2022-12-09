@@ -212,7 +212,7 @@ class Imports:
                     ssl += f" --ssl-ca={os.path.join(path, item['uri'], 'ssl_ca_certificate.pem')}"
 
             if item['mode'] == 'cloud':
-                client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+                client = boto3.client('s3', region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
 
             # MySQL & Amazon Aurora (MySQL) engines
             if server['engine'] in ('MySQL', 'Amazon Aurora (MySQL)'):

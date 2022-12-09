@@ -75,7 +75,7 @@ class Exports:
             self.__monitor(core, item, region, paths, monitor_status)
 
         # Generated Presigned URL 
-        client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+        client = boto3.client('s3', region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         now = self.__utcnow()
         try:
             url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"exports/{item['uri']}.sql.gz"}, ExpiresIn=604800)

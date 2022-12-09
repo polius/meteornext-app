@@ -94,7 +94,7 @@ class Clones:
             self.__monitor_export(core['source'], item, path['source'], monitor_status)
 
         # Generated Presigned URL
-        client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+        client = boto3.client('s3', region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         try:
             url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=3600)
         except Exception as e:
@@ -333,7 +333,7 @@ class Clones:
             error_sql_path = os.path.join(path, item['uri'], 'error_sql.txt')
 
             # Get file size
-            client = boto3.client('s3', aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+            client = boto3.client('s3', region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
             response = client.head_object(Bucket=amazon_s3['bucket'], Key=f"clones/{item['uri']}.sql.gz")
             size = response['ContentLength']
 

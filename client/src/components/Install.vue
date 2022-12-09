@@ -60,7 +60,17 @@
                           <v-icon size="18" color="info">fas fa-info-circle</v-icon>
                         </v-col>
                         <v-col>
-                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteornext.io/guides/administration/settings#amazon-s3" target="_blank">Admin Panel</a>.</div>
+                          <div class="text-body-1 white--text" style="text-align:left">Can be enabled later in the <a href="https://docs.meteornext.io/guides/administration.html#amazon-s3" target="_blank">Admin Panel</a>.</div>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <v-card style="margin-top:10px">
+                      <v-row no-gutters align="center" justify="center">
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon size="18" color="success">fas fa-question-circle</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1 white--text" style="text-align:left">Check the <a href="https://docs.meteornext.io/getting-started.html#amazon-s3" target="_blank">Documentation</a>.</div>
                         </v-col>
                       </v-row>
                     </v-card>
