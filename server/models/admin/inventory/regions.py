@@ -17,7 +17,7 @@ class Regions:
                 SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, `key`, r.shared, r.owner_id, r.secured, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
                 FROM regions r
                 JOIN users u0 ON u0.id = %(user_id)s
-                JOIN groups g ON g.id = r.group_id AND g.id = u0.group_id
+                JOIN `groups` g ON g.id = r.group_id AND g.id = u0.group_id
                 LEFT JOIN users u ON u.id = r.owner_id
                 LEFT JOIN users u2 ON u2.id = r.created_by
                 LEFT JOIN users u3 ON u3.id = r.updated_by
@@ -32,7 +32,7 @@ class Regions:
                 LEFT JOIN users u ON u.id = r.owner_id
                 LEFT JOIN users u2 ON u2.id = r.created_by
                 LEFT JOIN users u3 ON u3.id = r.updated_by
-                LEFT JOIN groups g ON g.id = r.group_id
+                LEFT JOIN `groups` g ON g.id = r.group_id
                 WHERE r.group_id = %s{}
                 ORDER BY r.id DESC
             """
@@ -47,7 +47,7 @@ class Regions:
                 LEFT JOIN users u ON u.id = r.owner_id
                 LEFT JOIN users u2 ON u2.id = r.created_by
                 LEFT JOIN users u3 ON u3.id = r.updated_by
-                LEFT JOIN groups g ON g.id = r.group_id
+                LEFT JOIN `groups` g ON g.id = r.group_id
                 GROUP BY r.id
                 ORDER BY r.id DESC
             """

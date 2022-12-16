@@ -28,7 +28,7 @@ class Executions_Queued:
             JOIN executions_queued q ON q.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id
             JOIN users u ON u.id = d.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             WHERE e.status IN('QUEUED','STARTING','IN PROGRESS','STOPPING')
             ORDER BY e.id
         """

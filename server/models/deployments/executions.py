@@ -68,7 +68,7 @@ class Executions:
             JOIN releases r ON r.id = d.release_id
             JOIN environments env ON env.id = e.environment_id
             JOIN users u ON u.id <=> e.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             WHERE e.status = 'SCHEDULED'
             AND %s >= e.scheduled
         """
@@ -83,7 +83,7 @@ class Executions:
             JOIN environments env ON env.id = e.environment_id
             JOIN users u ON u.id = e.user_id
             LEFT JOIN users u2 ON u2.id = e.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             WHERE e.id IN ({})
         """.format(execution_ids)
         return self._sql.execute(query)

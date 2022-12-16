@@ -12,7 +12,7 @@ class Monitoring:
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, r.shared AS 'region_shared'
                     FROM servers s
-                    JOIN groups g ON g.id = s.group_id
+                    JOIN `groups` g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
                     LEFT JOIN regions r ON r.id = s.region_id
                     WHERE (s.shared = 1 OR u.id IS NOT NULL)
@@ -65,7 +65,7 @@ class Monitoring:
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, r.shared AS 'region_shared'
                     FROM servers s
-                    JOIN groups g ON g.id = s.group_id
+                    JOIN `groups` g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
                     LEFT JOIN regions r ON r.id = s.region_id
                     WHERE (s.shared = 1 OR u.id IS NOT NULL)
@@ -123,7 +123,7 @@ class Monitoring:
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             ORDER BY u.username
         """
         return self._sql.execute(query)

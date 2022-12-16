@@ -102,7 +102,7 @@ class Clones:
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             ORDER BY u.username
         """
         return self._sql.execute(query)

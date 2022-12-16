@@ -68,7 +68,7 @@ class Client:
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             ORDER BY u.username
         """
         return self._sql.execute(query)
@@ -88,7 +88,7 @@ class Client:
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
-                    JOIN groups g ON g.id = s.group_id
+                    JOIN `groups` g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
                     WHERE (s.shared = 1 OR s.owner_id = u.id)
                     AND s.usage LIKE '%%C%%'
@@ -139,7 +139,7 @@ class Client:
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured
                     FROM servers s
-                    JOIN groups g ON g.id = s.group_id
+                    JOIN `groups` g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
                     WHERE (s.shared = 1 OR s.owner_id = u.id)
                     AND s.usage LIKE '%%C%%'

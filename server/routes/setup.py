@@ -42,48 +42,81 @@ import routes.utils.utils
 import routes.utils.imports
 import routes.utils.exports
 import routes.utils.clones
+import models.admin.settings
 import connectors.pool
 
 class Setup:
-    def __init__(self, app, license, url_prefix, sentry_dsn):
+    def __init__(self, app, version, license, url_prefix, sentry_dsn):
         self._app = app
         self._url_prefix = url_prefix
         self._conf = {}
         self._license = license
-        root_path = os.path.realpath(os.path.dirname(sys.argv[0]))
-        setup_file = "{}/server.conf".format(root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
+
+        # Retrieve base path
+        base_path = os.path.realpath(os.path.dirname(sys.executable)) if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS') else os.path.realpath(os.path.dirname(sys.argv[0]))
 
         # Register blueprints
         blueprints = self.register_blueprints()
 
         # Init Install blueprint
-        install = routes.install.Install(app, self._license, self._conf, blueprints)
+        install = routes.install.Install(app, version, self._license, self._conf, blueprints)
         app.register_blueprint(install.blueprint(), url_prefix=self._url_prefix)
 
         # Check if Meteor is initiated with all required params.
         try:
-            with open(setup_file) as file_open:
+            with open(f"{base_path}/server.conf") as file_open:
                 self._conf = json.load(file_open)
         except FileNotFoundError:
-            print("- Meteor initiated. No configuration detected. Install is required.")
+            # Store server status
+            print("- Meteor Next started. No user-defined configuration detected. Install section enabled.")
+            with open(f"{base_path}/status", 'w') as fopen:
+                fopen.write("Meteor Next started. No user-defined configuration detected. Install section enabled.")
         else:
-            # Set unique hardware id
-            self._conf['license']['uuid'] = app.config['JWT_SECRET_KEY']
-            # Init sql pool
-            sql = connectors.pool.Pool(self._conf['sql'])
-            # Init license
-            self._license.set_license(self._conf['license'])
-            self._license.validate()
-            # Init sentry
-            if self._license.get_status()['sentry']:
-                sentry_sdk.init(dsn=sentry_dsn, environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
-            # Init blueprints
-            for k,v in blueprints.items():
-                if k == 'settings':
-                    v.init(sql, self._conf)
-                else:
-                    v.init(sql)
-            print("- Meteor initiated from existing configuration.")
+            try:
+                # Set unique hardware id
+                self._conf['license']['uuid'] = app.config['JWT_SECRET_KEY']
+                # Init sql pool
+                sql = connectors.pool.Pool(self._conf['sql'])
+                # Check sql connection
+                try:
+                    sql.execute("SELECT 1")
+                except Exception as e:
+                    raise Exception(f"The provided MySQL credentials are invalid. Reason: {e}.")
+                # Init license
+                self._license.set_license(self._conf['license'])
+                self._license.validate()
+                # Check license
+                license_status = self._license.get_status()
+                if license_status['code'] == 404:
+                    raise Exception("A connection to the licensing server could not be established. Make sure that your container has internet connection to access https://license.meteornext.io")
+                elif license_status['code'] != 200:
+                    raise Exception("The provided License credentials are invalid or the current license is already registered. To unregister it go to https://account.meteornext.io and click the \"Unregister license\" button in the License section.")
+                # Init sentry
+                if self._license.get_status()['sentry']:
+                    sentry_sdk.init(dsn=sentry_dsn, environment=self._conf['license']['access_key'], traces_sample_rate=0, integrations=[FlaskIntegration()])
+                # Init blueprints
+                for k,v in blueprints.items():
+                    if k == 'settings':
+                        v.init(sql, self._conf)
+                    else:
+                        v.init(sql)
+                # Store new version
+                settings = models.admin.settings.Settings(sql, self._license)
+                settings.post(user_id=1, setting={'name': 'VERSION', 'value': version})
+                # Store server status
+                print("- Meteor Next started using user-defined configuration.")
+                with open(f"{base_path}/status", 'w') as fopen:
+                    fopen.write("Meteor Next started using user-defined configuration.")
+            except Exception as e:
+                # Remove server.conf file
+                if os.path.exists(f"{base_path}/server.conf"):
+                    os.remove(f"{base_path}/server.conf")
+                    install.enable()
+                # Store server status
+                print(f"- An error occurred starting the Meteor Next application. {e}")
+                with open(f"{base_path}/status", 'w') as fopen:
+                    fopen.write(f"An error occurred starting the Meteor Next application. {e}")
+
 
     ####################
     # Internal Methods #

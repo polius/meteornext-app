@@ -10,7 +10,7 @@ class Auxiliary:
                 SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.shared, a.owner_id, a.secured, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
                 FROM auxiliary a
                 JOIN users u0 ON u0.id = %(user_id)s
-                JOIN groups g ON g.id = a.group_id AND g.id = u0.group_id
+                JOIN `groups` g ON g.id = a.group_id AND g.id = u0.group_id
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
@@ -26,7 +26,7 @@ class Auxiliary:
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
-                LEFT JOIN groups g ON g.id = a.group_id
+                LEFT JOIN `groups` g ON g.id = a.group_id
                 WHERE a.group_id = %s
                 ORDER BY a.id DESC
             """
@@ -45,7 +45,7 @@ class Auxiliary:
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by
                 LEFT JOIN users u3 ON u3.id = a.updated_by
-                LEFT JOIN groups g ON g.id = a.group_id
+                LEFT JOIN `groups` g ON g.id = a.group_id
                 ORDER BY a.id DESC
             """
             return self._sql.execute(query)

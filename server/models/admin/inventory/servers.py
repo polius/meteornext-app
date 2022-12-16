@@ -11,7 +11,7 @@ class Servers:
                 SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.usage, s.shared, s.owner_id, s.secured, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', t.id IS NOT NULL AS 'active'
                 FROM servers s
                 JOIN users u0 ON u0.id = %(user_id)s
-                JOIN groups g ON g.id = s.group_id AND g.id = u0.group_id
+                JOIN `groups` g ON g.id = s.group_id AND g.id = u0.group_id
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
@@ -37,7 +37,7 @@ class Servers:
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
-                LEFT JOIN groups g ON g.id = s.group_id
+                LEFT JOIN `groups` g ON g.id = s.group_id
                 WHERE s.group_id = %s
                 ORDER BY s.id DESC
             """
@@ -46,7 +46,7 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', r.ssh_tunnel AS 'ssh', g.name AS 'group', u.username AS 'owner'
                 FROM servers s
-                LEFT JOIN groups g ON g.id = s.group_id
+                LEFT JOIN `groups` g ON g.id = s.group_id
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 WHERE s.id = %s
@@ -60,7 +60,7 @@ class Servers:
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
-                LEFT JOIN groups g ON g.id = s.group_id
+                LEFT JOIN `groups` g ON g.id = s.group_id
                 ORDER BY s.id DESC
             """
             return self._sql.execute(query)

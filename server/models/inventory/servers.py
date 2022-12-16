@@ -35,7 +35,7 @@ class Servers:
                     t.id IS NOT NULL AS 'active',
                     r.name AS 'region', r.shared AS 'region_shared', r.secured AS 'region_secured', r.ssh_tunnel AS 'ssh'
                 FROM servers s
-                JOIN groups g ON g.id = s.group_id
+                JOIN `groups` g ON g.id = s.group_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN (

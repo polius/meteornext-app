@@ -38,7 +38,7 @@ class Api:
         # Instantiate & Register Settings Blueprint
         URL_PREFIX = "/api"
         import routes.setup
-        routes.setup.Setup(app, license, URL_PREFIX, sentry_dsn)
+        routes.setup.Setup(app, version, license, URL_PREFIX, sentry_dsn)
 
         # Enable CORS
         CORS(app)
@@ -88,18 +88,18 @@ class Api:
                 THREADS = MAX_THREADS
         except Exception:
             THREADS = 1000
-            print("- The 'MAX_REQUESTS' parameter is invalid.")
-        finally:
-            print(f"- Max Concurrent Requests: {THREADS}")
+            # print("- The 'MAX_REQUESTS' parameter is invalid.")
+        # finally:
+            # print(f"- Max Concurrent Requests: {THREADS}")
 
         # Start Api
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
             # Extract Meteor
             with tarfile.open(f"{sys._MEIPASS}/apps/meteor.tar.gz") as tar:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
-            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "capture_output": True, "enable_stdio_inheritance": True, "errorlog": "server.err", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "pidfile": "server.pid", "timeout": 3600, "capture_output": True, "errorlog": "server.err"}).run()
         else:
-            StandaloneApplication(app, {"bind": "0.0.0.0:5000", "worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "0.0.0.0:5000", "pidfile": "server.pid", "timeout": 3600}).run()
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def __init__(self, app, options=None):

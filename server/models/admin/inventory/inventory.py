@@ -3,7 +3,7 @@ class Inventory:
         self._sql = sql
 
     def get_groups(self):
-        query = "SELECT id, name FROM groups ORDER BY name"
+        query = "SELECT id, name FROM `groups` ORDER BY name"
         return self._sql.execute(query)
 
     def get_users(self, group_id=None):
@@ -11,7 +11,7 @@ class Inventory:
             query = """
                 SELECT u.id, u.username, g.name AS 'group'
                 FROM users u
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 ORDER BY u.username
             """
             return self._sql.execute(query)
@@ -20,7 +20,7 @@ class Inventory:
             return self._sql.execute(query, (group_id))
 
     def exist_group(self, group_id):
-        query = "SELECT EXISTS(SELECT * FROM groups WHERE id = %s) AS exist"
+        query = "SELECT EXISTS(SELECT * FROM `groups` WHERE id = %s) AS exist"
         return self._sql.execute(query, (group_id))[0]['exist'] == 1
     
     def exist_user(self, group_id, user_id):

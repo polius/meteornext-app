@@ -16,20 +16,20 @@ class Settings:
     def post(self, user_id, setting):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query = """
-            INSERT INTO settings (name, value, updated_by, updated_at)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                value = VALUES(value),
-                updated_by = %s,
-                updated_at = %s
+            UPDATE `settings`
+            SET
+                `value` = %s,
+                `updated_by` = %s,
+                `updated_at` = %s
+            WHERE `name` = %s
         """
-        self._sql.execute(query, (setting['name'], setting['value'], user_id, now, user_id, now))
+        self._sql.execute(query, (setting['value'], user_id, now, setting['name']))
 
     def get_license_usage(self):
         query = """
             SELECT u.username, COUNT(s.id) AS 'servers', IF(%(resources)s = -1, 0, COUNT(s.id) > %(resources)s) AS 'exceeded', %(resources)s AS 'resources'
             FROM users u
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             JOIN servers s ON s.group_id = g.id
             WHERE (s.shared = 1 OR s.owner_id = u.id)
             GROUP BY u.id
