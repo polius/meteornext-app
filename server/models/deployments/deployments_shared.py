@@ -60,7 +60,7 @@ class Deployments_Shared:
             JOIN deployments d ON d.id = e.deployment_id
             JOIN deployments_shared ds ON ds.user_id = %(user_id)s AND ds.deployment_id = d.id
             JOIN users u ON u.id = d.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             LEFT JOIN environments env ON env.id = e.environment_id
             LEFT JOIN releases r ON r.id = d.release_id
             LEFT JOIN
@@ -168,7 +168,7 @@ class Deployments_Shared:
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s
             JOIN users u ON u.id = d.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             LEFT JOIN environments env ON env.id = e.environment_id
             LEFT JOIN releases r ON r.id = d.release_id
             LEFT JOIN

@@ -78,4 +78,6 @@ class builder:
         subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rmi meteornext/meteornext:latest >/dev/null 2>&1", shell=True)
+        subprocess.call(f"docker rmi meteornext/meteornext:{self._version} >/dev/null 2>&1", shell=True)
         subprocess.call("docker buildx prune --force >/dev/null 2>&1", shell=True)

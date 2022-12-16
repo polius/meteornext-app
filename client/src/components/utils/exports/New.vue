@@ -355,7 +355,7 @@ export default {
           }
           tablesHeaders.push(column)
         }
-        this.tablesHeadersSummary = JSON.parse(JSON.stringify(tablesHeaders))
+        this.tablesHeadersSummary = tablesHeaders.map(x => ({...x}))
         this.tablesHeaders = tablesHeaders.map(x => {
           if (x.colId == 'name') {
             x['headerCheckboxSelection'] = true

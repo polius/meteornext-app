@@ -10,7 +10,7 @@ class Cloud:
                 SELECT c.id, c.name, c.group_id, g.name AS 'group', c.type, c.access_key, c.secret_key, c.buckets, c.shared, c.owner_id, c.secured, u.username AS 'owner', u2.username AS 'created_by', c.created_at, u3.username AS 'updated_by', c.updated_at
                 FROM cloud c
                 JOIN users u0 ON u0.id = %(user_id)s
-                JOIN groups g ON g.id = c.group_id AND g.id = u0.group_id
+                JOIN `groups` g ON g.id = c.group_id AND g.id = u0.group_id
                 LEFT JOIN users u ON u.id = c.owner_id
                 LEFT JOIN users u2 ON u2.id = c.created_by
                 LEFT JOIN users u3 ON u3.id = c.updated_by
@@ -25,7 +25,7 @@ class Cloud:
                 LEFT JOIN users u ON u.id = c.owner_id
                 LEFT JOIN users u2 ON u2.id = c.created_by
                 LEFT JOIN users u3 ON u3.id = c.updated_by
-                LEFT JOIN groups g ON g.id = c.group_id
+                LEFT JOIN `groups` g ON g.id = c.group_id
                 WHERE c.group_id = %s
                 ORDER BY c.id DESC
             """
@@ -44,7 +44,7 @@ class Cloud:
                 LEFT JOIN users u ON u.id = c.owner_id
                 LEFT JOIN users u2 ON u2.id = c.created_by
                 LEFT JOIN users u3 ON u3.id = c.updated_by
-                LEFT JOIN groups g ON g.id = c.group_id
+                LEFT JOIN `groups` g ON g.id = c.group_id
                 ORDER BY c.id DESC
             """
             return self._sql.execute(query)

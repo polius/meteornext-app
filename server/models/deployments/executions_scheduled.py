@@ -9,7 +9,7 @@ class Executions_Scheduled:
             JOIN executions e ON e.id = es.execution_id
             JOIN deployments d ON d.id = e.deployment_id
             JOIN users u ON u.id = e.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             WHERE e.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
         """
         return self._sql.execute(query)

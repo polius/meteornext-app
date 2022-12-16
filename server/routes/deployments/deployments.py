@@ -488,7 +488,7 @@ class Deployments:
 
         # Parse queries
         if execution['queries'] is not None:
-            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']])
+            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']], ensure_ascii=False)
 
         # Check Coins
         group = self._groups.get(group_id=user['group_id'])[0]
@@ -590,7 +590,7 @@ class Deployments:
 
         # Parse queries
         if execution['queries'] is not None:
-            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']])
+            execution['queries'] = json.dumps([{"q": i} for i in execution['queries']], ensure_ascii=False)
 
         # Get Current Deployment
         current_execution = self._executions.get(execution['uri'])

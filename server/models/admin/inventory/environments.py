@@ -10,7 +10,7 @@ class Environments:
                 SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, e.secured, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 JOIN users u0 ON u0.id = %(user_id)s
-                JOIN groups g ON g.id = e.group_id AND g.id = u0.group_id
+                JOIN `groups` g ON g.id = e.group_id AND g.id = u0.group_id
                 LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
                 LEFT JOIN users u2 ON u2.id = e.created_by
@@ -28,7 +28,7 @@ class Environments:
                 LEFT JOIN users u ON u.id = e.owner_id
                 LEFT JOIN users u2 ON u2.id = e.created_by
                 LEFT JOIN users u3 ON u3.id = e.updated_by
-                LEFT JOIN groups g ON g.id = e.group_id
+                LEFT JOIN `groups` g ON g.id = e.group_id
                 WHERE e.group_id = %s
                 GROUP BY e.id
                 ORDER BY e.id DESC
@@ -42,7 +42,7 @@ class Environments:
                 LEFT JOIN users u ON u.id = e.owner_id
                 LEFT JOIN users u2 ON u2.id = e.created_by
                 LEFT JOIN users u3 ON u3.id = e.updated_by
-                LEFT JOIN groups g ON g.id = e.group_id
+                LEFT JOIN `groups` g ON g.id = e.group_id
                 GROUP BY e.id
                 ORDER BY e.id DESC
             """

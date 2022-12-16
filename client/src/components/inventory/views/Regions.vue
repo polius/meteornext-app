@@ -56,8 +56,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-alert v-if="mode != 'delete' && !owner && item.shared" color="warning" outlined dense style="margin-bottom:30px"><v-icon color="warning" style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This resource cannot be edited. You are not a group owner.</v-alert>
-                <v-form v-if="mode != 'delete'" ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readonly" label="Name" required hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
+                <v-form v-if="mode != 'delete'" ref="form" @submit.prevent style="margin-top:15px; margin-bottom:15px;">
+                  <v-text-field ref="field" v-model="item.name" @keypress.enter.native="item.ssh_tunnel ? null : submitRegion()" :rules="[v => !!v || '']" :readonly="readonly" label="Name" required hide-details style="margin-top:0px; padding-top:0px"></v-text-field>
                   <v-switch @click="sshtunnelClick" v-model="item.ssh_tunnel" :readonly="readonly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:25px">
                     <v-row no-gutters>

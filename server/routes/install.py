@@ -8,13 +8,15 @@ import boto3
 import bcrypt
 import tempfile
 
-import models.admin.settings
 import connectors.base
+import models.admin.settings
 import models.admin.users
+import models.admin.groups
 
 class Install:
-    def __init__(self, app, license, conf, blueprints):
+    def __init__(self, app, version, license, conf, blueprints):
         self._app = app
+        self._version = version
         self._license = license
         self._conf = conf
         self._blueprints = blueprints
@@ -113,6 +115,9 @@ class Install:
     ####################
     # Internal Methods #
     ####################
+    def enable(self):
+        self._available = True
+
     def available(self):
         if self._available is None:
             conf_path = f"{self._base_path}/server.conf"
@@ -139,17 +144,22 @@ class Install:
         # Get Params
         data = request.get_json()
 
+        # Init sql connection
+        sql_conf = copy.deepcopy(data['sql'])
+        sql_conf['database'] = None
+        sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': sql_conf})
+
         # Build Meteor & Create User Admin Account
         if data['sql']['recreate']:
-            # Init sql connection
-            sql_conf = copy.deepcopy(data['sql'])
-            sql_conf['database'] = None
-            sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': sql_conf})
+            # Init models
+            settings = models.admin.settings.Settings(sql, self._license)
+            groups = models.admin.groups.Groups(sql)
+            users = models.admin.users.Users(sql)
 
             # Import SQL Schema
             sql.execute('DROP DATABASE IF EXISTS `{}`'.format(data['sql']['database']))
             sql.execute('CREATE DATABASE `{}`'.format(data['sql']['database']))
-            schema_file = f"{sys._MEIPASS}/models/schema.sql" if self._bin else f"{self._base_path}/models/schema"
+            schema_file = f"{sys._MEIPASS}/models/schema.sql" if self._bin else f"{self._base_path}/models/schema.sql"
             with open(schema_file) as file_open:
                 queries = file_open.read().split(';')
                 for q in queries:
@@ -157,18 +167,15 @@ class Install:
                         sql.execute(query=q, database=data['sql']['database'])
 
             # Create group
-            groups = models.admin.groups.Groups(sql)
             group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_coins": 10, "deployments_execution_concurrent": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_expiration_days": 30, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "monitoring_interval": 10, "utils_enabled": 1, "utils_coins": 10, "utils_concurrent": 1, "utils_limit": None, "utils_slack_enabled": 0, "utils_slack_name": None, "utils_slack_url": None, "client_enabled": 1, "client_limits": 0, "client_limits_timeout_mode": 1, "client_limits_timeout_value": 10, "client_limits_rows": 100000, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
             groups.post(1, group)
 
             # Create user
-            users = models.admin.users.Users(sql)
             user = {"username": data['account']['username'], "password": data['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1, "disabled": 0, "change_password": 0}
             user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
             users.post(1, user)
 
             # Init Amazon S3
-            settings = models.admin.settings.Settings(sql, self._license)
             if data['amazon']['enabled']:
                 setting = {"name": "AMAZON", "value": f'{{"enabled":true,"aws_access_key":"{data["amazon"]["aws_access_key"]}","aws_secret_access_key":"{data["amazon"]["aws_secret_access_key"]}","region":"{data["amazon"]["region"]}","bucket":"{data["amazon"]["bucket"]}"}}'}
                 settings.post(user_id=1, setting=setting)
@@ -219,8 +226,12 @@ class Install:
             else:
                 v.init(sql)
 
+        # Store new version
+        settings = models.admin.settings.Settings(sql, self._license)
+        settings.post(user_id=1, setting={'name': 'VERSION', 'value': self._version})
+
         # Set unique hardware id
-        self._conf['license']['uuid'] = self._app.config['JWT_SECRET_KEY'] # str(uuid.getnode())
+        self._conf['license']['uuid'] = self._app.config['JWT_SECRET_KEY']
 
         # Disable Install
         self._available = False

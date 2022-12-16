@@ -8,6 +8,7 @@ __pycache__
 server.conf
 server.pid
 server.log*
+status
 *.pyc
 .bash_history
 .cache/

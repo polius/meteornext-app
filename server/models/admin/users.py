@@ -16,7 +16,7 @@ class Users:
                     END AS 'mfa'
                 FROM users u
                 LEFT JOIN user_mfa mfa ON mfa.user_id = u.id
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 LEFT JOIN users u2 ON u2.id = u.created_by
                 LEFT JOIN users u3 ON u3.id = u.updated_by
                 ORDER BY u.last_login DESC, u.username ASC
@@ -36,7 +36,7 @@ class Users:
                     END AS 'mfa'
                 FROM users u
                 LEFT JOIN user_mfa mfa ON mfa.user_id = u.id
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 LEFT JOIN group_owners go ON go.group_id = g.id AND go.user_id = u.id
                 WHERE u.username = %s
             """
@@ -44,10 +44,10 @@ class Users:
 
     def post(self, user_id, user):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin, disabled, change_password, created_by, created_at, password_at) SELECT %s, %s, %s, %s, id, %s, %s, %s, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user_id, now, now, user['group']))
+        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin, disabled, change_password, created_by, created_at, password_at) SELECT %s, %s, %s, %s, id, %s, %s, %s, %s, %s, %s FROM `groups` WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user_id, now, now, user['group']))
 
     def put(self, user_id, user):
-        self._sql.execute("UPDATE users SET username = %s, password = COALESCE(%s, password), email = %s, coins = %s, admin = %s, disabled = %s, change_password = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
+        self._sql.execute("UPDATE users SET username = %s, password = COALESCE(%s, password), email = %s, coins = %s, admin = %s, disabled = %s, change_password = %s, group_id = (SELECT id FROM `groups` WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
 
     def change_password(self, user):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -107,10 +107,10 @@ class Users:
 
     def clean_shared(self, user_id, group):
         self._sql.execute("DELETE m FROM monitoring m JOIN servers s ON s.id = m.server_id AND s.shared = 1 WHERE m.user_id = %s", (user_id))
-        self._sql.execute("UPDATE servers SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE servers SET group_id = (SELECT id FROM `groups` WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
         self._sql.execute("UPDATE servers JOIN regions r ON r.id = servers.region_id AND r.shared = 1 SET servers.region_id = NULL WHERE servers.shared = 0 AND servers.owner_id = %s", (user_id))
-        self._sql.execute("UPDATE regions SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
-        self._sql.execute("UPDATE auxiliary SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE regions SET group_id = (SELECT id FROM `groups` WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE auxiliary SET group_id = (SELECT id FROM `groups` WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
         self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 1 JOIN environments e ON e.id = es.environment_id AND e.shared = 0 AND e.owner_id = %s", (user_id))
-        self._sql.execute("UPDATE environments SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE environments SET group_id = (SELECT id FROM `groups` WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
         self._sql.execute("DELETE cs FROM client_servers cs JOIN servers s ON s.id = cs.server_id AND s.shared = 1 WHERE cs.user_id = %s", (user_id))

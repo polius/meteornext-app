@@ -68,7 +68,7 @@ class Deployments:
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id
                 JOIN users u ON u.id = d.user_id {0}
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 LEFT JOIN environments env ON env.id = e.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
                 LEFT JOIN
@@ -90,7 +90,7 @@ class Deployments:
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             ORDER BY u.username
         """
         return self._sql.execute(query)

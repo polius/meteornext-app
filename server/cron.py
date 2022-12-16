@@ -193,7 +193,7 @@ class Cron:
             # Hand out coins for all users
             query = """
                 UPDATE users u
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 SET u.coins = IF (u.coins + g.coins_day > coins_max, coins_max, u.coins + g.coins_day);
             """
             conn.execute(query)
@@ -221,7 +221,7 @@ class Cron:
                 FROM executions e
                 JOIN deployments d ON d.id = e.deployment_id
                 JOIN users u ON u.id = d.user_id
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 WHERE g.deployments_expiration_days != 0
                 AND DATE_ADD(DATE(e.created), INTERVAL g.deployments_expiration_days DAY) <= CURRENT_DATE
                 AND e.uri IS NOT NULL
@@ -351,7 +351,7 @@ class Cron:
                 DELETE cq
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
-                JOIN groups g ON g.id = u.group_id
+                JOIN `groups` g ON g.id = u.group_id
                 WHERE DATE_ADD(DATE(cq.end_date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
             """
             conn.execute(query)

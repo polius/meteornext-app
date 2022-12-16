@@ -6,13 +6,13 @@ class Groups:
 
     def get(self, group_id=None, group_name=None):
         if group_id is not None:
-            return self._sql.execute("SELECT * FROM groups WHERE id = %s", (group_id))
+            return self._sql.execute("SELECT * FROM `groups` WHERE id = %s", (group_id))
         elif group_name is not None:
-            return self._sql.execute("SELECT * FROM groups WHERE name = %s", (group_name))
+            return self._sql.execute("SELECT * FROM `groups` WHERE name = %s", (group_name))
         else:
             query = """
                 SELECT g.id, g.name, g.description, u2.username AS 'created_by', g.created_at, u3.username AS 'updated_by', g.updated_at, COUNT(u.id) AS 'users'
-                FROM groups g
+                FROM `groups` g
                 LEFT JOIN users u ON u.group_id = g.id
                 LEFT JOIN users u2 ON u2.id = g.created_by
                 LEFT JOIN users u3 ON u3.id = g.updated_by
@@ -22,7 +22,7 @@ class Groups:
 
     def post(self, user_id, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, inventory_enabled, deployments_enabled, deployments_basic, deployments_pro, deployments_coins, deployments_execution_concurrent, deployments_execution_threads, deployments_execution_timeout, deployments_expiration_days, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, monitoring_interval, utils_enabled, utils_coins, utils_limit, utils_concurrent, utils_slack_enabled, utils_slack_name, utils_slack_url, client_enabled, client_limits, client_limits_timeout_mode, client_limits_timeout_value, client_limits_rows, client_tracking, client_tracking_retention, client_tracking_mode, created_by, created_at)
+            INSERT INTO `groups` (name, description, coins_day, coins_max, inventory_enabled, deployments_enabled, deployments_basic, deployments_pro, deployments_coins, deployments_execution_concurrent, deployments_execution_threads, deployments_execution_timeout, deployments_expiration_days, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, monitoring_interval, utils_enabled, utils_coins, utils_limit, utils_concurrent, utils_slack_enabled, utils_slack_name, utils_slack_url, client_enabled, client_limits, client_limits_timeout_mode, client_limits_timeout_value, client_limits_rows, client_tracking, client_tracking_retention, client_tracking_mode, created_by, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['inventory_enabled'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_coins'], group['deployments_execution_concurrent'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_expiration_days'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['monitoring_interval'], group['utils_enabled'], group['utils_coins'], group['utils_limit'], group['utils_concurrent'], group['utils_slack_enabled'], group['utils_slack_name'], group['utils_slack_url'], group['client_enabled'], group['client_limits'], group['client_limits_timeout_mode'], group['client_limits_timeout_value'], group['client_limits_rows'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
@@ -84,7 +84,7 @@ class Groups:
 
     def put(self, user_id, group):
         query = """
-            UPDATE groups 
+            UPDATE `groups`
             SET name = %s, 
             description = %s,
             coins_day = %s,
@@ -142,14 +142,14 @@ class Groups:
         self._sql.execute("DELETE r FROM regions r WHERE r.group_id = %s", (group))
         self._sql.execute("DELETE e FROM environments e WHERE e.group_id = %s", (group))
         self._sql.execute("DELETE c FROM cloud c WHERE c.group_id = %s", (group))
-        self._sql.execute("DELETE FROM groups WHERE id = %s", (group))
+        self._sql.execute("DELETE FROM `groups` WHERE id = %s", (group))
 
     def exist(self, group):
         if 'id' in group:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM groups 
+                    FROM `groups`
                     WHERE name = %s
                     AND id != %s
                 ) AS exist
@@ -159,7 +159,7 @@ class Groups:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM groups 
+                    FROM `groups`
                     WHERE name = %s
                 ) AS exist
             """
@@ -200,7 +200,7 @@ class Groups:
                 deployments_slack_enabled AS 'enabled', 
                 deployments_slack_name AS 'channel_name',
                 deployments_slack_url AS 'webhook_url'
-            FROM groups
+            FROM `groups`
             WHERE id = %s
         """
         return self._sql.execute(query, (group_id))[0]
@@ -208,7 +208,7 @@ class Groups:
     def get_usage(self, group_id):
         query = """
             SELECT deployments_enabled, monitoring_enabled, utils_enabled, client_enabled
-            FROM groups
+            FROM `groups`
             WHERE id = %s
         """
         return self._sql.execute(query, (group_id))[0]

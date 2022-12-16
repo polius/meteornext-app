@@ -14,7 +14,7 @@ class Monitoring_Settings:
                 g.`monitoring_interval` AS 'monitor_interval' 
             FROM monitoring_settings ms
             JOIN users u ON u.id = ms.user_id
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             WHERE user_id = %s
         """
         return self._sql.execute(query, (user['id']))

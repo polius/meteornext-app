@@ -84,9 +84,6 @@ const actions = {
             localStorage.setItem('client_enabled', data['client_enabled'])
             localStorage.setItem('deployments_coins', data['deployments_coins'])
             localStorage.setItem('utils_coins', data['utils_coins'])
-
-            // Add the token to the axios lib
-            axios.defaults.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
             // Store variables to vuex
             commit('auth', data)
           }
@@ -109,7 +106,6 @@ const actions = {
           localStorage.removeItem('client_enabled')
           localStorage.removeItem('deployments_coins')
           localStorage.removeItem('utils_coins')
-          Cookies.remove('csrf_access_token')
           reject(error)
         })
     })
@@ -141,10 +137,6 @@ const actions = {
         localStorage.removeItem('client_enabled')
         localStorage.removeItem('deployments_coins')
         localStorage.removeItem('utils_coins')
-        Cookies.remove('csrf_access_token')
-
-        // Remove token from axios header
-        delete axios.defaults.headers.common['X-CSRF-TOKEN']
         resolve()
       })
     })

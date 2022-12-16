@@ -36,7 +36,7 @@ class Monitor:
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
             JOIN users u ON u.id = m.user_id AND u.disabled = 0
-            JOIN groups g ON g.id = u.group_id
+            JOIN `groups` g ON g.id = u.group_id
             JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
             JOIN regions r ON r.id = s.region_id
             WHERE (

@@ -222,7 +222,7 @@ class blueprint:
                 for i in self.queries.keys():
                     meteor.execute(query=self.queries[str(i)], database=database)
     def after(self, meteor, environment, region, server):
-        pass""".format(json.dumps(queries), databases)
+        pass""".format(json.dumps(queries, ensure_ascii=False), databases)
 
     def __execute(self, deployment):
         # Build Meteor Parameters
