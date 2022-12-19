@@ -298,7 +298,8 @@ class Monitor:
         # Check connections
         connections = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['connections']
         if server['monitor']['available'] and available:
-            last_event = self.__get_last_event(conn, server['id'])
+            events = ['connections_critical','connections_warning','connections_stable']
+            last_event = self.__get_last_event(conn, server['id'], events)
             queries = [int(i['TIME']) for i in processlist if i['COMMAND'] in ['Query','Execute']]
             queries.sort(reverse=True)
             event = ''
@@ -318,7 +319,7 @@ class Monitor:
                 notification_status = 'SUCCESS'
                 event = 'connections_stable'
 
-            if event != '': 
+            if event != '':
                 notification = {
                     'name': notification_name,
                     'status': notification_status,
@@ -337,6 +338,41 @@ class Monitor:
                 for s in slack:
                     self.__slack(slack=s, server=server, event=event, data=len(queries))
 
+        # Check max connections
+        if summary:
+            events = ['max_connections_critical','max_connections_stable']
+            last_event = self.__get_last_event(conn, server['id'], events)
+            event = ''
+            # Max connections - Critical (more than 90% connections being used)
+            if int(summary['connections']['current']) >= int(summary['connections']['max_connections_allowed']) * 0.9 and (len(last_event) == 0 or (last_event[0]['event'] != 'max_connections_critical' and last_event[0]['time'] + timedelta(minutes=1) < datetime.utcnow())):
+                notification_name = 'Server \'{}\' Critical | Too many connections | {}'.format(server['sql']['name'], summary['connections']['current'])
+                notification_status = 'ERROR'
+                event = 'max_connections_critical'
+            # Max connections - Stable (less than 75% connections being used)
+            elif int(summary['connections']['current']) < int(summary['connections']['max_connections_allowed']) * 0.75 and len(last_event) != 0 and last_event[0]['event'] == 'max_connections_critical' and last_event[0]['time'] + timedelta(minutes=1) < datetime.utcnow():
+                notification_name = 'Server \'{}\' Stable | Too many connections'.format(server['sql']['name'], summary['connections']['current'])
+                notification_status = 'SUCCESS'
+                event = 'max_connections_stable'
+
+            if event != '':
+                notification = {
+                    'name': notification_name,
+                    'status': notification_status,
+                    'category': 'monitoring',
+                    'data': '{{"id":"{}"}}'.format(server['id']),
+                    'date': self.__utcnow(),
+                    'show': 1
+                }
+                self.__add_event(conn, server_id=server['id'], event=event)
+                if users is None:
+                    users = self.__get_users_server(conn, server_id=server['id'])
+                for user in users:
+                    notifications.post(user_id=user['user_id'], notification=notification)
+                if slack is None:
+                    slack = self.__get_slack_server(conn, server_id=server['id'])
+                for s in slack:
+                    self.__slack(slack=s, server=server, event=event, data=summary)
+
     def __slack(self, slack, server, event, data):
         if event == 'unavailable':
             name = '[{}] Server has become unavailable'.format(server['sql']['name'])
@@ -352,6 +388,10 @@ class Monitor:
             name = '[{}] Server Warning | Current Connections: {}'.format(server['sql']['name'], data)
         elif event == 'connections_stable':
             name = '[{}] Server Stable | Current Connections: {}'.format(server['sql']['name'], data)
+        elif event == 'max_connections_critical':
+            name = '[{}] Server Critical | Too many connections'.format(server['sql']['name'])
+        elif event == 'max_connections_stable':
+            name = '[{}] Server Stable | Too many connections'.format(server['sql']['name'])
 
         webhook_data = {
             "text": "{}".format(name),
@@ -364,7 +404,7 @@ class Monitor:
                             "short": False
                         }
                     ],
-                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['restarted','connections_warning'] else '#3e9cef' if event == 'parameters' else 'danger',
+                    "color": 'good' if event in ['available','connections_stable','max_connections_stable'] else 'warning' if event in ['restarted','connections_warning'] else '#3e9cef' if event == 'parameters' else 'danger',
                     "ts": calendar.timegm(time.gmtime())
                 }
             ]
@@ -381,6 +421,10 @@ class Monitor:
             webhook_data['attachments'][0]['fields'].append({"title": "Previous Start Time", "value": data['previous_start_time'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Current Uptime", "value": data['current_uptime'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Current Start Time", "value": data['current_start_time'], "short": True})
+        elif event in ['max_connections_critical','max_connections_stable']:
+            webhook_data['attachments'][0]['fields'].append({"title": "Current Connections", "value": data['connections']['current'], "short": True})
+            webhook_data['attachments'][0]['fields'].append({"title": "Maximum Connections", "value": data['connections']['max_connections_allowed'], "short": True})
+
         # Send Slack Message
         requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
@@ -428,15 +472,16 @@ class Monitor:
         """
         return conn.execute(query=query, args={"server_id": server_id, "resources": self._license.get_resources()})
 
-    def __get_last_event(self, conn, server_id):
+    def __get_last_event(self, conn, server_id, events):
+        parsed_events = ",".join(f"'{i}'" for i in events)
         query = """
             SELECT event, time
             FROM monitoring_events
             WHERE server_id = %s
-            AND event IN ('connections_critical','connections_warning','connections_stable')
+            AND event IN ({})
             ORDER BY id DESC
             LIMIT 1
-        """
+        """.format(parsed_events)
         return conn.execute(query=query, args=(server_id))
 
     def __add_event(self, conn, server_id, event, data=None):

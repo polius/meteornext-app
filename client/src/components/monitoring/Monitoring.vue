@@ -542,7 +542,7 @@
           .finally(() => this.loading = false)
       },
       getEventColor(event) {
-        if (['available','connections_stable'].includes(event)) return '#4caf50'
+        if (['available','connections_stable','max_connections_stable'].includes(event)) return '#4caf50'
         else if (['restarted','connections_warning'].includes(event)) return '#ff9800'
         else if (event == 'parameters') return '#3e9bef'
         else return '#EF5354'
@@ -556,6 +556,8 @@
         else if (item.event == 'connections_critical') message = 'Server entered in a critical state (Current Connections: ' + item.data + ').'
         else if (item.event == 'connections_warning') message = 'Server entered in a warning state (Current Connections: ' + item.data + ').'
         else if (item.event == 'connections_stable') message = 'Server recovered (Current Connections: ' + item.data + ').'
+        else if (item.event == 'max_connections_critical') message = 'Server entered in a critical state (Current Connections >= 90%).'
+        else if (item.event == 'max_connections_stable') message = 'Server recovered (Current Connections <= 75%).'
         return message
       },
       eventDetails(item) {
