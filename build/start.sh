@@ -3,7 +3,7 @@ set -m
 cd /root/meteornext
 
 # Generate 'server.conf' file
-if [[ -n $LIC_ACCESS_KEY && -n $LIC_SECRET_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
+if [[ -n $LIC_ACCESS_KEY && -n $LIC_SECRET_KEY && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
     cat >./server.conf <<EOF
 {
     "license": {
@@ -11,7 +11,7 @@ if [[ -n $LIC_ACCESS_KEY && -n $LIC_SECRET_KEY && -n $SQL_ENGINE && -n $SQL_HOST
         "secret_key": "$LIC_SECRET_KEY"
     },
     "sql": {
-        "engine": "$SQL_ENGINE",
+        "engine": "MySQL",
         "hostname": "$SQL_HOST",
         "username": "$SQL_USER",
         "password": "$SQL_PASS",
@@ -63,7 +63,7 @@ deployments() {
 monitoring() {
     while true; do 
         sleep 10;
-        ./init --monitoring
+        timeout 600 ./init --monitoring
     done
 }
 utils() {
