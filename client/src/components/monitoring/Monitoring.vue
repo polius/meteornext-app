@@ -176,7 +176,7 @@
                 <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:0px;" mobile-breakpoint="0">
                   <template v-slot:[`item.event`]="{ item }">
                     <v-row no-gutters align="center" style="height:100%">
-                      <v-col cols="auto" :style="`width:4px; height:100%; margin-right:10px; background-color:` + getEventColor(item.event)">
+                      <v-col cols="auto" :style="`width:4px; height:90%; border-radius:3px; margin-right:10px; background-color:` + getEventColor(item.event)">
                       </v-col>
                       <v-col cols="auto" class="mr-auto">
                         {{ item.event.toUpperCase() }}
