@@ -362,28 +362,36 @@ export default {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         let selectedRows = this.gridApi.content.getSelectedRows()
         if (selectedRows.length > 1) {
-          // Copy values
           let header = Object.keys(selectedRows[0])
           let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
-          this.copyToClipboard(value)
-          // Apply effect
-          // this.gridApi.content.flashCells({
-          //   rowNodes: this.gridApi.content.getSelectedNodes(),
-          //   flashDelay: 200,
-          //   fadeDelay: 200,
-          // })
+          this.copyToClipboard(value).then(() => {
+            this.gridApi.content.flashCells({
+              rowNodes: this.gridApi.content.getSelectedNodes(),
+              flashDelay: 200,
+              fadeDelay: 200,
+            })
+          })
         }
         else {
-          // Copy value
-          this.copyToClipboard(e.value).then(() => {
-            // Apply effect
+          const editingCells = this.gridApi.content.getEditingCells()
+          if (editingCells.length == 0) {
+            this.copyToClipboard(e.value).then(() => {
+              this.gridApi.content.flashCells({
+                rowNodes: this.gridApi.content.getSelectedNodes(),
+                columns: [this.gridApi.content.getFocusedCell().column.colId],
+                flashDelay: 200,
+                fadeDelay: 200,
+              })
+            })
+          }
+          else {
             this.gridApi.content.flashCells({
               rowNodes: this.gridApi.content.getSelectedNodes(),
               columns: [this.gridApi.content.getFocusedCell().column.colId],
               flashDelay: 200,
               fadeDelay: 200,
             })
-          })
+          }
         }
       }
       else if (e.event.key == 'Enter') {
