@@ -369,7 +369,7 @@ export default {
       const payload = { 
         connection: this.id + '-shared',
         server: this.server.id,
-        database: this.currentQueryMetadata.database.replaceAll('``','`'),
+        database: this.currentQueryMetadata.database,
         table: this.currentQueryMetadata.table.replaceAll('``','`'),
       }
       axios.get('/client/pks', { params: payload })

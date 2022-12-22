@@ -86,7 +86,7 @@ export default {
       }
       this.loading = true
       let databaseName = this.name
-      let query = "DROP DATABASE `" + databaseName + '`;'
+      let query = "DROP DATABASE `" + databaseName.replaceAll('`','``') + '`;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 

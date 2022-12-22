@@ -94,8 +94,8 @@ export default {
       progressTimeValue: null,
       start: false, 
       error: '',
-      // Axios Cancel Token
-      cancelToken: null,
+      // Axios Abort Controller
+      abortController: null,
     }
   },
   computed: {
@@ -149,8 +149,7 @@ export default {
       data.append('database', this.database)
       data.append('file', this.file)
       // Build request options
-      const CancelToken = axios.CancelToken;
-      this.cancelToken = CancelToken.source();
+      this.abortController = new AbortController()
       const options = {
         onUploadProgress: (progressEvent) => {
           var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -160,7 +159,7 @@ export default {
             this.text = '[2/2] Importing file...'
           }
         },
-        cancelToken: this.cancelToken.token
+        signal: this.abortController.signal
       }
       // Start Timer
       this.progressTimeValue = moment().startOf("day");
@@ -205,7 +204,7 @@ export default {
     },
     cancelImport() {
       this.step = 'stopping'
-      this.cancelToken.cancel()
+      this.abortController.abort()
     },
   }
 }

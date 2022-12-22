@@ -152,6 +152,7 @@ export default {
       else if (item == 'Duplicate Trigger') this.duplicateTrigger()
       else if (item == 'Delete Trigger') this.deleteTrigger()
       else if (item == 'Export Trigger') this.exportTrigger()
+      else if (item == 'Clone Trigger') this.cloneTrigger()
       else if (item == 'Copy Trigger Name') this.copyTriggerNameSubmit()
       else if (item == 'Copy Trigger Syntax') this.copyTriggerSyntaxSubmit()
     },
@@ -212,6 +213,10 @@ export default {
       const items = this.sidebarSelected.map(x => x.name)
       EventBus.$emit('show-bottombar-objects-export', { object: 'triggers', items })
     },
+    cloneTrigger() {
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-clone', { object: 'triggers', items })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -228,7 +233,7 @@ export default {
     createTriggerSubmit() {
       let triggerName = this.dialogOptions.item.name
       let triggerCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-      let query = "CREATE TRIGGER `" + triggerName + '` ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.dialogOptions.item.table + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
+      let query = "CREATE TRIGGER `" + triggerName.replaceAll('`','``') + '` ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.dialogOptions.item.table + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -251,12 +256,12 @@ export default {
     renameTriggerSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE TRIGGER `" + currentName + "`", "DROP TRIGGER IF EXISTS `" + currentName + "`"]
+      let queries = ["SHOW CREATE TRIGGER `" + currentName.replaceAll('`','``') + "`", "DROP TRIGGER IF EXISTS `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
-        let query = "CREATE TRIGGER `" + newName + "` " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName.replaceAll('`','``') + ' ')[1]
+        let query = "CREATE TRIGGER `" + newName.replaceAll('`','``') + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -278,12 +283,12 @@ export default {
     duplicateTriggerSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE TRIGGER `" + currentName + "`"]
+      let queries = ["SHOW CREATE TRIGGER `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
-        let query = "CREATE TRIGGER `" + newName + "` " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName.replaceAll('`','``') + ' ')[1]
+        let query = "CREATE TRIGGER `" + newName.replaceAll('`','``') + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -304,7 +309,7 @@ export default {
     },
     deleteTriggerSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP TRIGGER `" + item.name + "`;")
+      for (let item of this.sidebarSelected) queries.push("DROP TRIGGER `" + item.name.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -328,7 +333,7 @@ export default {
     },
     copyTriggerSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE TRIGGER `" + name + "`;"
+      let query = "SHOW CREATE TRIGGER `" + name.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

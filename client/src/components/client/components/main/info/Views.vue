@@ -101,7 +101,7 @@ export default {
         server: this.server.id,
         database: this.database,
         object: 'view',
-        name: this.sidebarSelected[0]['name']
+        name: this.sidebarSelected[0]['name'].replaceAll('`','``')
       }
       axios.get('/client/info', { params: payload })
         .then((response) => {

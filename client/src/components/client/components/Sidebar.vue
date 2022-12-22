@@ -673,27 +673,27 @@ export default {
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Table',m}, {i:'|'}, {i:'Rename Table'}, {i:'Duplicate Table'}, {i:'|'}, {i:'Truncate Table',m,s}, {i:'Delete Table',m,s}, {i:'|'}, {i:'Export Table',m,s}, {i:'|'}, {i:'Copy Table Name'}, {i:'Copy Table Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Table',m}, {i:'|'}, {i:'Rename Table'}, {i:'Duplicate Table'}, {i:'|'}, {i:'Truncate Table',m,s}, {i:'Delete Table',m,s}, {i:'|'}, {i:'Export Table',m,s}, {i:'Clone Table',m,s}, {i:'|'}, {i:'Copy Table Name'}, {i:'Copy Table Syntax'}]
           else this.contextMenuItems = [{i:'Create Table'}, {i:'|'}, {i:'Show Table Objects'}]
         }
         else if (item.type == 'View') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create View',m}, {i:'|'}, {i:'Rename View'}, {i:'Duplicate View'}, {i:'|'}, {i:'Delete View',m,s}, {i:'|'}, {i:'Export View',m,s}, {i:'|'}, {i:'Copy View Name'}, {i:'Copy View Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create View',m}, {i:'|'}, {i:'Rename View'}, {i:'Duplicate View'}, {i:'|'}, {i:'Delete View',m,s}, {i:'|'}, {i:'Export View',m,s}, {i:'Clone View',m,s}, {i:'|'}, {i:'Copy View Name'}, {i:'Copy View Syntax'}]
           else this.contextMenuItems = [{i:'Create View'}, {i:'|'}, {i:'Show View Objects'}]
         }
         else if (item.type == 'Trigger') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Trigger',m}, {i:'|'}, {i:'Rename Trigger'}, {i:'Duplicate Trigger'}, {i:'|'}, {i:'Delete Trigger',m,s}, {i:'|'}, {i:'Export Trigger',m,s}, {i:'|'}, {i:'Copy Trigger Name'}, {i:'Copy Trigger Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Trigger',m}, {i:'|'}, {i:'Rename Trigger'}, {i:'Duplicate Trigger'}, {i:'|'}, {i:'Delete Trigger',m,s}, {i:'|'}, {i:'Export Trigger',m,s}, {i:'Clone Trigger',m,s}, {i:'|'}, {i:'Copy Trigger Name'}, {i:'Copy Trigger Syntax'}]
           else this.contextMenuItems = [{i:'Create Trigger'}, {i:'|'}, {i:'Show Trigger Objects'}]
         }
         else if (item.type == 'Function') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Function',m}, {i:'|'}, {i:'Rename Function'}, {i:'Duplicate Function'}, {i:'|'}, {i:'Delete Function',m,s}, {i:'|'}, {i:'Export Function',m,s}, {i:'|'}, {i:'Copy Function Name'}, {i:'Copy Function Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Function',m}, {i:'|'}, {i:'Rename Function'}, {i:'Duplicate Function'}, {i:'|'}, {i:'Delete Function',m,s}, {i:'|'}, {i:'Export Function',m,s}, {i:'Clone Function',m,s}, {i:'|'}, {i:'Copy Function Name'}, {i:'Copy Function Syntax'}]
           else this.contextMenuItems = [{i:'Create Function'}, {i:'|'}, {i:'Show Function Objects'}]
         }
         else if (item.type == 'Procedure') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Procedure',m}, {i:'|'}, {i:'Rename Procedure'}, {i:'Duplicate Procedure'}, {i:'|'}, {i:'Delete Procedure',m,s}, {i:'|'}, {i:'Export Procedure',m,s}, {i:'|'}, {i:'Copy Procedure Name'}, {i:'Copy Procedure Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Procedure',m}, {i:'|'}, {i:'Rename Procedure'}, {i:'Duplicate Procedure'}, {i:'|'}, {i:'Delete Procedure',m,s}, {i:'|'}, {i:'Export Procedure',m,s}, {i:'Clone Procedure',m,s}, {i:'|'}, {i:'Copy Procedure Name'}, {i:'Copy Procedure Syntax'}]
           else this.contextMenuItems = [{i:'Create Procedure'}, {i:'|'}, {i:'Show Procedure Objects'}]
         }
         else if (item.type == 'Event') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Event',m}, {i:'|'}, {i:'Rename Event'}, {i:'Duplicate Event'}, {i:'|'}, {i:'Delete Event',m,s}, {i:'|'}, {i:'Export Event',m,s}, {i:'|'}, {i:'Copy Event Name'}, {i:'Copy Event Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Event',m}, {i:'|'}, {i:'Rename Event'}, {i:'Duplicate Event'}, {i:'|'}, {i:'Delete Event',m,s}, {i:'|'}, {i:'Export Event',m,s}, {i:'Clone Event',m,s}, {i:'|'}, {i:'Copy Event Name'}, {i:'Copy Event Syntax'}]
           else this.contextMenuItems = [{i:'Create Event'}, {i:'|'}, {i:'Show Event Objects'}]
         }
       }
