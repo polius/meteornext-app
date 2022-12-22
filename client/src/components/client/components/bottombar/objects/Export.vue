@@ -450,7 +450,7 @@ export default {
         rows: this.rows,
         includeDropTable: this.includeDropTable,
         includeDelimiters: this.includeDelimiters,
-        fields: this.includeFields,
+        includeFields: this.includeFields,
         object: '',
         items: [],
       }
