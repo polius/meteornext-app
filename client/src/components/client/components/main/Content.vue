@@ -478,7 +478,7 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '` LIMIT 1000;' ]
+        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'].replaceAll('`','``') + '` LIMIT 1000;' ]
       }
       this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
       const server = this.server
@@ -659,7 +659,7 @@ export default {
               where.push(binary + key + " = " + JSON.stringify(value))
             }
           }
-          queries.push('DELETE FROM `' + this.sidebarSelected[0]['name'] + '` WHERE ' + where.join(' AND ') + ' LIMIT 1;')
+          queries.push('DELETE FROM `' + this.sidebarSelected[0]['name'].replaceAll('`','``') + '` WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
       }
       else {
@@ -671,7 +671,7 @@ export default {
           }
           pks.push('(' + pk.join(' AND ') + ')')
         }
-        queries = ['DELETE FROM `' + this.sidebarSelected[0]['name'] + '` WHERE ' + pks.join(' OR ') + ';']
+        queries = ['DELETE FROM `' + this.sidebarSelected[0]['name'].replaceAll('`','``') + '` WHERE ' + pks.join(' OR ') + ';']
       }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
@@ -804,7 +804,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO `" + this.sidebarSelected[0]['name'] + '` (' + keys.map(x => `\`${x}\``).join(',') + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO `" + this.sidebarSelected[0]['name'].replaceAll('`','``') + '` (' + keys.map(x => `\`${x}\``).join(',') + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -826,11 +826,11 @@ export default {
               where.push(binary + '`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
             }
           }
-          query = "UPDATE `" + this.sidebarSelected[0]['name'] + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE `" + this.sidebarSelected[0]['name'].replaceAll('`','``') + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
           for (let i = 0; i < this.contentPks.length; ++i) where.push('`' + this.contentPks[i] + "` = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE `" + this.sidebarSelected[0]['name'] + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          query = "UPDATE `" + this.sidebarSelected[0]['name'].replaceAll('`','``') + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
@@ -995,7 +995,7 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '`' + condition + sort + pagination + ';' ]
+        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'].replaceAll('`','``') + '`' + condition + sort + pagination + ';' ]
       }
       this.bottomBar.content = { status: 'executing', text: payload.queries[0], info: '' }
       const server = this.server

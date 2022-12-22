@@ -261,6 +261,7 @@ export default {
       else if (item == 'Duplicate Event') this.duplicateEvent()
       else if (item == 'Delete Event') this.deleteEvent()
       else if (item == 'Export Event') this.exportEvent()
+      else if (item == 'Clone Event') this.cloneEvent()
       else if (item == 'Copy Event Name') this.copyEventNameSubmit()
       else if (item == 'Copy Event Syntax') this.copyEventSyntaxSubmit()
     },
@@ -329,6 +330,10 @@ export default {
       const items = this.sidebarSelected.map(x => x.name)
       EventBus.$emit('show-bottombar-objects-export', { object: 'events', items })
     },
+    cloneEvent() {
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-clone', { object: 'events', items })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -345,7 +350,7 @@ export default {
     createEventSubmit() {
       let eventName = this.dialogOptions.item.name
       let eventCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-      let query = "CREATE EVENT `" + eventName + '` ON SCHEDULE'
+      let query = "CREATE EVENT `" + eventName.replaceAll('`','``') + '` ON SCHEDULE'
 
       if (this.dialogOptions.item.timing == 'at') {
         query += "\nAT '" + this.dialogOptions.item.executedAt + "'"
@@ -387,11 +392,11 @@ export default {
     renameEventSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE EVENT `" + currentName + "`", "DROP EVENT IF EXISTS `" + currentName + "`"]
+      let queries = ["SHOW CREATE EVENT `" + currentName.replaceAll('`','``') + "`", "DROP EVENT IF EXISTS `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName + '`')[1]
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName.replaceAll('`','``') + '`')[1]
         let query = "CREATE EVENT `" + newName + "`" + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
@@ -414,12 +419,12 @@ export default {
     duplicateEventSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE EVENT `" + currentName + "`"]
+      let queries = ["SHOW CREATE EVENT `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName + '`')[1]
-        let query = "CREATE EVENT `" + newName + "` " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName.replaceAll('`','``') + '`')[1]
+        let query = "CREATE EVENT `" + newName.replaceAll('`','``') + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -440,7 +445,7 @@ export default {
     },
     deleteEventSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP EVENT `" + item.name + "`;")
+      for (let item of this.sidebarSelected) queries.push("DROP EVENT `" + item.name.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -464,7 +469,7 @@ export default {
     },
     copyEventSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE EVENT `" + name + "`;"
+      let query = "SHOW CREATE EVENT `" + name.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

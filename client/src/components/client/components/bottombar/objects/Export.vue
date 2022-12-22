@@ -203,8 +203,8 @@ export default {
       progressTotal: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
-      // Axios Cancel Token
-      cancelToken: null,
+      // Axios Abort Controller
+      abortController: null,
       // Export Data
       exportData: [],
       exportErrors: '',
@@ -445,35 +445,33 @@ export default {
         server: this.server.id,
         engine: this.server.engine,
         database: this.database,
-        options: {
-          mode: this.tab,
-          include: this.include,
-          rows: this.rows,
-          includeDropTable: this.includeDropTable,
-          includeDelimiters: this.includeDelimiters,
-          fields: this.includeFields,
-          object: '',
-          items: [],
-        }
+        mode: this.tab,
+        include: this.include,
+        rows: this.rows,
+        includeDropTable: this.includeDropTable,
+        includeDelimiters: this.includeDelimiters,
+        fields: this.includeFields,
+        object: '',
+        items: [],
       }
       let total = objects['tables'].length
-      if (payload['options']['mode'] == 'sql') total += objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
+      if (payload['mode'] == 'sql') total += objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
       let t = 1
       const jobs = async () => {
-        let objectsType = (payload['options']['mode'] == 'csv') ? ['tables'] : ['tables','views','triggers','functions','procedures','events']
+        let objectsType = (payload['mode'] == 'csv') ? ['tables'] : ['tables','views','triggers','functions','procedures','events']
         for (let objSchema of objectsType) {
           const n = objects[objSchema].length
           let i = 1
           for (let objName of objects[objSchema]) {
             // Start Object Export
-            payload['options']['object'] = objSchema.slice(0, -1)
-            payload['options']['items'] = [objName]
+            payload['object'] = objSchema.slice(0, -1)
+            payload['items'] = JSON.stringify([objName])
             this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             const data = await this.exportObject(payload)
             this.exportData = new Blob([this.exportData, data])
             // Check Errors
             let dataSlice = await data.slice(0, 1024).text()
-            if (payload['options']['mode'] == 'sql' && dataSlice.split("\n")[3].startsWith('# Error: ')) {
+            if (payload['mode'] == 'sql' && dataSlice.split("\n")[3].startsWith('# Error: ')) {
               if (this.exportErrors.length != 0) this.exportErrors += '\n'
               this.exportErrors += dataSlice.split("\n")[3].substring(9)
             }
@@ -498,12 +496,11 @@ export default {
     },
     async exportObject(payload) {
       // Build options
-      const CancelToken = axios.CancelToken
-      this.cancelToken = CancelToken.source()
+      this.abortController = new AbortController()
       this.progressBytes = 0
       this.progressTotal = 0
       const options = {
-        cancelToken: this.cancelToken.token,
+        signal: this.abortController.signal,
         onDownloadProgress: (progressEvent) => {
           this.progressBytes = this.parseBytes(progressEvent.loaded)
           this.progressTotal = this.parseBytes(progressEvent.total)
@@ -516,7 +513,7 @@ export default {
       return response.data
     },
     cancelExport() {
-      this.cancelToken.cancel()
+      this.abortController.abort()
     },
     closeExport() {
       this.dialogProgress = false

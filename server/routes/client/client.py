@@ -672,13 +672,11 @@ class Client:
                 return jsonify({"message": str(e)}), 400
 
             try:
-                options = json.loads(request.args['options'])
                 # Start export
-                if options['mode'] == 'csv':
-                    return Response(stream_with_context(self.__export_csv(options, conn)))
-                elif options['mode'] == 'sql':
-                    options['engine'] = request.args['engine']
-                    return Response(stream_with_context(self.__export_sql(options, conn)))
+                if request.args['mode'] == 'csv':
+                    return Response(stream_with_context(self.__export_csv(conn)))
+                elif request.args['mode'] == 'sql':
+                    return Response(stream_with_context(self.__export_sql(conn)))
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
 
@@ -716,7 +714,7 @@ class Client:
 
             # Start clone
             try:
-                self.__clone_object(client_json['options'], conn)
+                self.__clone_object(conn)
                 return jsonify({"message": 'Object cloned'}), 200
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
@@ -950,9 +948,9 @@ class Client:
     def __allowed_file(self, filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql'}
 
-    def __export_csv(self, options, conn):
-        for table in options['items']:
-            first = options['fields']
+    def __export_csv(self, conn):
+        for table in json.loads(request.args['items']):
+            first = request.args['fields']
             conn.execute(query=f"SELECT * FROM `{table}`", database=request.args['database'], fetch=False)
             while True:
                 output = io.StringIO()
@@ -966,33 +964,33 @@ class Client:
                 writer.writerows(rows)
                 yield output.getvalue()
 
-    def __export_sql(self, options, conn):
+    def __export_sql(self, conn):
         # Build Tables
-        if options['object'] == 'table':
-            for table in options['items']:
+        if request.args['object'] == 'table':
+            for table in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# Table: {}\n'.format(table)
                 yield '# ------------------------------------------------------------\n'
                 try:
                     # Check table size
-                    if options['include'] in ['Structure + Content','Content']:
-                        info = conn.get_table_info(db=request.args['database'], table=table)
+                    if request.args['include'] in ['Structure + Content','Content']:
+                        info = conn.get_table_info(db=request.args['database'], table=table.replace('`','``'))
                         if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
                             raise Exception('To export objects larger than 10 MB use the Utils section.')
 
                     # Export table
-                    syntax = conn.get_table_syntax(request.args['database'], table)
-                    if options['includeDropTable']:
-                        yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
-                    if options['include'] in ['Structure','Structure + Content']:
+                    syntax = conn.get_table_syntax(request.args['database'], table.replace('`','``'))
+                    if request.args['includeDropTable']:
+                        yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table.replace('`','``'))
+                    if request.args['include'] in ['Structure','Structure + Content']:
                         yield '{};\n\n'.format(syntax)
-                    if options['include'] in ['Structure + Content','Content']:
-                        yield 'LOCK TABLES `{}` WRITE;\n'.format(table)
-                        yield 'ALTER TABLE `{}` DISABLE KEYS;\n\n'.format(table)
-                        conn.execute(query=f"SELECT SQL_NO_CACHE * FROM `{table}`", database=request.args['database'], fetch=False)
+                    if request.args['include'] in ['Structure + Content','Content']:
+                        yield 'LOCK TABLES `{}` WRITE;\n'.format(table.replace('`','``'))
+                        yield 'ALTER TABLE `{}` DISABLE KEYS;\n\n'.format(table.replace('`','``'))
+                        conn.execute(query=f"SELECT SQL_NO_CACHE * FROM `{table.replace('`','``')}`", database=request.args['database'], fetch=False)
                         first = True
                         while True:
-                            rows = conn.fetch_many(int(options['rows']))
+                            rows = conn.fetch_many(int(request.args['rows']))
                             if rows is None or len(rows) == 0:
                                 break
                             data = ''
@@ -1000,7 +998,7 @@ class Client:
                                 keys = [f'`{k}`' for k in row.keys()]
                                 vals = [i.decode('utf8', 'surrogateescape') if type(i) is bytes else i for i in row.values()]
                                 if first:
-                                    data += 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join(keys))
+                                    data += 'INSERT INTO `{}` ({})\nVALUES\n'.format(table.replace('`','``'), ','.join(keys))
                                     data += '({})'.format(conn.mogrify(','.join(repeat('%s', len(vals))), vals))
                                     first = False
                                 else:
@@ -1008,38 +1006,38 @@ class Client:
                             data += ';\n\n'
                             yield data
                             first = True
-                        yield 'ALTER TABLE `{}` ENABLE KEYS;\n'.format(table)
+                        yield 'ALTER TABLE `{}` ENABLE KEYS;\n'.format(table.replace('`','``'))
                         yield 'UNLOCK TABLES;\n\n'
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Views
-        elif options['object'] == 'view':
-            for view in options['items']:
+        elif request.args['object'] == 'view':
+            for view in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# View: {}\n'.format(view)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_view_syntax(request.args['database'], view).replace(f"`{request.args['database']}`.", '')
-                    if options['includeDropTable']:
-                        yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
+                    syntax = conn.get_view_syntax(request.args['database'], view.replace('`','``')).replace(f"`{request.args['database']}`.", '')
+                    if request.args['includeDropTable']:
+                        yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view.replace('`','``'))
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Triggers
-        elif options['object'] == 'trigger':
-            for trigger in options['items']:
+        elif request.args['object'] == 'trigger':
+            for trigger in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# Trigger: {}\n'.format(trigger)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_trigger_syntax(request.args['database'], trigger)
+                    syntax = conn.get_trigger_syntax(request.args['database'], trigger.replace('`','``'))
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                    if options['includeDropTable']:
-                        yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
-                    if options['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
-                        if options['includeDelimiters']:
+                    if request.args['includeDropTable']:
+                        yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger.replace('`','``'))
+                    if request.args['engine'] in ['MySQL','Amazon Aurora (MySQL)']:
+                        if request.args['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -1049,18 +1047,18 @@ class Client:
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Functions
-        elif options['object'] == 'function':
-            for function in options['items']:
+        elif request.args['object'] == 'function':
+            for function in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# Function: {}\n'.format(function)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_function_syntax(request.args['database'], function)
+                    syntax = conn.get_function_syntax(request.args['database'], function.replace('`','``'))
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
-                        if options['includeDropTable']:
-                            yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
-                        if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
+                        if request.args['includeDropTable']:
+                            yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function.replace('`','``'))
+                        if request.args['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and request.args['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -1071,18 +1069,18 @@ class Client:
                     yield '# Error: {}\n\n'.format(e)         
 
         # Build Procedures
-        elif options['object'] == 'procedure':
-            for procedure in options['items']:
+        elif request.args['object'] == 'procedure':
+            for procedure in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# Procedure: {}\n'.format(procedure)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_procedure_syntax(request.args['database'], procedure)
+                    syntax = conn.get_procedure_syntax(request.args['database'], procedure.replace('`','``'))
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
-                        if options['includeDropTable']:
-                            yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
-                        if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
+                        if request.args['includeDropTable']:
+                            yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure.replace('`','``'))
+                        if request.args['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and request.args['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -1093,68 +1091,70 @@ class Client:
                     yield '# Error: {}\n\n'.format(e)     
 
         # Build Events
-        elif options['object'] == 'event':
-            for event in options['items']:
+        elif request.args['object'] == 'event':
+            for event in json.loads(request.args['items']):
                 yield '# ------------------------------------------------------------\n'
                 yield '# Event: {}\n'.format(event)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_event_syntax(request.args['database'], event)
-                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                    if options['includeDropTable']:
+                    syntax = conn.get_event_syntax(request.args['database'], event.replace('`','``'))
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax.replace('`','``'))
+                    if request.args['includeDropTable']:
                         yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
-                    if options['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and options['includeDelimiters']:
+                    if request.args['engine'] in ['MySQL','Amazon Aurora (MySQL)'] and request.args['includeDelimiters']:
                         yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                     else:
                         yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
-    def __clone_object(self, options, conn):
+    def __clone_object(self, conn):
+        req = request.get_json()
         conn.disable_fks_checks()
-        if options['object'] == 'table':
-            for table in options['items']:
+        if req['object'] == 'table':
+            for table in json.loads(req['items']):
                 # Check table size
-                info = conn.get_table_info(db=options['origin'], table=table)
+                info = conn.get_table_info(db=req['origin'], table=table.replace('`','``'))
                 if len(info) > 0 and info[0]['data_length'] > 10*1024*1024:
                     raise Exception('To export objects larger than 10 MB use the Utils section.')
                 # Drop Table if Exists
-                conn.execute(query=f"DROP TABLE IF EXISTS `{table}`", database=options['target'])
+                conn.execute(query=f"DROP TABLE IF EXISTS `{table.replace('`','``')}`", database=req['target'])
                 # Create Table
-                conn.execute(query=f"CREATE TABLE IF NOT EXISTS `{table}` LIKE `{options['origin']}`.`{table}`", database=options['target'])
+                conn.execute(query=f"CREATE TABLE IF NOT EXISTS `{table.replace('`','``')}` LIKE `{req['origin']}`.`{table}`", database=req['target'])
                 # Create FKs
-                fks = conn.execute(query=f"SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE table_schema = '{options['origin']}' AND table_name = '{table}' AND REFERENCED_TABLE_SCHEMA IS NOT NULL ORDER BY ordinal_position", database=options['target'])['data']
+                fks = conn.execute(query=f"SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE table_schema = '{req['origin']}' AND table_name = '{table.replace('`','``')}' AND REFERENCED_TABLE_SCHEMA IS NOT NULL ORDER BY ordinal_position", database=req['target'])['data']
                 for fk in fks:
-                    db = fk['REFERENCED_TABLE_SCHEMA'] if fk['REFERENCED_TABLE_SCHEMA'] != options['origin'] else options['target']
-                    conn.execute(query=f"ALTER TABLE `{table}` ADD CONSTRAINT `{fk['CONSTRAINT_NAME']}` FOREIGN KEY (`{fk['COLUMN_NAME']}`) REFERENCES `{db}`.`{fk['REFERENCED_TABLE_NAME']}` (`{fk['REFERENCED_COLUMN_NAME']}`)", database=options['target'])
+                    db = fk['REFERENCED_TABLE_SCHEMA'] if fk['REFERENCED_TABLE_SCHEMA'] != req['origin'] else req['target']
+                    conn.execute(query=f"ALTER TABLE `{table.replace('`','``')}` ADD CONSTRAINT `{fk['CONSTRAINT_NAME']}` FOREIGN KEY (`{fk['COLUMN_NAME']}`) REFERENCES `{db}`.`{fk['REFERENCED_TABLE_NAME']}` (`{fk['REFERENCED_COLUMN_NAME']}`)", database=req['target'])
                 # Insert Data
-                conn.execute(query=f"INSERT INTO `{table}` SELECT * FROM `{options['origin']}`.`{table}`", database=options['target'])
-        elif options['object'] == 'view':
-            for view in options['items']:
-                syntax = conn.get_view_syntax(options['origin'], view)
-                conn.execute(query=f"DROP VIEW IF EXISTS `{view}`", database=options['target'])
-                conn.execute(query=syntax, database=options['target'])
-        elif options['object'] == 'trigger':
-            for trigger in options['items']:
-                syntax = conn.get_trigger_syntax(options['origin'], trigger)
+                conn.execute(query=f"INSERT INTO `{table.replace('`','``')}` SELECT * FROM `{req['origin']}`.`{table.replace('`','``')}`", database=req['target'])
+        elif req['object'] == 'view':
+            for view in json.loads(req['items']):
+                syntax = conn.get_view_syntax(req['origin'], view.replace('`','``'))
+                syntax = syntax.replace(f"`{req['origin']}`.`", f"`{req['target']}`.`")
+                conn.execute(query=f"DROP VIEW IF EXISTS `{view.replace('`','``')}`", database=req['target'])
+                conn.execute(query=syntax, database=req['target'])
+        elif req['object'] == 'trigger':
+            for trigger in json.loads(req['items']):
+                syntax = conn.get_trigger_syntax(req['origin'], trigger.replace('`','``'))
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP TRIGGER IF EXISTS `{trigger}`", database=options['target'])
-                conn.execute(query=syntax, database=options['target'])
-        elif options['object'] == 'function':
-            for function in options['items']:
-                syntax = conn.get_function_syntax(options['origin'], function)
+                conn.execute(query=f"DROP TRIGGER IF EXISTS `{trigger.replace('`','``')}`", database=req['target'])
+                conn.execute(query=syntax, database=req['target'])
+        elif req['object'] == 'function':
+            for function in json.loads(req['items']):
+                syntax = conn.get_function_syntax(req['origin'], function.replace('`','``'))
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP FUNCTION IF EXISTS `{function}`", database=options['target'])
-                conn.execute(query=syntax, database=options['target'])
-        elif options['object'] == 'procedure':
-            for procedure in options['items']:
-                syntax = conn.get_procedure_syntax(options['origin'], procedure)
+                conn.execute(query=f"DROP FUNCTION IF EXISTS `{function.replace('`','``')}`", database=req['target'])
+                conn.execute(query=syntax, database=req['target'])
+        elif req['object'] == 'procedure':
+            for procedure in json.loads(req['items']):
+                syntax = conn.get_procedure_syntax(req['origin'], procedure.replace('`','``'))
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP PROCEDURE IF EXISTS `{procedure}`", database=options['target'])
-                conn.execute(query=syntax, database=options['target'])
-        elif options['object'] == 'event':
-            for event in options['items']:
-                syntax = conn.get_event_syntax(options['origin'], event)
+                conn.execute(query=f"DROP PROCEDURE IF EXISTS `{procedure.replace('`','``')}`", database=req['target'])
+                conn.execute(query=syntax, database=req['target'])
+        elif req['object'] == 'event':
+            for event in json.loads(req['items']):
+                syntax = conn.get_event_syntax(req['origin'], event.replace('`','``'))
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP EVENT IF EXISTS `{event}`", database=options['target'])
-                conn.execute(query=syntax, database=options['target'])
+                conn.execute(query=f"DROP EVENT IF EXISTS `{event.replace('`','``')}`", database=req['target'])
+                conn.execute(query=syntax, database=req['target'])

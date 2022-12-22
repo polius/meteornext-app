@@ -158,6 +158,7 @@ export default {
       else if (item == 'Duplicate View') this.duplicateView()
       else if (item == 'Delete View') this.deleteView()
       else if (item == 'Export View') this.exportView()
+      else if (item == 'Clone View') this.cloneView()
       else if (item == 'Copy View Name') this.copyViewNameSubmit()
       else if (item == 'Copy View Syntax') this.copyViewSyntaxSubmit()
     },
@@ -218,6 +219,10 @@ export default {
       const items = this.sidebarSelected.map(x => x.name)
       EventBus.$emit('show-bottombar-objects-export', { object: 'views', items })
     },
+    cloneView() {
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-clone', { object: 'views', items })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -233,7 +238,7 @@ export default {
     },
     createViewSubmit() {
       let viewName = this.dialogOptions.item.name
-      let query = "CREATE VIEW `" + viewName + "` AS " + this.dialogEditor.getValue()
+      let query = "CREATE VIEW `" + viewName.replaceAll('`','``') + "` AS " + this.dialogEditor.getValue()
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -256,7 +261,7 @@ export default {
     renameViewSubmit() {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
-      let query = "RENAME TABLE `" + currentName + "` TO `" + newName + "`;"
+      let query = "RENAME TABLE `" + currentName.replaceAll('`','``') + "` TO `" + newName.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -273,12 +278,12 @@ export default {
     duplicateViewSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let query = "SHOW CREATE VIEW `" + currentName + "`;"
+      let query = "SHOW CREATE VIEW `" + currentName.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => { 
         let syntax = 'SELECT ' + JSON.parse(res.data)[0].data[0]['Create View'].split(' AS select ')[1]
-        let query = "CREATE VIEW `" + newName + "` AS " + syntax
+        let query = "CREATE VIEW `" + newName.replaceAll('`','``') + "` AS " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -299,7 +304,7 @@ export default {
     },
     deleteViewSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP VIEW `" + item.name + "`;")
+      for (let item of this.sidebarSelected) queries.push("DROP VIEW `" + item.name.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -323,7 +328,7 @@ export default {
     },
     copyViewSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE VIEW `" + name + "`;"
+      let query = "SHOW CREATE VIEW `" + name.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

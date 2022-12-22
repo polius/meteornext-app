@@ -317,7 +317,7 @@ export default {
     dialogSubmit(event) {
       this.loadingText = 'Applying changes...'
       this.loading = true
-      let query = 'ALTER TABLE `' + this.sidebarSelected[0]['name'] + '`'
+      let query = 'ALTER TABLE `' + this.sidebarSelected[0]['name'].replaceAll('`','``') + '`'
 
       if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields

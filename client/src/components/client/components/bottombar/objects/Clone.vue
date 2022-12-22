@@ -183,8 +183,8 @@ export default {
       progressValue: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
-      // Axios Cancel Token
-      cancelToken: null,
+      // Axios Abort Controller
+      abortController: null,
       // Clone Errors
       cloneErrors: '',
     }
@@ -217,16 +217,21 @@ export default {
     },
   },
   methods: {
-    showDialog() {
-      this.buildObjects()
+    showDialog(data) {
       this.targetDatabase = ''
       this.search = ''
       this.onSearch('')
       this.dialog = true
       setTimeout(() => {
+        this.buildObjects(data)
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
+        if (data !== undefined) {
+          const match = {'tables':0,'views':1,'triggers':2,'functions':3,'procedures':4,'events':5}
+          this.tabObjectsSelected = match[data['object']]
+        }
+        else this.tabObjectsSelected = 0
       },0)
     },
     onGridReady(object, params) {
@@ -249,6 +254,7 @@ export default {
     },
     resizeTable(object) {
       setTimeout(() => {
+        if (this.columnApi[object] == null) return
         var allColumnIds = []
         this.columnApi[object].getColumns().forEach(function(column) {
           allColumnIds.push(column.colId)
@@ -257,7 +263,7 @@ export default {
         this.gridApi[object].hideOverlay()
       }, 0)
     },
-    buildObjects() {
+    buildObjects(data) {
       for (let obj of this.objects) {
         if (this.gridApi[obj] != null) this.gridApi[obj].showLoadingOverlay()
       }
@@ -268,8 +274,14 @@ export default {
       .then(() => {
         this.objectsSelected = {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0}
         for (let obj of this.objects) this.resizeTable(obj)
+        if (data !== undefined) this.selectRows(data)
       })
       .finally(() => this.loading = false)
+    },
+    selectRows(data) {
+      this.gridApi[data['object']].forEachNode(node => {
+        if (data['items'].includes(node.data.name)) node.setSelected(true)
+      })
     },
     cloneObjectsSubmit() {
       // Check if all fields are filled
@@ -337,12 +349,10 @@ export default {
       var payload = {
         connection: this.id + '-clone',
         server: this.server.id,
-        options: {
-          origin: this.database,
-          target: this.targetDatabase,
-          object: '',
-          items: [],
-        }
+        origin: this.database,
+        target: this.targetDatabase,
+        object: '',
+        items: [],
       }
       let total = objects['tables'].length + objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
       let t = 1
@@ -352,8 +362,8 @@ export default {
           let i = 1
           for (let objName of objects[objSchema]) {
             // Start Object Clone
-            payload['options']['object'] = objSchema.slice(0, -1)
-            payload['options']['items'] = [objName]
+            payload['object'] = objSchema.slice(0, -1)
+            payload['items'] = JSON.stringify([objName])
             this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             const response = await this.cloneObject(payload)
             // Check Errors
@@ -379,15 +389,14 @@ export default {
     },
     async cloneObject(payload) {
       // Build options
-      const CancelToken = axios.CancelToken
-      this.cancelToken = CancelToken.source()
-      const options = { cancelToken: this.cancelToken.token }
+      this.abortController = new AbortController()
+      const options = { signal: this.abortController.signal }
       // Execute Query
       try { return await axios.post('/client/clone', payload, options) }
       catch (error) { return error.response }
     },
     cancelClone() {
-      this.cancelToken.cancel()
+      this.abortController.abort()
     },
     closeClone() {
       this.dialogProgress = false

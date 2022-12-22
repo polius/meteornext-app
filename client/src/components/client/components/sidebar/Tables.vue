@@ -180,6 +180,7 @@ export default {
       else if (item == 'Truncate Table') this.truncateTable()
       else if (item == 'Delete Table') this.deleteTable()
       else if (item == 'Export Table') this.exportTable()
+      else if (item == 'Clone Table') this.cloneTable()
       else if (item == 'Copy Table Name') this.copyTableNameSubmit()
       else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },
@@ -253,6 +254,10 @@ export default {
       const items = this.sidebarSelected.map(x => x.name)
       EventBus.$emit('show-bottombar-objects-export', { object: 'tables', items })
     },
+    cloneTable() {
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-clone', { object: 'tables', items })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -269,7 +274,7 @@ export default {
     },
     createTableSubmit() {
       let tableName = this.dialogOptions.item.name
-      let query = "CREATE TABLE `" + tableName + "` (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
+      let query = "CREATE TABLE `" + tableName.replaceAll('`','``') + "` (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -293,7 +298,7 @@ export default {
     renameTableSubmit() {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
-      let query = "ALTER TABLE `" + currentName + "` RENAME TO `" + newName + "`;"
+      let query = "ALTER TABLE `" + currentName.replaceAll('`','``') + "` RENAME TO `" + newName.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -312,7 +317,7 @@ export default {
       let newName = this.dialogOptions.item.newName
       let duplicateContent = this.dialogOptions.item.duplicateContent
       let queries = ["CREATE TABLE `" + newName + "` LIKE `" + currentName + "`;"]
-      if (duplicateContent) queries.push("INSERT INTO `" + newName + "` SELECT * FROM `" + currentName + "`;")
+      if (duplicateContent) queries.push("INSERT INTO `" + newName.replaceAll('`','``') + "` SELECT * FROM `" + currentName.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -345,7 +350,7 @@ export default {
       let force = this.dialogOptions.item.force
       let queries = []
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 0")
-      for (let item of this.sidebarSelected) queries.push("DROP TABLE `" + item.name + "`;")
+      for (let item of this.sidebarSelected) queries.push("DROP TABLE `" + item.name.replaceAll('`','``') + "`;")
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
@@ -370,7 +375,7 @@ export default {
     },
     copyTableSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE TABLE `" + name + "`;"
+      let query = "SHOW CREATE TABLE `" + name.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

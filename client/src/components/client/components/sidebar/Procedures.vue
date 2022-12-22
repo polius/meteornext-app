@@ -165,6 +165,7 @@ WHERE CountryCode = country;
       else if (item == 'Duplicate Procedure') this.duplicateProcedure()
       else if (item == 'Delete Procedure') this.deleteProcedure()
       else if (item == 'Export Procedure') this.exportProcedure()
+      else if (item == 'Clone Procedure') this.cloneProcedure()
       else if (item == 'Copy Procedure Name') this.copyProcedureNameSubmit()
       else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
     },
@@ -225,6 +226,10 @@ WHERE CountryCode = country;
       const items = this.sidebarSelected.map(x => x.name)
       EventBus.$emit('show-bottombar-objects-export', { object: 'procedures', items })
     },
+    cloneProcedure() {
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-clone', { object: 'procedures', items })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -243,7 +248,7 @@ WHERE CountryCode = country;
       let procedureParams = this.dialogOptions.item.params
       let procedureCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
       let procedureDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
-      let query = "CREATE PROCEDURE `" + procedureName + '` (' + procedureParams + ')' + procedureDeterministic + '\nBEGIN\n' + procedureCode + '\nEND;'
+      let query = "CREATE PROCEDURE `" + procedureName.replaceAll('`','``') + '` (' + procedureParams + ')' + procedureDeterministic + '\nBEGIN\n' + procedureCode + '\nEND;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -266,11 +271,11 @@ WHERE CountryCode = country;
     renameProcedureSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE PROCEDURE `" + currentName + "`", "DROP PROCEDURE IF EXISTS `" + currentName + "`"]
+      let queries = ["SHOW CREATE PROCEDURE `" + currentName.replaceAll('`','``') + "`", "DROP PROCEDURE IF EXISTS `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName.replaceAll('`','``') + '`')[1]
         let query = "CREATE PROCEDURE `" + newName + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
@@ -293,11 +298,11 @@ WHERE CountryCode = country;
     duplicateProcedureSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE PROCEDURE `" + currentName + "`"]
+      let queries = ["SHOW CREATE PROCEDURE `" + currentName.replaceAll('`','``') + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName.replaceAll('`','``') + '`')[1]
         let query = "CREATE PROCEDURE `" + newName + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
@@ -319,7 +324,7 @@ WHERE CountryCode = country;
     },
     deleteProcedureSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP PROCEDURE `" + item.name + "`;")
+      for (let item of this.sidebarSelected) queries.push("DROP PROCEDURE `" + item.name.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -343,7 +348,7 @@ WHERE CountryCode = country;
     },
     copyProcedureSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE PROCEDURE `" + name + "`;"
+      let query = "SHOW CREATE PROCEDURE `" + name.replaceAll('`','``') + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
