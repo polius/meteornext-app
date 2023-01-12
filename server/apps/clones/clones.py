@@ -9,6 +9,7 @@ import calendar
 import requests
 import threading
 from datetime import datetime, timedelta
+from botocore.client import Config
 
 import models.notifications
 import apps.clones.core
@@ -94,7 +95,7 @@ class Clones:
             self.__monitor_export(core['source'], item, path['source'], monitor_status)
 
         # Generated Presigned URL
-        client = boto3.client('s3', region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
+        client = boto3.client('s3', endpoint_url=f"https://s3.{amazon_s3['region']}.amazonaws.com", config=Config(signature_version='s3v4'), region_name=amazon_s3['region'], aws_access_key_id=amazon_s3['aws_access_key'], aws_secret_access_key=amazon_s3['aws_secret_access_key'])
         try:
             url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': amazon_s3['bucket'], 'Key': f"clones/{item['uri']}.sql.gz"}, ExpiresIn=3600)
         except Exception as e:

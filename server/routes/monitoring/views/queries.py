@@ -52,11 +52,23 @@ class Queries:
     # Internal Methods #
     ####################
     def get(self, user):
-        # Get Queries
-        mfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-        msort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if '[' in k:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                else:
+                    args[k] = v
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
 
-        if mfilter is not None or msort is not None:
+        # Get Queries
+        mfilter = args['filter'] if 'filter' in args else None
+        msort = args['sort'] if 'sort' in args else None
+        if mfilter or msort:
             queries = self._monitoring_queries.get(user, mfilter, msort)
             return jsonify({'queries': queries}), 200
 

@@ -5,8 +5,8 @@ class Monitoring:
         self._sql = sql
         self._license = license
 
-    def get_servers(self, dfilter=None, dsort=None):
-        if dfilter is None and dsort is None:
+    def get_servers(self, mfilter=None, msort=None):
+        if mfilter is None and msort is None:
             query = """
                 SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, available.region_shared, m.server_id IS NOT NULL AS 'attached', m.date
                 FROM (
@@ -43,22 +43,22 @@ class Monitoring:
             args = []
             sort_column = 'm.date'
             sort_order = 'DESC'
-            if dfilter is not None:
-                if 'user' in dfilter and dfilter['user'] is not None:
+            if mfilter is not None:
+                if 'user' in mfilter and mfilter['user'] is not None:
                     user = 'AND u.username = %s'
-                    args.append(dfilter['user'])
-                if 'server' in dfilter and dfilter['server'] is not None:
+                    args.append(mfilter['user'])
+                if 'server' in mfilter and mfilter['server'] is not None:
                     server = 'AND s.name = %s'
-                    args.append(dfilter['server'])
+                    args.append(mfilter['server'])
             args.append(self._license.get_resources())
             args.append(self._license.get_resources())
-            if dfilter is not None:
-                if 'attached' in dfilter and dfilter['attached'] is not None:
-                    attached = 'AND m.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND m.server_id IS NULL'
+            if mfilter is not None:
+                if 'attached' in mfilter and mfilter['attached'] is not None:
+                    attached = 'AND m.server_id IS NOT NULL' if mfilter['attached'] == 'attached' else 'AND m.server_id IS NULL'
 
-            if dsort is not None and dsort['column'] in ['user','server','attached','date']:
-                sort_column = f"`{dsort['column']}`"
-                sort_order = 'DESC' if dsort['desc'] else 'ASC'
+            if msort is not None and msort['column'] in ['user','server','attached','date']:
+                sort_column = f"`{msort['column']}`"
+                sort_order = 'DESC' if msort['desc'] == 'true' else 'ASC'
 
             query = """
                 SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, available.region_shared, m.server_id IS NOT NULL AS 'attached', m.date

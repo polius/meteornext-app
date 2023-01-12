@@ -62,9 +62,9 @@ class Clones:
                 deleted = ''
                 args['deleted'] = efilter['deleted']
 
-        if esort is not None and esort['column'] in ['user','mode','server','database','size','status','created','started','ended','overall','deleted']:
+        if esort is not None and esort['column'] in ['user','mode','source_server_name','destination_server_name','source_database','destination_database','size','status','created','started','ended','overall','deleted']:
             sort_column = f"`{esort['column']}`"
-            sort_order = 'DESC' if esort['desc'] else 'ASC'
+            sort_order = 'DESC' if esort['desc'] == 'true' else 'ASC'
 
         query = """
             SELECT c.id, c.mode, c.source_server, c.source_database, c.destination_server, c.destination_database, c.size, c.uri, c.status, c.created, c.started, c.ended, c.deleted, s.name AS 'source_server_name', s.shared AS 'source_server_shared', s.secured AS 'source_server_secured', s2.name AS 'destination_server_name', s2.shared AS 'destination_server_shared', s2.secured AS 'destination_server_secured', CONCAT(TIMEDIFF(IF(c.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), c.ended), c.started)) AS 'overall', u.username, q.queue

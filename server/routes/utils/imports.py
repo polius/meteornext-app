@@ -335,7 +335,7 @@ class Imports:
             format = '.tar' if source.endswith('.tar') else '.tar.gz' if source.endswith('.tar.gz') else '.gz' if source.endswith('.gz') else '.sql'
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
-            details = {"cloud": data['cloud'], "bucket": data['bucket'], "object": data['object']}
+            details = {"cloud": data['cloud'], "bucket": data['bucket'], "region": data['region'], "object": data['object']}
             url = data['url']
             create_database = data['createDatabase']
             recreate_database = data['recreateDatabase']
@@ -344,7 +344,7 @@ class Imports:
         self._users.consume_coins(user, group['utils_coins'])
         coins = user['coins'] - group['utils_coins']
 
-        # Create mew import
+        # Create new import
         item = {
             'username': user['username'],
             'mode': data['mode'],

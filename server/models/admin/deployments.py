@@ -61,7 +61,7 @@ class Deployments:
 
         if dsort is not None and dsort['column'] in ['username','name','release','environment','mode','method','status','created','scheduled','started','ended','overall']:
             sort_column = f"`{dsort['column']}`"
-            sort_order = 'DESC' if dsort['desc'] else 'ASC'
+            sort_order = 'DESC' if dsort['desc'] == 'true' else 'ASC'
 
         query = """
                 SELECT d.id, e.id AS 'execution_id', e.uri, d.name, env.name AS 'environment', r.name AS 'release', u.id AS 'user_id', u.username, e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall'
