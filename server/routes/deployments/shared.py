@@ -104,8 +104,12 @@ class Shared:
     # Internal Methods #
     ####################
     def get_you(self, user_id):
-        dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-        dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        try:
+            args = self.parse_args()
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+        dfilter = args['filter'] if 'filter' in args else None
+        dsort = args['sort'] if 'sort' in args else None
         deployments = self._shared.get_you(user_id, dfilter=dfilter, dsort=dsort)
         return jsonify({'deployments': deployments}), 200
 
@@ -142,8 +146,12 @@ class Shared:
         return jsonify({'message': 'Selected deployments removed'}), 200
 
     def get_others(self, user_id):
-        dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-        dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        try:
+            args = self.parse_args()
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+        dfilter = args['filter'] if 'filter' in args else None
+        dsort = args['sort'] if 'sort' in args else None
         deployments = self._shared.get_others(user_id, dfilter=dfilter, dsort=dsort)
         return jsonify({'deployments': deployments}), 200
 
@@ -152,3 +160,22 @@ class Shared:
         for deployment_id in data:
             self._shared.delete_others(user_id, deployment_id)
         return jsonify({'message': 'Selected deployments unshared'}), 200
+
+    def parse_args(self):
+        args = {}
+        for k,v in request.args.to_dict().items():
+            if k.count('[') == 0:
+                args[k] = v
+            elif k.count('[') == 1:
+                if not k[:k.find('[')] in args:
+                    args[k[:k.find('[')]] = {}
+                args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+            elif k.count('[') == 2:
+                if not k[:k.find('[')] in args:
+                    args[k[:k.find('[')]] = {}
+                key = k[k.find('[')+1:-1]
+                key = key[:key.find(']')]
+                if key not in args[k[:k.find('[')]]:
+                    args[k[:k.find('[')]][key] = []
+                args[k[:k.find('[')]][key].append(v)
+        return args

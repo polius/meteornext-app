@@ -81,8 +81,30 @@ class Imports:
     # Internal Methods #
     ####################
     def get(self):
-        rfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-        rsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if k.count('[') == 0:
+                    args[k] = v
+                elif k.count('[') == 1:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                elif k.count('[') == 2:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    key = k[k.find('[')+1:-1]
+                    key = key[:key.find(']')]
+                    if key not in args[k[:k.find('[')]]:
+                        args[k[:k.find('[')]][key] = []
+                    args[k[:k.find('[')]][key].append(v)
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+
+        # Get imports
+        rfilter = args['filter'] if 'filter' in args else None
+        rsort = args['sort'] if 'sort' in args else None
         imports = self._imports.get(rfilter, rsort)
         users_list = self._imports.get_users_list()
         return jsonify({'imports': imports, 'users_list': users_list}), 200

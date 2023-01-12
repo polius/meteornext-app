@@ -56,38 +56,38 @@ class Exports:
                 deleted = ''
                 args['deleted'] = efilter['deleted']
 
-        if esort is not None and esort['column'] in ['user','mode','server','database','size','status','created','started','ended','overall','deleted']:
+        if esort is not None and esort['column'] in ['user','mode','server_name','database','size','status','created','started','ended','overall','deleted']:
             sort_column = f"`{esort['column']}`"
-            sort_order = 'DESC' if esort['desc'] else 'ASC'
+            sort_order = 'DESC' if esort['desc'] == 'true' else 'ASC'
 
         query = """
-                SELECT e.id, e.mode, e.server_id, e.database, e.size, e.uri, e.status, e.created, e.started, e.ended, e.deleted, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', u.username, q.queue
-                FROM exports e
-                JOIN servers s ON s.id = e.server_id
-                JOIN users u ON u.id = e.user_id
-                LEFT JOIN
-                (
-                    SELECT (@cnt := @cnt + 1) AS queue, source_id, source_type
-                    FROM (
-                        SELECT i.id AS 'source_id', 'import' AS 'source_type', i.created
-                        FROM imports i
-                        WHERE i.status = 'QUEUED'
-                        UNION ALL
-                        SELECT e.id AS 'source_id', 'export' AS 'source_type', e.created
-                        FROM exports e
-                        WHERE e.status = 'QUEUED'
-                        UNION ALL
-                        SELECT c.id AS 'source_id', 'clone' AS 'source_type', c.created
-                        FROM clones c
-                        WHERE c.status = 'QUEUED'
-                        ORDER BY created
-                    ) t
-                    JOIN (SELECT @cnt := 0) cnt
-                ) q ON q.source_id = e.id AND q.source_type = 'export'
-                WHERE 1=1
-                {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
-                ORDER BY {13} {14}
-                LIMIT 1000
+            SELECT e.id, e.mode, e.server_id, e.database, e.size, e.uri, e.status, e.created, e.started, e.ended, e.deleted, s.name AS 'server_name', s.shared AS 'server_shared', s.secured AS 'server_secured', CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', u.username, q.queue
+            FROM exports e
+            JOIN servers s ON s.id = e.server_id
+            JOIN users u ON u.id = e.user_id
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, source_id, source_type
+                FROM (
+                    SELECT i.id AS 'source_id', 'import' AS 'source_type', i.created
+                    FROM imports i
+                    WHERE i.status = 'QUEUED'
+                    UNION ALL
+                    SELECT e.id AS 'source_id', 'export' AS 'source_type', e.created
+                    FROM exports e
+                    WHERE e.status = 'QUEUED'
+                    UNION ALL
+                    SELECT c.id AS 'source_id', 'clone' AS 'source_type', c.created
+                    FROM clones c
+                    WHERE c.status = 'QUEUED'
+                    ORDER BY created
+                ) t
+                JOIN (SELECT @cnt := 0) cnt
+            ) q ON q.source_id = e.id AND q.source_type = 'export'
+            WHERE 1=1
+            {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
+            ORDER BY {13} {14}
+            LIMIT 1000
         """.format(user, mode, size, server, database, status, created_from, created_to, started_from, started_to, ended_from, ended_to, deleted, sort_column, sort_order)
         return self._sql.execute(query, args)
 

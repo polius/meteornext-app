@@ -45,20 +45,45 @@ class Monitoring:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                # Return Monitoring Servers
-                dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-                dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-                servers = self._monitoring.get_servers(dfilter, dsort)
-                users_list = self._monitoring.get_users_list()
-                servers_list = self._monitoring.get_servers_list()
-                return jsonify({'servers': servers, 'users_list': users_list, 'servers_list': servers_list }), 200
+                return self.get()
             elif request.method == 'POST':
-                # Attach Servers
-                self._monitoring.attach_servers(request.get_json())
-                return jsonify({'message': 'Server(s) attached'}), 200
+                return self.post()
             elif request.method == 'DELETE':
-                # Detach Servers
-                self._monitoring.detach_servers(json.loads(request.args['servers']))
-                return jsonify({'message': 'Server(s) detached'}), 200
+                return self.delete()
 
         return admin_monitoring_blueprint
+
+    ####################
+    # Internal Methods #
+    ####################
+    def get(self):
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if '[' in k:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                else:
+                    args[k] = v
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+
+        # Return Monitoring Servers
+        mfilter = args['filter'] if 'filter' in args else None
+        msort = args['sort'] if 'sort' in args else None
+        servers = self._monitoring.get_servers(mfilter, msort)
+        users_list = self._monitoring.get_users_list()
+        servers_list = self._monitoring.get_servers_list()
+        return jsonify({'servers': servers, 'users_list': users_list, 'servers_list': servers_list }), 200
+
+    def post(self):
+        # Attach Servers
+        self._monitoring.attach_servers(request.get_json())
+        return jsonify({'message': 'Server(s) attached'}), 200
+
+    def delete(self):
+        # Detach Servers
+        self._monitoring.detach_servers(json.loads(request.args['servers']))
+        return jsonify({'message': 'Server(s) detached'}), 200

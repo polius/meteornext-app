@@ -408,17 +408,38 @@ class Deployments:
     # Class Methods #
     #################
     def __get(self, user):
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if k.count('[') == 0:
+                    args[k] = v
+                elif k.count('[') == 1:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                elif k.count('[') == 2:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    key = k[k.find('[')+1:-1]
+                    key = key[:key.find(']')]
+                    if key not in args[k[:k.find('[')]]:
+                        args[k[:k.find('[')]][key] = []
+                    args[k[:k.find('[')]][key].append(v)
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+
         # Get all user deployments
-        if 'uri' not in request.args:
-            dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-            dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        if 'uri' not in args:
+            dfilter = args['filter'] if 'filter' in args else None
+            dsort = args['sort'] if 'sort' in args else None
             deployments = self._deployments.get(user_id=user['id'], dfilter=dfilter, dsort=dsort)
             releases = self._releases.get(user['id'])
             deployments_list = self._deployments.getDeploymentsName(user['id'])
             return jsonify({'deployments': deployments, 'releases': releases, 'deployments_list': deployments_list}), 200
 
         # Get current execution
-        execution = self._executions.get(request.args['uri'])
+        execution = self._executions.get(args['uri'])
 
         # Check if deployment exists
         if len(execution) == 0:

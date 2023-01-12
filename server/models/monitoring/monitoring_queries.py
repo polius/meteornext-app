@@ -47,7 +47,7 @@ class Monitoring_Queries:
 
         if msort is not None:
             sort_column = 's.name' if msort['column'] == 'server' else f"q.{msort['column']}"
-            sort_order = 'DESC' if msort['desc'] else 'ASC'
+            sort_order = 'DESC' if msort['desc'] == 'true' else 'ASC'
 
         query = """
             SELECT q.id, s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count

@@ -357,7 +357,8 @@ class Utils:
                 amazon_s3 = {
                     "aws_access_key": cloud['access_key'],
                     "aws_secret_access_key": cloud['secret_key'],
-                    "bucket": details['bucket']
+                    "bucket": details['bucket'],
+                    "region": details['region']
                 }
 
             # Build item

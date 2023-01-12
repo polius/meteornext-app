@@ -47,18 +47,9 @@ class Deployments:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-                dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-                deployments = self._deployments.get(dfilter, dsort)
-                users_list = self._deployments.get_users_list()
-                return jsonify({'deployments': deployments, 'users_list': users_list}), 200
+                return self.get()
             elif request.method == 'PUT':
-                deployment_json = request.get_json()
-                if deployment_json['put'] == 'name':
-                    self._deployments.put_name(deployment_json['user_id'], deployment_json)
-                elif deployment_json['put'] == 'release':
-                    self._deployments.put_release(deployment_json['user_id'], deployment_json)
-                return jsonify({'message': 'Deployment edited'}), 200
+                return self.put()
 
         @admin_deployments_blueprint.route('/admin/deployments/releases', methods=['GET'])
         @jwt_required()
@@ -103,3 +94,43 @@ class Deployments:
             return jsonify({'data': self._deployments.get(search=json.loads(request.args['data']))}), 200
 
         return admin_deployments_blueprint
+
+    ####################
+    # Internal Methods #
+    ####################
+    def get(self):
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if k.count('[') == 0:
+                    args[k] = v
+                elif k.count('[') == 1:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                elif k.count('[') == 2:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    key = k[k.find('[')+1:-1]
+                    key = key[:key.find(']')]
+                    if key not in args[k[:k.find('[')]]:
+                        args[k[:k.find('[')]][key] = []
+                    args[k[:k.find('[')]][key].append(v)
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+
+        # Get deployments
+        dfilter = args['filter'] if 'filter' in args else None
+        dsort = args['sort'] if 'sort' in args else None
+        deployments = self._deployments.get(dfilter, dsort)
+        users_list = self._deployments.get_users_list()
+        return jsonify({'deployments': deployments, 'users_list': users_list}), 200
+
+    def put(self):
+        deployment_json = request.get_json()
+        if deployment_json['put'] == 'name':
+            self._deployments.put_name(deployment_json['user_id'], deployment_json)
+        elif deployment_json['put'] == 'release':
+            self._deployments.put_release(deployment_json['user_id'], deployment_json)
+        return jsonify({'message': 'Deployment edited'}), 200

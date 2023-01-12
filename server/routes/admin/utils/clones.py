@@ -81,8 +81,30 @@ class Clones:
     # Internal Methods #
     ####################
     def get(self):
-        efilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-        esort = json.loads(request.args['sort']) if 'sort' in request.args else None
+        # Parse arguments
+        args = {}
+        try:
+            for k,v in request.args.to_dict().items():
+                if k.count('[') == 0:
+                    args[k] = v
+                elif k.count('[') == 1:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+                elif k.count('[') == 2:
+                    if not k[:k.find('[')] in args:
+                        args[k[:k.find('[')]] = {}
+                    key = k[k.find('[')+1:-1]
+                    key = key[:key.find(']')]
+                    if key not in args[k[:k.find('[')]]:
+                        args[k[:k.find('[')]][key] = []
+                    args[k[:k.find('[')]][key].append(v)
+        except Exception:
+            return jsonify({'message': 'Invalid parameters'}), 400
+
+        # Get clones
+        efilter = args['filter'] if 'filter' in args else None
+        esort = args['sort'] if 'sort' in args else None
         clone = self._clone.get(efilter, esort)
         users_list = self._clone.get_users_list()
         return jsonify({'clones': clone, 'users_list': users_list}), 200

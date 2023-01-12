@@ -422,7 +422,10 @@ export default {
       // Build URL Params
       let query = {}
       if ('filter' in payload) query = {...payload['filter']}
-      if ('sort' in payload) query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      if ('sort' in payload) {
+        if (payload['sort']['column'] == 'server_id') payload['sort']['column'] = 'server_name'
+        query = {...query, sortBy: payload['sort']['column'], sortDesc: payload['sort']['desc']}
+      }
       let routeQuery = ('sortDesc' in this.$route.query) ? {...this.$route.query, "sortDesc": this.$route.query['sortDesc'] == 'true'} : this.$route.query
       if (JSON.stringify(routeQuery) != JSON.stringify(query)) this.$router.replace({query: query})
       // Get Exports

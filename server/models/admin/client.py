@@ -50,7 +50,7 @@ class Client:
 
         if dsort is not None and dsort['column'] in ['start_date','end_date','elapsed','user','server','database','status','records']:
             sort_column = f"`{dsort['column']}`"
-            sort_order = 'DESC' if dsort['desc'] else 'ASC'
+            sort_order = 'DESC' if dsort['desc'] == 'true' else 'ASC'
 
         query = """
             SELECT cq.id, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, s.secured, cq.database, IF(LENGTH(cq.query) > 1000, CONCAT(LEFT(cq.query,1000),'...'), cq.query) AS 'query', cq.status, cq.start_date, cq.end_date, cq.records, cq.elapsed, cq.error
@@ -132,7 +132,7 @@ class Client:
 
             if dsort is not None and dsort['column'] in ['user','server','attached','date','folder']:
                 sort_column = f"`{dsort['column']}`"
-                sort_order = 'DESC' if dsort['desc'] else 'ASC'
+                sort_order = 'DESC' if dsort['desc'] == 'true' else 'ASC'
 
             query = """
                 SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, t.active, available.shared, available.secured, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'

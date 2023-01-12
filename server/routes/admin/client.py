@@ -44,9 +44,15 @@ class Client:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
+            # Parse arguments
+            try:
+                args = self.parse_args()
+            except Exception:
+                return jsonify({'message': 'Invalid parameters'}), 400
+
             # Return Client Queries
-            dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-            dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+            dfilter = args['filter'] if 'filter' in args else None
+            dsort = args['sort'] if 'sort' in args else None
             queries = self._client.get_queries(dfilter, dsort)
             users_list = self._client.get_users_list()
             servers_list = self._client.get_servers_list()
@@ -75,9 +81,14 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
+                # Parse arguments
+                try:
+                    args = self.parse_args()
+                except Exception:
+                    return jsonify({'message': 'Invalid parameters'}), 400
                 # Return Client Servers
-                dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-                dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+                dfilter = args['filter'] if 'filter' in args else None
+                dsort = args['sort'] if 'sort' in args else None
                 servers = self._client.get_servers(dfilter, dsort)
                 users_list = self._client.get_users_list()
                 servers_list = self._client.get_servers_list()
@@ -92,3 +103,17 @@ class Client:
                 return jsonify({'message': 'Server(s) detached'}), 200
 
         return admin_client_blueprint
+
+    ####################
+    # Internal Methods #
+    ####################
+    def parse_args(self):
+        args = {}
+        for k,v in request.args.to_dict().items():
+            if '[' in k:
+                if not k[:k.find('[')] in args:
+                    args[k[:k.find('[')]] = {}
+                args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
+            else:
+                args[k] = v
+        return args
