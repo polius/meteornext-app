@@ -242,15 +242,15 @@ class core:
                                     with open(database_file, 'r', encoding='utf-8') as fread:
                                         # Get transactions
                                         transactions = {}
-                                        if os.path.exists(database_file[:-4] + '_tx.jsonl'):
-                                            with open(database_file[:-4] + '_tx.jsonl', 'r', encoding='utf-8') as ftxread:
+                                        if os.path.exists(database_file[:-6] + '_tx.jsonl'):
+                                            with open(database_file[:-6] + '_tx.jsonl', 'r', encoding='utf-8') as ftxread:
                                                 transactions = {i['id']: i['status'] for i in [json.loads(i) for i in ftxread.read().splitlines()]}
                                         # Compile server logs
                                         for i in fread:
                                             row = json.loads(i.rstrip('\n|\r'))
                                             # Check transactions
                                             if row['meteor_status'].startswith('tx_'):
-                                                row['meteor_status'] = 1 if row['meteor_status'] in transactions and int(transactions[row['meteor_status']]) == 1 else 2
+                                                row['meteor_status'] = '1' if row['meteor_status'] in transactions and int(transactions[row['meteor_status']]) == 1 else '2'
                                             # Compute summary
                                             summary['queries_failed'] += 1 if int(row['meteor_status']) == 0 else 0
                                             summary['queries_success'] += 1 if int(row['meteor_status']) == 1 else 0
