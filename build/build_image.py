@@ -58,7 +58,7 @@ class build_image:
         build_path = f"{self._pwd}/meteor"
         additional_files = ['version.txt']
         additional_binaries = []
-        hidden_imports = ['pymysql','requests','paramiko','boto3','sshtunnel','sentry_sdk','sqlparse','urllib3']
+        hidden_imports = ['pymysql','requests','paramiko','boto3','sshtunnel','sentry_sdk','sqlparse','urllib3','charset_normalizer.md__mypyc']
         binary_name = 'meteor'
         binary_path = f'{self._pwd}/server/apps'
 
@@ -69,7 +69,7 @@ class build_image:
         # Build Meteor Next Server
         build_path = f"{self._pwd}/server"
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','pyotp','flask_compress','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread']
+        hidden_imports = ['_cffi_backend','bcrypt','requests','pymysql','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','pyotp','flask_compress','dbutils.pooled_db','statistics','re','webauthn','sentry_sdk','sqlparse','gunicorn.app.base','gunicorn.glogging','gunicorn.workers.gthread','charset_normalizer.md__mypyc']
         additional_binaries = []
         binary_name = 'server'
         binary_path = f'{self._pwd}/dist'
