@@ -250,7 +250,7 @@ export default {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
     showTopNavbar() {
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer') && !window.location.pathname.startsWith('/install')) return true
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer') && !window.location.pathname.startsWith('/results') && !window.location.pathname.startsWith('/install')) return true
       return false
     },
     openNotifications() {
