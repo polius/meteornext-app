@@ -110,10 +110,18 @@ class Client:
     def parse_args(self):
         args = {}
         for k,v in request.args.to_dict().items():
-            if '[' in k:
+            if k.count('[') == 0:
+                args[k] = v
+            elif k.count('[') == 1:
                 if not k[:k.find('[')] in args:
                     args[k[:k.find('[')]] = {}
                 args[k[:k.find('[')]][k[k.find('[')+1:-1]] = v
-            else:
-                args[k] = v
+            elif k.count('[') == 2:
+                if not k[:k.find('[')] in args:
+                    args[k[:k.find('[')]] = {}
+                key = k[k.find('[')+1:-1]
+                key = key[:key.find(']')]
+                if key not in args[k[:k.find('[')]]:
+                    args[k[:k.find('[')]][key] = []
+                args[k[:k.find('[')]][key].append(v)
         return args
