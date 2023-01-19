@@ -1136,7 +1136,11 @@ export default {
       axios.post('/client/stop', payload)
       .finally(() => {
         let current = this.connections.find(c => c['index'] == index)
-        if (current !== undefined) current.clientExecuting = null
+        if (current !== undefined) {
+          current.clientExecuting = null
+          current.bottomBar.client['status'] = 'stopped'
+          this.gridApi.client.hideOverlay()
+        }
       })
     },
     executeQuery(payload) {
