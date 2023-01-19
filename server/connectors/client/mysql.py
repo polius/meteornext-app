@@ -95,7 +95,7 @@ class MySQL:
                 port = port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, client_flag=CLIENT.MULTI_STATEMENTS, ssl=ssl)
-                self._connection_id = self.execute(query='SELECT CONNECTION_ID()', skip_lock=True)['data'][0]['CONNECTION_ID()']
+                self._connection_id = self._sql.thread_id()
                 return
 
             except Exception as e:
@@ -134,10 +134,7 @@ class MySQL:
                 time.sleep(1)
 
         # Check connection
-        try:
-            self._sql.ping(reconnect=False)
-        except Exception:
-            self.connect()
+        self.__check_connection()
 
         # Check transaction
         if not import_file:
@@ -194,6 +191,13 @@ class MySQL:
             rowcount = cursor.rowcount if query.lower().startswith(('insert','update','delete')) else len(data)
             query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": rowcount}
             return query_data
+
+    def __check_connection(self):
+        try:
+            with self._sql.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        except Exception:
+            self.connect()
 
     def __timeout_query(self, query, query_id, timeout_type, timeout_value):
         is_select = query[:6].lower() == 'select'

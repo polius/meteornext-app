@@ -193,6 +193,7 @@ export default {
     loading: false,
     fullScreenEnabled: false,
     coinsDialog: false,
+    activeSession: true,
 
     // Snackbar
     snackbar: false,
@@ -220,7 +221,8 @@ export default {
     this.checkStyle()
   },
   watch: {
-    isLoggedIn() {
+    isLoggedIn(value) {
+      this.activeSession = value
       this.checkStyle()
     }
   },
@@ -322,11 +324,14 @@ export default {
       this.getNotifications(false)
     },
     getNotifications(recurrent) {
-      if (recurrent && (!this.isLoggedIn || this.rightDrawer)) setTimeout(this.getNotifications, 1000, true)
+      if (recurrent && (!this.isLoggedIn || !this.activeSession || this.rightDrawer)) setTimeout(this.getNotifications, 1000, true)
       else {
         axios.get('/notifications/bar')
           .then((response) => {
             this.notifications = response.data.data
+          })
+          .catch((error) => {
+            if (error.response.status == 401) this.activeSession = false
           })
           .finally(() => {
             this.loading = false
