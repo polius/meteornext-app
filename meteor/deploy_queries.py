@@ -68,6 +68,9 @@ class deploy_queries:
         if output is not True and output is not False:
             raise Exception('The output argument has an invalid value (should be either True or False)')
 
+        # Parse arguments
+        args = self.__parse_args(args)
+
         # Core Variables
         query_parsed = query.strip()
         server_sql = self.__server['name'] if auxiliary is None else auxiliary
@@ -153,6 +156,20 @@ class deploy_queries:
                 # Do not Raise the Exception. Continue with the Deployment
                 if e.__class__ == KeyboardInterrupt:
                     raise
+
+    def __parse_args(self, args):
+        # Do not parse arguments if are None or is a dictionary
+        if args is None or isinstance(args, dict):
+            return args
+
+        # Return a parsed list of arguments extending tuples and lists
+        parsed_args = []
+        for i in args:
+            if isinstance(i, (tuple, list)):
+                parsed_args.extend(i)
+            else:
+                parsed_args.append(i)
+        return parsed_args
 
     def __store_query(self, query):
         # Get execution path
