@@ -29,6 +29,9 @@ class deploy_queries:
         self.__tx_count = 0
         self.__tx_error = False
 
+        # Store Last Row Id
+        self._lastrowid = None
+
         # Init Query Template
         self.__query_template = query_template()
 
@@ -121,6 +124,9 @@ class deploy_queries:
                 query_prefix = '/*' + str(self.__imports.config['params']['id']) + '*/'
                 query_info = conn.execute(query=query_prefix + query_parsed, args=args, database=database)
 
+                # Retrieve last row id
+                self._lastrowid = conn.lastrowid()
+
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
 
@@ -159,7 +165,7 @@ class deploy_queries:
 
     def __parse_args(self, args):
         # Do not parse arguments if are None or is a dictionary
-        if args is None or isinstance(args, dict):
+        if args is None or isinstance(args, dict) or not isinstance(args, (tuple, list)):
             return args
 
         # Return a parsed list of arguments extending tuples and lists
@@ -251,6 +257,9 @@ class deploy_queries:
 
     def is_error(self):
         return self.__tx_error
+
+    def lastrowid(self):
+        return self._lastrowid
 
     def __get_auxiliary(self, auxiliary):
         if auxiliary not in self.__aux:

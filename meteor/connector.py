@@ -32,6 +32,9 @@ class connector:
     def rollback(self):
         self._sql.rollback()
 
+    def lastrowid(self):
+        return self._sql.lastrowid()
+
     ####################
     # INTERNAL QUERIES #
     ####################
