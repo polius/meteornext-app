@@ -14,6 +14,7 @@ class MySQL:
         self._tunnel = None
         self._sql = None
         self._last_execution_time = None
+        self._lastrowid = None
 
     @property
     def last_execution_time(self):
@@ -106,6 +107,9 @@ class MySQL:
         except Exception:
             pass
 
+    def lastrowid(self):
+        return self._lastrowid
+
     def __execute_query(self, query, args=None, database=None):
         # Select the database
         if database:
@@ -119,6 +123,9 @@ class MySQL:
             # Get the query results
             query_parsed = sqlparse.format(query, strip_comments=True).strip()[:6].lower()
             query_result = cursor.rowcount if query_parsed.startswith(('insert','update','delete')) else cursor.fetchall()
+
+            # Retrieve last row id
+            self._lastrowid = cursor.lastrowid
 
         # Return query info
         query_data = {"query_result": query_result, "query_rows_affected": cursor.rowcount}
