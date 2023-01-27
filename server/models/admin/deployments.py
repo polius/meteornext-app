@@ -6,7 +6,7 @@ class Deployments:
         user = name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
         all_executions = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
         args = {}
-        sort_column = 'e.started'
+        sort_column = 'e.id'
         sort_order = 'DESC'
         if dfilter is not None:
             matching = {

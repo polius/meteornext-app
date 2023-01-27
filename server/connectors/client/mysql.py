@@ -506,7 +506,7 @@ class MySQL:
     def get_table_info(self, db, table=None):
         table = '' if table is None else "AND t.table_name = '{}'".format(table)
         query = """
-            SELECT table_name AS 'name', table_rows AS 'rows', data_length, index_length, (data_length + index_length) AS 'total_length', engine, row_format, avg_row_length, data_free, auto_increment, c.character_set_name AS 'charset', table_collation AS 'collation', table_comment AS 'comment', create_time AS 'created', update_time AS 'modified'
+            SELECT table_name AS 'name', table_rows AS 'rows', data_length AS 'data_length', index_length AS 'index_length', (data_length + index_length) AS 'total_length', engine, row_format, avg_row_length, data_free, auto_increment, c.character_set_name AS 'charset', table_collation AS 'collation', table_comment AS 'comment', create_time AS 'created', update_time AS 'modified'
             FROM information_schema.tables t
             JOIN information_schema.collations c ON c.collation_name = t.table_collation
             WHERE t.table_schema = '{}'
