@@ -44,10 +44,10 @@ class Users:
 
     def post(self, user_id, user):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin, disabled, change_password, created_by, created_at, password_at) SELECT %s, %s, %s, %s, id, %s, %s, %s, %s, %s, %s FROM `groups` WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user_id, now, now, user['group']))
+        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, `admin`, disabled, change_password, created_by, created_at, password_at) SELECT %s, %s, %s, %s, id, %s, %s, %s, %s, %s, %s FROM `groups` WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user_id, now, now, user['group']))
 
     def put(self, user_id, user):
-        self._sql.execute("UPDATE users SET username = %s, password = COALESCE(%s, password), email = %s, coins = %s, admin = %s, disabled = %s, change_password = %s, group_id = (SELECT id FROM `groups` WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
+        self._sql.execute("UPDATE users SET username = %s, password = COALESCE(%s, password), email = %s, coins = %s, `admin` = %s, disabled = %s, change_password = %s, group_id = (SELECT id FROM `groups` WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['change_password'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
 
     def change_password(self, user):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -100,7 +100,7 @@ class Users:
         return self._sql.execute("SELECT EXISTS ( SELECT * FROM users WHERE username = %s) AS exist", (username))[0]['exist'] == 1
 
     def is_admin(self, username):
-        return len(self._sql.execute("SELECT admin FROM users WHERE username = '{}' AND admin = 1".format(username))) > 0
+        return len(self._sql.execute("SELECT `admin` FROM users WHERE username = '{}' AND `admin` = 1".format(username))) > 0
     
     def consume_coins(self, user, coins):
         self._sql.execute("UPDATE users SET coins = coins-%s WHERE username = %s", (coins, user['username']))
