@@ -91,7 +91,7 @@
                     <br>
                     <b>Concurrent Deployments</b>: Maximum concurrent deployments across all users in the group.
                     <br>
-                    <b>Execution Threads</b>: This option is used to increase the parallelization factor and therefore reduce the execution time needed to finish a deployment.
+                    <b>Execution Concurrency</b>: This option is used to increase the parallelization factor and therefore reduce the execution time needed to finish a deployment.
                     <br>
                     <b>Execution Timeout</b>: Maximum execution time per query (in seconds). This field is optional and can be left blank.
                   </span>
@@ -99,7 +99,7 @@
                 </div>
                 <v-text-field v-model="group.deployments_coins" label="Coins per Deployment" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Deployments" :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_threads" label="Execution Concurrency" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_timeout" label="Execution Timeout" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   RETENTION

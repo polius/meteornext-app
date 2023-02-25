@@ -85,6 +85,27 @@
                 </template>
               </v-radio>
             </v-radio-group>
+            <!-- CONCURRENCY -->
+            <div style="margin-top:15px; margin-bottom:15px">
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                  <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                    CONCURRENCY
+                    <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                  </span>
+                </template>
+                <span>The number of parallel connections created at the database level.</span>
+                <br>
+                <span>When set to 1, the deployment will proceed sequentially, processing databases one by one.</span>
+                <br>
+                <span>Setting it to 2 or higher will increase the number of databases that are concurrently processed at the same time.</span>
+                <br>
+                <span>Higher values enable faster deployment but require more resources.</span>
+              </v-tooltip>
+            </div>
+            <v-card style="margin-top:15px; padding:10px; padding-left:15px; max-width:300px">
+              <v-slider :disabled="concurrencyLoading" v-model="concurrency" :label="concurrency" min="1" :max="concurrencyMax" thumb-label hide-details style="max-width:270px"></v-slider>
+            </v-card>
             <!-- SCHEDULE -->
             <div style="margin-top:15px">
               <v-tooltip right>
@@ -349,6 +370,11 @@ export default {
       schedule_time2: '',
       schedule_datetime: '',
 
+      // Concurrency
+      concurrency: 1,
+      concurrencyMax: 1,
+      concurrencyLoading: true,
+
       // Query Dialog
       queryDialog: false,
       queryDialogTitle: '',
@@ -415,6 +441,7 @@ export default {
   created() {
     this.getReleases()
     this.getEnvironments()
+    this.getConcurrency()
   },
   mounted() {
     if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
@@ -499,6 +526,17 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    getConcurrency() {
+      axios.get('/deployments/concurrency')
+        .then((response) => {
+          this.concurrency = this.concurrencyMax = response.data.data
+        })
+        .catch((error) => {
+          if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.concurrencyLoading = false)
     },
     schedule_close() {
       this.scheduleDialog = false
@@ -669,7 +707,8 @@ export default {
         databases: this.databases,
         queries: this.query_items.map(x => x.query),
         method: this.method.toUpperCase(),
-        url: window.location.protocol + '//' + window.location.host
+        url: window.location.protocol + '//' + window.location.host,
+        concurrency: this.concurrency,
       }
       if (this.schedule_enabled) {
         payload['schedule_type'] = this.schedule_type

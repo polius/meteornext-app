@@ -1,5 +1,5 @@
-var axios = require('axios')
-var base64js = require('base64-js')
+import axios from 'axios';
+import base64js from 'base64-js';
 
 export async function webauthnRegisterBegin(user={}) {
   let payload = user

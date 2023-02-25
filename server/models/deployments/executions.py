@@ -6,7 +6,7 @@ class Executions:
 
     def get(self, uri):
         query = """
-            SELECT e.id, e.deployment_id, e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, es.schedule_type, es.schedule_value, es.schedule_rules, e.started, e.ended, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, d.shared, e.pid
+            SELECT e.id, e.deployment_id, e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', env.shared AS 'environment_shared', env.secured AS 'environment_secured', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, es.schedule_type, es.schedule_value, es.schedule_rules, e.started, e.ended, CONCAT(TIMEDIFF(IF(e.status IN('IN PROGRESS','STOPPING'), UTC_TIMESTAMP(), e.ended), e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, d.shared, e.pid, e.concurrency
             FROM executions e
             LEFT JOIN executions_scheduled es ON es.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id
@@ -25,10 +25,10 @@ class Executions:
 
     def post(self, user_id, execution):
         query = """
-            INSERT INTO executions (`deployment_id`, `environment_id`, `mode`, `databases`, `queries`, `code`, `method`, `status`, `created`, `scheduled`, `url`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO executions (`deployment_id`, `environment_id`, `mode`, `databases`, `queries`, `code`, `method`, `status`, `created`, `scheduled`, `url`, `uri`, `user_id`, `concurrency`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (execution['deployment_id'], execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], execution['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), execution['scheduled'], execution['url'], execution['uri'], user_id))
+        return self._sql.execute(query, (execution['deployment_id'], execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], execution['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), execution['scheduled'], execution['url'], execution['uri'], user_id, execution['concurrency']))
 
     def put(self, user_id, execution):
         query = """
@@ -41,10 +41,11 @@ class Executions:
                 `method` = %s,
                 `status` = %s,
                 `scheduled` = %s,
-                `user_id` = %s
+                `user_id` = %s,
+                `concurrency` = %s
             WHERE uri = %s
         """
-        self._sql.execute(query, (execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], execution['status'], execution['scheduled'], user_id, execution['uri']))
+        self._sql.execute(query, (execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], execution['status'], execution['scheduled'], user_id, execution['concurrency'], execution['uri']))
 
     def updateStatus(self, execution_id, status, extra=None):
         if extra is None:
@@ -62,7 +63,7 @@ class Executions:
 
     def getScheduled(self):
         query = """
-            SELECT e.id, d.name, r.name AS 'release', e.mode, e.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_concurrent AS 'concurrent_executions', g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout'
+            SELECT e.id, d.name, r.name AS 'release', e.mode, e.uri, u.id AS 'user_id', u.username, g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.url, g.deployments_execution_concurrent AS 'concurrent_executions', g.deployments_execution_timeout AS 'execution_timeout', e.concurrency
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             JOIN releases r ON r.id = d.release_id
@@ -76,7 +77,7 @@ class Executions:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT e.id, d.name, r.name AS 'release', e.mode, u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', e.url, e.uri
+            SELECT e.id, d.name, r.name AS 'release', e.mode, u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, g.deployments_execution_timeout AS 'execution_timeout', e.url, e.uri, e.concurrency
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             JOIN releases r ON r.id = d.release_id

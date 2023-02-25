@@ -901,6 +901,23 @@ class Client:
             # Get Request Json
             data = request.get_json()
 
+            # Stop current ongoing queries
+            for conn_id in ['-main','-shared']:
+                # Get current connection - query_id & start_time
+                conn = self._connections.get(user['id'], data['connection'] + conn_id)
+
+                # Track query (stopped)
+                try:
+                    if conn and conn.query_id:
+                        elapsed = "{0:.3f}".format(time.time() - conn.start_execution)
+                        self._client.track_query_end(query_id=conn.query_id, status='STOPPED', elapsed=elapsed)
+                        conn.query_id = None
+                        # Kill Query
+                        self._connections.kill(user['id'], data['connection'] + conn_id)
+                except AttributeError:
+                    # The connection has already closed (race condition case)
+                    pass
+
             # Close Connection
             self._connections.close(user['id'], data['connection'])
             return jsonify({'message': 'Connection closed'}), 200

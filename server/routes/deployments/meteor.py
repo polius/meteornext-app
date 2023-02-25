@@ -176,7 +176,7 @@ class Meteor:
             "id": deployment['id'],
             "mode": deployment['mode'].lower(),
             "user": deployment['username'],
-            "threads": deployment['execution_threads'],
+            "threads": deployment['concurrency'],
             "timeout": deployment['execution_timeout'],
             'name': deployment['name'],
             "release": deployment['release'],

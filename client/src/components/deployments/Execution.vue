@@ -382,6 +382,27 @@
                       </template>
                     </v-radio>
                   </v-radio-group>
+                  <!-- CONCURRENCY -->
+                  <div style="margin-top:15px; margin-bottom:15px">
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          CONCURRENCY
+                          <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                        </span>
+                      </template>
+                      <span>The number of parallel connections created at the database level.</span>
+                      <br>
+                      <span>When set to 1, the deployment will proceed sequentially, processing databases one by one.</span>
+                      <br>
+                      <span>Setting it to 2 or higher will increase the number of databases that are concurrently processed at the same time.</span>
+                      <br>
+                      <span>Higher values enable faster deployment but require more resources.</span>
+                    </v-tooltip>
+                  </div>
+                  <v-card style="margin-top:15px; padding:10px; padding-left:15px; max-width:300px">
+                    <v-slider :readonly="information_dialog_mode == 'parameters'" :disabled="concurrencyLoading" v-model="concurrency" :label="concurrency" min="1" :max="concurrencyMax" thumb-label hide-details style="max-width:270px"></v-slider>
+                  </v-card>
                   <!-- SCHEDULE -->
                   <div style="margin-top:15px">
                     <v-tooltip right>
@@ -837,6 +858,12 @@
       action_dialog_text: '',
       action_dialog_mode: '',
 
+      // Concurrency
+      concurrency: 1,
+      concurrencyMax: 1,
+      concurrencyGroup: 1,
+      concurrencyLoading: true,
+
       // Schedule
       scheduleDialog: false,
       schedule_enabled: false,
@@ -1024,6 +1051,7 @@
         else {
           this.getDeployment()
           this.getCode()
+          this.getConcurrency()
         }
       },
       goBack() {
@@ -1039,6 +1067,17 @@
             if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
+      },
+      getConcurrency() {
+        axios.get('/deployments/concurrency')
+          .then((response) => {
+            this.concurrencyGroup = response.data.data
+          })
+          .catch((error) => {
+            if ([401,404,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+          .finally(() => this.concurrencyLoading = false)
       },
       getDeployment() {
         // Get Deployment Data
@@ -1117,6 +1156,7 @@
         this.deployment['shared'] = data['shared']
         this.deployment['overall'] = data['overall']
         this.deployment['owner'] = data['owner']
+        this.deployment['concurrency'] = data['concurrency']
 
         // Parse Queries
         if (this.deployment['mode'] == 'BASIC') {
@@ -1330,6 +1370,8 @@
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
         this.schedule_datetime = this.deployment['schedule_value']
+        this.concurrency = this.deployment['concurrency']
+        this.concurrencyMax = Math.max(this.deployment['concurrency'], this.concurrencyGroup)
         this.information_dialog = true
       },
       edit() {
@@ -1346,6 +1388,8 @@
         this.information_dialog_execution_mode = this.deployment['mode']
         this.information_dialog_query_selected = []
         this.cmOptions.readOnly = false
+        this.concurrency = Math.min(this.deployment['concurrency'], this.concurrencyGroup)
+        this.concurrencyMax = this.concurrencyGroup
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.information_dialog = true
       },
@@ -1508,7 +1552,8 @@
           mode: this.information_dialog_execution_mode,
           environment: this.information_dialog_data.environment.id,
           method: this.information_dialog_data.method.toUpperCase(),
-          url: window.location.protocol + '//' + window.location.host
+          url: window.location.protocol + '//' + window.location.host,
+          concurrency: this.concurrency,
         }
         // Build different modes
         if (this.information_dialog_execution_mode == 'BASIC') {

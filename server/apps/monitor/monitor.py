@@ -197,6 +197,9 @@ class Monitor:
                         updated = VALUES(updated)
                 """
                 conn.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
+            except Exception:
+                # Race condition prevention. If the above insert is executed at the same time that the server has been deleted.
+                pass
             finally:
                 # Close SQL Connection
                 conn.stop()

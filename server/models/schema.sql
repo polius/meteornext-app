@@ -326,6 +326,7 @@ CREATE TABLE `executions` (
  `logs` VARCHAR(191) NULL,
  `expired` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
  `user_id` INT UNSIGNED NULL,
+ `concurrency` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE `uri` (`uri`),
   KEY `deployment_id` (`deployment_id`),

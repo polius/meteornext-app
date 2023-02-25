@@ -150,6 +150,7 @@ class MySQL:
             # Handle MySQL error "Table definition has changed, please retry transaction" when cloning an object.
             if e.__class__.__name__ == 'OperationalError' and e.args[0] == 1412:
                 self.connect()
+            if self._query_uuid:
                 return self.__execute_query(query, args, database, fetch)
             raise
         finally:

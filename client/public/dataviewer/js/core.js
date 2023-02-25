@@ -32,18 +32,6 @@ var ERROR;
 var SETTINGS_NORMALIZED = {};
 var SETTINGS_VISIBLE = {};
 var SETTINGS_PINNED = {};
-// +--------+
-// | FILTER |
-// +--------+
-// Global Filter Modal Default Dropdown Variables
-var FILTER_ENVIRONMENT = []
-var FILTER_REGION = [];
-var FILTER_SERVER = [];
-var FILTER_DATABASE = [];
-var FILTER_QUERY = [];
-// Global Filter Modal Non Default Dropdown Variables
-var FILTER_CUSTOM_COLUMNS = [];
-var FILTER_CUSTOM_DATA = {};
 // +----------------+
 // | TRANSFORMATION |
 // +----------------+
@@ -75,7 +63,6 @@ function init() {
   $("#delete-button").attr("disabled", true);
   $("#info-button").attr("disabled", true);
   $("#settings-button").attr("disabled", true);
-  $("#filter-button").attr("disabled", true);
   $("#transformation-button").attr("disabled", true);
   $("#errors-button").attr("disabled", true);
   $("#export-button").attr("disabled", true);
@@ -276,7 +263,6 @@ function onFirstDataRendered(params) {
         $("#theme-button").attr("disabled", false);
         $("#info-button").attr("disabled", (typeof INFO == 'undefined' || !('total' in INFO.queries)));
         $("#settings-button").attr("disabled", false);
-        $("#filter-button").attr("disabled", false);
         $("#transformation-button").attr("disabled", !COLUMNS.includes('meteor_query') || !COLUMNS.includes('meteor_output'));
         $("#errors-button").attr("disabled", !COLUMNS.includes('meteor_database') || !COLUMNS.includes('meteor_query') || !COLUMNS.includes('meteor_status') || !COLUMNS.includes('meteor_response'));
         $("#export-button").attr("disabled", false);
@@ -356,9 +342,6 @@ function removeSelectedRows() {
 }
 
 function init_meteor() {
-  // Compile Several Data File Meteor Values.
-  $("#loading").append("<p>- Compiling Data ...</p>");
-  compile_meteor();
   // Init and Load The AG-GRID
   $("#loading").append("<p>- Building Columns ...</p>");
   build_columns();
@@ -368,9 +351,6 @@ function init_meteor() {
   // Init Info Modal
   $("#loading").append("<p>- Initializing Information Modal ...</p>");
   init_info_modal();
-  // Init Filter Modal
-  $("#loading").append("<p>- Initializing Filter Modal ...</p>");
-  init_filter_modal();
   // Init Transformation Modal
   $("#loading").append("<p>- Initializing Transformation Modal ...</p>");
   init_transformation_modal();
@@ -384,13 +364,6 @@ function init_meteor() {
   $("#loading").append("<p>- Shuffling the Deck ...</p>");
   load_grid();
   $("#loading").append("<p>- Initiating Launch Sequence ...</p>");
-}
-
-function compile_meteor() {
-  // Get the Custom Columns
-  for (var i = 0; i < COLUMNS.length; ++i) {
-    if (!SUMMARY_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) FILTER_CUSTOM_COLUMNS.push(COLUMNS[i]);
-  }
 }
 
 function init_select2() {
@@ -582,7 +555,7 @@ $("#import-json").click(function () {
   imported_file_format = 'json'
   $("#import-json").addClass("is-info")
   $("#import-csv").removeClass("is-info")
-  $("#import-box").html('[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]')
+  $("#import-box").html('[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name": "Sophia", "age": 28}]')
 });
 
 $("#import-csv").click(function () {
@@ -650,6 +623,7 @@ $("#import-modal-save").click(function () {
   }
   $("#theme-button").attr("disabled", true);
   $("#loading").append("<p><b>" + imported_file_name + " (" + pretty_size(imported_file['size']) + ")</b></p>");
+  $("#loading").append("<p>- Importing File ...</p>"); 
 
   // Load file
   if (imported_file_format == 'json') {
@@ -658,13 +632,11 @@ $("#import-modal-save").click(function () {
     reader.onprogress = updateProgress;
     reader.onload = function(e) {
       try {
-        $("#loading").append("<p>- File Uploaded Successfully</p>"); 
-        $("#loading").append("<p>- Processing File ...</p>");
         DATA = JSON.parse(e.target.result);
         COLUMNS = Object.keys(DATA[0]);
         setTimeout(function () { init_meteor(); }, 100);
       } catch (error) {
-        error_code = '[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name", "Sophia", "age": 28}]';
+        error_code = '[{"id": 1, "name": "John", "age": 25}, {"id": 2, "name": "Sophia", "age": 28}]';
         show_error(error_title, error_message, error_code);
       }
     }
@@ -806,242 +778,6 @@ function init_info_modal() {
 }
 
 // ##############################################################################################
-// FILTER MODAL
-// ##############################################################################################
-var filter_environment_selected = filter_region_selected = filter_server_selected = filter_database_selected = filter_query_selected = 0;
-var data = []
-
-$("#filter-button").click(function () {
-  // Add Loading Class to Button
-  $("#filter-button").addClass("is-loading");
-
-  setTimeout(function () {
-    // Enable All Modal Objects
-    enable_filter_modal(true);
-
-    // Set Dropdown Values
-    $("#filter-environment").val(filter_environment_selected).trigger('change');
-    $("#filter-region").val(filter_region_selected).trigger('change');
-    $("#filter-server").val(filter_server_selected).trigger('change');
-    $("#filter-database").val(filter_database_selected).trigger('change');
-    $("#filter-query").val(filter_query_selected).trigger('change');
-    // Show Filter Modal
-    $("#filter-modal").addClass("is-active");
-    // Remove Loading Class to Button
-    $("#filter-button").removeClass("is-loading");
-  }, 100);
-});
-
-$("#filter-modal-close").click(function () {
-  enable_filter_modal(false);
-  close_filter_modal();
-});
-
-$("#filter-modal-cancel").click(function () {
-  enable_filter_modal(false);
-  close_filter_modal();
-});
-
-$("#filter-modal-save").click(function () {
-  // Disable All Modal Objects
-  enable_filter_modal(false);
-  // Add Button Loading Effect
-  $("#filter-modal-save").addClass("is-loading");
-
-  setTimeout(function () {
-    // Store Dropdown Values
-    filter_environment_selected = $('#filter-environment').val();
-    filter_region_selected = $('#filter-region').val();
-    filter_server_selected = $('#filter-server').val();
-    filter_database_selected = $('#filter-database').val();
-    filter_query_selected = $('#filter-query').val();
-    // Apply Filter
-    filter_data();
-    // Remove Button Loading Effect
-    $("#filter-modal-save").removeClass("is-loading");
-    // Hide Filter Modal
-    close_filter_modal();
-  }, 100);
-});
-
-function init_filter_modal() {
-  // Init Variables
-  FILTER_ENVIRONMENT = []
-  FILTER_REGION = []
-  FILTER_SERVER = []
-  FILTER_DATABASE = []
-  FILTER_QUERY = []
-
-  // Init UI Elements
-  elements = ['meteor_environment', 'meteor_region', 'meteor_server', 'meteor_database', 'meteor_query'];
-  for (var i = 0; i < elements.length; ++i) {
-    if (!COLUMNS.includes(elements[i])) {
-      $("#filter-modal-" + elements[i] + "-div").fadeOut();
-    }
-  }
-  // Get Dropdown Values
-  for (let i = 0; i < DATA.length; ++i) {
-    if ('meteor_environment' in DATA[i] && !FILTER_ENVIRONMENT.includes(DATA[i]['meteor_environment'])) FILTER_ENVIRONMENT.push(DATA[i]['meteor_environment']);
-    if ('meteor_region' in DATA[i] && !FILTER_REGION.includes(DATA[i]['meteor_region'])) FILTER_REGION.push(DATA[i]['meteor_region']);
-    if ('meteor_server' in DATA[i] && !FILTER_SERVER.includes(DATA[i]['meteor_server'])) FILTER_SERVER.push(DATA[i]['meteor_server']);
-    if ('meteor_database' in DATA[i] && !FILTER_DATABASE.includes(DATA[i]['meteor_database'])) FILTER_DATABASE.push(DATA[i]['meteor_database']);
-    if ('meteor_query' in DATA[i] && FILTER_QUERY.length < 10000 && !FILTER_QUERY.includes(DATA[i]['meteor_query'])) {
-      if (DATA[i]['meteor_query'].startsWith('[')) {
-        // Parse Query Alias
-        let stack = 0
-        for (let j = 1; j < DATA[i]['meteor_query'].length; ++j) {
-          if (DATA[i]['meteor_query'][j] == '[') stack += 1
-          else if (DATA[i]['meteor_query'][j] == ']') {
-            if (stack == 0) {
-              let element = '[ALIAS] ' + DATA[i]['meteor_query'].substr(1, j - 1)
-              if (!FILTER_QUERY.includes(element)) FILTER_QUERY.push(element)
-              break
-            }
-            else stack -= 1
-          }
-        }
-      }
-      else FILTER_QUERY.push(DATA[i]['meteor_query']);
-    }
-  }
-
-  // Show warning message
-  if (FILTER_QUERY.length == 10000) $('#filter-modal-meteor_query-limit-div').css({ display : "inline" });
-  else $('#filter-modal-meteor_query-limit-div').css({ display : "none" });
-
-  // Sort Dropdown Values
-  FILTER_ENVIRONMENT.sort();
-  FILTER_REGION.sort();
-  FILTER_SERVER.sort();
-  FILTER_DATABASE.sort();
-  FILTER_QUERY.sort();
-  // Init Dropdown Values
-  for (var i = 0; i < FILTER_ENVIRONMENT.length; ++i) $('#filter-environment').append($('<option>', { value: i + 1, text: FILTER_ENVIRONMENT[i] }))
-  for (var i = 0; i < FILTER_REGION.length; ++i) $('#filter-region').append($('<option>', { value: i + 1, text: FILTER_REGION[i] }))
-  for (var i = 0; i < FILTER_SERVER.length; ++i) $('#filter-server').append($('<option>', { value: i + 1, text: FILTER_SERVER[i] }))
-  for (var i = 0; i < FILTER_DATABASE.length; ++i) $('#filter-database').append($('<option>', { value: i + 1, text: FILTER_DATABASE[i] }))
-  for (var i = 0; i < FILTER_QUERY.length; ++i) $('#filter-query').append($('<option>', { value: i + 1, text: FILTER_QUERY[i] }))
-
-  /////////////////////
-  // CUSTOM ELEMENTS //
-  /////////////////////
-
-  // Add Non Default Column Elements
-  for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]] = [];
-  for (var i = 0; i < DATA.length; ++i) {
-    for (var j = 0; j < FILTER_CUSTOM_COLUMNS.length; ++j) {
-      if (!FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[j]].includes(DATA[i][FILTER_CUSTOM_COLUMNS[j]])) FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[j]].push(DATA[i][FILTER_CUSTOM_COLUMNS[j]]);
-    }
-  }
-  // Sort Non Default Column Elements
-  for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]].sort();
-  // Create Dropdown Elements
-  for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) {
-    var column_name = get_column_name(FILTER_CUSTOM_COLUMNS[i]);
-    $('#filter-modal-content').append(`
-      <div id="filter-modal-` + this.normalize(FILTER_CUSTOM_COLUMNS[i]) + `-div" style="width:100%; margin-top:10px;">
-        <!-- ` + column_name + ` -->
-        <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
-          <span>` + column_name + `:</span>
-        </div>
-        <div style="width:80%; float:left;">
-          <select id="filter-` + this.normalize(FILTER_CUSTOM_COLUMNS[i]) + `" class="js-example-basic-single" name="state" style="width:50%;">
-            <option value="0">- All Data -</option>
-          </select>
-        </div>
-      </div>`);
-  }
-  // Init Dropdown Values
-  for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) {
-    for (var j = 0; j < FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]].length; ++j) {
-      $('#filter-' + this.normalize(FILTER_CUSTOM_COLUMNS[i])).append($('<option>', { value: i + 1, text: FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]][j] }))
-    }
-  }
-}
-
-function filter_data() {
-  // Usable Variables
-  var api = gridOptions.api;
-  var data = [];
-
-  // Get Dropdown Selected Text Values
-  var environment_text = $("#filter-environment option:selected").text();
-  var region_text = $("#filter-region option:selected").text();
-  var server_text = $("#filter-server option:selected").text();
-  var database_text = $("#filter-database option:selected").text();
-  var query_text = $("#filter-query option:selected").text();
-  var is_alias = query_text.startsWith('[ALIAS] ')
-
-  // Clear All Cells
-  api.setRowData([]);
-
-  // Check if Apply Filter on Raw Data or Transformed Data
-  var data2filter = [];
-  if (transformation_query_selected == 0) {
-    // Reset Grid Columns
-    for (var i = 0; i < columnDefs.length; ++i) {
-      if (columnDefs[i]['field'] == 'meteor_database') columnDefs[i]['pinned'] = null;
-    }
-    gridOptions.api.setColumnDefs(defaultColumnDefs);
-    // Apply Column Properties to Settings Modal
-    apply_settings_modal();
-
-    // Set data2filter to all Raw Data 
-    data2filter = DATA.slice(0);
-  }
-  else data2filter = TRANSFORMED_DATA.slice(0);
-
-  // Check the Matching Rows to be Rebuild
-  for (var i = 0; i < data2filter.length; ++i) {
-    var row_match = true;
-    // Default Elements
-    var environment_condition = (filter_environment_selected == 0) ? 1 : ((data2filter[i]['meteor_environment'] == environment_text) ? 1 : 0)
-    let region_condition = (filter_region_selected == 0) ? 1 : ((data2filter[i]['meteor_region'] == region_text) ? 1 : 0)
-    let server_condition = (filter_server_selected == 0) ? 1 : ((data2filter[i]['meteor_server'] == server_text) ? 1 : 0)
-    let database_condition = (filter_database_selected == 0) ? 1 : ((data2filter[i]['meteor_database'] == database_text) ? 1 : 0)
-    let query_condition = (filter_query_selected == 0) ? 1 : (!is_alias && data2filter[i]['meteor_query'] == query_text) || (is_alias && data2filter[i]['meteor_query'].startsWith('[' + query_text.substr(8, query_text.length) + ']')) ? 1 : 0
-    row_match = (environment_condition & region_condition & server_condition & database_condition & query_condition);
-    // Custom Elements
-    for (var j = 0; j < FILTER_CUSTOM_COLUMNS.length; ++j) {
-      var row_selected = $("#filter-" + this.normalize(FILTER_CUSTOM_COLUMNS[j])).val();
-      var row_value = $("#filter-" + this.normalize(FILTER_CUSTOM_COLUMNS[j]) + " option:selected").text();
-      row_match &= (row_selected == 0) ? 1 : ((data2filter[i][FILTER_CUSTOM_COLUMNS[j]] == row_value) ? 1 : 0)
-    }
-    // If Row Match the Filter, then show the row
-    if (row_match) data.push(data2filter[i]);
-  }
-  // Add Matching Rows
-  api.updateRowData({ add: data });
-  // Resize All Columns
-  setTimeout(function () {
-    // Auto Size Columns
-    autoSizeAll();
-  }, 100);
-}
-
-function close_filter_modal() {
-  $("#filter-modal").removeClass('fadeIn');
-  $("#filter-modal").addClass('fadeOut');
-  setTimeout(function () {
-    $("#filter-modal").removeClass("is-active");
-    $("#filter-modal").removeClass('fadeOut');
-    $("#filter-modal").addClass('fadeIn');
-  }, 300);
-}
-
-function enable_filter_modal(option) {
-  // Enable/Disable All Filter Modal Objects
-  $('#filter-environment').attr("disabled", !option);
-  $('#filter-region').attr("disabled", !option);
-  $('#filter-server').attr("disabled", !option);
-  $('#filter-database').attr("disabled", !option);
-  $('#filter-query').attr("disabled", !option);
-  $("#filter-modal-cancel").attr('disabled', !option);
-  $("#filter-modal-close").attr('disabled', !option);
-  $("#filter-modal-save").attr('disabled', !option);
-}
-
-// ##############################################################################################
 // TRANSFORMATION MODAL
 // ##############################################################################################
 var transformation_query_selected = 0;
@@ -1096,7 +832,7 @@ $("#transformation-modal-save").click(function () {
     transformation_query_selected = $('#transformation-query').val();
     // Store Checkbox Value
     transformation_checkbox_checked = $("#transformation_checkbox").is(":checked");
-    // Apply Filter
+    // Apply Transform
     transform_data();
     // Remove Button Loading Effect
     $("#transformation-modal-save").removeClass("is-loading");
@@ -1188,8 +924,6 @@ function transform_data() {
     TRANSFORMED_DATA = data.slice(0)
     // Set Database Column Visible
     if (COLUMNS.includes('meteor_database') && data.length > 0) set_column_visible('meteor_database', true);
-    // Add Matching Rows
-    api.setRowData(data);
   }
   else {
     // Enable Error Tab Button
@@ -1206,10 +940,10 @@ function transform_data() {
     // Unpin Database Column
     set_column_pinned('meteor_database', false);
   }
+  // Set Row Data
+  api.setRowData(data);
   // Apply Matching Columns
   apply_settings_modal();
-  // Apply Current Filter
-  filter_data();
   // Resize All Columns
   setTimeout(function () {
     // Auto Size Columns
@@ -1344,7 +1078,6 @@ function show_errors() {
     gridOptions.api.setSortModel(sort);
     // Disable Components
     $("#settings-button").attr("disabled", true);
-    $("#filter-button").attr("disabled", true);
     $("#transformation-button").attr("disabled", true);
     // Change Error Button Class
     $("#errors-button").removeClass("is-loading");
@@ -1365,11 +1098,8 @@ function hide_errors() {
     gridOptions.api.setRowData(DATA);
     // Apply Matching Columns
     apply_settings_modal();
-    // Apply Current Filter
-    filter_data();
     // Enable Components
     $("#settings-button").attr("disabled", false);
-    $("#filter-button").attr("disabled", false);
     $("#transformation-button").attr("disabled", false);
     // Change Error Button Class
     $("#errors-button").removeClass("is-loading");
@@ -1530,7 +1260,7 @@ function export_data() {
 
   // Check if there's any rows to export
   var nrows = rows_to_export.length;
-  if (nrows == 0) show_error('No Rows', 'There are no rows to export. Please change your filter settings.', '');
+  if (nrows == 0) show_error('No Rows', 'There are no rows to be exported.', '');
   else {
     if (export_value == "csv") export_csv(JSON.parse(JSON.stringify(rows_to_export)));
     else if (export_value == "json") export_json(rows_to_export);
@@ -1673,7 +1403,6 @@ function apply_light_theme() {
   add_style(document.getElementsByClassName("modal-card-foot"), 'borderTop', '1px solid #dbdbdb');
   document.getElementById("info-modal-save").classList.remove('is-light');
   document.getElementById("settings-modal-cancel").classList.remove('is-light');
-  document.getElementById("filter-modal-cancel").classList.remove('is-light');
   document.getElementById("transformation-modal-cancel").classList.remove('is-light');
   document.getElementById("export-modal-cancel").classList.remove('is-light');
   document.getElementById("error-title").style.color = '#dcdcde';
@@ -1782,7 +1511,6 @@ function apply_dark_theme() {
   add_style(document.getElementsByClassName("modal-card-foot"), 'borderTop', '1px solid #4f4d56');
   document.getElementById("info-modal-save").classList.add('is-light');
   document.getElementById("settings-modal-cancel").classList.add('is-light');
-  document.getElementById("filter-modal-cancel").classList.add('is-light');
   document.getElementById("transformation-modal-cancel").classList.add('is-light');
   document.getElementById("export-modal-cancel").classList.add('is-light');
   document.getElementById("error-modal-accept").classList.add('is-light');
