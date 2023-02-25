@@ -5,7 +5,7 @@
         <v-avatar size="100" style="margin-left:auto; margin-right:auto; display:inherit"><v-img src="../assets/logo.png"></v-img></v-avatar>
       </transition>
       <transition appear appear-active-class="title-transition">
-        <div class="text-h2" style="margin:20px; font-size:3.2rem!important; font-weight:400; text-align:center">Meteor Next<span class="text-body-1 font-weight-light" style="margin-top:10px; margin-left:10px">{{ version }}</span></div>
+        <div class="text-h2" style="margin:20px; font-size:3.2rem!important; font-weight:400; text-align:center">Meteor Next<span style="margin-left:12px; font-family: Consolas,monaco,monospace; font-size:14px;">v{{ version }}</span></div>
       </transition>
     </div>
     <div class="font-weight-light" style="position:fixed; bottom:0; width:100%; margin-bottom:2vh; font-size:14px; text-align:center">Copyright © {{ new Date().getFullYear() }} <a style="color: white" href="https://www.meteornext.io" target="_blank">Meteor Next</a></div>

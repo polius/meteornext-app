@@ -4,7 +4,7 @@ class Executions_Scheduled:
 
     def get(self):
         query = """
-            SELECT es.execution_id, e.environment_id, e.mode, e.databases, e.queries, e.code, e.method, e.url, e.uri, e.user_id, u.username, u.coins AS 'user_coins', u.group_id, e.deployment_id, d.name AS 'deployment_name', g.deployments_coins, es.schedule_type, es.schedule_value, es.schedule_rules
+            SELECT es.execution_id, e.environment_id, e.mode, e.databases, e.queries, e.code, e.method, e.url, e.uri, e.user_id, u.username, u.coins AS 'user_coins', u.group_id, e.deployment_id, d.name AS 'deployment_name', g.deployments_coins, es.schedule_type, es.schedule_value, es.schedule_rules, e.concurrency
             FROM executions_scheduled es
             JOIN executions e ON e.id = es.execution_id
             JOIN deployments d ON d.id = e.deployment_id

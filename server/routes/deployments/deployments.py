@@ -83,6 +83,30 @@ class Deployments:
             elif request.method == 'PUT':
                 return self.__put(user)
 
+        @deployments_blueprint.route('/deployments/concurrency', methods=['GET'])
+        @jwt_required()
+        def deployments_concurrency():
+            # Check license
+            if not self._license.is_validated():
+                return jsonify({"message": "The license is not valid"}), 401
+
+            # Get user data
+            try:
+                user = self._users.get(get_jwt_identity())[0]
+                set_user({"id": user['id'], "username": user['username'], "email": user['email']})
+            except IndexError:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Check user privileges
+            if user['disabled'] or not user['deployments_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get group
+            group = self._groups.get(group_id=user['group_id'])[0]
+
+            # Get group execution threads (= concurrency)
+            return jsonify({'data': group['deployments_execution_threads']}), 200
+
         @deployments_blueprint.route('/deployments/blueprint', methods=['GET'])
         @jwt_required()
         def deployments_code():
@@ -505,6 +529,7 @@ class Deployments:
             'method': data['method'],
             'url': data['url'] if 'url' in data else None,
             'uri': str(uuid.uuid4()),
+            'concurrency': data['concurrency'],
         }
 
         # Parse queries
@@ -515,6 +540,10 @@ class Deployments:
         group = self._groups.get(group_id=user['group_id'])[0]
         if (user['coins'] - group['deployments_coins']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
+
+        # Check concurrency
+        if data['concurrency'] > group['deployments_execution_threads']:
+            return jsonify({'message': 'The currency value exceeds the maximum allowed in your group'}), 400
 
         # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
@@ -607,6 +636,7 @@ class Deployments:
             'method': data['method'],
             'url': data['url'] if 'url' in data else None,
             'uri': data['uri'],
+            'concurrency': data['concurrency'],
         }
 
         # Parse queries
@@ -631,6 +661,10 @@ class Deployments:
 
         # Get deployment group
         group = self._groups.get(group_id=user['group_id'])[0]
+
+        # Check concurrency
+        if data['concurrency'] > group['deployments_execution_threads']:
+            return jsonify({'message': 'The currency value exceeds the maximum allowed in your group'}), 400
 
         # Check environment exists
         environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=data['environment'])
