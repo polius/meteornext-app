@@ -19,7 +19,7 @@ RUN echo "Building & Compiling Backend" && \
     python3 -m pip install --no-cache-dir schedule && \
     python3 -m pip install --no-cache-dir gunicorn[gthread] && \
     python3 -m pip install --no-cache-dir cython && \
-    python3 -m pip install --no-cache-dir pyinstaller && \
+    python3 -m pip install --no-cache-dir pyinstaller==5.7.0 && \
     python3 -m pip install --no-cache-dir sentry-sdk[flask] && \
     python3 -m pip install --no-cache-dir sqlparse
 WORKDIR /root/build
