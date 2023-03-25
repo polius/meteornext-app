@@ -633,9 +633,9 @@
                           <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
                           <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
                         </td>
-                        <td>{{ dateFormat(props.item.created) }}</td>
-                        <td>{{ dateFormat(props.item.started) }}</td>
-                        <td>{{ dateFormat(props.item.ended) }}</td>
+                        <td>{{ props.item.created }}</td>
+                        <td>{{ props.item.started }}</td>
+                        <td>{{ props.item.ended }}</td>
                         <td>{{ props.item.overall }}</td>
                         <td>
                           <v-btn icon @click="selectExecution(props.item.uri)"><v-icon title="Select execution" small>fas fa-arrow-right</v-icon></v-btn>
@@ -1341,7 +1341,7 @@
         // Get Deployment Executions
         axios.get('/deployments/executions', { params: { uri: this.$route.params.uri } })
           .then((response) => {
-            this.executions['items'] = response.data.data
+            this.executions['items'] = response.data.data.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
             this.executions['headers'] = [
               { text: 'Environment', value: 'environment' },
               { text: 'Mode', value: 'mode' },

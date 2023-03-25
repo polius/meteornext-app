@@ -802,6 +802,7 @@ export default {
         let keys = Object.keys(node.data)
         for (let i = 0; i < keys.length; ++i) {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
+          else if (node.data[keys[i]].toUpperCase() == 'CURRENT_TIMESTAMP') valuesToUpdate.push('CURRENT_TIMESTAMP')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
         query = "INSERT INTO `" + this.sidebarSelected[0]['name'].replaceAll('`','``') + '` (' + keys.map(x => `\`${x}\``).join(',') + ") VALUES (" + valuesToUpdate.join() + ");"
