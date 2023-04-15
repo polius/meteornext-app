@@ -27,7 +27,7 @@ class firewall:
             whitelist = ['blueprint','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale','boto3','hashlib','itertools']
             frommodule = kwargs['globals']['__name__'] if 'globals' in kwargs else None
             if frommodule is None or frommodule in ['__main__','blueprint']:
-                if name not in whitelist:
+                if name not in whitelist and not name.startswith('_'):
                     raise Exception(f"Module '{name}' is restricted.")
             else:
                 split = frommodule.split('.')
