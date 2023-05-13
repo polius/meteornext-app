@@ -1138,6 +1138,8 @@ class Client:
         req = request.get_json()
         conn.disable_fks_checks()
         if req['object'] == 'table':
+            # Set SQL Mode to avoid replacing 0 to 1 values in auto_inc
+            conn.execute(query="SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'")
             for table in json.loads(req['items']):
                 # Check table size
                 info = conn.get_table_info(db=req['origin'], table=table.replace('`','``'))

@@ -316,7 +316,7 @@ export default {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
       let duplicateContent = this.dialogOptions.item.duplicateContent
-      let queries = ["CREATE TABLE `" + newName + "` LIKE `" + currentName + "`;"]
+      let queries = ["SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'", "CREATE TABLE `" + newName + "` LIKE `" + currentName + "`;"]
       if (duplicateContent) queries.push("INSERT INTO `" + newName.replaceAll('`','``') + "` SELECT * FROM `" + currentName.replaceAll('`','``') + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
