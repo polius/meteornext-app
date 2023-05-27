@@ -356,7 +356,7 @@ class MySQL:
         query = """
             SELECT schema_name AS 'name'
             FROM information_schema.schemata
-            ORDER BY schema_name
+            ORDER BY LOWER(schema_name)
         """
         result = self.execute(query)['data']
         databases = []
@@ -369,7 +369,7 @@ class MySQL:
             SELECT table_name AS 'name', IF(table_type = 'VIEW', 'view','table') AS 'type'
             FROM information_schema.tables 
             WHERE table_schema = %s
-            ORDER BY table_name
+            ORDER BY LOWER(table_name)
         """
         return self.execute(query, args=(db))['data']
 
@@ -378,7 +378,7 @@ class MySQL:
             SELECT DISTINCT column_name AS 'name', column_type AS 'type'
             FROM information_schema.columns
             WHERE table_schema = %s
-            ORDER BY 'name'
+            ORDER BY LOWER(name)
         """
         return self.execute(query, args=(db))['data']
 
@@ -395,7 +395,7 @@ class MySQL:
             SELECT event_name AS 'name'
             FROM information_schema.events
             WHERE event_schema = %s
-            ORDER BY event_name
+            ORDER BY LOWER(event_name)
         """
         return self.execute(query, args=(db))['data']
 
@@ -404,7 +404,7 @@ class MySQL:
             SELECT routine_name AS 'name', LOWER(routine_type) AS 'type'
             FROM information_schema.routines
             WHERE routine_schema = %s
-            ORDER BY routine_name
+            ORDER BY LOWER(routine_name)
         """
         return self.execute(query, args=(db))['data']
 
@@ -512,7 +512,7 @@ class MySQL:
             JOIN information_schema.collations c ON c.collation_name = t.table_collation
             WHERE t.table_schema = '{}'
             {}
-            ORDER BY table_name
+            ORDER BY LOWER(table_name)
         """.format(db, table).strip()
         result = self.execute(query)['data']
         return result
@@ -529,7 +529,7 @@ class MySQL:
             FROM information_schema.views
             WHERE table_schema = '{}'
             {}
-            ORDER BY table_name
+            ORDER BY LOWER(table_name)
         """.format(db, view).strip()
         result = self.execute(query)['data']
         return result
@@ -551,7 +551,7 @@ class MySQL:
             FROM information_schema.triggers
             WHERE event_object_schema = '{}'
             {}
-            ORDER BY trigger_name
+            ORDER BY LOWER(trigger_name)
         """.format(db, trigger).strip()
         return self.execute(query)['data']
 
@@ -568,7 +568,7 @@ class MySQL:
             WHERE routine_schema = '{}'
             AND routine_type = 'FUNCTION'
             {}
-            ORDER BY routine_name
+            ORDER BY LOWER(routine_name)
         """.format(db, function).strip()
         return self.execute(query)['data']
 
@@ -585,7 +585,7 @@ class MySQL:
             WHERE routine_schema = '{}'
             AND routine_type = 'PROCEDURE'
             {}
-            ORDER BY routine_name
+            ORDER BY LOWER(routine_name)
         """.format(db, procedure).strip()
         return self.execute(query)['data']
 
@@ -601,7 +601,7 @@ class MySQL:
             FROM information_schema.events
             WHERE event_schema = '{}'
             {}
-            ORDER BY event_name
+            ORDER BY LOWER(event_name)
         """.format(db, event).strip()
         return self.execute(query)['data']
 
@@ -621,8 +621,7 @@ class MySQL:
         return result
 
     def get_all_rights(self):
-        # self.execute("FLUSH PRIVILEGES")
-        query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY `user`, `host`"
+        query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY LOWER(`user`), `host`"
         return self.execute(query)['data']
 
     def get_server_rights(self, user, host):
@@ -640,7 +639,7 @@ class MySQL:
             FROM db
             WHERE `user` = %s
             AND `host` = %s
-            ORDER BY db;
+            ORDER BY LOWER(db);
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
 
@@ -651,7 +650,7 @@ class MySQL:
             WHERE `user` = %s
             AND `host` = %s
             AND table_priv != ''
-            ORDER BY db, table_name;
+            ORDER BY LOWER(db), LOWER(table_name);
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
 
@@ -661,7 +660,7 @@ class MySQL:
             FROM columns_priv
             WHERE `user` = %s
             AND `host` = %s
-            ORDER BY db, table_name, column_name;
+            ORDER BY LOWER(db), LOWER(table_name), LOWER(column_name);
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
 
@@ -671,7 +670,7 @@ class MySQL:
             FROM procs_priv
             WHERE `user` = %s
             AND `host` = %s
-            ORDER BY db, routine_name
+            ORDER BY LOWER(db), LOWER(routine_name)
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
 
@@ -699,5 +698,8 @@ class MySQL:
         return [pk['column_name'] for pk in result]
 
     def get_processlist(self):
-        query = "SHOW FULL PROCESSLIST"
+        query = """
+            SELECT `ID`, `USER`, `HOST`, `DB`, `COMMAND`, `TIME`, `STATE`, `INFO`
+            FROM information_schema.processlist
+        """
         return self.execute(query)['data']
