@@ -363,13 +363,9 @@ export default {
     },
     parseProcesslist(data) {
       // Build header
-      let header = []
-      if (data.length > 0) {
-        let keys = Object.keys(data[0])
-        for (let key of keys) header.push({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false })
-      }
+      let header_fields = ['ID', 'USER', 'HOST', 'DB', 'COMMAND', 'TIME', 'STATE', 'INFO']
+      this.header = header_fields.map(x => ({"headerName": x, "colId": x, "field": x, "sortable": true, "filter": true, "resizable": true, "editable": false}))
       // Apply new columns
-      this.header = header.slice(0)
       this.gridApi.setColumnDefs(this.header)
       // Preserve selected / filtered nodes
       const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
