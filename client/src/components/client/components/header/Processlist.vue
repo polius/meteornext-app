@@ -368,7 +368,7 @@ export default {
       // Apply new columns
       this.gridApi.setColumnDefs(this.header)
       // Preserve selected / filtered nodes
-      const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
+      const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.ID)
       const filterModel = this.gridApi.getFilterModel()
       // Reload new items
       this.items = data
@@ -376,7 +376,7 @@ export default {
       if (this.search.length == 0) this.rowCount = this.items.length
       // Apply selected / filtered nodes
       this.$nextTick(() => {
-        this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
+        this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.ID)))
         this.gridApi.setFilterModel(filterModel)
       })
       // Repeat processlist request
