@@ -222,7 +222,7 @@ class Utils:
 
             # Get tables
             try:
-                return jsonify({'tables': conn.get_tables_detailed(request.args['database'])}), 200
+                return jsonify({'tables': self.__json(conn.get_tables_detailed(request.args['database']))}), 200
             finally:
                 conn.stop()
 
@@ -231,6 +231,12 @@ class Utils:
     ####################
     # Internal Methods #
     ####################
+    def __json(self, data):
+        return json.dumps(data, default=self.__json_parser)
+
+    def __json_parser(self, o):
+        return o.__str__()
+
     def get(self, user):
         # Get servers
         servers = self._servers_admin.get(server_id=request.args['server_id']) if user['admin'] else self._servers.get(user['id'], user['group_id'], request.args['server_id'])

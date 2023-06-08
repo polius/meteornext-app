@@ -436,7 +436,7 @@ export default {
       const payload = { server_id: this.sourceServer, database: this.sourceDatabase }
       axios.get('/utils/tables', { params: payload })
         .then((response) => {
-          this.parseTables(response.data.tables)
+          this.parseTables(JSON.parse(response.data.tables))
           this.resizeTable()
           this.gridApi.hideOverlay()
           this.tablesSelected = []
