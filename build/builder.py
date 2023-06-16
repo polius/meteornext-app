@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
 class builder:
     def __init__(self):
-        self._version = '1.0.8'
+        self._version = '1.0.9'
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         self.build_docker()
 
