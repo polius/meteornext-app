@@ -6,7 +6,7 @@ import argparse
 class server:
     def __init__(self):
         # Init Global Variables
-        self._version = '1.0.9'
+        self._version = '1.0.10'
         self._sentry_dsn = 'https://7de474b9a31148d29d10eb5aea1dff71@o1100742.ingest.sentry.io/6138582'
 
         # Init args
