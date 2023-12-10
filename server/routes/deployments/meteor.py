@@ -227,7 +227,7 @@ class blueprint:
     def __execute(self, deployment):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._base_path
-        meteor_path = [f"{meteor_base_path}/apps/meteor/init"] if self._bin else ["python3", f"{meteor_base_path}/../meteor/meteor.py"]
+        meteor_path = [f"{meteor_base_path}/apps/meteor/init"] if self._bin else ["python3", f"{meteor_base_path}/apps/meteor/meteor.py"]
         execution_path = f"{self._base_path}/files/deployments/{deployment['uri']}"
         execution_method = deployment['method'].lower()
 

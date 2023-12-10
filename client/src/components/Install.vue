@@ -161,7 +161,7 @@
   export default {
     data: () => ({
       // Install Form
-      license: { access_key: '', secret_key: '' },
+      license: { access_key: 'meteornext', secret_key: 'meteornext' },
       sql: { engine: 'MySQL', port: '3306', hostname: '', username: '', password: '', database: 'meteornext', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null },
       amazon: { enabled: false, aws_access_key: '', aws_secret_access_key: '', region: '', bucket: '' },
       account: { username: '', password: '' },

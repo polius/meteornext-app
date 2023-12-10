@@ -34,14 +34,21 @@ class Region:
             raise Exception("The remote SSH server does not have the gzip installed.")
 
         # Check glibc version
-        glibc_version = self.__ssh("ldd --version | head -1 | awk '{print $NF}'")
-        try:
-            glibc_version = float(glibc_version)
-        except Exception:
-            raise Exception("The remote SSH server does not have the glibc installed. Alpine distros are not supported.")
-        else:
-            if glibc_version < 2.17:
-                raise Exception(f"The remote SSH server must have a glibc version greater than or equal to 2.17 (current version is {glibc_version}).")
+        # glibc_version = self.__ssh("ldd --version | head -1 | awk '{print $NF}'")
+        # try:
+        #     glibc_version = float(glibc_version)
+        # except Exception:
+        #     raise Exception("The remote SSH server does not have the glibc installed. Alpine distros are not supported.")
+        # else:
+        #     if glibc_version < 2.17:
+        #         raise Exception(f"The remote SSH server must have a glibc version greater than or equal to 2.17 (current version is {glibc_version}).")
+
+        # Check libraries
+        dependencies = ['boto3','requests','sentry_sdk','pymysql','sqlparse','paramiko','sshtunnel']
+        for i in dependencies:
+            response = self.__ssh(f"python3 -m pip show {i} | grep Version")
+            if not response.startswith('Version:'):
+                raise Exception(f"The python '{i}' library is not installed.")
 
     def check_version(self):
         # Get SSH Version
@@ -65,10 +72,10 @@ class Region:
         else:
             # Compress Meteor files
             shutil.make_archive(self._local_path, 'gztar', self._local_path)
-            shutil.move(f"{self._local_path}.tar.gz", f"{self._local_path}/../server/apps/meteor.tar.gz")
+            # shutil.move(f"{self._local_path}.tar.gz", f"{self._local_path}/../server/apps/meteor.tar.gz")
             # Upload Meteor
             self.__ssh(f"rm -rf {self._remote_path}/bin && mkdir -p {self._remote_path}/bin")
-            self.__put(f"{self._local_path}/../server/apps/meteor.tar.gz", ".meteor/bin/meteor.tar.gz")
+            self.__put(f"{self._local_path}/../meteor.tar.gz", ".meteor/bin/meteor.tar.gz")
             self.__ssh("tar -xvzf {0}/bin/meteor.tar.gz -C {0}/bin && rm -rf {0}/bin/meteor.tar.gz".format(self._remote_path))
 
     def get_logs(self):

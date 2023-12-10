@@ -57,19 +57,19 @@ mv /etc/nginx/nginx2.conf /etc/nginx/nginx.conf
 deployments() {
     while true; do 
         sleep 10;
-        ./init --deployments
+        python3 server.py --deployments
     done
 }
 monitoring() {
     while true; do 
         sleep 10;
-        timeout 600 ./init --monitoring
+        timeout 600 python3 server.py --monitoring
     done
 }
 utils() {
     while true; do 
         sleep 10;
-        ./init --utils &
+        python3 server.py --utils &
     done
 }
 
@@ -79,5 +79,5 @@ monitoring &
 utils &
 
 # Start Meteor Next
-./init &
+python3 server.py &
 nginx -g 'daemon off;'
