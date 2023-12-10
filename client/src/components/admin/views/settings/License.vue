@@ -6,9 +6,9 @@
       <v-text-field readonly :loading="loading" v-model="resources" label="Resources" style="padding-top:0px"></v-text-field>
       <v-text-field readonly :loading="loading" v-model="license.access_key" label="Access Key" style="margin-top:0px" @click:append="show_access_key = !show_access_key" :append-icon="show_access_key ? 'visibility' : 'visibility_off'" :type="show_access_key ? 'text' : 'password'"></v-text-field>
       <v-text-field readonly :loading="loading" v-model="license.secret_key" label="Secret Key" style="padding-top:0px" @click:append="show_secret_key = !show_secret_key" :append-icon="show_secret_key ? 'visibility' : 'visibility_off'" :type="show_secret_key ? 'text' : 'password'" hide-details></v-text-field>
-      <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn>
-      <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn>
-      <v-btn @click="manageLicense" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">MANAGE LICENSE</v-btn>
+      <!-- <v-btn @click="refresh" :loading="loading || diff == null" :disabled="diff == null || diff < 60" color="info" style="margin-top:20px"><v-icon small style="margin-right:10px">fas fa-spinner</v-icon>{{ `Refresh ${diff == null || diff >= 60 ? '' : '- Wait ' + (60-diff) + ' seconds'}` }}</v-btn> -->
+      <!-- <v-btn @click="getUsage" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">SHOW USAGE</v-btn> -->
+      <!-- <v-btn @click="manageLicense" text :disabled="diff == null" style="margin-top:20px; margin-left:5px">MANAGE LICENSE</v-btn> -->
       <!-- DIALOG -->
       <v-dialog v-model="dialog" width="1024px">
         <v-card>

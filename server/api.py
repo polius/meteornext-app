@@ -99,7 +99,8 @@ class Api:
                 tar.extractall(path=f"{sys._MEIPASS}/apps/meteor/")
             StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "pidfile": "server.pid", "timeout": 3600, "capture_output": True, "errorlog": "server.err"}).run()
         else:
-            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "0.0.0.0:5000", "pidfile": "server.pid", "timeout": 3600}).run()
+            # StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "0.0.0.0:5000", "pidfile": "server.pid", "timeout": 3600}).run()
+            StandaloneApplication(app, {"worker_class": "gthread", "threads": THREADS, "worker_connections": MAX_THREADS+1, "bind": "unix:server.sock", "pidfile": "server.pid", "timeout": 3600, "capture_output": True, "errorlog": "server.err"}).run()
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def __init__(self, app, options=None):
