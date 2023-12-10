@@ -2,7 +2,3 @@
 .git
 .gitignore
 __pycache__
-client
-meteor
-server
-dist/meteornext.tar

@@ -34,43 +34,7 @@ class License:
             self._last_check_date = datetime.utcnow()
 
     def __check(self):
-        try:
-            # Import requests lib
-            import requests
-
-            # Add version
-            self._license_params['version'] = self._version
-
-            # Generate challenge
-            self._license_params['challenge'] = str(uuid.uuid4())
-
-            # Check license
-            response = requests.post("https://license.meteornext.io/", json=self._license_params, headers={"x-meteor2-key": self._license_params['access_key']}, allow_redirects=False)
-
-            # Check "x-meteor2-key" header is valid
-            if response.status_code != 200:
-                self._license_status = {"code": response.status_code, "response": "The license is not valid.", "account": None, "resources": None, "sentry": None}
-            else:
-                # Check license is valid
-                response_code = json.loads(response.text)['statusCode']
-                response_body = json.loads(response.text)['body']
-                response_text = response_body['response']
-                account = response_body['account'] if response_code == 200 else None
-                resources = response_body['resources'] if response_code == 200 else None
-                sentry = response_body['sentry'] == 1 if response_code == 200 else False
-
-                # Solve challenge
-                if response_code == 200:
-                    response_challenge = response_body['challenge']
-                    challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
-                    challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
-
-                    # Validate challenge
-                    if response_challenge != challenge:
-                        response_text = "The license is not valid."
-                        response_code = 401
-
-                self._license_status = {"code": response_code, "response": response_text, "account": account, "resources": resources, "sentry": sentry}
-        except Exception:
-            if not self._license_status or self._license_status['code'] != 200 or int((datetime.utcnow()-self._last_check_date).total_seconds()) > 3600:
-                self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established."}
+        if self._license_params.get('access_key') == 'meteornext' and self._license_params.get('secret_key') == 'meteornext':
+            self._license_status = {"code": 200, "response": "The license is valid.", "account": "License GPLv3", "resources": -1, "sentry": False}
+        else:
+            self._license_status = {"code": 401, "response": "Use 'meteornext' for both Api Key and Secret Key.", "account": None, "resources": None, "sentry": False}
