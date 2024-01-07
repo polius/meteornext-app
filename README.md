@@ -14,20 +14,34 @@
 
 Meteor Next is a cross-platform web application that fully automatizes MySQL database workload operations in a Production ready environment.
 
-![Meteor Next - Client](https://docs.meteornext.io/assets/client-3b1cab91.png)
-
 </div>
 
-### Features
+## Features
 
-🚀 **Deployments**: Execute thousands or millions of SQL queries to multiple servers/databases in a secured and automated way, getting a detailed summary.
+### Deployments
 
-🖥️ **Monitoring**: Perform active monitoring in all the database servers (server metrics, parameters and queries).
+Execute millions of SQL queries to multiple servers and databases in a secured and automated way, getting a detailed summary.
 
-💾 **Utils**: A suite of different apps to perform massive data transfer operations.
+![Meteor Next - Deployments](https://docs.meteornext.io/assets/execution-87e3aacf.png)
 
-⚡ **Client**: A complete MySQL Client.
+### Monitoring
 
-### License
+Don't lose the track of what happens in your servers in real-time.
+
+![Meteor Next - Monitoring](https://docs.meteornext.io/assets/monitoring-5384772d.png)
+
+### Utils
+
+A suite of different apps to perform massive data transfer operations.
+
+![Meteor Next - Utils](https://docs.meteornext.io/assets/utils-exports-full-information-7262ef00.png)
+
+### Client
+
+A complete MySQL client to manage all your servers.
+
+![Meteor Next - Client](https://docs.meteornext.io/assets/client-3b1cab91.png)
+
+## License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the [LICENSE](LICENSE) file for details.
